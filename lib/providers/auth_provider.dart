@@ -30,9 +30,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       await _storage.write(key: 'refresh', value: response.data['refresh']);
 
       await _fetchUserAndSetState();
-    } catch (e, st) {
-      state = AsyncValue.error('Error al iniciar sesión', st);
-    }
+    } catch (_) {
+  state = AsyncValue.data(AuthState(
+    status: AuthStatus.loggedOut,
+    errorMessage: 'Usuario o contraseña incorrectos',
+  ));
+}
   }
 
   /// Verifica si hay token guardado y lo valida con el backend

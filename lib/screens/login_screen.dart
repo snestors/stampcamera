@@ -13,36 +13,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  bool _isSubmitting = false;
-  String? _error;
+  
+  
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isSubmitting = true;
-      _error = null;
-    });
-
-    try {
-      await ref.read(authProvider.notifier).login(
-            _usernameCtrl.text.trim(),
-            _passwordCtrl.text.trim(),
-          );
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _error = 'Usuario o contraseña incorrectos';
-        });
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isSubmitting = false;
-      });
-    }
+  if (_formKey.currentState!.validate()) {
+    await ref.read(authProvider.notifier).login(
+          _usernameCtrl.text.trim(),
+          _passwordCtrl.text.trim(),
+        );
   }
+}
 
   @override
   void dispose() {
@@ -53,6 +34,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final errorMessage = ref.watch(authProvider).value?.errorMessage;
+    final isLoading = ref.watch(authProvider).isLoading;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Iniciar Sesión')),
       body: Center(
@@ -93,15 +77,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 validator: (val) => val!.isEmpty ? 'Requerido' : null,
               ),
               const SizedBox(height: 20),
-              if (_error != null)
-                Text(
-                  _error!,
-                  style: const TextStyle(color: Colors.red),
-                ),
+              if (errorMessage != null)
+  Text(
+    errorMessage,
+    style: const TextStyle(color: Colors.red),
+  ),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                child: _isSubmitting
+                onPressed: isLoading ? null : _submit,
+                child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text('Ingresar'),
               ),

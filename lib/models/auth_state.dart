@@ -10,23 +10,33 @@ enum AuthStatus {
 class AuthState {
   final AuthStatus status;
   final UserModel? user;
+  final String? errorMessage;
 
-  AuthState({
+  const AuthState({
     required this.status,
     this.user,
+    this.errorMessage,
   });
-
-  factory AuthState.initial() => AuthState(status: AuthStatus.loading);
 
   AuthState copyWith({
     AuthStatus? status,
     UserModel? user,
+    String? errorMessage,
   }) {
     return AuthState(
       status: status ?? this.status,
       user: user ?? this.user,
+      errorMessage: errorMessage,
     );
   }
+
+  factory AuthState.initial() => const AuthState(
+        status: AuthStatus.loading,
+        user: null,
+        errorMessage: null,
+      );
+
+  
 
   bool get isLoggedIn => status == AuthStatus.loggedIn;
   bool get isLoggedOut => status == AuthStatus.loggedOut;
