@@ -20,13 +20,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   /// Login con username y password
   Future<void> login(String username, String password) async {
     state = const AsyncValue.loading();
-    print('Intentando iniciar sesión con $username');
     try {
       final response = await _http.dio.post('api/v1/token/', data: {
         'username': username,
         'password': password,
       });
-      print('Login response: ${response.data}');
+      
       await _storage.write(key: 'access', value: response.data['access']);
       await _storage.write(key: 'refresh', value: response.data['refresh']);
 

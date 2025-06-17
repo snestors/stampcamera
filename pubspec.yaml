@@ -21,6 +21,7 @@ dependencies:
   go_router: ^15.2.0
   dio: ^5.8.0+1
   flutter_secure_storage: ^9.2.4
+  package_info_plus: ^8.3.0
 
 dev_dependencies:
   flutter_test:
@@ -36,6 +37,7 @@ flutter:
       - assets/splash/branding.png
       - assets/icon/icon.png
       - assets/logo_principal.png
+      - assets/splash/splash_ilustracion_persona.png
   uses-material-design: true
 
 
