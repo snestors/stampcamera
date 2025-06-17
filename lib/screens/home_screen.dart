@@ -49,8 +49,6 @@ class HomeScreen extends ConsumerWidget {
             error: (e, _) => const SizedBox(),
           ),
           const SizedBox(height: 20),
-
-          // Opciones de navegación
           ListTile(
             leading: const Icon(Icons.camera_alt),
             title: const Text('Cámara'),
@@ -65,6 +63,8 @@ class HomeScreen extends ConsumerWidget {
               );
             },
           ),
+          
+          
           ListTile(
             leading: const Icon(Icons.directions_car),
             title: const Text('Autos'),

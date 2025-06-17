@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
 
 class FullscreenImage extends StatefulWidget {
   final List<File> images;
@@ -31,6 +32,7 @@ class _FullscreenImageState extends State<FullscreenImage> {
         title: const Text('¿Borrar imagen?'),
         content: const Text('¿Estás seguro de que deseas eliminar esta imagen?'),
         actions: [
+          
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
           TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Borrar')),
         ],
@@ -78,6 +80,21 @@ class _FullscreenImageState extends State<FullscreenImage> {
           onPressed: () => Navigator.pop(context, _images),
         ),
         actions: [
+          IconButton(
+    icon: const Icon(Icons.select_all),
+    tooltip: 'Seleccionar para compartir',
+    onPressed: () async {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => GallerySelectorScreen(images: _images),
+        ),
+      );
+      if (result != null && result is List<File>) {
+        // puedes hacer algo con los archivos compartidos, si quieres
+      }
+    },
+  ),
           IconButton(
             icon: const Icon(Icons.delete),
             tooltip: 'Borrar',
