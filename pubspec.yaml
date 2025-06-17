@@ -1,0 +1,54 @@
+name: stampcamera
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  camera: ^0.11.1
+  path_provider: ^2.1.5
+  permission_handler: ^12.0.0+1
+  image: ^4.5.4
+  intl: ^0.20.2
+  share_plus: ^11.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
+  flutter_riverpod: ^2.6.1
+  go_router: ^15.2.0
+  dio: ^5.8.0+1
+  flutter_secure_storage: ^9.2.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  custom_lint: ^0.7.5
+  riverpod_lint: ^2.6.5
+
+flutter:
+  assets:
+      - assets/logo.png
+      - assets/splash/logo_blanco.png
+      - assets/splash/branding.png
+      - assets/icon/icon.png
+      - assets/logo_principal.png
+  uses-material-design: true
+
+
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+
+flutter_native_splash:
+  color: "#0A2D3E"  # Azul oscuro como en la imagen subida
+  image: assets/splash/logo_blanco.png
+  android: true
+
+
+  android_12:
+    image: assets/splash/logo_blanco.png
+    color: "#0A2D3E"
+    branding: assets/splash/branding.png
