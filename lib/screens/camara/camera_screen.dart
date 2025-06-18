@@ -1,82 +1,21 @@
-import 'dart:io';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:stampcamera/screens/camara/fullscreen_image.dart';
-import '../../utils/image_processor.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:camera/camera.dart';
+import 'package:go_router/go_router.dart';
+import '../../providers/camera_provider.dart';
 
-class CameraScreen extends StatefulWidget {
+class CameraScreen extends ConsumerWidget {
   final CameraDescription camera;
   const CameraScreen({super.key, required this.camera});
 
   @override
-  State<CameraScreen> createState() => _CameraScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(cameraProvider(camera));
+    final notifier = ref.read(cameraProvider(camera).notifier);
 
-class _CameraScreenState extends State<CameraScreen> {
-  late CameraController _controller;
-  bool _isReady = false;
-  bool _isProcessing = false;
-  List<File> imagenes = [];
-
-  FlashMode _flashMode = FlashMode.off;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = CameraController(widget.camera, ResolutionPreset.high);
-    _controller.initialize().then((_) async {
-      if (!mounted) return;
-      setState(() => _isReady = true);
-      _cargarImagenes();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _cargarImagenes() async {
-    final dir = Directory('/storage/emulated/0/DCIM/MiEmpresa');
-    if (!await dir.exists()) return;
-
-    final files = dir.listSync()
-      ..sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
-
-    final fotos = files
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.jpg') || f.path.endsWith('.png'))
-        .toList();
-
-    setState(() => imagenes = fotos);
-  }
-
-  Future<void> _takePicture() async {
-    if (_isProcessing) return;
-    setState(() => _isProcessing = true);
-
-    try {
-      final picture = await _controller.takePicture();
-      await processAndSaveImage(picture.path);
-      await _cargarImagenes();
-    } catch (e) {
-      debugPrint('❌ Error al tomar/guardar la foto: $e');
-    } finally {
-      if (mounted) setState(() => _isProcessing = false);
+    if (!state.isReady) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-  }
-
-  void _toggleFlash() async {
-    setState(() {
-      _flashMode = _flashMode == FlashMode.off ? FlashMode.torch : FlashMode.off;
-    });
-    await _controller.setFlashMode(_flashMode);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_isReady) return const Center(child: CircularProgressIndicator());
 
     return Scaffold(
       appBar: AppBar(
@@ -85,15 +24,17 @@ class _CameraScreenState extends State<CameraScreen> {
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context, imagenes),
+          onPressed: () => context.pop(), // o .maybePop() si es necesario
         ),
         actions: [
           IconButton(
             icon: Icon(
-              _flashMode == FlashMode.off ? Icons.flash_off : Icons.flash_on,
+              state.flashMode == FlashMode.off
+                  ? Icons.flash_off
+                  : Icons.flash_on,
               color: Colors.white,
             ),
-            onPressed: _toggleFlash,
+            onPressed: notifier.toggleFlash,
           ),
         ],
       ),
@@ -105,18 +46,21 @@ class _CameraScreenState extends State<CameraScreen> {
               Expanded(
                 child: Stack(
                   children: [
-                    CameraPreview(_controller),
+                    CameraPreview(notifier.controller),
                     Positioned(
                       bottom: 20,
                       left: 0,
                       right: 0,
                       child: Center(
                         child: FloatingActionButton(
-                          onPressed: _isProcessing ? null : _takePicture,
-                          child: _isProcessing
+                          onPressed: state.isProcessing
+                              ? null
+                              : notifier.takePicture,
+                          child: state.isProcessing
                               ? const CircularProgressIndicator(
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 )
                               : const Icon(Icons.camera_alt),
                         ),
@@ -135,7 +79,7 @@ class _CameraScreenState extends State<CameraScreen> {
                     topRight: Radius.circular(12),
                   ),
                 ),
-                child: imagenes.isEmpty
+                child: state.imagenes.isEmpty
                     ? const Center(
                         child: Text(
                           "Sin fotos aún",
@@ -143,33 +87,25 @@ class _CameraScreenState extends State<CameraScreen> {
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
                         scrollDirection: Axis.horizontal,
-                        itemCount: imagenes.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        itemCount: state.imagenes.length,
                         itemBuilder: (context, index) {
                           return GestureDetector(
-                            onTap: () async {
-                              final updatedList = await Navigator.push<List<File>>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => FullscreenImage(
-                                    images: imagenes,
-                                    initialIndex: index,
-                                  ),
-                                ),
+                            onTap: () {
+                              context.pushNamed(
+                                'fullscreen',
+                                extra: {'camera': camera, 'index': index},
                               );
-                              if (updatedList != null &&
-                                  updatedList.length != imagenes.length) {
-                                setState(() => imagenes = updatedList);
-                              }
                             },
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.file(
-                                  imagenes[index],
+                                  state.imagenes[index],
                                   width: 90,
                                   fit: BoxFit.cover,
                                 ),

@@ -27,8 +27,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -64,8 +62,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ListTile(
             leading: const Icon(Icons.camera_alt),
             title: const Text('Cámara'),
-            onTap: () => context.push('/camera', extra: cameras.first),
-            
+            onTap: () =>
+                context.push('/camera', extra: {'camera': cameras.first}),
           ),
           ListTile(
             leading: const Icon(Icons.access_time),

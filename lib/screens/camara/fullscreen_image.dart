@@ -1,73 +1,37 @@
 import 'dart:io';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../../providers/camera_provider.dart';
 
-class FullscreenImage extends StatefulWidget {
-  final List<File> images;
+class FullscreenImage extends ConsumerStatefulWidget {
   final int initialIndex;
-  const FullscreenImage({super.key, required this.images, required this.initialIndex});
+  final CameraDescription camera;
+
+  const FullscreenImage({
+    super.key,
+    required this.camera,
+    required this.initialIndex,
+  });
 
   @override
-  State<FullscreenImage> createState() => _FullscreenImageState();
+  ConsumerState<FullscreenImage> createState() => _FullscreenImageState();
 }
 
-class _FullscreenImageState extends State<FullscreenImage> {
+class _FullscreenImageState extends ConsumerState<FullscreenImage> {
   late PageController _pageController;
   late int _currentIndex;
-  late List<File> _images;
-
-  final TransformationController _transformationController = TransformationController();
+  final TransformationController _transformationController =
+      TransformationController();
   TapDownDetails? _doubleTapDetails;
 
   @override
   void initState() {
     super.initState();
-    _images = List.from(widget.images);
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: _currentIndex);
-  }
-
-  Future<void> _deleteCurrentImage() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('¿Borrar imagen?'),
-        content: const Text('¿Estás seguro de que deseas eliminar esta imagen?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Borrar')),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    final file = _images[_currentIndex];
-    if (await file.exists()) await file.delete();
-
-    setState(() {
-      _images.removeAt(_currentIndex);
-      if (_currentIndex >= _images.length) {
-        _currentIndex = _images.length - 1;
-      }
-    });
-
-    if (!mounted) return;
-    if (_images.isEmpty) {
-      Navigator.pop(context, <File>[]);
-    }
-  }
-
-  Future<void> _shareCurrentImage() async {
-    final file = _images[_currentIndex];
-    final result = await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)]),
-    );
-
-    if (result.status == ShareResultStatus.success) {
-      debugPrint('¡Gracias por compartir!');
-    }
   }
 
   void _handleDoubleTap() {
@@ -81,6 +45,52 @@ class _FullscreenImageState extends State<FullscreenImage> {
     }
   }
 
+  Future<void> _confirmDelete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('¿Borrar imagen?'),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar esta imagen?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Borrar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final notifier = ref.read(cameraProvider(widget.camera).notifier);
+    await notifier.deleteImageAtIndex(_currentIndex);
+
+    final updatedList = ref.read(cameraProvider(widget.camera)).imagenes;
+    if (updatedList.isEmpty && mounted) {
+      context.goNamed('camera', extra: widget.camera);
+    } else {
+      setState(() {
+        _currentIndex = _currentIndex.clamp(0, updatedList.length - 1);
+      });
+    }
+  }
+
+  Future<void> _shareCurrentImage(File file) async {
+    final result = await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path)]),
+    );
+
+    if (result.status == ShareResultStatus.success) {
+      debugPrint('✅ Compartido con éxito');
+    }
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -90,6 +100,8 @@ class _FullscreenImageState extends State<FullscreenImage> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(cameraProvider(widget.camera));
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -97,38 +109,36 @@ class _FullscreenImageState extends State<FullscreenImage> {
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context, _images),
+          onPressed: () {
+            context.pop(); // o .maybePop() si es necesario
+            if (!context.mounted) return;
+            context.pushNamed('camera', extra: {'camera': widget.camera});
+          },
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.select_all),
             tooltip: 'Seleccionar para compartir',
-            onPressed: () async {
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => GallerySelectorScreen(images: _images),
-                ),
-              );
-              if (result != null && result is List<File>) {
-                // puedes hacer algo con los archivos compartidos
-              }
+            onPressed: () {
+              context.pushNamed('gallery', extra: {'camera': widget.camera});
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete),
             tooltip: 'Borrar',
-            onPressed: _images.isEmpty ? null : _deleteCurrentImage,
+            onPressed: state.imagenes.isEmpty ? null : () => _confirmDelete(),
           ),
           IconButton(
             icon: const Icon(Icons.share),
             tooltip: 'Compartir',
-            onPressed: _images.isEmpty ? null : _shareCurrentImage,
+            onPressed: state.imagenes.isEmpty
+                ? null
+                : () => _shareCurrentImage(state.imagenes[_currentIndex]),
           ),
         ],
       ),
       body: SafeArea(
-        child: _images.isEmpty
+        child: state.imagenes.isEmpty
             ? const Center(
                 child: Text(
                   'Sin imágenes',
@@ -137,11 +147,11 @@ class _FullscreenImageState extends State<FullscreenImage> {
               )
             : PageView.builder(
                 controller: _pageController,
-                itemCount: _images.length,
+                itemCount: state.imagenes.length,
                 onPageChanged: (index) {
                   setState(() {
                     _currentIndex = index;
-                    _transformationController.value = Matrix4.identity(); // reset zoom al cambiar imagen
+                    _transformationController.value = Matrix4.identity();
                   });
                 },
                 itemBuilder: (context, index) {
@@ -156,7 +166,7 @@ class _FullscreenImageState extends State<FullscreenImage> {
                       maxScale: 5.0,
                       child: Center(
                         child: Image.file(
-                          _images[index],
+                          state.imagenes[index],
                           fit: BoxFit.contain,
                         ),
                       ),
