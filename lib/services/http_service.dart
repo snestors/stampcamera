@@ -28,19 +28,35 @@ class HttpService {
           return handler.next(options);
         },
         onError: (DioException error, handler) async {
-          if (error.response?.statusCode == 401 &&
-              !error.requestOptions.path.contains(refreshEndpoint)) {
-            final refreshed = await _refreshToken();
-            if (refreshed) {
-              final retryRequest = error.requestOptions;
-              final newToken = await storage.read(key: 'access');
-              retryRequest.headers['Authorization'] = 'Bearer $newToken';
-              final response = await dio.fetch(retryRequest);
-              return handler.resolve(response);
-            }
-          }
-          return handler.next(error);
-        },
+  if (error.response?.statusCode == 401 &&
+      !error.requestOptions.path.contains(refreshEndpoint)) {
+    final refreshed = await _refreshToken();
+    if (refreshed) {
+      final newToken = await storage.read(key: 'access');
+
+      // Creamos un nuevo Dio sin interceptores
+      final retryDio = Dio();
+      final retryOptions = error.requestOptions;
+
+      // ✅ Prevención de reintentos infinitos
+      if (retryOptions.extra['retried'] == true) {
+        return handler.reject(error);
+      }
+      retryOptions.extra['retried'] = true;
+
+      retryOptions.headers['Authorization'] = 'Bearer $newToken';
+
+      try {
+        final response = await retryDio.fetch(retryOptions);
+        return handler.resolve(response);
+      } catch (e) {
+        return handler.reject(e as DioException);
+      }
+    }
+  }
+
+  return handler.next(error);
+}
       ),
     );
   }
@@ -53,7 +69,7 @@ class HttpService {
       final response = await dio.post(refreshEndpoint, data: {
         'refresh': refreshToken,
       });
-
+      print('refreshToken response: ${response.data}');
       final newAccess = response.data['access'];
       await storage.write(key: 'access', value: newAccess);
       return true;

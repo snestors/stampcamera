@@ -1,8 +1,11 @@
 
 
 
+import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stampcamera/screens/autos/autos_screen.dart';
+import 'package:stampcamera/screens/camara/camera_screen.dart';
 
 import '../providers/auth_provider.dart';
 import '../models/auth_state.dart';
@@ -28,6 +31,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/home',
         builder: (context, state) => const HomeScreen(),
       ),
+      //'/screen_registro': (context) => const ScreenRegistro(),
+      GoRoute(
+        path: '/autos',
+        builder: (context, state) => const AutosScreen(),),
+
+      GoRoute(
+        path: '/camera',
+        name: 'camera',
+        builder: (context, state) {
+          final camera = state.extra as CameraDescription;
+          return CameraScreen(camera: camera);
+        },
+),
+
     ],
     redirect: (context, state) {
       final authState = ref.read(authProvider);
@@ -43,6 +60,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (auth == null || auth.status == AuthStatus.loggedOut) {
         return '/login';
       }
+
 
       if (auth.status == AuthStatus.loggedIn) {
         // Si intenta ir a login pero ya está logueado, redirigimos a home

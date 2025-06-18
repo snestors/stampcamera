@@ -17,6 +17,9 @@ class _FullscreenImageState extends State<FullscreenImage> {
   late int _currentIndex;
   late List<File> _images;
 
+  final TransformationController _transformationController = TransformationController();
+  TapDownDetails? _doubleTapDetails;
+
   @override
   void initState() {
     super.initState();
@@ -32,7 +35,6 @@ class _FullscreenImageState extends State<FullscreenImage> {
         title: const Text('¿Borrar imagen?'),
         content: const Text('¿Estás seguro de que deseas eliminar esta imagen?'),
         actions: [
-          
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
           TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Borrar')),
         ],
@@ -68,6 +70,24 @@ class _FullscreenImageState extends State<FullscreenImage> {
     }
   }
 
+  void _handleDoubleTap() {
+    if (_transformationController.value != Matrix4.identity()) {
+      _transformationController.value = Matrix4.identity();
+    } else if (_doubleTapDetails != null) {
+      final position = _doubleTapDetails!.localPosition;
+      _transformationController.value = Matrix4.identity()
+        ..translate(-position.dx * 2, -position.dy * 2)
+        ..scale(3.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _transformationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,20 +101,20 @@ class _FullscreenImageState extends State<FullscreenImage> {
         ),
         actions: [
           IconButton(
-    icon: const Icon(Icons.select_all),
-    tooltip: 'Seleccionar para compartir',
-    onPressed: () async {
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => GallerySelectorScreen(images: _images),
-        ),
-      );
-      if (result != null && result is List<File>) {
-        // puedes hacer algo con los archivos compartidos, si quieres
-      }
-    },
-  ),
+            icon: const Icon(Icons.select_all),
+            tooltip: 'Seleccionar para compartir',
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => GallerySelectorScreen(images: _images),
+                ),
+              );
+              if (result != null && result is List<File>) {
+                // puedes hacer algo con los archivos compartidos
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.delete),
             tooltip: 'Borrar',
@@ -118,15 +138,27 @@ class _FullscreenImageState extends State<FullscreenImage> {
             : PageView.builder(
                 controller: _pageController,
                 itemCount: _images.length,
-                onPageChanged: (index) => setState(() => _currentIndex = index),
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentIndex = index;
+                    _transformationController.value = Matrix4.identity(); // reset zoom al cambiar imagen
+                  });
+                },
                 itemBuilder: (context, index) {
-                  return InteractiveViewer(
-                    minScale: 1.0,
-                    maxScale: 5.0,
-                    child: Center(
-                      child: Image.file(
-                        _images[index],
-                        fit: BoxFit.contain,
+                  return GestureDetector(
+                    onDoubleTapDown: (details) => _doubleTapDetails = details,
+                    onDoubleTap: _handleDoubleTap,
+                    child: InteractiveViewer(
+                      transformationController: _transformationController,
+                      panEnabled: true,
+                      scaleEnabled: true,
+                      minScale: 1.0,
+                      maxScale: 5.0,
+                      child: Center(
+                        child: Image.file(
+                          _images[index],
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   );
@@ -136,4 +168,3 @@ class _FullscreenImageState extends State<FullscreenImage> {
     );
   }
 }
-

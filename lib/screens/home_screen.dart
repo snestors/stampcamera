@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:stampcamera/screens/camara/camera_screen.dart';
+
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/utils/verificar_version_app.dart';
 import 'package:stampcamera/widgets/user_card.dart';
@@ -27,11 +27,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  void _abrirCamara(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CameraScreen(camera: cameras.first)),
-    );
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +64,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ListTile(
             leading: const Icon(Icons.camera_alt),
             title: const Text('Cámara'),
-            onTap: () => _abrirCamara(context),
+            onTap: () => context.push('/camera', extra: cameras.first),
+            
           ),
           ListTile(
             leading: const Icon(Icons.access_time),
@@ -83,9 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             leading: const Icon(Icons.directions_car),
             title: const Text('Autos'),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Autos en construcción')),
-              );
+              context.push('/autos');
             },
           ),
         ],
