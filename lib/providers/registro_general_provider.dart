@@ -76,6 +76,7 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
         _nextUrl = paginated.next;
       }
     } catch (e, st) {
+      //state = AsyncValue.error(e, st);
       // No tocamos el state principal
     } finally {
       _isLoadingMore = false;

@@ -69,7 +69,6 @@ class HttpService {
       final response = await dio.post(refreshEndpoint, data: {
         'refresh': refreshToken,
       });
-      print('refreshToken response: ${response.data}');
       final newAccess = response.data['access'];
       await storage.write(key: 'access', value: newAccess);
       return true;

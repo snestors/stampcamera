@@ -6,7 +6,6 @@ import '../providers/app_version_provider.dart';
 Future<void> verificarVersionApp(BuildContext context, WidgetRef ref) async {
   try {
     final version = await ref.read(appVersionProvider.future);
-    print('[APK] url: ${version.apkUrl}');
 
     if (version.mustUpdate && version.apkUrl != null) {
       if (!context.mounted) return;
@@ -60,7 +59,6 @@ Future<bool> _abrirUrlApk(
 }) async {
   try {
     final uri = Uri.parse(apkUrl);
-    print('[APK] Abriendo navegador con: $apkUrl');
 
     await showDialog(
       context: context,
