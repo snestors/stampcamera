@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:stampcamera/utils/date_formatter.dart';
 import 'package:stampcamera/utils/image_compressor.dart';
+import 'package:flutter/foundation.dart'; // para compute()
 
 Future<ui.Image> loadLogoImage() async {
   final byteData = await rootBundle.load('assets/logo.png');
@@ -43,11 +44,16 @@ Future<void> processAndSaveImage(String imagePath) async {
   // 🖼 Logo en la esquina superior derecha
   final logoDst = Rect.fromLTWH(
     original.width - logoSize - 10, // derecha
-    10,                              // arriba
+    10, // arriba
     logoSize,
     logoSize,
   );
-  final logoSrc = Rect.fromLTWH(0, 0, logo.width.toDouble(), logo.height.toDouble());
+  final logoSrc = Rect.fromLTWH(
+    0,
+    0,
+    logo.width.toDouble(),
+    logo.height.toDouble(),
+  );
   canvas.drawImageRect(logo, logoSrc, logoDst, paint);
 
   // 🕓 Timestamp en la esquina inferior derecha
@@ -91,7 +97,7 @@ Future<void> processAndSaveImage(String imagePath) async {
   final now = DateTime.now();
   final filename = 'foto_marcada_${now.millisecondsSinceEpoch}.png';
   final filePath = '${folder.path}/$filename';
-  final compressedBytes = await compressToJpg(pngBytes);
+  final compressedBytes = await compute(compressToJpg, pngBytes);
   final file = File(filePath);
   await file.writeAsBytes(compressedBytes);
   await scanFile(filePath);

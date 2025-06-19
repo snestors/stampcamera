@@ -97,16 +97,11 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
     }
   }
 
-  void _onImageTap(File image, int index) {
+  _onImageTap(File image, int index) {
     if (isSelecting) {
       _toggleSelection(image);
     } else {
-      context.pop(); // Dismiss the gallery selector
-      if (!context.mounted) return;
-      context.pushNamed(
-        'fullscreen',
-        extra: {'camera': widget.camera, 'index': index},
-      );
+      context.pop(index); // Devuelve index a FullscreenImage
     }
   }
 

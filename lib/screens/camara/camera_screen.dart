@@ -13,10 +13,6 @@ class CameraScreen extends ConsumerWidget {
     final state = ref.watch(cameraProvider(camera));
     final notifier = ref.read(cameraProvider(camera).notifier);
 
-    if (!state.isReady) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
@@ -46,7 +42,11 @@ class CameraScreen extends ConsumerWidget {
               Expanded(
                 child: Stack(
                   children: [
-                    CameraPreview(notifier.controller),
+                    state.isReady
+                        ? CameraPreview(notifier.controller)
+                        : const SizedBox.expand(
+                            child: ColoredBox(color: Colors.black),
+                          ),
                     Positioned(
                       bottom: 20,
                       left: 0,

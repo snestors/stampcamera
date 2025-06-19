@@ -73,7 +73,7 @@ class _FullscreenImageState extends ConsumerState<FullscreenImage> {
 
     final updatedList = ref.read(cameraProvider(widget.camera)).imagenes;
     if (updatedList.isEmpty && mounted) {
-      context.goNamed('camera', extra: widget.camera);
+      context.pop();
     } else {
       setState(() {
         _currentIndex = _currentIndex.clamp(0, updatedList.length - 1);
@@ -110,9 +110,7 @@ class _FullscreenImageState extends ConsumerState<FullscreenImage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            context.pop(); // o .maybePop() si es necesario
-            if (!context.mounted) return;
-            context.pushNamed('camera', extra: {'camera': widget.camera});
+            context.pop(); // volver al CameraScreen (sin apilarlo de nuevo)
           },
         ),
         actions: [

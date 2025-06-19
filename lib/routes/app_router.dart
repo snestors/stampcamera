@@ -36,15 +36,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
         routes: [
           GoRoute(
-            path: 'gallery',
-            name: 'gallery',
-            builder: (context, state) {
-              final extra = state.extra as Map<String, dynamic>;
-              final camera = extra['camera'] as CameraDescription;
-              return GallerySelectorScreen(camera: camera);
-            },
-          ),
-          GoRoute(
             path: 'fullscreen',
             name: 'fullscreen',
             builder: (context, state) {
@@ -52,6 +43,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final camera = extra['camera'] as CameraDescription;
               final index = extra['index'] as int;
               return FullscreenImage(camera: camera, initialIndex: index);
+            },
+          ),
+          GoRoute(
+            path: 'gallery',
+            name: 'gallery',
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>;
+              final camera = extra['camera'] as CameraDescription;
+              return GallerySelectorScreen(camera: camera);
             },
           ),
         ],

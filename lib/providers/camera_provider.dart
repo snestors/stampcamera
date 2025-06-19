@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/image_processor.dart';
+import 'dart:async'; // para usar unawaited()
 
 class CameraState {
   final bool isReady;
@@ -40,7 +41,11 @@ class CameraNotifier extends StateNotifier<CameraState> {
   late CameraController controller;
 
   Future<void> _init() async {
-    controller = CameraController(_camera, ResolutionPreset.high);
+    controller = CameraController(
+      _camera,
+      ResolutionPreset.veryHigh,
+      imageFormatGroup: ImageFormatGroup.jpeg,
+    );
     await controller.initialize();
     await _loadImages();
     state = state.copyWith(isReady: true);
@@ -61,14 +66,26 @@ class CameraNotifier extends StateNotifier<CameraState> {
     state = state.copyWith(imagenes: fotos);
   }
 
+  Future<void> _processInBackground(String path) async {
+    try {
+      await processAndSaveImage(path);
+      await _loadImages();
+
+      // 🔁 Fuerza notificación de cambio (aunque no cambie nada)
+      state = state.copyWith();
+    } catch (e) {
+      print('❌ Error al procesar en segundo plano: $e');
+    }
+  }
+
   Future<void> takePicture() async {
     if (state.isProcessing) return;
     state = state.copyWith(isProcessing: true);
 
     try {
       final picture = await controller.takePicture();
-      await processAndSaveImage(picture.path);
-      await _loadImages();
+
+      unawaited(_processInBackground(picture.path));
     } catch (e) {
       print('❌ Error al tomar foto: $e');
     } finally {
