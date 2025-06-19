@@ -5,7 +5,8 @@ import '../services/http_service.dart';
 
 final registroGeneralProvider =
     AsyncNotifierProvider<RegistroGeneralNotifier, List<RegistroGeneral>>(
-        RegistroGeneralNotifier.new);
+      RegistroGeneralNotifier.new,
+    );
 
 class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
   String? _nextUrl;
@@ -13,13 +14,17 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
   String? _searchQuery;
   bool _isLoadingMore = false;
   bool _isSearching = false;
-  bool _searchingFromApi = false;
+  bool get isSearching => _isSearching;
+  int _searchToken = 0;
 
   bool get isLoadingMore => _isLoadingMore;
-  bool get isSearching => _isSearching;
-  bool get searchingFromApi => _searchingFromApi;
-  bool get hasNextPage =>
-    _searchQuery != null ? _searchNextUrl != null : _nextUrl != null;
+
+  bool get hasNextPage {
+    if (_searchQuery != null) {
+      return _searchNextUrl != null;
+    }
+    return _nextUrl != null;
+  }
 
   @override
   Future<List<RegistroGeneral>> build() async {
@@ -28,7 +33,9 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
 
   Future<List<RegistroGeneral>> _loadInitial() async {
     try {
-      final res = await HttpService().dio.get('/api/v1/registro-general/');
+      final res = await HttpService().dio.get(
+        '/api/v1/autos/registro-general/',
+      );
       final paginated = PaginatedResponse<RegistroGeneral>.fromJson(
         res.data,
         RegistroGeneral.fromJson,
@@ -37,7 +44,6 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       _searchQuery = null;
       _searchNextUrl = null;
       _isSearching = false;
-      _searchingFromApi = false;
       return paginated.results;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -75,42 +81,38 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       } else {
         _nextUrl = paginated.next;
       }
-    } catch (e, st) {
-      //state = AsyncValue.error(e, st);
-      // No tocamos el state principal
+    } catch (_) {
+      // Silent fail
     } finally {
       _isLoadingMore = false;
-      // Notificamos cambio para que rebuild del ListView funcione
       state = AsyncValue.data([...?state.value]);
     }
   }
 
   Future<void> search(String query) async {
-    final current = state.value ?? [];
-
-    _isSearching = true;
-    _searchQuery = query;
-
-    final localMatches = current.where((e) {
-      final q = query.toLowerCase();
-      return e.vin.toLowerCase().contains(q) ||
-          (e.serie?.toLowerCase() ?? '').contains(q);
-    }).toList();
-
-    if (localMatches.isNotEmpty) {
-      _searchingFromApi = false;
-      state = AsyncValue.data(localMatches);
-      _isSearching = false;
-      return;
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      return clearSearch();
     }
 
-    _searchingFromApi = true;
+    print('🔍 Buscando en la API: "$trimmed"');
+    _isSearching = true;
+    state = const AsyncValue.loading();
+    _searchQuery = trimmed;
+    _searchToken++;
+    final currentToken = _searchToken;
 
     try {
       final res = await HttpService().dio.get(
-        '/api/v1/registro-general/',
-        queryParameters: {'search': query},
+        '/api/v1/autos/registro-general/',
+        queryParameters: {'search': trimmed},
       );
+
+      if (_searchToken != currentToken) {
+        print('🔥 Ignorando respuesta vieja de búsqueda');
+        return;
+      }
+
       final paginated = PaginatedResponse<RegistroGeneral>.fromJson(
         res.data,
         RegistroGeneral.fromJson,
@@ -118,10 +120,14 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       _searchNextUrl = paginated.next;
       state = AsyncValue.data(paginated.results);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (_searchToken == currentToken) {
+        state = AsyncValue.error(e, st);
+      }
     } finally {
+      // ✅ Esto debe ejecutarse siempre
       _isSearching = false;
-      _searchingFromApi = false;
+      // Notificamos para que el widget se reconstruya si depende de isSearching
+      state = AsyncValue.data([...?state.value]);
     }
   }
 }
