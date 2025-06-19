@@ -74,6 +74,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
       // 🔁 Fuerza notificación de cambio (aunque no cambie nada)
       state = state.copyWith();
     } catch (e) {
+      // ignore: avoid_print
       print('❌ Error al procesar en segundo plano: $e');
     }
   }
@@ -87,6 +88,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
       unawaited(_processInBackground(picture.path));
     } catch (e) {
+      // ignore: avoid_print
       print('❌ Error al tomar foto: $e');
     } finally {
       state = state.copyWith(isProcessing: false);

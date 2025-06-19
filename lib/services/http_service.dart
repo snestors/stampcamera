@@ -1,9 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../providers/auth_provider.dart';
 
 class HttpService {
   static final HttpService _instance = HttpService._internal();
   factory HttpService() => _instance;
+  AuthNotifier? _authNotifier; // ✅ NUEVO
+
+  void setAuthNotifier(AuthNotifier notifier) {
+    _authNotifier = notifier;
+  }
 
   late Dio dio;
   final storage = const FlutterSecureStorage();
@@ -28,52 +34,57 @@ class HttpService {
           return handler.next(options);
         },
         onError: (DioException error, handler) async {
-  if (error.response?.statusCode == 401 &&
-      !error.requestOptions.path.contains(refreshEndpoint)) {
-    final refreshed = await _refreshToken();
-    if (refreshed) {
-      final newToken = await storage.read(key: 'access');
+          if (error.response?.statusCode == 401 &&
+              !error.requestOptions.path.contains(refreshEndpoint)) {
+            final refreshed = await _refreshToken();
+            if (refreshed) {
+              final newToken = await storage.read(key: 'access');
 
-      // Creamos un nuevo Dio sin interceptores
-      final retryDio = Dio();
-      final retryOptions = error.requestOptions;
+              // Creamos un nuevo Dio sin interceptores
+              final retryDio = Dio();
+              final retryOptions = error.requestOptions;
 
-      // ✅ Prevención de reintentos infinitos
-      if (retryOptions.extra['retried'] == true) {
-        return handler.reject(error);
-      }
-      retryOptions.extra['retried'] = true;
+              // ✅ Prevención de reintentos infinitos
+              if (retryOptions.extra['retried'] == true) {
+                return handler.reject(error);
+              }
+              retryOptions.extra['retried'] = true;
 
-      retryOptions.headers['Authorization'] = 'Bearer $newToken';
+              retryOptions.headers['Authorization'] = 'Bearer $newToken';
 
-      try {
-        final response = await retryDio.fetch(retryOptions);
-        return handler.resolve(response);
-      } catch (e) {
-        return handler.reject(e as DioException);
-      }
-    }
-  }
+              try {
+                final response = await retryDio.fetch(retryOptions);
+                return handler.resolve(response);
+              } catch (e) {
+                return handler.reject(e as DioException);
+              }
+            }
+          }
 
-  return handler.next(error);
-}
+          return handler.next(error);
+        },
       ),
     );
   }
 
   Future<bool> _refreshToken() async {
     final refreshToken = await storage.read(key: 'refresh');
-    if (refreshToken == null) return false;
+    if (refreshToken == null) {
+      _authNotifier?.logout(); // Si no hay refresh, forzar logout
+      return false;
+    }
 
     try {
-      final response = await dio.post(refreshEndpoint, data: {
-        'refresh': refreshToken,
-      });
+      final response = await dio.post(
+        refreshEndpoint,
+        data: {'refresh': refreshToken},
+      );
       final newAccess = response.data['access'];
       await storage.write(key: 'access', value: newAccess);
       return true;
     } catch (_) {
       await storage.deleteAll();
+      _authNotifier?.logout(); // Si falla la solicitud
       return false;
     }
   }

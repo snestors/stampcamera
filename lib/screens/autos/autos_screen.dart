@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'registro_screen.dart';
-import 'pedeteo_screen.dart';
+import 'registro_general/registro_screen.dart';
+import 'pedeteo/pedeteo_screen.dart';
 
 class AutosScreen extends StatefulWidget {
   const AutosScreen({super.key});
@@ -39,19 +39,13 @@ class _AutosScreenState extends State<AutosScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: const [
-          RegistroScreen(),
-          PedeteoScreen(),
-        ],
+        children: const [RegistroScreen(), PedeteoScreen()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onNavTapped,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit),
-            label: 'REGISTRO',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.edit), label: 'REGISTRO'),
           BottomNavigationBarItem(
             icon: Icon(Icons.pending_actions),
             label: 'PEDETEO',

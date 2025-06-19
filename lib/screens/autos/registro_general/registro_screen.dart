@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stampcamera/providers/registro_general_provider.dart';
+import 'package:stampcamera/providers/autos/registro_general_provider.dart';
 import 'package:stampcamera/utils/debouncer.dart';
+import 'package:go_router/go_router.dart';
 
 class RegistroScreen extends ConsumerStatefulWidget {
   const RegistroScreen({super.key});
@@ -92,70 +93,80 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
                   controller: _scrollController,
                   itemCount: registros.length + (showLoader ? 1 : 0),
                   itemBuilder: (context, index) {
-                    print(
-                      'Index: $index, Total: ${registros.length}, Show Loader: $showLoader',
-                    );
                     if (index < registros.length) {
                       final r = registros[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                r.serie != null && r.serie!.isNotEmpty
-                                    ? '${r.vin} (${r.serie})'
-                                    : r.vin,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                      return GestureDetector(
+                        onTap: () {
+                          final vin = r.vin;
+                          context.push('/autos/detalle/$vin');
+                        },
+                        child: Card(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  r.serie != null && r.serie!.isNotEmpty
+                                      ? '${r.vin} (${r.serie})'
+                                      : r.vin,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text('${r.marca ?? ''} - ${r.modelo ?? ''}'),
-                              Text('Color: ${r.color ?? 'N/A'}'),
-                              Text('Versión: ${r.version ?? 'N/A'}'),
-                              Text('Nave: ${r.naveDescarga ?? 'N/A'}'),
-                              Text('BL: ${r.bl ?? 'N/A'}'),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(
-                                    r.pedeteado
-                                        ? Icons.check_circle
-                                        : Icons.cancel,
-                                    color: r.pedeteado
-                                        ? Colors.green
-                                        : Colors.red,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Pedeteado',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
+                                const SizedBox(height: 4),
+                                Text('${r.marca ?? ''} - ${r.modelo ?? ''}'),
+                                Text('Color: ${r.color ?? 'N/A'}'),
+                                Text('Versión: ${r.version ?? 'N/A'}'),
+                                Text('Nave: ${r.naveDescarga ?? 'N/A'}'),
+                                Text('BL: ${r.bl ?? 'N/A'}'),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      r.pedeteado
+                                          ? Icons.check_circle
+                                          : Icons.cancel,
+                                      color: r.pedeteado
+                                          ? Colors.green
+                                          : Colors.red,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Pedeteado',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
 
-                                  const SizedBox(width: 12),
+                                    const SizedBox(width: 12),
 
-                                  Icon(
-                                    r.danos ? Icons.check_circle : Icons.cancel,
-                                    color: r.danos ? Colors.green : Colors.red,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text('Daños', style: TextStyle(fontSize: 12)),
-                                ],
-                              ),
-                            ],
+                                    Icon(
+                                      r.danos
+                                          ? Icons.check_circle
+                                          : Icons.cancel,
+                                      color: r.danos
+                                          ? Colors.green
+                                          : Colors.red,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Daños',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );

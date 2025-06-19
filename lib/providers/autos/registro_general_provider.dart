@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/registro_general_model.dart';
-import '../models/paginated_response.dart';
-import '../services/http_service.dart';
+import '../../models/autos/registro_general_model.dart';
+import '../../models/paginated_response.dart';
+import '../../services/http_service.dart';
 
 final registroGeneralProvider =
     AsyncNotifierProvider<RegistroGeneralNotifier, List<RegistroGeneral>>(
@@ -95,6 +95,7 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       return clearSearch();
     }
 
+    // ignore: avoid_print
     print('🔍 Buscando en la API: "$trimmed"');
     _isSearching = true;
     state = const AsyncValue.loading();
@@ -109,6 +110,7 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       );
 
       if (_searchToken != currentToken) {
+        // ignore: avoid_print
         print('🔥 Ignorando respuesta vieja de búsqueda');
         return;
       }

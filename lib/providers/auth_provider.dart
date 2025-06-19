@@ -6,7 +6,13 @@ import '../models/auth_state.dart';
 import '../services/http_service.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
-  (ref) => AuthNotifier(),
+  (ref) {
+    final notifier = AuthNotifier();
+    HttpService().setAuthNotifier(
+      notifier,
+    ); // ✅ Aquí conectamos el singleton con el AuthNotifier
+    return notifier;
+  },
 );
 
 class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
@@ -21,21 +27,23 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   Future<void> login(String username, String password) async {
     state = const AsyncValue.loading();
     try {
-      final response = await _http.dio.post('api/v1/token/', data: {
-        'username': username,
-        'password': password,
-      });
-      
+      final response = await _http.dio.post(
+        'api/v1/token/',
+        data: {'username': username, 'password': password},
+      );
+
       await _storage.write(key: 'access', value: response.data['access']);
       await _storage.write(key: 'refresh', value: response.data['refresh']);
 
       await _fetchUserAndSetState();
     } catch (_) {
-  state = AsyncValue.data(AuthState(
-    status: AuthStatus.loggedOut,
-    errorMessage: 'Usuario o contraseña incorrectos',
-  ));
-}
+      state = AsyncValue.data(
+        AuthState(
+          status: AuthStatus.loggedOut,
+          errorMessage: 'Usuario o contraseña incorrectos',
+        ),
+      );
+    }
   }
 
   /// Verifica si hay token guardado y lo valida con el backend
@@ -54,10 +62,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     try {
       final response = await _http.dio.get('api/v1/check-auth/');
       final userData = UserModel.fromJson(response.data['user']);
-      state = AsyncValue.data(AuthState(
-        status: AuthStatus.loggedIn,
-        user: userData,
-      ));
+      state = AsyncValue.data(
+        AuthState(status: AuthStatus.loggedIn, user: userData),
+      );
     } catch (e) {
       await logout(); // Limpieza si falla check-auth
     }

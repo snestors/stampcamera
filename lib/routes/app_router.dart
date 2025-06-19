@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/screens/autos/autos_screen.dart';
+import 'package:stampcamera/screens/autos/registro_general/detalle_registro_screen.dart';
 import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
 import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
@@ -24,7 +25,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       //'/screen_registro': (context) => const ScreenRegistro(),
-      GoRoute(path: '/autos', builder: (context, state) => const AutosScreen()),
+      GoRoute(
+        path: '/autos',
+        builder: (context, state) => const AutosScreen(),
+        routes: [
+          // Aquí puedes agregar rutas hijas para AutosScreen si es necesario
+          GoRoute(
+            path: 'detalle/:vin',
+            builder: (context, state) {
+              final vin = state.pathParameters['vin']!;
+              return DetalleRegistroScreen(vin: vin);
+            },
+          ),
+        ],
+      ),
 
       GoRoute(
         path: '/camera',
