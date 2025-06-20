@@ -90,6 +90,7 @@ class _FormularioPedeteoScreenState
     if (_sugerencias.isEmpty) return;
 
     _overlayEntry = _createOverlayEntry();
+    if (!context.mounted) return;
     Overlay.of(context).insert(_overlayEntry!);
   }
 

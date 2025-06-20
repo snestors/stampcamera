@@ -6,6 +6,7 @@ import 'package:stampcamera/screens/autos/registro_general/detalle_registro_scre
 import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
 import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
+import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 
 import '../providers/auth_provider.dart';
 import '../models/auth_state.dart';
@@ -24,6 +25,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(
+        path: '/asistencia',
+        name: 'asistencia',
+        builder: (context, state) => const RegistroAsistenciaScreen(),
+      ),
       //'/screen_registro': (context) => const ScreenRegistro(),
       GoRoute(
         path: '/autos',

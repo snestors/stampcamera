@@ -69,9 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             leading: const Icon(Icons.access_time),
             title: const Text('Asistencia'),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Asistencia en construcción')),
-              );
+              context.pushNamed('asistencia');
             },
           ),
           ListTile(
