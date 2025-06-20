@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/utils/debouncer.dart';
 import '../../models/autos/registro_general_model.dart';
 import '../../models/paginated_response.dart';
 import '../../services/http_service.dart';
@@ -16,6 +17,7 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
   bool _isSearching = false;
   bool get isSearching => _isSearching;
   int _searchToken = 0;
+  final _debouncer = Debouncer();
 
   bool get isLoadingMore => _isLoadingMore;
 
@@ -87,6 +89,16 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       _isLoadingMore = false;
       state = AsyncValue.data([...?state.value]);
     }
+  }
+
+  void debouncedSearch(String query) {
+    _debouncer.run(() {
+      if (query.trim().isEmpty) {
+        clearSearch();
+      } else {
+        search(query);
+      }
+    });
   }
 
   Future<void> search(String query) async {
