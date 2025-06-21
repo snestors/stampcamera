@@ -13,6 +13,7 @@ class BotonMarcarSalida extends ConsumerWidget {
 
     return FloatingActionButton.extended(
       label: const Text('Marcar salida'),
+      backgroundColor: Colors.deepOrange[400],
       icon: cargando
           ? const SizedBox(
               width: 16,

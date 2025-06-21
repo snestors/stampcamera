@@ -28,19 +28,37 @@ class _DiaSelectorWidgetState extends State<DiaSelectorWidget> {
     dias = List.generate(30, (i) => hoy.subtract(Duration(days: 28 - i)));
 
     // Asegurar que el día actual esté centrado al iniciar
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final index = dias.indexWhere(
-        (d) => isSameDay(d, widget.fechaSeleccionada),
-      );
-      if (index >= 0 && _scrollController.hasClients) {
-        _scrollController.animateTo(
-          index * 90.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(
+        const Duration(milliseconds: 280),
+      ); // dejamos que todo se asiente antes de animar (ajusta si quieres)
+      _centrarFechaSeleccionada();
     });
   }
+
+  void _centrarFechaSeleccionada() {
+    final index = dias.indexWhere(
+      (d) => _isSameDay(d, widget.fechaSeleccionada),
+    );
+    if (index < 0 || !_scrollController.hasClients) return;
+
+    //-- Ancho total de cada item (70 + márgenes laterales de 6 *2 = 12)
+    const itemWidth = 82.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final offsetParaCentrar = index * itemWidth - (screenWidth - itemWidth) / 2;
+
+    _scrollController.animateTo(
+      offsetParaCentrar.clamp(
+        _scrollController.position.minScrollExtent,
+        _scrollController.position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOutQuart,
+    );
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
   @override
   Widget build(BuildContext context) {
