@@ -1,158 +1,145 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
-import 'package:stampcamera/utils/gps_utils.dart';
 
-void showMarcarEntradaBottomSheet(BuildContext context, WidgetRef ref) {
-  final formOptions = ref.read(asistenciaFormOptionsProvider).value;
-  if (formOptions == null) return;
-
-  final zonas = formOptions.zonas;
-  final naves = formOptions.naves;
-  bool isLoading = false;
-  ZonaTrabajo? zonaSeleccionada = zonas.firstOrNull;
-  Nave? naveSeleccionada;
-  final comentarioController = TextEditingController();
-
+void showMarcarEntradaBottomSheet(
+  BuildContext context,
+  WidgetRef ref,
+  DateTime fechaSeleccionada,
+) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (ctx) {
-      return Padding(
-        padding: MediaQuery.of(ctx).viewInsets,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    "Registrar entrada",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
+    builder: (_) => ModalMarcarEntrada(fechaSeleccionada: fechaSeleccionada),
+  );
+}
 
-                  // Zona de trabajo
-                  DropdownButtonFormField<ZonaTrabajo>(
-                    value: zonaSeleccionada,
-                    isExpanded: true, // ✅ importante para evitar overflow
-                    items: zonas
-                        .map(
-                          (z) => DropdownMenuItem(
-                            value: z,
-                            child: Text(
-                              z.value,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (zona) => setState(() {
-                      zonaSeleccionada = zona;
-                    }),
-                    decoration: const InputDecoration(
-                      labelText: "Zona de trabajo",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+class ModalMarcarEntrada extends ConsumerStatefulWidget {
+  final DateTime fechaSeleccionada;
 
-                  // Nave opcional
-                  DropdownButtonFormField<Nave>(
-                    value: naveSeleccionada,
-                    items: naves
-                        .map(
-                          (n) =>
-                              DropdownMenuItem(value: n, child: Text(n.value)),
-                        )
-                        .toList(),
-                    onChanged: (n) => setState(() {
-                      naveSeleccionada = n;
-                    }),
-                    decoration: const InputDecoration(
-                      labelText: "Embarque (opcional)",
-                      border: OutlineInputBorder(),
-                    ),
-                    isDense: true,
-                    isExpanded: true,
-                  ),
-                  const SizedBox(height: 12),
+  const ModalMarcarEntrada({super.key, required this.fechaSeleccionada});
 
-                  // Comentario
-                  TextFormField(
-                    controller: comentarioController,
-                    decoration: const InputDecoration(
-                      labelText: "Comentario",
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 20),
+  @override
+  ConsumerState<ModalMarcarEntrada> createState() => _ModalMarcarEntradaState();
+}
 
-                  // Botón confirmar
-                  ElevatedButton.icon(
-                    icon: isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.login),
-                    label: Text(
-                      isLoading ? "Procesando..." : "Confirmar entrada",
-                    ),
-                    onPressed: isLoading
-                        ? null
-                        : () async {
-                            setState(() => isLoading = true);
+class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
+  ZonaTrabajo? zonaSeleccionada;
+  Nave? naveSeleccionada;
+  final TextEditingController comentarioCtrl = TextEditingController();
 
-                            final position = await obtenerGpsSeguro();
-                            final gps =
-                                "${position.latitude},${position.longitude}";
+  @override
+  void dispose() {
+    comentarioCtrl.dispose();
+    super.dispose();
+  }
 
-                            final ok = await ref
-                                .read(asistenciasDiariasProvider.notifier)
-                                .marcarEntrada(
-                                  zonaTrabajoId: zonaSeleccionada!.id,
-                                  turnoId: 1,
-                                  gps: gps,
-                                  naveId: naveSeleccionada?.id,
-                                  comentario: comentarioController.text.trim(),
-                                );
+  @override
+  Widget build(BuildContext context) {
+    final formOptionsAsync = ref.watch(asistenciaFormOptionsProvider);
+    final status = ref.watch(asistenciaStatusProvider);
+    final notifier = ref.read(
+      asistenciasDiariasProvider(widget.fechaSeleccionada).notifier,
+    );
 
-                            if (context.mounted) {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    ok
-                                        ? "Entrada registrada correctamente"
-                                        : "Error al registrar entrada",
-                                  ),
-                                ),
-                              );
-                            }
+    return formOptionsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text("Error: $e")),
+      data: (opciones) {
+        final zonas = opciones.zonas;
+        final naves = opciones.naves;
 
-                            setState(() => isLoading = false);
-                          },
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Marcar entrada",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              DropdownButtonFormField<ZonaTrabajo>(
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Zona de trabajo'),
+                value: zonaSeleccionada,
+                items: zonas.map((zona) {
+                  return DropdownMenuItem(value: zona, child: Text(zona.value));
+                }).toList(),
+                onChanged: (value) => setState(() => zonaSeleccionada = value),
+              ),
+
+              const SizedBox(height: 12),
+
+              DropdownButtonFormField<Nave>(
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Nave (opcional)'),
+                value: naveSeleccionada,
+                items: [
+                  ...naves.map(
+                    (nave) =>
+                        DropdownMenuItem(value: nave, child: Text(nave.value)),
                   ),
                 ],
-              );
-            },
+                onChanged: (value) => setState(() => naveSeleccionada = value),
+              ),
+
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: comentarioCtrl,
+                decoration: const InputDecoration(
+                  labelText: "Comentario (opcional)",
+                ),
+                maxLines: 2,
+              ),
+
+              const SizedBox(height: 16),
+
+              ElevatedButton.icon(
+                icon: status == AsistenciaStatus.entradaLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.login),
+                label: const Text('Confirmar entrada'),
+                onPressed: (status == AsistenciaStatus.entradaLoading)
+                    ? null
+                    : () async {
+                        if (zonaSeleccionada == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Selecciona una zona de trabajo'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final ok = await notifier.marcarEntrada(
+                          zonaTrabajoId: zonaSeleccionada!.id,
+                          turnoId: 1, // <-- pon aquí tu lógica real
+                          naveId: naveSeleccionada?.id,
+                          comentario: comentarioCtrl.text.trim().isEmpty
+                              ? null
+                              : comentarioCtrl.text.trim(),
+                        );
+
+                        if (ok && context.mounted) {
+                          Navigator.of(context).pop(); // el rebuild ocurre solo
+                        }
+                      },
+              ),
+            ],
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
+  }
 }

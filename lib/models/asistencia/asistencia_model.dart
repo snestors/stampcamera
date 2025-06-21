@@ -1,4 +1,5 @@
 // models/asistencia_model.dart
+import 'package:intl/intl.dart';
 
 class Turno {
   final int id;
@@ -73,22 +74,26 @@ class Asistencia {
     required this.turno,
   });
 
-  factory Asistencia.fromJson(Map<String, dynamic> json) => Asistencia(
-    id: json['id'],
-    usuario: json['usuario'],
-    fechaHoraEntrada: DateTime.parse(json['fecha_hora_entrada']),
-    ubicacionEntradaGps: json['ubicacion_entrada_gps'],
-    fechaHoraSalida: json['fecha_hora_salida'] != null
-        ? DateTime.parse(json['fecha_hora_salida'])
-        : null,
-    ubicacionSalidaGps: json['ubicacion_salida_gps'],
-    activo: json['activo'],
-    comentarioUsuario: json['comentario_usuario'],
-    comentarioAdmin: json['comentario_admin'],
-    zonaTrabajo: ZonaTrabajo.fromJson(json['zona_trabajo']),
-    nave: json['nave'] != null ? Nave.fromJson(json['nave']) : null,
-    turno: Turno.fromJson(json['turno']),
-  );
+  factory Asistencia.fromJson(Map<String, dynamic> json) {
+    final formato = DateFormat("dd/MM/yyyy HH:mm");
+
+    return Asistencia(
+      id: json['id'],
+      usuario: json['usuario'],
+      fechaHoraEntrada: formato.parse(json['fecha_hora_entrada']),
+      ubicacionEntradaGps: json['ubicacion_entrada_gps'],
+      fechaHoraSalida: json['fecha_hora_salida'] != null
+          ? formato.parse(json['fecha_hora_salida'])
+          : null,
+      ubicacionSalidaGps: json['ubicacion_salida_gps'],
+      activo: json['activo'],
+      comentarioUsuario: json['comentario_usuario'],
+      comentarioAdmin: json['comentario_admin'],
+      zonaTrabajo: ZonaTrabajo.fromJson(json['zona_trabajo']),
+      nave: json['nave'] != null ? Nave.fromJson(json['nave']) : null,
+      turno: Turno.fromJson(json['turno']),
+    );
+  }
 }
 
 class AsistenciaDiaria {
@@ -102,6 +107,7 @@ class AsistenciaDiaria {
   final String estado;
   final String? motivoInasistencia;
   final List<Asistencia> asistencias;
+  final bool asistenciaActiva;
 
   AsistenciaDiaria({
     required this.id,
@@ -114,6 +120,7 @@ class AsistenciaDiaria {
     required this.estado,
     this.motivoInasistencia,
     required this.asistencias,
+    required this.asistenciaActiva,
   });
 
   factory AsistenciaDiaria.fromJson(Map<String, dynamic> json) =>
@@ -130,5 +137,6 @@ class AsistenciaDiaria {
         asistencias: (json['asistencias'] as List)
             .map((e) => Asistencia.fromJson(e))
             .toList(),
+        asistenciaActiva: json['asistencia_activa'],
       );
 }

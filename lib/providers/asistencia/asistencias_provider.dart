@@ -1,108 +1,136 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 import 'package:stampcamera/services/http_service.dart';
+import 'package:stampcamera/utils/gps_utils.dart';
+
+enum AsistenciaStatus { idle, entradaLoading, salidaLoading, error }
+
+final asistenciaStatusProvider = StateProvider<AsistenciaStatus>(
+  (_) => AsistenciaStatus.idle,
+);
 
 final asistenciasDiariasProvider =
-    StateNotifierProvider<
+    AsyncNotifierProvider.family<
       AsistenciasNotifier,
-      AsyncValue<List<AsistenciaDiaria>>
-    >((ref) => AsistenciasNotifier());
+      List<AsistenciaDiaria>,
+      DateTime
+    >(() => AsistenciasNotifier());
 
 class AsistenciasNotifier
-    extends StateNotifier<AsyncValue<List<AsistenciaDiaria>>> {
-  AsistenciasNotifier() : super(const AsyncValue.loading()) {
-    fetchAsistencias(); // carga inicial
-  }
-
+    extends FamilyAsyncNotifier<List<AsistenciaDiaria>, DateTime> {
   final _http = HttpService();
 
-  Future<void> fetchAsistencias({String? fecha}) async {
-    state = const AsyncValue.loading();
-    try {
-      final response = await _http.dio.get(
-        '/api/v1/asistencias/asistencias-diarias/',
-        queryParameters: {if (fecha != null) 'fecha': fecha},
-      );
-      final List<AsistenciaDiaria> results = [];
-      final rawList = response.data['results'] as List;
-      for (var i = 0; i < rawList.length; i++) {
-        final item = rawList[i];
-        try {
-          final asistencia = AsistenciaDiaria.fromJson(item);
-          results.add(asistencia);
-        } catch (e, st) {
-          print('❌ Error al parsear item $i');
-          print('🧾 JSON: $item');
-          print('📛 Error: $e');
-          print('📍 Stack: $st');
-        }
-      }
-      print('response.data: ${response.data}');
-
-      state = AsyncValue.data([...results]); // fuerza nueva instancia
-      print('state: ${state}');
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
+  // Mantener vivo
+  @override
+  FutureOr<List<AsistenciaDiaria>> build(DateTime fecha) async {
+    ref.keepAlive();
+    return _fetchAsistencias(fecha);
   }
 
+  Future<List<AsistenciaDiaria>> _fetchAsistencias(DateTime fecha) async {
+    final f = fecha.toIso8601String().split('T').first;
+    final res = await _http.dio.get(
+      '/api/v1/asistencias/asistencias-diarias/',
+      queryParameters: {'fecha': f},
+    );
+    return (res.data['results'] as List)
+        .map((e) => AsistenciaDiaria.fromJson(e))
+        .toList();
+  }
+
+  // ------------------------------------------------------------------
+  // ENTRADA
+  // ------------------------------------------------------------------
   Future<bool> marcarEntrada({
     required int zonaTrabajoId,
     required int turnoId,
-    required String gps,
     int? naveId,
     String? comentario,
   }) async {
+    ref.read(asistenciaStatusProvider.notifier).state =
+        AsistenciaStatus.entradaLoading;
+
     try {
-      final payload = {
-        'zona_trabajo_id': zonaTrabajoId,
-        'turno_id': turnoId,
-        'ubicacion_entrada_gps': gps,
-        if (naveId != null) 'nave_id': naveId,
-        if (comentario != null) 'comentario_usuario': comentario,
-      };
+      final gps = await _getGps();
       await _http.dio.post(
         '/api/v1/asistencias/asistencias-diarias/entrada/',
-        data: payload,
+        data: {
+          'zona_trabajo_id': zonaTrabajoId,
+          'turno_id': turnoId,
+          'ubicacion_entrada_gps': gps,
+          if (naveId != null) 'nave_id': naveId,
+          if (comentario != null) 'comentario_usuario': comentario,
+        },
       );
-      await fetchAsistencias();
+
+      // 🔥 disparo un refetch obligatorio
+      ref.invalidateSelf();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      ref.read(asistenciaStatusProvider.notifier).state =
+          AsistenciaStatus.error;
       return false;
+    } finally {
+      ref.read(asistenciaStatusProvider.notifier).state = AsistenciaStatus.idle;
     }
   }
 
-  Future<bool> marcarSalida({required String gps}) async {
+  // ------------------------------------------------------------------
+  // SALIDA
+  // ------------------------------------------------------------------
+  Future<bool> marcarSalida() async {
+    ref.read(asistenciaStatusProvider.notifier).state =
+        AsistenciaStatus.salidaLoading;
+
     try {
+      final gps = await _getGps();
       await _http.dio.post(
         '/api/v1/asistencias/asistencias-diarias/salida/',
         data: {'gps': gps},
       );
-      await fetchAsistencias();
+
+      // 🔥 disparo un refetch obligatorio
+      ref.invalidateSelf();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      ref.read(asistenciaStatusProvider.notifier).state =
+          AsistenciaStatus.error;
       return false;
+    } finally {
+      ref.read(asistenciaStatusProvider.notifier).state = AsistenciaStatus.idle;
     }
   }
+
+  // util
+  Future<String> _getGps() async {
+    final p = await obtenerGpsSeguro();
+    return '${p.latitude},${p.longitude}';
+  }
+}
+
+// ---------------------------------------------------------------------
+// Opciones para el formulario de entrada
+// ---------------------------------------------------------------------
+class FormularioAsistenciaOptions {
+  final List<ZonaTrabajo> zonas;
+  final List<Nave> naves;
+  FormularioAsistenciaOptions({required this.zonas, required this.naves});
 }
 
 final asistenciaFormOptionsProvider =
     FutureProvider<FormularioAsistenciaOptions>((ref) async {
-      final response = await HttpService().dio.get(
+      final res = await HttpService().dio.get(
         '/api/v1/asistencias/asistencias-diarias/formulario-options/',
       );
-      final zonas = (response.data['zonas'] as List)
-          .map((e) => ZonaTrabajo.fromJson(e))
-          .toList();
-      final naves = (response.data['naves'] as List)
-          .map((e) => Nave.fromJson(e))
-          .toList();
-      return FormularioAsistenciaOptions(zonas: zonas, naves: naves);
+      return FormularioAsistenciaOptions(
+        zonas: (res.data['zonas'] as List)
+            .map((e) => ZonaTrabajo.fromJson(e))
+            .toList(),
+        naves: (res.data['naves'] as List)
+            .map((e) => Nave.fromJson(e))
+            .toList(),
+      );
     });
-
-class FormularioAsistenciaOptions {
-  final List<ZonaTrabajo> zonas;
-  final List<Nave> naves;
-
-  FormularioAsistenciaOptions({required this.zonas, required this.naves});
-}

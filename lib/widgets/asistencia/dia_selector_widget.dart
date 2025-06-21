@@ -25,7 +25,7 @@ class _DiaSelectorWidgetState extends State<DiaSelectorWidget> {
   void initState() {
     super.initState();
     final hoy = DateTime.now();
-    dias = List.generate(7, (i) => hoy.subtract(Duration(days: 6 - i)));
+    dias = List.generate(30, (i) => hoy.subtract(Duration(days: 28 - i)));
 
     // Asegurar que el día actual esté centrado al iniciar
     WidgetsBinding.instance.addPostFrameCallback((_) {
