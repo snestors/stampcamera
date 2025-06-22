@@ -37,7 +37,6 @@ class _RegistroAsistenciaScreenState
           DiaSelectorWidget(
             fechaSeleccionada: fechaSeleccionada,
             onSeleccionar: (nuevaFecha) {
-              print(nuevaFecha);
               if (!_isSameDay(nuevaFecha, fechaSeleccionada)) {
                 setState(() => fechaSeleccionada = nuevaFecha);
               }

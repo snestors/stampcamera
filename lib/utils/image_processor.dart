@@ -168,7 +168,7 @@ img.Image _smartResize(img.Image original) {
   final newHeight = (height * scale).round();
 
   debugPrint(
-    '📏 Redimensionando a ${newWidth}x${newHeight} (factor: ${scale.toStringAsFixed(2)})',
+    '📏 Redimensionando a ${newWidth}x$newHeight (factor: ${scale.toStringAsFixed(2)})',
   );
 
   return img.copyResize(

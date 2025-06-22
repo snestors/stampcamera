@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/widgets/connectivity_app_bar.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -13,17 +14,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  
-  
 
   Future<void> _submit() async {
-  if (_formKey.currentState!.validate()) {
-    await ref.read(authProvider.notifier).login(
-          _usernameCtrl.text.trim(),
-          _passwordCtrl.text.trim(),
-        );
+    if (_formKey.currentState!.validate()) {
+      await ref
+          .read(authProvider.notifier)
+          .login(_usernameCtrl.text.trim(), _passwordCtrl.text.trim());
+    }
   }
-}
 
   @override
   void dispose() {
@@ -38,64 +36,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Iniciar Sesión')),
+      appBar: ConnectivityAppBarWithDetails(
+        title: const Text('Iniciar Sesión'),
+      ),
       body: Center(
-  child: SingleChildScrollView(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: Image.asset(
-            'assets/logo_principal.png',
-            
-            fit: BoxFit.contain,
-          ),
-        ),
-        const SizedBox(height: 20),
-        Form(
-          key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _usernameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Usuario',
-                  hintText: 'Ej: nfarinas',
+              Align(
+                alignment: Alignment.topCenter,
+                child: Image.asset(
+                  'assets/logo_principal.png',
+
+                  fit: BoxFit.contain,
                 ),
-                validator: (val) => val!.isEmpty ? 'Requerido' : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _passwordCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Contraseña',
-                ),
-                obscureText: true,
-                validator: (val) => val!.isEmpty ? 'Requerido' : null,
               ),
               const SizedBox(height: 20),
-              if (errorMessage != null)
-  Text(
-    errorMessage,
-    style: const TextStyle(color: Colors.red),
-  ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: isLoading ? null : _submit,
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Ingresar'),
+              Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _usernameCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Usuario',
+                        hintText: 'Ej: nfarinas',
+                      ),
+                      validator: (val) => val!.isEmpty ? 'Requerido' : null,
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _passwordCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Contraseña',
+                      ),
+                      obscureText: true,
+                      validator: (val) => val!.isEmpty ? 'Requerido' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    if (errorMessage != null)
+                      Text(
+                        errorMessage,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: isLoading ? null : _submit,
+                      child: isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Ingresar'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
-      ],
-    ),
-  ),
-),
+      ),
     );
   }
 }

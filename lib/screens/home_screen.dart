@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/utils/verificar_version_app.dart';
+import 'package:stampcamera/widgets/connectivity_app_bar.dart';
 import 'package:stampcamera/widgets/user_card.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
@@ -32,7 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: ConnectivityAppBarWithDetails(
         title: const Text('Aplicaciones'),
         actions: [
           IconButton(
