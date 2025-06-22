@@ -5,7 +5,7 @@ import '../providers/auth_provider.dart';
 class HttpService {
   static final HttpService _instance = HttpService._internal();
   factory HttpService() => _instance;
-  AuthNotifier? _authNotifier; // ✅ NUEVO
+  AuthNotifier? _authNotifier;
 
   void setAuthNotifier(AuthNotifier notifier) {
     _authNotifier = notifier;
@@ -34,6 +34,7 @@ class HttpService {
           return handler.next(options);
         },
         onError: (DioException error, handler) async {
+          // ✅ SOLUCIÓN: Solo manejar errores 401, dejar pasar otros errores
           if (error.response?.statusCode == 401 &&
               !error.requestOptions.path.contains(refreshEndpoint)) {
             final refreshed = await _refreshToken();
@@ -44,7 +45,7 @@ class HttpService {
               final retryDio = Dio();
               final retryOptions = error.requestOptions;
 
-              // ✅ Prevención de reintentos infinitos
+              // Prevención de reintentos infinitos
               if (retryOptions.extra['retried'] == true) {
                 return handler.reject(error);
               }
@@ -61,7 +62,9 @@ class HttpService {
             }
           }
 
-          return handler.next(error);
+          // ✅ IMPORTANTE: Para otros errores (400, 500, etc.), simplemente rechazar sin modificar
+          // Esto permite que el servicio maneje los errores como espera
+          return handler.reject(error);
         },
       ),
     );
@@ -70,7 +73,7 @@ class HttpService {
   Future<bool> _refreshToken() async {
     final refreshToken = await storage.read(key: 'refresh');
     if (refreshToken == null) {
-      _authNotifier?.logout(); // Si no hay refresh, forzar logout
+      _authNotifier?.logout();
       return false;
     }
 
@@ -84,7 +87,7 @@ class HttpService {
       return true;
     } catch (_) {
       await storage.deleteAll();
-      _authNotifier?.logout(); // Si falla la solicitud
+      _authNotifier?.logout();
       return false;
     }
   }

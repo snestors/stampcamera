@@ -19,7 +19,7 @@ class ResumenAsistenciaWidget extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        splashColor: accent.withOpacity(.16),
+        splashColor: accent.withValues(alpha: 0.16),
         onTap: () {}, // opcional
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -32,12 +32,12 @@ class ResumenAsistenciaWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withOpacity(.8),
+                color: Colors.white.withValues(alpha: .8),
                 blurRadius: 4,
                 offset: const Offset(-2, -2),
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(.05),
+                color: Colors.black.withValues(alpha: .05),
                 blurRadius: 8,
                 offset: const Offset(3, 4),
               ),

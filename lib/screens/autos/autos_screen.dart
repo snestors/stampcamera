@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:stampcamera/screens/autos/pedeteo/pedeteo_screen.dart';
 import 'registro_general/registro_screen.dart';
-import 'pedeteo/pedeteo_screen.dart';
 
 class AutosScreen extends StatefulWidget {
   const AutosScreen({super.key});
