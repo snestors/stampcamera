@@ -1,6 +1,6 @@
 // services/registro_vin_service.dart
 import 'package:dio/dio.dart';
-import 'package:stampcamera/models/autos/pedeteo/registro_vin_options.dart';
+import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/services/http_service.dart';
 
@@ -42,8 +42,8 @@ class RegistroVinService {
 
   Future<RegistroGeneral> createRegistro({
     required String vin,
-    required String condicion, // ✅ Vuelve a ser required
-    required int zonaInspeccion, // ✅ Vuelve a ser required
+    required String condicion,
+    required int zonaInspeccion,
     required String fotoPath,
     int? bloqueId,
     int? fila,
@@ -65,11 +65,54 @@ class RegistroVinService {
       final response = await _http.dio.post(
         '/api/v1/autos/registro-vin/',
         data: formData,
+        options: Options(
+          extra: {
+            'file_paths': {'foto_vin': fotoPath},
+          },
+        ),
       );
 
-      return RegistroGeneral.fromJson(response.data);
+      return RegistroGeneral.fromJson(response.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 400) {
+        final errorData = e.response?.data;
+        if (errorData is Map<String, dynamic> &&
+            errorData.containsKey('non_field_errors')) {
+          final nonFieldErrors = errorData['non_field_errors'];
+          if (nonFieldErrors is List && nonFieldErrors.isNotEmpty) {
+            throw Exception(nonFieldErrors.first.toString());
+          }
+        }
+
+        if (errorData is Map<String, dynamic>) {
+          final firstError = _extractFirstFieldError(errorData);
+          if (firstError != null) {
+            throw Exception(firstError);
+          }
+        }
+
+        throw Exception('Error de validación en los datos');
+      }
+
+      if (e.response?.statusCode == 401) {
+        throw Exception('Sesión expirada, inicia sesión nuevamente');
+      }
+
+      throw Exception('Error del servidor (${e.response?.statusCode})');
     } catch (e) {
       throw Exception('Error al crear registro: $e');
     }
+  }
+
+  String? _extractFirstFieldError(Map<String, dynamic> errorData) {
+    for (final entry in errorData.entries) {
+      if (entry.key != 'non_field_errors' && entry.value is List) {
+        final errors = entry.value as List;
+        if (errors.isNotEmpty) {
+          return '${entry.key}: ${errors.first}';
+        }
+      }
+    }
+    return null;
   }
 }

@@ -86,6 +86,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
     try {
       final picture = await controller.takePicture();
 
+      // ✅ SOLUCIÓN: Usar unawaited de dart:async
       unawaited(_processInBackground(picture.path));
     } catch (e) {
       // ignore: avoid_print

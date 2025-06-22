@@ -1,6 +1,6 @@
 // lib/providers/autos/pedeteo_provider.dart - CORRECCIÓN PARA VIN COMO STRING
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stampcamera/models/autos/pedeteo/registro_vin_options.dart';
+import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/services/registro_vin_service.dart';
 
@@ -250,16 +250,8 @@ class PedeteoStateNotifier extends StateNotifier<PedeteoState> {
       // Si todo sale bien, limpiar el formulario
       resetForm();
     } catch (e) {
-      // ✅ DEBUG: Ver qué tipo de error estamos recibiendo
-      print('🔍 DEBUG - Provider caught exception:');
-      print('   Exception Type: ${e.runtimeType}');
-      print('   Exception String: $e');
-      print('   Exception toString(): ${e.toString()}');
-
       // ✅ Manejo simplificado - el servicio ya envía mensajes limpios
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
-
-      print('🔍 DEBUG - Final error message: $errorMessage');
 
       state = state.copyWith(isLoading: false, errorMessage: errorMessage);
     }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:stampcamera/models/asistencia/asistencia_model.dart';
-import 'package:intl/intl.dart'; // si lo necesitas para formatear horas
 
 class ResumenAsistenciaWidget extends StatelessWidget {
   final AsistenciaDiaria asistenciaDiaria;

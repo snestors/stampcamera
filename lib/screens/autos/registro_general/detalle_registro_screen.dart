@@ -16,7 +16,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
     final detalleAsync = ref.watch(registroDetalleProvider(vin));
 
     return Scaffold(
-      appBar: AppBar(title: Text('Detalle: $vin')),
+      appBar: AppBar(title: Text(vin)),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(

@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:stampcamera/theme/app_theme.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:stampcamera/utils/image_processor.dart';
 import '../routes/app_router.dart';
 
 late List<CameraDescription> cameras;
@@ -14,7 +15,7 @@ Future<void> main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   cameras = await availableCameras();
-
+  await warmUpImageProcessor();
   FlutterNativeSplash.remove();
   await initializeDateFormatting('es', null); // 👈 esto es lo que falta
   runApp(const ProviderScope(child: MyApp()));
