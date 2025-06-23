@@ -1,10 +1,13 @@
-// widgets/pedeteo/search_bar_widget.dart (limpio)
+// =====================================================
+// widgets/pedeteo/search_bar_widget.dart - ACTUALIZACIÓN NECESARIA
+// =====================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/widgets/pedeteo/search_dropdown_widget.dart';
+import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 
 class PedeteoSearchBar extends ConsumerStatefulWidget {
   const PedeteoSearchBar({super.key});
@@ -27,7 +30,14 @@ class _PedeteoSearchBarState extends ConsumerState<PedeteoSearchBar> {
   }
 
   void _onFocusChanged() {
-    if (!_searchFocusNode.hasFocus) _hideDropdown();
+    if (!_searchFocusNode.hasFocus) {
+      // Delay para permitir tap en dropdown antes de ocultar
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (mounted && !_searchFocusNode.hasFocus) {
+          _hideDropdown();
+        }
+      });
+    }
   }
 
   void _onSearchChanged() {
@@ -35,7 +45,7 @@ class _PedeteoSearchBarState extends ConsumerState<PedeteoSearchBar> {
     ref.read(pedeteoStateProvider.notifier).updateSearchQuery(query);
 
     setState(() {
-      if (query.isNotEmpty && query.length < 17) {
+      if (query.isNotEmpty && query.length < 17 && _searchFocusNode.hasFocus) {
         _showSearchDropdown();
       } else {
         _hideDropdown();
@@ -47,6 +57,7 @@ class _PedeteoSearchBarState extends ConsumerState<PedeteoSearchBar> {
     ref.read(pedeteoStateProvider.notifier).selectVin(vin);
     _searchController.text = vin.vin;
     _hideDropdown();
+    _searchFocusNode.unfocus();
 
     final optionsAsync = ref.read(pedeteoOptionsProvider);
     if (optionsAsync.hasValue) {
@@ -64,13 +75,26 @@ class _PedeteoSearchBarState extends ConsumerState<PedeteoSearchBar> {
 
   void _showSearchDropdown() {
     _hideDropdown();
+
     _overlayEntry = OverlayEntry(
-      builder: (context) => PedeteoSearchDropdown(
-        layerLink: _layerLink,
-        onSelectVin: _selectVin,
-        onHide: _hideDropdown,
+      builder: (context) => GestureDetector(
+        onTap: _hideDropdown,
+        behavior: HitTestBehavior.translucent,
+        child: Stack(
+          children: [
+            // Área transparente para cerrar dropdown
+            Positioned.fill(child: Container()),
+            // Dropdown real
+            PedeteoSearchDropdown(
+              layerLink: _layerLink,
+              onSelectVin: _selectVin,
+              onHide: _hideDropdown,
+            ),
+          ],
+        ),
       ),
     );
+
     Overlay.of(context).insert(_overlayEntry!);
   }
 
@@ -97,39 +121,24 @@ class _PedeteoSearchBarState extends ConsumerState<PedeteoSearchBar> {
   Widget build(BuildContext context) {
     final state = ref.watch(pedeteoStateProvider);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.grey[100],
-      child: CompositedTransformTarget(
-        link: _layerLink,
-        child: TextField(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          decoration: InputDecoration(
-            hintText: 'Buscar por VIN o Serie...',
-            prefixIcon: const Icon(Icons.search),
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_searchController.text.isNotEmpty)
-                  IconButton(
-                    onPressed: _resetForm,
-                    icon: const Icon(Icons.clear),
-                  ),
-                IconButton(
-                  onPressed: _toggleScanner,
-                  icon: Icon(
-                    state.showScanner ? Icons.close : Icons.qr_code_scanner,
-                    color: state.showScanner ? Colors.blue : null,
-                  ),
-                ),
-              ],
-            ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            filled: true,
-            fillColor: Colors.white,
-          ),
-        ),
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: SearchBarWidget(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        hintText: 'Buscar por VIN o Serie...',
+        backgroundColor: Colors.grey[100],
+        fillColor: Colors.white,
+        onChanged: (value) {
+          // La lógica ya está en _onSearchChanged que se ejecuta automáticamente
+        },
+        onClear: _resetForm,
+        onScannerPressed: _toggleScanner,
+        scannerIcon: state.showScanner ? Icons.close : Icons.qr_code_scanner,
+        scannerTooltip: state.showScanner
+            ? 'Cerrar scanner'
+            : 'Escanear código',
+        scannerButtonColor: state.showScanner ? Colors.red : null,
       ),
     );
   }

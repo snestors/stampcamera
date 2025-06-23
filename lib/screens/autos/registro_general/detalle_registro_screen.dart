@@ -5,6 +5,7 @@ import 'package:stampcamera/widgets/autos/detalle_info_general.dart';
 import 'package:stampcamera/widgets/autos/detalle_registros_vin.dart';
 import 'package:stampcamera/widgets/autos/detalle_fotos_presentacion.dart';
 import 'package:stampcamera/widgets/autos/detalle_danos.dart';
+import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class DetalleRegistroScreen extends ConsumerWidget {
   final String vin;
@@ -25,7 +26,11 @@ class DetalleRegistroScreen extends ConsumerWidget {
         },
         child: detalleAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Error: $err')),
+          error: (err, _) => ConnectionErrorScreen(
+            onRetry: () {
+              ref.invalidate(registroDetalleProvider(vin));
+            },
+          ),
           data: (registro) => ListView(
             padding: const EdgeInsets.all(12),
             children: [

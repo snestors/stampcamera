@@ -119,15 +119,15 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
                 .setCapturedImage(processedImagePath);
             ref.read(pedeteoStateProvider.notifier).onBarcodeScanned(barcode);
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  '✅ VIN: $barcode\n📸 Foto tomada automáticamente',
-                ),
-                backgroundColor: Colors.green,
-                duration: const Duration(seconds: 2),
-              ),
-            );
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(
+            //     content: Text(
+            //       '✅ VIN: $barcode\n📸 Foto tomada automáticamente',
+            //     ),
+            //     backgroundColor: Colors.green,
+            //     duration: const Duration(seconds: 2),
+            //   ),
+            // );
 
             // Delay reducido
             await Future.delayed(const Duration(milliseconds: 300));

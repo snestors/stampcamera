@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
+import 'package:stampcamera/providers/session_manager_provider.dart';
 import 'dart:async';
 import 'dart:convert'; // ✅ Para jsonEncode/jsonDecode
 
@@ -27,11 +28,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   /// ✅ NUEVO: Inicialización con persistencia
   Future<void> _initializeAuth() async {
     try {
-      // 1. Cargar estado guardado inmediatamente
-      await _loadPersistedAuthState();
-
+      //await Future.delayed(Duration(seconds: 1));
       // 2. Intentar actualizar con servidor en paralelo
       await _checkAuthWithRetry();
+      // 1. Cargar estado guardado inmediatamente
+      await _loadPersistedAuthState();
     } catch (e) {
       // Si falla verificación del servidor, mantener estado local si existe
       final currentState = state.value;
@@ -243,7 +244,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   }
 
   /// Logout con limpieza completa
-  Future<void> logout() async {
+  Future<void> logout([WidgetRef? ref]) async {
+    // 🔥 Limpiar todos los providers relacionados con el usuario
+    if (ref != null) {
+      ref.read(sessionManagerProvider.notifier).clearSession(ref);
+    }
+
     state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
 
     try {

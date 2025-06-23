@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
-import 'package:stampcamera/widgets/pedeteo/vehicle_info_card.dart';
+import 'package:stampcamera/widgets/autos/card_detalle_registro_vin.dart';
+import 'package:stampcamera/widgets/pedeteo/_vehicle_info_card.dart';
 import 'package:stampcamera/widgets/pedeteo/form_fields_card.dart';
 import 'package:stampcamera/widgets/pedeteo/camera_card.dart';
 import 'package:stampcamera/widgets/pedeteo/action_buttons.dart';
@@ -29,7 +30,7 @@ class PedeteoRegistrationForm extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Información del vehículo
-          VehicleInfoCard(vehicleInfo: selectedVin),
+          DetalleRegistroCard(registro: selectedVin),
 
           const SizedBox(height: 16),
 

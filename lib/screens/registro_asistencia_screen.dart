@@ -6,6 +6,7 @@ import 'package:stampcamera/widgets/asistencia/marcar_salida.dart';
 import 'package:stampcamera/widgets/asistencia/resumen_asistencia_widget.dart';
 import 'package:stampcamera/widgets/asistencia/lista_asistencias_widget.dart';
 import 'package:stampcamera/widgets/asistencia/modal_entrada.dart';
+import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class RegistroAsistenciaScreen extends ConsumerStatefulWidget {
   const RegistroAsistenciaScreen({super.key});
@@ -69,7 +70,11 @@ class _RegistroAsistenciaScreenState
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text("Error: $e")),
+              error: (e, _) => ConnectionErrorScreen(
+                onRetry: () {
+                  ref.invalidate(asistenciasDiariasProvider(fechaSeleccionada));
+                },
+              ),
             ),
           ),
         ],
