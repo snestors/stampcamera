@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:async';
 import 'dart:collection';
@@ -250,7 +251,7 @@ class HttpService {
           );
           newFormData.files.add(MapEntry(fieldName, newFile));
         } catch (e) {
-          print('Error recreando archivo $filePath: $e');
+          debugPrint('Error recreando archivo $filePath: $e');
         }
       }
     }

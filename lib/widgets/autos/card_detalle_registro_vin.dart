@@ -247,7 +247,7 @@ class DetalleRegistroCard extends StatelessWidget {
                   color: Color(0xFF1F2937), // Gris oscuro corporativo
                 ),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: TextOverflow.clip,
               ),
             ],
           ),
@@ -263,7 +263,6 @@ class DetalleRegistroCard extends StatelessWidget {
         Expanded(
           child: _buildStatusBadge(
             'Pedeteado',
-            r.pedeteado,
             r.pedeteado
                 ? const Color(0xFF059669) // Verde corporativo
                 : const Color(0xFFF59E0B), // Naranja corporativo
@@ -275,8 +274,7 @@ class DetalleRegistroCard extends StatelessWidget {
         // Badge Daños
         Expanded(
           child: _buildStatusBadge(
-            'Daños',
-            r.danos,
+            r.danos ? 'Con Daños' : 'Sin Daños',
             r.danos
                 ? const Color(0xFFDC2626) // Rojo corporativo
                 : const Color(0xFF059669), // Verde corporativo
@@ -287,12 +285,7 @@ class DetalleRegistroCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(
-    String label,
-    bool status,
-    Color color,
-    IconData icon,
-  ) {
+  Widget _buildStatusBadge(String label, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(

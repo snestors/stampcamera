@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
+import 'package:stampcamera/widgets/pedeteo/queue_badget.dart';
 import 'registro_general/registro_screen.dart';
 
 class AutosScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _AutosScreenState extends State<AutosScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Autos')),
+      appBar: AppBar(title: const Text('Autos'), actions: [QueueBadge()]),
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,

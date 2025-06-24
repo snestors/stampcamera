@@ -58,7 +58,7 @@ class ActionButtons extends ConsumerWidget {
   Future<void> _saveAndContinue(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
 
-    await ref.read(pedeteoStateProvider.notifier).saveRegistro();
+    await ref.read(pedeteoStateProvider.notifier).saveRegistroOfflineFirst();
 
     final state = ref.read(pedeteoStateProvider);
 

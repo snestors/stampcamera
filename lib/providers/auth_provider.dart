@@ -87,7 +87,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       final userJson = jsonEncode(user.toJson());
       await _storage.write(key: 'user_data', value: userJson);
     } catch (e) {
-      print('Error guardando datos de usuario: $e');
+      //print('Error guardando datos de usuario: $e');
     }
   }
 
@@ -96,7 +96,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     try {
       await _storage.delete(key: 'user_data');
     } catch (e) {
-      print('Error limpiando datos de usuario: $e');
+      //print('Error limpiando datos de usuario: $e');
     }
   }
 

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/utils/verificar_version_app.dart';
 import 'package:stampcamera/widgets/connectivity_app_bar.dart';
-import 'package:stampcamera/widgets/user_card.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
 
@@ -136,7 +135,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.2, // ✅ Aumentar un poco más la altura
+            childAspectRatio: 0.9, // ✅ Aumentar un poco más la altura
             children: [
               _AppCard(
                 title: 'Cámara',

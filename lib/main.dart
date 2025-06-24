@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:camera/camera.dart';
+import 'package:stampcamera/services/background_queue_service.dart';
 import 'package:stampcamera/theme/app_theme.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
@@ -16,7 +17,10 @@ Future<void> main() async {
 
   cameras = await availableCameras();
   await warmUpImageProcessor();
+  // ✅ AGREGAR ESTA LÍNEA
+  BackgroundQueueService().start();
   FlutterNativeSplash.remove();
+
   await initializeDateFormatting('es', null); // 👈 esto es lo que falta
   runApp(const ProviderScope(child: MyApp()));
 }

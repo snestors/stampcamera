@@ -95,7 +95,6 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
         case DioExceptionType.badCertificate:
           return 'Error de seguridad en la conexión';
         case DioExceptionType.unknown:
-        default:
           return 'Error de conexión - Revisa tu internet';
       }
     }
