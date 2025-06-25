@@ -61,8 +61,8 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       return paginated.results;
     } catch (e, st) {
       final errorMsg = _parseError(e);
-      state = AsyncValue.error(errorMsg, st);
-      return [];
+      // ✅ FIX: Propagar el error en lugar de retornar lista vacía
+      throw Exception(errorMsg);
     }
   }
 
@@ -118,7 +118,8 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       final initial = await _loadInitial();
       state = AsyncValue.data(initial);
     } catch (e, st) {
-      state = AsyncValue.error(_parseError(e), st);
+      // ✅ FIX: Propagar error correctamente
+      state = AsyncValue.error(e, st);
     }
   }
 
@@ -217,14 +218,17 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       state = AsyncValue.data(paginated.results);
     } catch (e, st) {
       if (_searchToken == currentToken) {
+        // ✅ FIX: Propagar error correctamente usando Exception
         final errorMsg = _parseError(e);
-        state = AsyncValue.error(errorMsg, st);
+        state = AsyncValue.error(Exception(errorMsg), st);
       }
     } finally {
       if (_searchToken == currentToken) {
         _isSearching = false;
-        // ✅ Rebuild para actualizar isSearching flag
-        state = AsyncValue.data([...?state.value]);
+        // ✅ Solo rebuild si no hay error
+        if (!state.hasError) {
+          state = AsyncValue.data([...?state.value]);
+        }
       }
     }
   }
@@ -237,8 +241,13 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
     } else {
       // Si estamos en lista inicial, recargar desde inicio
       state = const AsyncValue.loading();
-      final initial = await _loadInitial();
-      state = AsyncValue.data(initial);
+      try {
+        final initial = await _loadInitial();
+        state = AsyncValue.data(initial);
+      } catch (e, st) {
+        // ✅ FIX: Propagar error correctamente
+        state = AsyncValue.error(e, st);
+      }
     }
   }
 

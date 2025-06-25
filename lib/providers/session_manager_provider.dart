@@ -1,6 +1,7 @@
 // lib/providers/session_manager_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
+import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/providers/autos/registro_general_provider.dart';
 
 class SessionManager extends StateNotifier<String?> {
@@ -36,8 +37,16 @@ class SessionManager extends StateNotifier<String?> {
     ref.invalidate(asistenciaFormOptionsProvider);
     ref.invalidate(asistenciaStatusProvider);
 
-    //Autos
+    // ============================================================================
+    // PROVIDERS DE AUTOS - REGISTRO GENERAL
+    // ============================================================================
     ref.invalidate(registroGeneralProvider);
+
+    // ============================================================================
+    // PROVIDERS DE AUTOS - PEDETEO (TODOS LOS RELACIONADOS)
+    // ============================================================================
+    ref.invalidate(pedeteoOptionsProvider);
+    ref.invalidate(pedeteoStateProvider);
 
     // Invalidar otros providers de datos de usuario
     // ref.invalidate(perfilUsuarioProvider);

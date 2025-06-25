@@ -1,8 +1,4 @@
-// ===================================
-// 1. REEMPLAZAR lib/utils/image_processor.dart COMPLETAMENTE
-// ===================================
-
-// utils/image_processor.dart (VERSIÓN OPTIMIZADA COMPLETA)
+// utils/image_processor.dart (CÓDIGO COMPLETO FINAL)
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
@@ -179,7 +175,7 @@ img.Image _smartResize(img.Image original) {
   );
 }
 
-// Watermark optimizado
+// Watermark SIMPLE con estándar fijo
 img.Image _addWatermarkOptimized(
   img.Image original,
   img.Image logo,
@@ -187,18 +183,18 @@ img.Image _addWatermarkOptimized(
 ) {
   final processed = img.Image.from(original);
 
-  // 1. Logo proporcional y visible
-  final logoSize = (original.width * 0.12).round().clamp(100, 250);
+  // 1. Logo estándar 20% del ancho
+  final logoSize = (original.width * 0.20).round();
   final logoResized = img.copyResize(
     logo,
     width: logoSize,
     height: logoSize,
-    interpolation: img.Interpolation.linear,
+    interpolation: img.Interpolation.cubic,
   );
 
   // 2. Posición del logo (esquina superior derecha)
-  final logoX = original.width - logoResized.width - 20;
-  final logoY = 20;
+  final logoX = original.width - logoResized.width - 30;
+  final logoY = 30;
 
   // 3. Componer logo
   img.compositeImage(
@@ -209,30 +205,42 @@ img.Image _addWatermarkOptimized(
     blend: img.BlendMode.alpha,
   );
 
-  // 4. Timestamp en la esquina inferior derecha
-  final fontSize = _calculateFontSize(original.width);
-  final textWidth = (timestamp.length * fontSize * 0.6).round();
-  final textX = original.width - textWidth - 20;
-  final textY = original.height - fontSize - 20;
+  // 4. Timestamp ESTÁNDAR con arial48
+  final textPadding = -35;
+  final textHeight = 48;
+  final charWidth = 28.0;
+  final textWidth = (timestamp.length * charWidth).round();
 
-  // Agregar texto blanco
+  final textX = original.width - textWidth - textPadding;
+  final textY = original.height - textHeight;
+
+  // 5. Dibujar sombra negra estándar
+  for (int dx = -3; dx <= 3; dx++) {
+    for (int dy = -3; dy <= 3; dy++) {
+      if (dx != 0 || dy != 0) {
+        img.drawString(
+          processed,
+          timestamp,
+          font: img.arial48,
+          x: textX + dx,
+          y: textY + dy,
+          color: img.ColorRgb8(0, 0, 0),
+        );
+      }
+    }
+  }
+
+  // 6. Dibujar texto principal blanco
   img.drawString(
     processed,
     timestamp,
-    font: img.arial24,
+    font: img.arial48,
     x: textX,
     y: textY,
     color: img.ColorRgb8(255, 255, 255),
   );
 
   return processed;
-}
-
-int _calculateFontSize(int imageWidth) {
-  if (imageWidth >= 1400) return 32;
-  if (imageWidth >= 1000) return 28;
-  if (imageWidth >= 700) return 24;
-  return 20;
 }
 
 // Compresión inteligente

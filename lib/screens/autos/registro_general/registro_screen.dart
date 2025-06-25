@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/widgets/autos/card_detalle_registro_vin.dart';
 import 'package:stampcamera/widgets/vin_scanner_screen.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
+import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class RegistroScreen extends ConsumerStatefulWidget {
   const RegistroScreen({super.key});
@@ -112,46 +113,13 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
         ),
       ),
 
-      error: (error, stackTrace) =>
-          _buildErrorState(error.toString(), notifier),
+      // ✅ Usar ConnectionErrorScreen para manejo inteligente de errores
+      error: (error, stackTrace) => ConnectionErrorScreen(
+        error: error,
+        onRetry: () => notifier.refresh(),
+      ),
 
       data: (registros) => _buildDataState(registros, notifier),
-    );
-  }
-
-  Widget _buildErrorState(String error, RegistroGeneralNotifier notifier) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-          const SizedBox(height: 16),
-          Text(
-            'Error al cargar',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(color: Colors.red[700]),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              error,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => notifier.refresh(),
-            icon: const Icon(Icons.refresh),
-            label: const Text('Reintentar'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -1,6 +1,5 @@
 // lib/providers/autos/queue_state_provider.dart - OPTIMIZADO (reemplaza el actual)
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/services/registro_vin_service.dart';
 
 // ============================================================================

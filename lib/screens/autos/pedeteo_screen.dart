@@ -1,5 +1,5 @@
 // =====================================================
-// 1. screens/pedeteo_screen.dart (archivo principal simplificado)
+// screens/pedeteo_screen.dart - Con integración de ConnectionErrorScreen
 // =====================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +9,7 @@ import 'package:stampcamera/widgets/pedeteo/search_bar_widget.dart';
 import 'package:stampcamera/widgets/pedeteo/scanner_widget.dart';
 import 'package:stampcamera/widgets/pedeteo/registration_form_widget.dart';
 import 'package:stampcamera/widgets/pedeteo/empty_state_widget.dart';
+import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class PedeteoScreen extends ConsumerWidget {
   const PedeteoScreen({super.key});
@@ -37,8 +38,21 @@ class PedeteoScreen extends ConsumerWidget {
       );
     }
 
-    // Error state
+    // Error state - Distinguir entre error de conexión y otros errores
     if (optionsAsync.hasError) {
+      final error = optionsAsync.error!;
+
+      // Error state - Usar ConnectionErrorScreen que maneja la detección internamente
+      if (optionsAsync.hasError) {
+        return Scaffold(
+          body: ConnectionErrorScreen(
+            error: optionsAsync.error!,
+            onRetry: () => ref.invalidate(pedeteoOptionsProvider),
+          ),
+        );
+      }
+
+      // Para otros errores, mostrar pantalla de error genérica
       return Scaffold(
         body: Center(
           child: Column(
@@ -52,7 +66,7 @@ class PedeteoScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                '${optionsAsync.error}',
+                'Error: ${error.toString()}',
                 style: const TextStyle(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
@@ -67,6 +81,7 @@ class PedeteoScreen extends ConsumerWidget {
       );
     }
 
+    // Estado normal - Contenido principal
     return Scaffold(
       body: Column(
         children: [
