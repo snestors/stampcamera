@@ -1,13 +1,6 @@
 // lib/providers/autos/fotos_presentacion_provider.dart
-// 📸 PROVIDER OFFLINE-FIRST PARA FOTOS DE PRESENTACIÓN
-// ✅ Siguiendo patrón de PedeteoProvider
-// ✅ Integración con ReusableCameraCard
-// ✅ Queue management unificado
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stampcamera/models/autos/fotos_presentacion_model.dart';
-import 'package:stampcamera/services/fotos_presentacion_service.dart'
-    as service;
+import 'package:stampcamera/services/fotos_presentacion_service.dart';
 import 'package:stampcamera/providers/autos/queue_state_provider.dart';
 
 // ============================================================================
@@ -15,345 +8,405 @@ import 'package:stampcamera/providers/autos/queue_state_provider.dart';
 // ============================================================================
 
 /// Provider del servicio de fotos de presentación
-final fotosPresentacionServiceProvider =
-    Provider<service.FotosPresentacionService>((ref) {
-      return service.FotosPresentacionService();
-    });
+final fotosPresentacionServiceProvider = Provider<FotosPresentacionService>((
+  ref,
+) {
+  return FotosPresentacionService();
+});
 
 // ============================================================================
 // PROVIDER DE OPCIONES (CACHED)
 // ============================================================================
 
-/// Provider que obtiene las opciones del endpoint /options una sola vez
-/// Se mantiene en caché durante la sesión
+/// Provider que obtiene las opciones de tipos de fotos (una sola vez)
 final fotosOptionsProvider = FutureProvider<FotosOptions>((ref) async {
-  final serviceInstance = ref.read(fotosPresentacionServiceProvider);
-  final serviceOptions = await serviceInstance.getOptions();
-
-  // Convertir del modelo del servicio al modelo del provider
-  return FotosOptions(
-    tiposDisponibles: serviceOptions.tiposDisponibles.map((tipo) {
-      return TipoFotoOption(value: tipo.value, label: tipo.label);
-    }).toList(),
-  );
+  final service = ref.read(fotosPresentacionServiceProvider);
+  return await service.getOptions();
 });
 
-/// Provider que expone solo los tipos disponibles para widgets
+/// Provider que expone solo los tipos disponibles
 final tiposFotosDisponiblesProvider = Provider<List<TipoFotoOption>>((ref) {
   final optionsAsync = ref.watch(fotosOptionsProvider);
   return optionsAsync.value?.tiposDisponibles ?? [];
 });
 
 // ============================================================================
-// PROVIDER PRINCIPAL DE FOTOS POR REGISTRO VIN
+// PROVIDER PRINCIPAL DE FOTOS
 // ============================================================================
 
-/// Provider que maneja las fotos de un registro VIN específico
-/// Patrón AsyncNotifier para datos del backend con estado offline-first
-final fotosPorRegistroProvider =
-    AsyncNotifierProvider.family<
-      FotosPresentacionNotifier,
-      List<FotoPresentacion>,
-      int
-    >(() => FotosPresentacionNotifier());
+/// Provider principal que maneja el estado de fotos de presentación
+final fotosPresentacionStateProvider =
+    StateNotifierProvider<FotosPresentacionNotifier, FotosPresentacionState>((
+      ref,
+    ) {
+      return FotosPresentacionNotifier(ref);
+    });
 
-class FotosPresentacionNotifier
-    extends FamilyAsyncNotifier<List<FotoPresentacion>, int> {
-  late service.FotosPresentacionService _service;
+// ============================================================================
+// ESTADO DEL PROVIDER
+// ============================================================================
 
-  @override
-  Future<List<FotoPresentacion>> build(int registroVinId) async {
-    // Keepalive para mantener en caché
-    ref.keepAlive();
+class FotosPresentacionState {
+  final int? selectedRegistroVinId;
+  final bool isUploading;
+  final String? errorMessage;
+  final String? successMessage;
+  final Map<String, dynamic> uploadProgress; // {"foto_1": 0.5, "foto_2": 1.0}
 
-    // Inicializar servicio
-    _service = ref.read(fotosPresentacionServiceProvider);
+  const FotosPresentacionState({
+    this.selectedRegistroVinId,
+    this.isUploading = false,
+    this.errorMessage,
+    this.successMessage,
+    this.uploadProgress = const {},
+  });
 
-    // TODO: Aquí irían las fotos del backend si hay endpoint de listado
-    // Por ahora retornamos lista vacía ya que el servicio se enfoca en creación
-    return <FotoPresentacion>[];
+  FotosPresentacionState copyWith({
+    int? selectedRegistroVinId,
+    bool? isUploading,
+    String? errorMessage,
+    String? successMessage,
+    Map<String, dynamic>? uploadProgress,
+    bool clearSelectedVin = false,
+    bool clearError = false,
+    bool clearSuccess = false,
+    bool clearProgress = false,
+  }) {
+    return FotosPresentacionState(
+      selectedRegistroVinId: clearSelectedVin
+          ? null
+          : (selectedRegistroVinId ?? this.selectedRegistroVinId),
+      isUploading: isUploading ?? this.isUploading,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      successMessage: clearSuccess
+          ? null
+          : (successMessage ?? this.successMessage),
+      uploadProgress: clearProgress
+          ? {}
+          : (uploadProgress ?? this.uploadProgress),
+    );
+  }
+
+  /// Helper: ¿Está en progreso alguna subida?
+  bool get hasActiveUploads => uploadProgress.isNotEmpty;
+
+  /// Helper: ¿Hay un registro seleccionado?
+  bool get hasSelectedRegistro => selectedRegistroVinId != null;
+}
+
+// ============================================================================
+// NOTIFIER PRINCIPAL
+// ============================================================================
+
+class FotosPresentacionNotifier extends StateNotifier<FotosPresentacionState> {
+  final Ref ref;
+
+  FotosPresentacionNotifier(this.ref) : super(const FotosPresentacionState());
+
+  // ============================================================================
+  // MÉTODO DE CONFIGURACIÓN
+  // ============================================================================
+
+  /// Seleccionar registro VIN para trabajar
+  void selectRegistroVin(int registroVinId) {
+    state = state.copyWith(
+      selectedRegistroVinId: registroVinId,
+      clearError: true,
+      clearSuccess: true,
+    );
+  }
+
+  /// Limpiar registro seleccionado
+  void clearSelectedRegistro() {
+    state = state.copyWith(
+      clearSelectedVin: true,
+      clearError: true,
+      clearSuccess: true,
+    );
   }
 
   // ============================================================================
-  // MÉTODOS OFFLINE-FIRST
+  // MÉTODOS OFFLINE-FIRST (AMBOS ENFOQUES)
   // ============================================================================
 
-  /// Agregar una foto individual offline-first
-  /// Se integra perfectamente con ReusableCameraCard
-  Future<bool> addFoto({
+  /// Agregar foto individual (offline-first) para un registro específico
+  Future<void> addFotoOfflineFirst({
+    required int registroVinId,
     required String tipo,
     required String imagenPath,
     String? nDocumento,
   }) async {
-    try {
-      // Actualizar estado a loading
-      state = const AsyncLoading();
+    state = state.copyWith(
+      isUploading: true,
+      clearError: true,
+      clearSuccess: true,
+    );
 
-      // Usar método offline-first del servicio
-      final success = await _service.createFotoOfflineFirst(
-        registroVinId: arg,
+    try {
+      final service = ref.read(fotosPresentacionServiceProvider);
+
+      final success = await service.createFotoOfflineFirst(
+        registroVinId: registroVinId,
         tipo: tipo,
         imagenPath: imagenPath,
         nDocumento: nDocumento,
       );
 
       if (success) {
-        // Refrescar el provider unificado de cola
+        // Refrescar estado de queue
         ref.read(queueStateProvider.notifier).refreshState();
 
-        // Recargar fotos (esto podría optimizarse con estado local)
-        state = await AsyncValue.guard(() => build(arg));
+        state = state.copyWith(
+          isUploading: false,
+          successMessage:
+              'Foto guardada exitosamente. Se enviará automáticamente.',
+        );
 
-        return true;
+        // Auto-limpiar mensaje después de 2 segundos
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            state = state.copyWith(clearSuccess: true);
+          }
+        });
       } else {
-        state = AsyncError('Error al guardar la foto', StackTrace.current);
-        return false;
+        state = state.copyWith(
+          isUploading: false,
+          errorMessage: 'Error al guardar la foto',
+        );
       }
-    } catch (e, stackTrace) {
-      state = AsyncError(e, stackTrace);
-      return false;
+    } catch (e) {
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      state = state.copyWith(isUploading: false, errorMessage: errorMessage);
     }
   }
 
-  /// Agregar múltiples fotos offline-first
-  /// Útil para subida masiva desde galería
-  Future<bool> addMultipleFotos(List<FotoCreate> fotos) async {
+  /// Agregar foto al registro seleccionado (enfoque con estado)
+  Future<void> addFotoToSelected({
+    required String tipo,
+    required String imagenPath,
+    String? nDocumento,
+  }) async {
+    if (state.selectedRegistroVinId == null) {
+      state = state.copyWith(
+        errorMessage: 'Debe seleccionar un registro VIN primero',
+      );
+      return;
+    }
+
+    await addFotoOfflineFirst(
+      registroVinId: state.selectedRegistroVinId!,
+      tipo: tipo,
+      imagenPath: imagenPath,
+      nDocumento: nDocumento,
+    );
+  }
+
+  /// Agregar múltiples fotos (offline-first) para un registro específico
+  Future<void> addMultipleFotosOfflineFirst({
+    required int registroVinId,
+    required List<FotoCreate> fotos,
+  }) async {
+    state = state.copyWith(
+      isUploading: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+
     try {
-      state = const AsyncLoading();
+      final service = ref.read(fotosPresentacionServiceProvider);
 
-      // Convertir modelos del provider a modelos del servicio
-      final serviceFotos = fotos.map((foto) {
-        return service.FotoCreate(
-          tipo: foto.tipo,
-          imagenPath: foto.imagenPath,
-          nDocumento: foto.nDocumento,
-        );
-      }).toList();
-
-      final success = await _service.createMultipleFotosOfflineFirst(
-        registroVinId: arg,
-        fotos: serviceFotos,
+      final success = await service.createMultipleFotosOfflineFirst(
+        registroVinId: registroVinId,
+        fotos: fotos,
       );
 
       if (success) {
-        // Refrescar queue state
+        // Refrescar estado de queue
         ref.read(queueStateProvider.notifier).refreshState();
 
-        // Recargar fotos
-        state = await AsyncValue.guard(() => build(arg));
+        state = state.copyWith(
+          isUploading: false,
+          successMessage:
+              '${fotos.length} fotos guardadas exitosamente. Se enviarán automáticamente.',
+        );
 
-        return true;
+        // Auto-limpiar mensaje después de 2 segundos
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            state = state.copyWith(clearSuccess: true);
+          }
+        });
       } else {
-        state = AsyncError('Error al guardar las fotos', StackTrace.current);
-        return false;
+        state = state.copyWith(
+          isUploading: false,
+          errorMessage: 'Error al guardar las fotos',
+        );
       }
-    } catch (e, stackTrace) {
-      state = AsyncError(e, stackTrace);
-      return false;
-    }
-  }
-
-  /// Método de conveniencia para ReusableCameraCard
-  /// Callback directo que puede usarse en onImageSelected
-  Future<void> onCameraImageSelected({
-    required String imagePath,
-    required String tipoFoto,
-    String? numeroDocumento,
-  }) async {
-    await addFoto(
-      tipo: tipoFoto,
-      imagenPath: imagePath,
-      nDocumento: numeroDocumento,
-    );
-  }
-}
-
-// ============================================================================
-// PROVIDER DE ESTADO DE CARGA ESPECÍFICO
-// ============================================================================
-
-/// Provider que maneja estados específicos para la UI
-final fotosUiStateProvider =
-    StateNotifierProvider.family<FotosUiStateNotifier, FotosUiState, int>((
-      ref,
-      registroVinId,
-    ) {
-      return FotosUiStateNotifier(registroVinId, ref);
-    });
-
-class FotosUiState {
-  final bool isUploading;
-  final int pendingCount;
-  final String? currentTipoSeleccionado;
-  final String? errorMessage;
-  final String? successMessage;
-  final Map<String, String?> capturedImages; // tipo -> path
-
-  const FotosUiState({
-    this.isUploading = false,
-    this.pendingCount = 0,
-    this.currentTipoSeleccionado,
-    this.errorMessage,
-    this.successMessage,
-    this.capturedImages = const {},
-  });
-
-  FotosUiState copyWith({
-    bool? isUploading,
-    int? pendingCount,
-    String? currentTipoSeleccionado,
-    String? errorMessage,
-    String? successMessage,
-    Map<String, String?>? capturedImages,
-    bool clearError = false,
-    bool clearSuccess = false,
-    bool clearTipoSeleccionado = false,
-  }) {
-    return FotosUiState(
-      isUploading: isUploading ?? this.isUploading,
-      pendingCount: pendingCount ?? this.pendingCount,
-      currentTipoSeleccionado: clearTipoSeleccionado
-          ? null
-          : (currentTipoSeleccionado ?? this.currentTipoSeleccionado),
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      successMessage: clearSuccess
-          ? null
-          : (successMessage ?? this.successMessage),
-      capturedImages: capturedImages ?? this.capturedImages,
-    );
-  }
-}
-
-class FotosUiStateNotifier extends StateNotifier<FotosUiState> {
-  final int registroVinId;
-  final Ref ref;
-
-  FotosUiStateNotifier(this.registroVinId, this.ref)
-    : super(const FotosUiState());
-
-  /// Seleccionar tipo de foto actual para ReusableCameraCard
-  void selectTipoFoto(String tipo) {
-    state = state.copyWith(currentTipoSeleccionado: tipo);
-  }
-
-  /// Limpiar tipo seleccionado
-  void clearTipoSeleccionado() {
-    state = state.copyWith(clearTipoSeleccionado: true);
-  }
-
-  /// Agregar imagen capturada localmente (para preview)
-  void addCapturedImage(String tipo, String imagePath) {
-    final newImages = Map<String, String?>.from(state.capturedImages);
-    newImages[tipo] = imagePath;
-    state = state.copyWith(capturedImages: newImages);
-  }
-
-  /// Remover imagen capturada
-  void removeCapturedImage(String tipo) {
-    final newImages = Map<String, String?>.from(state.capturedImages);
-    newImages.remove(tipo);
-    state = state.copyWith(capturedImages: newImages);
-  }
-
-  /// Actualizar estado desde queue manager - ahora usando FutureProvider
-  Future<void> updateFromQueue() async {
-    try {
-      final service = ref.read(fotosPresentacionServiceProvider);
-      final pendingCount = await service.getPendingCount();
-      state = state.copyWith(pendingCount: pendingCount);
     } catch (e) {
-      // No hacer nada si falla, el conteo se actualiza desde otro provider
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      state = state.copyWith(isUploading: false, errorMessage: errorMessage);
     }
   }
 
-  /// Mostrar mensaje de éxito
-  void showSuccess(String message) {
-    state = state.copyWith(successMessage: message);
+  /// Agregar múltiples fotos al registro seleccionado
+  Future<void> addMultipleFotosToSelected({
+    required List<FotoCreate> fotos,
+  }) async {
+    if (state.selectedRegistroVinId == null) {
+      state = state.copyWith(
+        errorMessage: 'Debe seleccionar un registro VIN primero',
+      );
+      return;
+    }
 
-    // Auto limpiar después de 3 segundos
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        state = state.copyWith(clearSuccess: true);
-      }
-    });
+    await addMultipleFotosOfflineFirst(
+      registroVinId: state.selectedRegistroVinId!,
+      fotos: fotos,
+    );
   }
 
-  /// Mostrar mensaje de error
-  void showError(String message) {
-    state = state.copyWith(errorMessage: message);
-  }
+  // ============================================================================
+  // MÉTODOS DE LIMPIEZA Y UTILIDAD
+  // ============================================================================
 
-  /// Limpiar error
+  /// Limpiar mensajes de error
   void clearError() {
     state = state.copyWith(clearError: true);
   }
 
-  /// Reset completo del estado
-  void reset() {
-    state = const FotosUiState();
+  /// Limpiar mensajes de éxito
+  void clearSuccess() {
+    state = state.copyWith(clearSuccess: true);
+  }
+
+  /// Limpiar todo el estado
+  void resetState() {
+    state = const FotosPresentacionState();
+  }
+
+  // ============================================================================
+  // HELPER METHODS PARA WIDGETS (AMBOS ENFOQUES)
+  // ============================================================================
+
+  /// Método helper genérico para ReusableCameraCard (con parámetro)
+  Future<void> addFotoWithType({
+    required int registroVinId,
+    required String tipo,
+    required String imagenPath,
+    String? nDocumento,
+  }) async {
+    await addFotoOfflineFirst(
+      registroVinId: registroVinId,
+      tipo: tipo,
+      imagenPath: imagenPath,
+      nDocumento: nDocumento,
+    );
+  }
+
+  /// Método helper para widgets que usan selectedRegistroVinId
+  Future<void> addFotoWithTypeToSelected({
+    required String tipo,
+    required String imagenPath,
+    String? nDocumento,
+  }) async {
+    await addFotoToSelected(
+      tipo: tipo,
+      imagenPath: imagenPath,
+      nDocumento: nDocumento,
+    );
+  }
+
+  /// Helper para validar si un tipo está disponible
+  bool isTipoDisponible(String tipo) {
+    final tiposDisponibles = ref.read(tiposFotosDisponiblesProvider);
+    return tiposDisponibles.any((t) => t.value == tipo);
+  }
+
+  /// Helper para obtener el label de un tipo
+  String? getLabelForTipo(String tipo) {
+    final tiposDisponibles = ref.read(tiposFotosDisponiblesProvider);
+    final tipoOption = tiposDisponibles
+        .where((t) => t.value == tipo)
+        .firstOrNull;
+    return tipoOption?.label;
   }
 }
 
 // ============================================================================
-// PROVIDERS DE CONVENIENCIA PARA WIDGETS
+// PROVIDERS DERIVADOS PARA WIDGETS ESPECÍFICOS
 // ============================================================================
 
-/// Provider que obtiene el conteo específico de fotos pendientes usando UnifiedQueueService
-final fotosPendientesCountProvider = FutureProvider.family<int, int>((
+/// Provider que expone si hay fotos cargando
+final fotosIsUploadingProvider = Provider<bool>((ref) {
+  final state = ref.watch(fotosPresentacionStateProvider);
+  return state.isUploading;
+});
+
+/// Provider que expone si hay mensajes de error
+final fotosHasErrorProvider = Provider<bool>((ref) {
+  final state = ref.watch(fotosPresentacionStateProvider);
+  return state.errorMessage != null;
+});
+
+/// Provider que expone si hay un registro seleccionado
+final fotosHasSelectedRegistroProvider = Provider<bool>((ref) {
+  final state = ref.watch(fotosPresentacionStateProvider);
+  return state.hasSelectedRegistro;
+});
+
+/// Provider que expone el ID del registro seleccionado
+final fotosSelectedRegistroIdProvider = Provider<int?>((ref) {
+  final state = ref.watch(fotosPresentacionStateProvider);
+  return state.selectedRegistroVinId;
+});
+
+/// Provider para obtener el primer tipo disponible (útil como default)
+final defaultTipoFotoProvider = Provider<String?>((ref) {
+  final tipos = ref.watch(tiposFotosDisponiblesProvider);
+  return tipos.isNotEmpty ? tipos.first.value : null;
+});
+
+/// Provider que expone los tipos como Map<String, String> para dropdowns
+final tiposFotosMapProvider = Provider<Map<String, String>>((ref) {
+  final tipos = ref.watch(tiposFotosDisponiblesProvider);
+  return {for (var tipo in tipos) tipo.value: tipo.label};
+});
+
+// ============================================================================
+// PROVIDER ESPECÍFICO PARA REGISTRO VIN (FAMILY)
+// ============================================================================
+
+/// Provider para el estado de fotos de un registro VIN específico
+/// Mantiene track de las fotos locales por registro
+final fotosForRegistroProvider = StateProvider.family<List<String>, int>((
   ref,
   registroVinId,
-) async {
-  final serviceInstance = ref.read(fotosPresentacionServiceProvider);
-  return await serviceInstance.getPendingCount();
-});
-
-/// Provider que verifica si una foto específica está en cola
-final fotoTipoEstaPendienteProvider = Provider.family<bool, (int, String)>((
-  ref,
-  params,
 ) {
-  final (registroVinId, tipo) = params;
-  final uiState = ref.watch(fotosUiStateProvider(registroVinId));
-  return uiState.capturedImages.containsKey(tipo);
+  // Lista de paths de fotos para un registro específico
+  return <String>[];
 });
 
-/// Provider que combina el estado de las fotos con las opciones disponibles
-final fotosCompleteStateProvider = Provider.family<FotosCompleteState, int>((
-  ref,
-  registroVinId,
-) {
-  final fotosAsync = ref.watch(fotosPorRegistroProvider(registroVinId));
-  final optionsAsync = ref.watch(fotosOptionsProvider);
-  final uiState = ref.watch(fotosUiStateProvider(registroVinId));
+/// Provider simplificado para agregar foto directamente a un registro específico
+final addFotoDirectProvider =
+    Provider.family<
+      Future<void> Function(String, String, {String? nDocumento}),
+      int
+    >((ref, registroVinId) {
+      return (String tipo, String imagenPath, {String? nDocumento}) async {
+        // Usar el notifier principal pero con el registroVinId específico
+        await ref
+            .read(fotosPresentacionStateProvider.notifier)
+            .addFotoWithType(
+              registroVinId: registroVinId,
+              tipo: tipo,
+              imagenPath: imagenPath,
+              nDocumento: nDocumento,
+            );
 
-  // Obtener pending count de forma síncrona desde el queue state general
-  final queueState = ref.watch(queueStateProvider);
-
-  return FotosCompleteState(
-    fotos: fotosAsync.value ?? [],
-    tiposDisponibles: optionsAsync.value?.tiposDisponibles ?? [],
-    isLoading: fotosAsync.isLoading || optionsAsync.isLoading,
-    error: fotosAsync.error ?? optionsAsync.error,
-    uiState: uiState.copyWith(pendingCount: queueState.pendingCount),
-  );
-});
-
-class FotosCompleteState {
-  final List<FotoPresentacion> fotos;
-  final List<TipoFotoOption> tiposDisponibles;
-  final bool isLoading;
-  final Object? error;
-  final FotosUiState uiState;
-
-  const FotosCompleteState({
-    required this.fotos,
-    required this.tiposDisponibles,
-    required this.isLoading,
-    this.error,
-    required this.uiState,
-  });
-
-  bool get hasError => error != null;
-  bool get hasFotos => fotos.isNotEmpty;
-  int get totalFotos => fotos.length + uiState.capturedImages.length;
-}
+        // Agregar a la lista local para tracking
+        final currentFotos = ref.read(
+          fotosForRegistroProvider(registroVinId).notifier,
+        );
+        currentFotos.state = [...currentFotos.state, imagenPath];
+      };
+    });

@@ -16,7 +16,8 @@ Future<void> main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   cameras = await availableCameras();
-  await warmUpImageProcessor();
+
+  await initializeImageProcessor();
   // ✅ AGREGAR ESTA LÍNEA
   BackgroundQueueService().start();
   FlutterNativeSplash.remove();

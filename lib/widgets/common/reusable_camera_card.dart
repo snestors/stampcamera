@@ -382,44 +382,103 @@ class ReusableCameraCard extends StatelessWidget {
         imageQuality: 90,
       );
 
-      if (image != null) {
-        // Mostrar diálogo de procesamiento
-        if (context.mounted) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => const AlertDialog(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Procesando imagen...'),
-                ],
+      if (image != null && context.mounted) {
+        // Preguntar si quiere marcar la imagen
+        final bool? quiereMarcar = await _preguntarSiMarcar(context);
+
+        if (quiereMarcar != null) {
+          // Mostrar diálogo de procesamiento
+          if (context.mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => AlertDialog(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(
+                      quiereMarcar
+                          ? 'Marcando imagen...'
+                          : 'Comprimiendo imagen...',
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }
+            );
+          }
 
-        // Procesar imagen
-        final processedPath = await processAndSaveImage(image.path);
+          String processedPath;
+          if (quiereMarcar) {
+            // Configuración con marcas (sin GPS)
+            final config = WatermarkConfig(
+              showLogo: true,
+              showTimestamp: true,
+              showLocation: false,
+              logoPosition: WatermarkPosition.topRight,
+              timestampPosition: WatermarkPosition.bottomRight,
+              compressionQuality: 95,
+              timestampFontSize: FontSize.large,
+            );
 
-        // Cerrar diálogo
-        if (context.mounted) {
-          Navigator.of(context).pop();
-          onImageSelected(processedPath);
+            processedPath = await processImageWithWatermark(
+              image.path,
+              config: config,
+              autoGPS: false,
+            );
+          } else {
+            // Solo compresión
+            final config = WatermarkConfig(
+              showLogo: false,
+              showTimestamp: false,
+              showLocation: false,
+              compressionQuality: 95,
+            );
+
+            processedPath = await processImageWithWatermark(
+              image.path,
+              config: config,
+            );
+          }
+
+          // Cerrar diálogo
+          if (context.mounted) {
+            Navigator.of(context).pop();
+            onImageSelected(processedPath);
+          }
         }
       }
     } catch (e) {
       if (context.mounted) {
-        // Cerrar diálogo si está abierto
-        Navigator.of(context).pop();
-
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al seleccionar imagen: $e')),
         );
       }
     }
+  }
+
+  Future<bool?> _preguntarSiMarcar(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Marcar imagen'),
+        content: const Text('¿Deseas agregar logo y timestamp?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No, solo comprimir'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Sí, marcar'),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Muestra la imagen en pantalla completa con zoom
@@ -527,8 +586,23 @@ class _CameraModalState extends State<_CameraModal> {
       // 1. Capturar imagen
       final image = await _cameraController!.takePicture();
 
-      // 2. Procesar con logo y obtener path directamente (más eficiente)
-      final processedImagePath = await processAndSaveImage(image.path);
+      final config = WatermarkConfig(
+        showLogo: true,
+        showTimestamp: true,
+        showLocation: true,
+        logoPosition: WatermarkPosition.topRight,
+        timestampPosition: WatermarkPosition.bottomRight,
+        locationPosition: WatermarkPosition.bottomLeft, // GPS abajo izquierda
+        compressionQuality: 95,
+        timestampFontSize: FontSize.medium,
+        locationFontSize: FontSize.small, // Posiciones fijas
+      );
+
+      final processedImagePath = await processImageWithWatermark(
+        image.path,
+        config: config,
+        autoGPS: true,
+      );
 
       // 3. Actualizar estado con imagen procesada
       if (mounted) {

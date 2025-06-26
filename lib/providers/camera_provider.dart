@@ -44,6 +44,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
     controller = CameraController(
       _camera,
       ResolutionPreset.veryHigh,
+
       imageFormatGroup: ImageFormatGroup.jpeg,
     );
     await controller.initialize();
@@ -68,7 +69,19 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
   Future<void> _processInBackground(String path) async {
     try {
-      await processAndSaveImage(path);
+      final config = WatermarkConfig(
+        showLogo: true,
+        showTimestamp: true,
+        showLocation: true,
+        logoPosition: WatermarkPosition.topRight,
+        timestampPosition: WatermarkPosition.bottomRight,
+        locationPosition: WatermarkPosition.bottomRight, // GPS abajo izquierda
+        compressionQuality: 88,
+        timestampFontSize: FontSize.large,
+        locationFontSize: FontSize.large, // Posiciones fijas
+      );
+      await processImageWithWatermark(path, config: config, autoGPS: true);
+
       await _loadImages();
 
       // 🔁 Fuerza notificación de cambio (aunque no cambie nada)
