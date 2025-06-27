@@ -30,7 +30,7 @@ class DetalleRegistroCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ Header con VIN y Serie
+            // ✅ Header con VIN y Serie + HERO
             _buildHeader(r),
 
             const SizedBox(height: 12),
@@ -54,69 +54,97 @@ class DetalleRegistroCard extends StatelessWidget {
   }
 
   Widget _buildHeader(RegistroGeneral r) {
-    return Row(
-      children: [
-        // VIN principal
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                r.vin,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF003B5C), // Color corporativo para VIN
-                ),
-              ),
-              if (r.serie != null && r.serie!.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(
-                      0xFF00B4D8,
-                    ).withValues(alpha: 0.1), // Secundario corporativo
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF00B4D8).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    'Serie: ${r.serie}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF00B4D8), // Secundario corporativo
-                      fontWeight: FontWeight.w500,
-                    ),
+    return Material(
+      type: MaterialType.transparency,
+      child: Row(
+        children: [
+          // VIN principal
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  r.vin,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF003B5C), // Color corporativo para VIN
                   ),
                 ),
+                if (r.serie != null && r.serie!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(
+                        0xFF00B4D8,
+                      ).withValues(alpha: 0.1), // Secundario corporativo
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF00B4D8).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      'Serie: ${r.serie}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF00B4D8), // Secundario corporativo
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
 
-        // Icono indicativo
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(
-              0xFF003B5C,
-            ).withValues(alpha: 0.1), // Fondo corporativo
-            borderRadius: BorderRadius.circular(8),
+          // Icono indicativo (camión o auto según marca)
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(
+                0xFF003B5C,
+              ).withValues(alpha: 0.1), // Fondo corporativo
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Hero(
+              tag: 'vin_header_${r.vin}', // Mismo tag que en detalle,
+              child: _buildBrandIcon(r.marca ?? 'N/A'),
+            ),
           ),
-          child: const Icon(
-            Icons.directions_car,
-            color: Color(0xFF003B5C), // Icono corporativo
-            size: 20,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  // ============================================================================
+  // 🚛🚗 MÉTODO PARA ÍCONO SEGÚN TIPO DE VEHÍCULO
+  // ============================================================================
+  Widget _buildBrandIcon(String marca) {
+    // Marcas que son principalmente camiones/comerciales
+    final truckBrands = {
+      'HINO', 'FUSO', 'T-KING', 'UD TRUCKS', 'JAC PESADO', 'KOMATSU',
+      'JAC', // JAC también maneja comerciales
+    };
+
+    if (truckBrands.contains(marca.toUpperCase())) {
+      return const Icon(
+        Icons.local_shipping, // Camión
+        color: Color(0xFF003B5C),
+        size: 20,
+      );
+    } else {
+      // Default para autos
+      return const Icon(
+        Icons.directions_car, // Auto
+        color: Color(0xFF003B5C),
+        size: 20,
+      );
+    }
   }
 
   Widget _buildVehicleInfo(RegistroGeneral r) {

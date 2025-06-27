@@ -33,7 +33,6 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
   @override
   Future<List<RegistroGeneral>> build() async {
     // ✅ KeepAlive para mantener datos en memoria durante la sesión
-    ref.keepAlive();
 
     return await _loadInitial();
   }
@@ -59,7 +58,7 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
       _isSearching = false;
 
       return paginated.results;
-    } catch (e, st) {
+    } catch (e) {
       final errorMsg = _parseError(e);
       // ✅ FIX: Propagar el error en lugar de retornar lista vacía
       throw Exception(errorMsg);
@@ -249,6 +248,18 @@ class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
         state = AsyncValue.error(e, st);
       }
     }
+  }
+
+  void clearAll() {
+    _nextUrl = null;
+    _searchNextUrl = null;
+    _searchQuery = null;
+    _isLoadingMore = false;
+    _isSearching = false;
+    _searchToken = 0;
+
+    // Resetear a loading state
+    state = const AsyncValue.loading();
   }
 
   // ✅ Forzar invalidación - para cambios de permisos

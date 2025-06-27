@@ -439,6 +439,7 @@ class ReusableCameraCard extends StatelessWidget {
             processedPath = await processImageWithWatermark(
               image.path,
               config: config,
+              autoGPS: false,
             );
           }
 
@@ -562,7 +563,7 @@ class _CameraModalState extends State<_CameraModal> {
       if (cameras.isNotEmpty) {
         _cameraController = CameraController(
           cameras.first,
-          ResolutionPreset.veryHigh,
+          ResolutionPreset.high,
           imageFormatGroup: ImageFormatGroup.jpeg,
         );
         await _cameraController!.initialize();
@@ -594,14 +595,13 @@ class _CameraModalState extends State<_CameraModal> {
         timestampPosition: WatermarkPosition.bottomRight,
         locationPosition: WatermarkPosition.bottomLeft, // GPS abajo izquierda
         compressionQuality: 95,
-        timestampFontSize: FontSize.medium,
-        locationFontSize: FontSize.small, // Posiciones fijas
+        timestampFontSize: FontSize.large,
       );
 
       final processedImagePath = await processImageWithWatermark(
         image.path,
         config: config,
-        autoGPS: true,
+        autoGPS: false,
       );
 
       // 3. Actualizar estado con imagen procesada

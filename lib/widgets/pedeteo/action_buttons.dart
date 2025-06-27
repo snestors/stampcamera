@@ -63,10 +63,37 @@ class ActionButtons extends ConsumerWidget {
     final state = ref.read(pedeteoStateProvider);
 
     if (state.errorMessage != null) {
-      messenger.showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+      messenger.showSnackBar(
+        SnackBar(
+          backgroundColor: const Color.fromARGB(
+            255,
+            150,
+            5,
+            5,
+          ), // Verde corporativo
+          content: Text(state.errorMessage!),
+        ),
+      );
     } else {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Registro guardado exitosamente')),
+        SnackBar(
+          content: const Text(
+            'Registro guardado exitosamente',
+            style: TextStyle(
+              fontSize: 12, // Más pequeño
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          backgroundColor: const Color(0xFF059669), // Verde corporativo
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ), // Más compacto
+          duration: const Duration(seconds: 2),
+        ),
       );
     }
   }
