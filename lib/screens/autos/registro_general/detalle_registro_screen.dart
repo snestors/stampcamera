@@ -46,9 +46,12 @@ class DetalleRegistroScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.zero, // Cuadrado sin bordes
       ),
-      title: Text(
-        vin,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      title: Hero(
+        tag: 'vin_appbar_$vin',
+        child: Text(
+          vin,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
       ),
       actions: [
         IconButton(

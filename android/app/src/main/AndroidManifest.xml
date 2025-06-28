@@ -14,7 +14,7 @@
 
 
     <application
-        android:label="A&amp;G Cámara"
+        android:label="A&amp;G"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
        

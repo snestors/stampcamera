@@ -1,269 +1,167 @@
-import 'package:flutter/material.dart';
+// lib/providers/autos/registro_general_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stampcamera/utils/debouncer.dart';
-import 'package:dio/dio.dart';
+import 'package:stampcamera/core/base_provider_imp.dart';
+import 'package:stampcamera/utils/error_parse.dart';
 import '../../models/autos/registro_general_model.dart';
-import '../../models/paginated_response.dart';
-import '../../services/http_service.dart';
+import '../../services/autos/registro_general_service.dart';
+
+// ============================================================================
+// PROVIDER DEL SERVICIO
+// ============================================================================
+
+final registroGeneralServiceProvider = Provider<RegistroGeneralService>((ref) {
+  return RegistroGeneralService();
+});
+
+// ============================================================================
+// PROVIDER PRINCIPAL DE LISTA
+// ============================================================================
 
 final registroGeneralProvider =
     AsyncNotifierProvider<RegistroGeneralNotifier, List<RegistroGeneral>>(
       RegistroGeneralNotifier.new,
     );
 
-class RegistroGeneralNotifier extends AsyncNotifier<List<RegistroGeneral>> {
-  String? _nextUrl;
-  String? _searchNextUrl;
-  String? _searchQuery;
-  bool _isLoadingMore = false;
-  bool _isSearching = false;
-  int _searchToken = 0;
-  final _debouncer = Debouncer();
-
-  // ✅ Getters públicos para el UI
-  bool get isSearching => _isSearching;
-  bool get isLoadingMore => _isLoadingMore;
-  bool get hasNextPage {
-    if (_searchQuery != null) {
-      return _searchNextUrl != null;
-    }
-    return _nextUrl != null;
-  }
-
+class RegistroGeneralNotifier extends BaseListProviderImpl<RegistroGeneral> {
   @override
-  Future<List<RegistroGeneral>> build() async {
-    // ✅ KeepAlive para mantener datos en memoria durante la sesión
-
-    return await _loadInitial();
-  }
+  RegistroGeneralService get service =>
+      ref.read(registroGeneralServiceProvider);
 
   // ============================================================================
-  // MÉTODOS PRIVADOS - CORE FUNCTIONALITY
+  // MÉTODOS ESPECÍFICOS DEL DOMINIO
   // ============================================================================
 
-  Future<List<RegistroGeneral>> _loadInitial() async {
-    try {
-      final res = await HttpService().dio.get(
-        '/api/v1/autos/registro-general/',
-      );
-
-      final paginated = PaginatedResponse<RegistroGeneral>.fromJson(
-        res.data,
-        RegistroGeneral.fromJson,
-      );
-
-      _nextUrl = paginated.next;
-      _searchQuery = null;
-      _searchNextUrl = null;
-      _isSearching = false;
-
-      return paginated.results;
-    } catch (e) {
-      final errorMsg = _parseError(e);
-      // ✅ FIX: Propagar el error en lugar de retornar lista vacía
-      throw Exception(errorMsg);
-    }
-  }
-
-  // ✅ Manejo específico de errores de red
-  String _parseError(dynamic error) {
-    if (error is DioException) {
-      switch (error.type) {
-        case DioExceptionType.connectionTimeout:
-          return 'Conexión lenta - Revisa tu internet y vuelve a intentar';
-        case DioExceptionType.receiveTimeout:
-          return 'El servidor tardó demasiado en responder';
-        case DioExceptionType.sendTimeout:
-          return 'Error enviando datos - Revisa tu conexión';
-        case DioExceptionType.badResponse:
-          final status = error.response?.statusCode;
-          if (status == 401) {
-            return 'Sesión expirada - Vuelve a iniciar sesión';
-          } else if (status == 403) {
-            return 'No tienes permisos para ver estos registros';
-          } else if (status == 404) {
-            return 'Servicio no encontrado';
-          } else if (status != null && status >= 500) {
-            return 'Error del servidor - Intenta más tarde';
-          }
-          return 'Error del servidor (${status ?? 'desconocido'})';
-        case DioExceptionType.cancel:
-          return 'Operación cancelada';
-        case DioExceptionType.connectionError:
-          return 'Sin conexión a internet';
-        case DioExceptionType.badCertificate:
-          return 'Error de seguridad en la conexión';
-        case DioExceptionType.unknown:
-          return 'Error de conexión - Revisa tu internet';
-      }
-    }
-    return 'Error inesperado: ${error.toString()}';
-  }
-
-  // ============================================================================
-  // MÉTODOS PÚBLICOS - API PARA EL UI
-  // ============================================================================
-
-  // ✅ Limpiar búsqueda y volver a lista inicial
-  Future<void> clearSearch() async {
-    if (_searchQuery == null) return; // Ya está en modo inicial
-
+  /// Buscar registros con daños
+  Future<void> searchWithDanos({Map<String, dynamic>? filters}) async {
     state = const AsyncValue.loading();
-    _searchQuery = null;
-    _searchNextUrl = null;
-    _isSearching = false;
 
     try {
-      final initial = await _loadInitial();
-      state = AsyncValue.data(initial);
+      final paginated = await service.getWithDanos(filters: filters);
+      _updateSearchState(paginated, query: 'con_danos');
     } catch (e, st) {
-      // ✅ FIX: Propagar error correctamente
-      state = AsyncValue.error(e, st);
+      state = AsyncValue.error(Exception(parseError(e)), st);
     }
   }
 
-  // ✅ Cargar más elementos (paginación)
-  Future<void> loadMore() async {
-    if (_isLoadingMore) return;
-
-    final url = _searchQuery != null ? _searchNextUrl : _nextUrl;
-    if (url == null) return;
-
-    _isLoadingMore = true;
-    final dio = HttpService().dio;
+  /// Buscar registros pedeteados
+  Future<void> searchPedeteados({Map<String, dynamic>? filters}) async {
+    state = const AsyncValue.loading();
 
     try {
-      final uri = Uri.parse(url);
-      final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
-      final res = await dio.get(path);
-
-      final paginated = PaginatedResponse<RegistroGeneral>.fromJson(
-        res.data,
-        RegistroGeneral.fromJson,
-      );
-
-      final current = state.value ?? [];
-      final newResults = [...current, ...paginated.results];
-
-      state = AsyncValue.data(newResults);
-
-      // Actualizar URLs para siguiente página
-      if (_searchQuery != null) {
-        _searchNextUrl = paginated.next;
-      } else {
-        _nextUrl = paginated.next;
-      }
-    } catch (e) {
-      // ✅ Error silencioso en loadMore - no romper UI existente
-      // Solo logear para debug, no cambiar estado
-      debugPrint('❌ Error cargando más resultados: ${_parseError(e)}');
-    } finally {
-      _isLoadingMore = false;
-      // ✅ Trigger rebuild para actualizar isLoadingMore
-      state = AsyncValue.data([...?state.value]);
+      final paginated = await service.getPedeteados(filters: filters);
+      _updateSearchState(paginated, query: 'pedeteados');
+    } catch (e, st) {
+      state = AsyncValue.error(Exception(parseError(e)), st);
     }
   }
 
-  // ✅ Búsqueda con debounce - para search automático
-  void debouncedSearch(String query) {
-    _debouncer.run(() {
-      final trimmed = query.trim();
-      if (trimmed.isEmpty) {
-        clearSearch();
-      } else {
-        search(trimmed);
+  /// Verificar si un VIN existe
+  Future<bool> vinExists(String vin) async {
+    return await service.vinExists(vin);
+  }
+
+  /// Obtener registro por VIN
+  Future<RegistroGeneral?> getByVin(String vin) async {
+    try {
+      return await service.getByVin(vin);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ============================================================================
+  // MÉTODOS PRIVADOS AUXILIARES
+  // ============================================================================
+
+  void _updateSearchState(dynamic paginated, {String? query}) {
+    // Simular búsqueda para mantener consistencia con BaseListProviderImpl
+    if (query != null) {
+      _searchQuery = query;
+      _searchNextUrl = paginated.next;
+    }
+
+    state = AsyncValue.data(paginated.results);
+  }
+
+  // Acceso a variables privadas de la clase base (workaround)
+  String? _searchQuery;
+  String? _searchNextUrl;
+}
+
+// ============================================================================
+// PROVIDER DE DETALLE POR VIN
+// ============================================================================
+
+final registroDetalleByVinProvider =
+    FutureProvider.family<RegistroGeneral?, String>((ref, vin) async {
+      final service = ref.read(registroGeneralServiceProvider);
+      try {
+        return await service.getByVin(vin);
+      } catch (e) {
+        return null;
       }
     });
-  }
 
-  // ✅ Búsqueda inmediata - para scanner o enter
-  Future<void> search(String query) async {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) {
-      return clearSearch();
-    }
+// ============================================================================
+// PROVIDER PARA VERIFICACIÓN DE VIN
+// ============================================================================
 
-    // ✅ Evitar búsquedas duplicadas
-    if (_searchQuery == trimmed && state.hasValue) {
-      return;
-    }
+final vinExistsProvider = FutureProvider.family<bool, String>((ref, vin) async {
+  final service = ref.read(registroGeneralServiceProvider);
+  return await service.vinExists(vin);
+});
 
-    debugPrint('🔍 Buscando: "$trimmed"');
+// ============================================================================
+// PROVIDERS DE FILTROS ESPECÍFICOS
+// ============================================================================
 
-    _isSearching = true;
-    state = const AsyncValue.loading();
-    _searchQuery = trimmed;
-    _searchToken++;
-    final currentToken = _searchToken;
+/// Provider para registros con daños
+final registrosConDanosProvider =
+    AsyncNotifierProvider<RegistrosConDanosNotifier, List<RegistroGeneral>>(
+      RegistrosConDanosNotifier.new,
+    );
 
+class RegistrosConDanosNotifier extends BaseListProviderImpl<RegistroGeneral> {
+  @override
+  RegistroGeneralService get service =>
+      ref.read(registroGeneralServiceProvider);
+
+  @override
+  Future<List<RegistroGeneral>> loadInitial() async {
     try {
-      final res = await HttpService().dio.get(
-        '/api/v1/autos/registro-general/',
-        queryParameters: {'search': trimmed},
-      );
-
-      // ✅ Verificar si esta búsqueda aún es relevante
-      if (_searchToken != currentToken) {
-        debugPrint('🔥 Ignorando respuesta de búsqueda obsoleta');
-        return;
-      }
-
-      final paginated = PaginatedResponse<RegistroGeneral>.fromJson(
-        res.data,
-        RegistroGeneral.fromJson,
-      );
-
-      _searchNextUrl = paginated.next;
-      state = AsyncValue.data(paginated.results);
-    } catch (e, st) {
-      if (_searchToken == currentToken) {
-        // ✅ FIX: Propagar error correctamente usando Exception
-        final errorMsg = _parseError(e);
-        state = AsyncValue.error(Exception(errorMsg), st);
-      }
-    } finally {
-      if (_searchToken == currentToken) {
-        _isSearching = false;
-        // ✅ Solo rebuild si no hay error
-        if (!state.hasError) {
-          state = AsyncValue.data([...?state.value]);
-        }
-      }
+      final paginated = await service.getWithDanos();
+      _nextUrl = paginated.next;
+      return paginated.results;
+    } catch (e) {
+      throw Exception(parseError(e));
     }
   }
 
-  // ✅ Refresh manual - para pull-to-refresh
-  Future<void> refresh() async {
-    if (_searchQuery != null) {
-      // Si estamos en búsqueda, rehacer la búsqueda
-      await search(_searchQuery!);
-    } else {
-      // Si estamos en lista inicial, recargar desde inicio
-      state = const AsyncValue.loading();
-      try {
-        final initial = await _loadInitial();
-        state = AsyncValue.data(initial);
-      } catch (e, st) {
-        // ✅ FIX: Propagar error correctamente
-        state = AsyncValue.error(e, st);
-      }
+  String? _nextUrl;
+}
+
+/// Provider para registros pedeteados
+final registrosPedeteadosProvider =
+    AsyncNotifierProvider<RegistrosPedeteadosNotifier, List<RegistroGeneral>>(
+      RegistrosPedeteadosNotifier.new,
+    );
+
+class RegistrosPedeteadosNotifier
+    extends BaseListProviderImpl<RegistroGeneral> {
+  @override
+  RegistroGeneralService get service =>
+      ref.read(registroGeneralServiceProvider);
+
+  @override
+  Future<List<RegistroGeneral>> loadInitial() async {
+    try {
+      final paginated = await service.getPedeteados();
+      _nextUrl = paginated.next;
+      return paginated.results;
+    } catch (e) {
+      throw Exception(parseError(e));
     }
   }
 
-  void clearAll() {
-    _nextUrl = null;
-    _searchNextUrl = null;
-    _searchQuery = null;
-    _isLoadingMore = false;
-    _isSearching = false;
-    _searchToken = 0;
-
-    // Resetear a loading state
-    state = const AsyncValue.loading();
-  }
-
-  // ✅ Forzar invalidación - para cambios de permisos
-  void forceInvalidate() {
-    ref.invalidateSelf();
-  }
+  String? _nextUrl;
 }

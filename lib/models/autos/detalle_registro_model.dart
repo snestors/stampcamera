@@ -170,6 +170,7 @@ class Dano {
   final Responsabilidad? responsabilidad;
   final String? createAt;
   final String? createBy;
+  final bool relevante;
   final bool verificadoBool;
   final int? verificado;
 
@@ -186,6 +187,7 @@ class Dano {
     this.responsabilidad,
     this.createAt,
     this.createBy,
+    required this.relevante,
     required this.verificadoBool,
     this.verificado,
   });
@@ -214,6 +216,7 @@ class Dano {
           .toList(),
       createAt: json['create_at'],
       createBy: json['create_by'],
+      relevante: json['relevante'] ?? false,
       verificadoBool: json['verificado_bool'] ?? false,
       verificado: json['verificado'],
     );

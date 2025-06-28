@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stampcamera/screens/autos/contenedores/contenedores_tab.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
 import 'package:stampcamera/widgets/pedeteo/queue_badget.dart';
 import 'registro_general/registro_screen.dart';
@@ -40,7 +41,7 @@ class _AutosScreenState extends State<AutosScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: const [RegistroScreen(), PedeteoScreen()],
+        children: const [RegistroScreen(), PedeteoScreen(), ContenedoresTab()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -50,6 +51,10 @@ class _AutosScreenState extends State<AutosScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.pending_actions),
             label: 'PEDETEO',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2),
+            label: 'CONTENEDORES',
           ),
         ],
       ),
