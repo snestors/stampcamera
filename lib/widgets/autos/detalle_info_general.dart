@@ -128,17 +128,14 @@ class DetalleInfoGeneral extends StatelessWidget {
               ),
 
               // Logo de la marca como ícono indicativo
-              Hero(
-                tag: 'vin_header_${r.vin}',
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF003B5C).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: _buildBrandLogo(
-                    r.informacionUnidad?.marca.marca ?? 'N/A',
-                  ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: _buildBrandLogo(
+                  r.informacionUnidad?.marca.marca ?? 'N/A',
                 ),
               ),
             ],

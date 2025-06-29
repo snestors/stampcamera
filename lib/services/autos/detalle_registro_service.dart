@@ -129,6 +129,13 @@ class DetalleRegistroService {
   // ============================================================================
 
   /// Obtener tipos de documento disponibles
+  ///
+  // ✅ Nuevo método en DetalleRegistroService
+  Future<Map<String, dynamic>> getRegistroVinOptions() async {
+    final response = await _http.dio.get('/api/v1/autos/registro-vin/options/');
+    return response.data;
+  }
+
   /// GET /api/v1/autos/fotos-presentacion/options/
   Future<Map<String, dynamic>> getFotosOptions() async {
     final response = await _http.dio.get(

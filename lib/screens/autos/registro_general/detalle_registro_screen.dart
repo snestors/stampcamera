@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_info_general.dart';
 import 'package:stampcamera/widgets/autos/detalle_registros_vin.dart';
@@ -46,12 +47,9 @@ class DetalleRegistroScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.zero, // Cuadrado sin bordes
       ),
-      title: Hero(
-        tag: 'vin_appbar_$vin',
-        child: Text(
-          vin,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
+      title: Text(
+        vin,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
       ),
       actions: [
         IconButton(
@@ -189,7 +187,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
   // ============================================================================
   // CONTENIDO DE TABS
   // ============================================================================
-  Widget _buildTabContent(registro, WidgetRef ref) {
+  Widget _buildTabContent(DetalleRegistroModel registro, WidgetRef ref) {
     return TabBarView(
       children: [
         _buildScrollableTab(
@@ -197,11 +195,14 @@ class DetalleRegistroScreen extends ConsumerWidget {
           ref: ref,
         ),
         _buildScrollableTab(
-          child: DetalleRegistrosVin(items: registro.registrosVin),
+          child: DetalleRegistrosVin(items: registro.registrosVin, vin: vin),
           ref: ref,
         ),
         _buildScrollableTab(
-          child: DetalleFotosPresentacion(items: registro.fotosPresentacion),
+          child: DetalleFotosPresentacion(
+            items: registro.fotosPresentacion,
+            vin: vin,
+          ),
           ref: ref,
         ),
         _buildScrollableTab(

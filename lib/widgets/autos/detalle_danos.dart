@@ -763,11 +763,11 @@ class DetalleDanos extends StatelessWidget {
   // HELPERS
   // ============================================================================
   String _getCondicionTexto(Dano dano) {
-    return (dano.condicion == "PUERTO" &&
+    return (dano.condicion?.value == "PUERTO" &&
             (dano.responsabilidad?.esp == "SNMP" ||
                 dano.responsabilidad?.esp == "NAVIERA"))
         ? "ARRIBO"
-        : dano.condicion ?? "";
+        : dano.condicion?.value ?? "";
   }
 
   bool _hasAdditionalInfo(Dano dano) {

@@ -1,23 +1,25 @@
 // widgets/common/reusable_camera_card.dart
 /**
- * 📸 COMPONENTE REUTILIZABLE DE CÁMARA
+ * 📸 COMPONENTE REUTILIZABLE DE CÁMARA (v2.0)
  * 
  * 🎯 PROPÓSITO:
  * Componente que permite tomar fotos con cámara o seleccionar de galería.
+ * Soporte para preview de imágenes desde URL (para formularios de edición).
  * Procesa automáticamente las imágenes con logo y timestamp.
  * 
  * 📝 CARACTERÍSTICAS:
  * - ✅ Tomar foto con cámara
  * - ✅ Seleccionar imagen de galería  
- * - ✅ Vista previa con zoom
+ * - ✅ Vista previa con zoom (local + URL)
  * - ✅ Procesamiento automático (logo + timestamp)
+ * - ✅ Soporte para URLs existentes (formularios de edición)
  * - ✅ Títulos y colores personalizables
  * - ✅ Opción de ocultar galería
  * - ✅ Manejo de errores y estados de carga
  * 
  * 🚀 EJEMPLOS DE USO:
  * 
- * // Uso básico
+ * // Formulario nuevo (path local)
  * String? photoPath;
  * ReusableCameraCard(
  *   title: 'Foto del VIN',
@@ -25,71 +27,37 @@
  *   onImageSelected: (path) => setState(() => photoPath = path),
  * )
  * 
+ * // Formulario de edición (URL existente)
+ * ReusableCameraCard(
+ *   title: 'Foto del Vehículo',
+ *   currentImagePath: localPhotoPath, // null si no se ha cambiado
+ *   currentImageUrl: 'https://api.example.com/photos/123.jpg',
+ *   onImageSelected: (path) => setState(() => localPhotoPath = path),
+ * )
+ * 
  * // Con Provider/Riverpod
  * ReusableCameraCard(
  *   title: 'Foto del Vehículo',
- *   currentImagePath: ref.watch(vehicleProvider).photoPath,
+ *   currentImagePath: ref.watch(vehicleProvider).newPhotoPath,
+ *   currentImageUrl: ref.watch(vehicleProvider).existingPhotoUrl,
  *   onImageSelected: (path) {
- *     ref.read(vehicleProvider.notifier).setPhoto(path);
+ *     ref.read(vehicleProvider.notifier).setNewPhoto(path);
  *   },
  * )
  * 
- * // Personalizado
- * ReusableCameraCard(
- *   title: 'Documento de Identidad',
- *   subtitle: 'Debe ser legible y completo',
- *   currentImagePath: documentPath,
- *   onImageSelected: (path) => saveDocument(path),
- *   showGalleryOption: false, // Solo cámara
- *   primaryColor: Colors.blue,
- *   cameraButtonText: 'Fotografiar documento',
- * )
+ * 📋 PARÁMETROS NUEVOS:
+ * - currentImageUrl: URL de imagen existente (para formularios de edición)
+ * - thumbnailUrl: URL del thumbnail (opcional, mejora performance)
  * 
- * // Múltiples imágenes
- * String? frontPhoto, backPhoto, interiorPhoto;
- * Column(
- *   children: [
- *     ReusableCameraCard(
- *       title: 'Vista Frontal',
- *       currentImagePath: frontPhoto,
- *       onImageSelected: (path) => setState(() => frontPhoto = path),
- *     ),
- *     ReusableCameraCard(
- *       title: 'Vista Trasera',
- *       currentImagePath: backPhoto,
- *       onImageSelected: (path) => setState(() => backPhoto = path),
- *     ),
- *   ],
- * )
+ * 🔄 LÓGICA DE PRIORIDAD:
+ * 1. Si currentImagePath != null → Muestra imagen local (nueva)
+ * 2. Si currentImageUrl != null → Muestra imagen desde URL (existente)
+ * 3. Si ambos null → Muestra placeholder
  * 
- * 📋 PARÁMETROS:
- * - title: Título principal (obligatorio)
- * - currentImagePath: Path de imagen actual (null = sin imagen)
- * - onImageSelected: Callback cuando se selecciona imagen
- * - subtitle: Texto descriptivo opcional
- * - showGalleryOption: Mostrar botón de galería (default: true)
- * - cameraButtonText: Texto del botón de cámara
- * - galleryButtonText: Texto del botón de galería
- * - primaryColor: Color principal del tema
- * 
- * 🔄 FLUJO:
- * 1. Usuario ve preview (placeholder si currentImagePath = null)
- * 2. Toca botón cámara/galería
- * 3. Selecciona/toma imagen
- * 4. Se procesa automáticamente (logo + timestamp)
- * 5. Se ejecuta onImageSelected(processedPath)
- * 6. Padre actualiza currentImagePath
- * 7. Card muestra nueva imagen
- * 
- * 📦 DEPENDENCIAS REQUERIDAS:
- * - camera: ^0.10.0+4
- * - image_picker: ^1.0.4
- * 
- * 🎨 COMPORTAMIENTO VISUAL:
- * - Sin imagen: Placeholder con ícono
- * - Con imagen: Preview + badge "Procesada" + botón zoom
- * - Estados de carga durante procesamiento
- * - Botones adaptativos según configuración
+ * 📱 COMPORTAMIENTO:
+ * - Al tomar nueva foto: currentImagePath se actualiza, currentImageUrl se ignora
+ * - Permite cambiar foto existente manteniendo funcionalidad completa
+ * - Badge diferente para fotos locales vs URLs
  */
 
 import 'package:flutter/material.dart';
@@ -103,8 +71,14 @@ class ReusableCameraCard extends StatelessWidget {
   /// Título principal de la card
   final String title;
 
-  /// Path de la imagen actual (null si no hay imagen seleccionada)
+  /// Path de la imagen local (nueva foto tomada/seleccionada)
   final String? currentImagePath;
+
+  /// URL de imagen existente (para formularios de edición)
+  final String? currentImageUrl;
+
+  /// URL del thumbnail (opcional, para mejor performance)
+  final String? thumbnailUrl;
 
   /// Callback ejecutado cuando se selecciona una nueva imagen
   /// Recibe el path de la imagen procesada
@@ -129,12 +103,15 @@ class ReusableCameraCard extends StatelessWidget {
   ///
   /// [title] es obligatorio y aparece como título principal
   /// [onImageSelected] es obligatorio - recibe el path de imagen procesada
-  /// [currentImagePath] debe ser manejado por el widget padre
-  /// [showGalleryOption] controla si mostrar el botón de galería
+  /// [currentImagePath] tiene prioridad sobre [currentImageUrl]
+  /// [currentImageUrl] útil para formularios de edición con imágenes existentes
+  /// [thumbnailUrl] mejora performance al mostrar preview de URLs
   const ReusableCameraCard({
     super.key,
     required this.title,
     this.currentImagePath,
+    this.currentImageUrl,
+    this.thumbnailUrl,
     required this.onImageSelected,
     this.subtitle,
     this.showGalleryOption = true,
@@ -142,6 +119,15 @@ class ReusableCameraCard extends StatelessWidget {
     this.galleryButtonText = 'Elegir de galería',
     this.primaryColor,
   });
+
+  /// Determina si hay una imagen para mostrar
+  bool get hasImage => currentImagePath != null || currentImageUrl != null;
+
+  /// Determina si la imagen actual es local (nueva)
+  bool get isLocalImage => currentImagePath != null;
+
+  /// Obtiene la URL efectiva para mostrar (thumbnail o URL completa)
+  String? get effectiveImageUrl => thumbnailUrl ?? currentImageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +187,7 @@ class ReusableCameraCard extends StatelessWidget {
   }
 
   /// Construye el preview de la imagen
-  /// Muestra placeholder si no hay imagen, o la imagen con controles si existe
+  /// Soporte para imágenes locales y URLs
   Widget _buildImagePreview(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -209,69 +195,19 @@ class ReusableCameraCard extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey),
         borderRadius: BorderRadius.circular(8),
-        color: currentImagePath == null ? Colors.grey[100] : null,
+        color: !hasImage ? Colors.grey[100] : null,
       ),
-      child: currentImagePath != null
+      child: hasImage
           ? ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Stack(
                 children: [
-                  // Imagen principal
-                  Image.file(
-                    File(currentImagePath!),
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.red.shade50,
-                        child: const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.error, color: Colors.red),
-                              SizedBox(height: 8),
-                              Text('Error al cargar imagen'),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  // Badge de procesada
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            'Procesada',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // Imagen principal (local o URL)
+                  isLocalImage ? _buildLocalImage() : _buildNetworkImage(),
+
+                  // Badge de estado
+                  Positioned(top: 8, right: 8, child: _buildImageBadge()),
+
                   // Botón para ver imagen completa
                   Positioned(
                     bottom: 8,
@@ -306,10 +242,125 @@ class ReusableCameraCard extends StatelessWidget {
     );
   }
 
+  /// Widget para imagen local
+  Widget _buildLocalImage() {
+    return Image.file(
+      File(currentImagePath!),
+      width: double.infinity,
+      height: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.red.shade50,
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(height: 8),
+                Text('Error al cargar imagen'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Widget para imagen desde URL
+  Widget _buildNetworkImage() {
+    return Image.network(
+      effectiveImageUrl!,
+      width: double.infinity,
+      height: double.infinity,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Center(
+          child: CircularProgressIndicator(
+            value: loadingProgress.expectedTotalBytes != null
+                ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                : null,
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: Colors.red.shade50,
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                SizedBox(height: 8),
+                Text('Error al cargar imagen'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Construye el badge según el tipo de imagen
+  Widget _buildImageBadge() {
+    if (isLocalImage) {
+      // Nueva imagen local procesada
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.green,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, color: Colors.white, size: 16),
+            SizedBox(width: 4),
+            Text(
+              'Procesada',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Imagen existente desde URL
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_done, color: Colors.white, size: 16),
+            SizedBox(width: 4),
+            Text(
+              'Existente',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   /// Construye los botones de acción según la configuración
-  /// - Si showGalleryOption = false: solo botón de cámara
-  /// - Si showGalleryOption = true: botón cámara + botón galería
   Widget _buildActionButtons(BuildContext context, Color primaryColor) {
+    // Texto dinámico del botón principal
+    final String mainButtonText = hasImage ? 'Cambiar foto' : cameraButtonText;
+
     if (!showGalleryOption) {
       // Solo botón de cámara
       return SizedBox(
@@ -322,9 +373,7 @@ class ReusableCameraCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
           icon: const Icon(Icons.camera_alt),
-          label: Text(
-            currentImagePath != null ? 'Cambiar foto' : cameraButtonText,
-          ),
+          label: Text(mainButtonText),
         ),
       );
     }
@@ -483,8 +532,9 @@ class ReusableCameraCard extends StatelessWidget {
   }
 
   /// Muestra la imagen en pantalla completa con zoom
+  /// Soporte para imágenes locales y URLs
   void _showFullImage(BuildContext context) {
-    if (currentImagePath == null) return;
+    if (!hasImage) return;
 
     showDialog(
       context: context,
@@ -507,7 +557,20 @@ class ReusableCameraCard extends StatelessWidget {
             ),
             Flexible(
               child: InteractiveViewer(
-                child: Image.file(File(currentImagePath!), fit: BoxFit.contain),
+                child: isLocalImage
+                    ? Image.file(File(currentImagePath!), fit: BoxFit.contain)
+                    : Image.network(
+                        currentImageUrl!, // Usar URL completa para fullscreen
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                      ),
               ),
             ),
           ],
@@ -518,19 +581,10 @@ class ReusableCameraCard extends StatelessWidget {
 }
 
 /**
- * 📷 MODAL DE CÁMARA REUTILIZABLE
+ * 📷 MODAL DE CÁMARA REUTILIZABLE (Sin cambios)
  * 
  * Modal que maneja la captura de fotos con preview y confirmación.
  * Procesa automáticamente las imágenes tomadas.
- * 
- * 🔄 FLUJO:
- * 1. Inicializa cámara
- * 2. Muestra preview de cámara
- * 3. Usuario toma foto
- * 4. Procesa imagen (logo + timestamp)
- * 5. Muestra preview de resultado
- * 6. Usuario confirma o repite
- * 7. Retorna path de imagen procesada
  */
 
 // Modal de cámara reutilizable
@@ -546,9 +600,9 @@ class _CameraModal extends StatefulWidget {
 
 class _CameraModalState extends State<_CameraModal> {
   CameraController? _cameraController;
-  bool _isInitialized = false; // Estado de inicialización de cámara
-  bool _isProcessing = false; // Estado de procesamiento de imagen
-  String? _capturedImagePath; // Path de imagen capturada y procesada
+  bool _isInitialized = false;
+  bool _isProcessing = false;
+  String? _capturedImagePath;
 
   @override
   void initState() {
@@ -556,7 +610,6 @@ class _CameraModalState extends State<_CameraModal> {
     _initCamera();
   }
 
-  /// Inicializa la cámara al abrir el modal
   Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
@@ -576,15 +629,12 @@ class _CameraModalState extends State<_CameraModal> {
     }
   }
 
-  /// Toma la foto y la procesa automáticamente
-  /// Utiliza el return directo de processAndSaveImage para mayor eficiencia
   Future<void> _takePicture() async {
     if (_cameraController?.value.isInitialized != true) return;
 
     try {
       setState(() => _isProcessing = true);
 
-      // 1. Capturar imagen
       final image = await _cameraController!.takePicture();
 
       final config = WatermarkConfig(
@@ -593,7 +643,7 @@ class _CameraModalState extends State<_CameraModal> {
         showLocation: true,
         logoPosition: WatermarkPosition.topRight,
         timestampPosition: WatermarkPosition.bottomRight,
-        locationPosition: WatermarkPosition.bottomLeft, // GPS abajo izquierda
+        locationPosition: WatermarkPosition.bottomLeft,
         compressionQuality: 95,
         timestampFontSize: FontSize.large,
       );
@@ -604,7 +654,6 @@ class _CameraModalState extends State<_CameraModal> {
         autoGPS: false,
       );
 
-      // 3. Actualizar estado con imagen procesada
       if (mounted) {
         setState(() {
           _capturedImagePath = processedImagePath;
@@ -621,7 +670,6 @@ class _CameraModalState extends State<_CameraModal> {
     }
   }
 
-  /// Confirma la imagen y cierra el modal
   void _confirmImage() {
     if (_capturedImagePath != null) {
       widget.onImageCaptured(_capturedImagePath!);
@@ -629,7 +677,6 @@ class _CameraModalState extends State<_CameraModal> {
     }
   }
 
-  /// Permite tomar otra foto (descarta la actual)
   void _retakePhoto() {
     setState(() {
       _capturedImagePath = null;

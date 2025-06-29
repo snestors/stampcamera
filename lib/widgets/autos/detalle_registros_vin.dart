@@ -1,23 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
+import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
 
 class DetalleRegistrosVin extends StatelessWidget {
   final List<RegistroVin> items;
+  final String vin; // ✅ VIN para el formulario
+  final VoidCallback? onAddPressed; // ✅ Callback opcional adicional
 
-  const DetalleRegistrosVin({super.key, required this.items});
+  const DetalleRegistrosVin({
+    super.key,
+    required this.items,
+    required this.vin,
+    this.onAddPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(context);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ✅ Header de sección
-        _buildSectionHeader(),
+        // ✅ Header de sección con botón agregar
+        _buildSectionHeader(context),
 
         const SizedBox(height: 16),
 
@@ -35,9 +43,9 @@ class DetalleRegistrosVin extends StatelessWidget {
   }
 
   // ============================================================================
-  // HEADER DE SECCIÓN
+  // HEADER DE SECCIÓN CON BOTÓN AGREGAR
   // ============================================================================
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(BuildContext context) {
     return Row(
       children: [
         Container(
@@ -58,6 +66,8 @@ class DetalleRegistrosVin extends StatelessWidget {
           ),
         ),
         const Spacer(),
+
+        // ✅ Counter badge
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -73,7 +83,99 @@ class DetalleRegistrosVin extends StatelessWidget {
             ),
           ),
         ),
+
+        const SizedBox(width: 8),
+
+        // ✅ Botón agregar nuevo registro
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF00B4D8),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _showAgregarRegistroForm(context),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.add, size: 18, color: Colors.white),
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  // ============================================================================
+  // ACCIÓN PARA MOSTRAR FORMULARIO
+  // ============================================================================
+
+  void _showAgregarRegistroForm(BuildContext context) {
+    // Ejecutar callback adicional si existe
+    onAddPressed?.call();
+
+    // Mostrar formulario
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => RegistroVinForm(vin: vin),
+    );
+  }
+
+  // ============================================================================
+  // ESTADO VACÍO CON BOTÓN PARA AGREGAR PRIMER REGISTRO
+  // ============================================================================
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6B7280).withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF6B7280).withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.history_outlined,
+            size: 48,
+            color: Color(0xFF6B7280),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Sin Historial',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'No hay registros de inspecciones para este vehículo',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+
+          // ✅ Botón para agregar primer registro
+          ElevatedButton.icon(
+            onPressed: () => _showAgregarRegistroForm(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00B4D8),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            icon: const Icon(Icons.add),
+            label: const Text('Agregar Primera Inspección'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -208,7 +310,7 @@ class DetalleRegistrosVin extends StatelessWidget {
           _buildInfoRow(
             Icons.location_on,
             'Zona de Inspección',
-            registro.zonaInspeccion!,
+            registro.zonaInspeccion!.value,
             const Color(0xFF00B4D8),
           ),
 
@@ -218,7 +320,7 @@ class DetalleRegistrosVin extends StatelessWidget {
           _buildInfoRow(
             Icons.view_module,
             'Bloque',
-            registro.bloque!,
+            registro.bloque!.value,
             const Color(0xFF059669),
           ),
         ],
@@ -319,43 +421,6 @@ class DetalleRegistrosVin extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  // ============================================================================
-  // ESTADO VACÍO
-  // ============================================================================
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: const Color(0xFF6B7280).withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF6B7280).withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: const Column(
-        children: [
-          Icon(Icons.history_outlined, size: 48, color: Color(0xFF6B7280)),
-          SizedBox(height: 16),
-          Text(
-            'Sin Historial',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'No hay registros de inspecciones para este vehículo',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 

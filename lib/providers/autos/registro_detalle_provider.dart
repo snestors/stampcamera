@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import '../../models/autos/detalle_registro_model.dart';
 import '../../services/autos/detalle_registro_service.dart';
 
@@ -79,14 +80,26 @@ class DetalleRegistroNotifier
         contenedorId: contenedorId,
       );
 
+      debugPrint("✅ Result: $result");
+
+      // ✅ Verificar que la operación fue exitosa
+      if (result['success'] != true) {
+        debugPrint("❌ Error del servidor: ${result['message']}");
+        return false;
+      }
+
       // ✅ Actualizar state local con el nuevo registro VIN
       final currentDetalle = state.valueOrNull;
-      if (currentDetalle != null && result['data'] != null) {
+      if (currentDetalle != null) {
+        // ✅ FIX: Extraer 'data' de la respuesta
         final nuevoRegistroVin = RegistroVin.fromJson(result['data']);
         final registrosActualizados = [
           ...currentDetalle.registrosVin,
           nuevoRegistroVin,
         ];
+
+        debugPrint("📋 Registros antes: ${currentDetalle.registrosVin.length}");
+        debugPrint("📋 Registros después: ${registrosActualizados.length}");
 
         final detalleActualizado = DetalleRegistroModel(
           vin: currentDetalle.vin,
@@ -101,7 +114,12 @@ class DetalleRegistroNotifier
           danos: currentDetalle.danos,
         );
 
+        debugPrint("🔄 Actualizando state...");
+        //TODO: Penitente arreglar el Refres de la pantalla.
         state = AsyncValue.data(detalleActualizado);
+        debugPrint("✅ State actualizado correctamente");
+      } else {
+        debugPrint("⚠️ currentDetalle es null, no se puede actualizar state");
       }
 
       return true;
@@ -626,6 +644,15 @@ class DetalleRegistroNotifier
 // PROVIDERS DE OPCIONES
 // ============================================================================
 
+/// Provider para opciones de registro VIN
+final registroVinOptionsProvider = FutureProvider<RegistroVinOptions>((
+  ref,
+) async {
+  final service = ref.read(detalleRegistroServiceProvider);
+  final data = await service.getRegistroVinOptions();
+  return RegistroVinOptions.fromJson(data);
+});
+
 /// Provider para opciones de fotos
 final fotosOptionsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final service = ref.read(detalleRegistroServiceProvider);
@@ -660,27 +687,4 @@ final vinHasDetalleProvider = FutureProvider.family<bool, String>((
   } catch (e) {
     return false;
   }
-});
-
-/// Provider para obtener solo los daños de un VIN
-final danosByVinProvider = Provider.family<List<Dano>, String>((ref, vin) {
-  final detalleAsync = ref.watch(registroDetalleProvider(vin));
-  return detalleAsync.when(
-    data: (detalle) => detalle.danos,
-    loading: () => [],
-    error: (_, __) => [],
-  );
-});
-
-/// Provider para obtener solo las fotos de un VIN
-final fotosByVinProvider = Provider.family<List<FotoPresentacion>, String>((
-  ref,
-  vin,
-) {
-  final detalleAsync = ref.watch(registroDetalleProvider(vin));
-  return detalleAsync.when(
-    data: (detalle) => detalle.fotosPresentacion,
-    loading: () => [],
-    error: (_, __) => [],
-  );
 });

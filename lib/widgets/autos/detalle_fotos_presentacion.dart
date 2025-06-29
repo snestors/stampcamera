@@ -1,36 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
+import 'package:stampcamera/widgets/autos/forms/fotos_presentacion_form.dart';
 
 class DetalleFotosPresentacion extends StatelessWidget {
   final List<FotoPresentacion> items;
+  final String vin; // ✅ VIN para el formulario
+  final VoidCallback? onAddPressed; // ✅ Callback opcional adicional
 
-  const DetalleFotosPresentacion({super.key, required this.items});
+  const DetalleFotosPresentacion({
+    super.key,
+    required this.items,
+    required this.vin,
+    this.onAddPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(context);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ✅ Header de sección
-        _buildSectionHeader(),
+        // ✅ Header de sección con botón agregar
+        _buildSectionHeader(context),
 
         const SizedBox(height: 16),
 
-        // ✅ Grid de fotos por tipo
+        // ✅ Lista de fotos
         ..._buildPhotosByType(),
       ],
     );
   }
 
   // ============================================================================
-  // HEADER DE SECCIÓN
+  // HEADER DE SECCIÓN CON BOTÓN AGREGAR
   // ============================================================================
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(BuildContext context) {
     return Row(
       children: [
         Container(
@@ -55,6 +63,8 @@ class DetalleFotosPresentacion extends StatelessWidget {
           ),
         ),
         const Spacer(),
+
+        // ✅ Counter badge
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -70,7 +80,99 @@ class DetalleFotosPresentacion extends StatelessWidget {
             ),
           ),
         ),
+
+        const SizedBox(width: 8),
+
+        // ✅ Botón agregar nueva foto
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF059669),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _showAgregarFotoForm(context),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.add_a_photo, size: 18, color: Colors.white),
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  // ============================================================================
+  // ACCIÓN PARA MOSTRAR FORMULARIO
+  // ============================================================================
+
+  void _showAgregarFotoForm(BuildContext context) {
+    // Ejecutar callback adicional si existe
+    onAddPressed?.call();
+
+    // Mostrar formulario
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FotoPresentacionForm(vin: vin),
+    );
+  }
+
+  // ============================================================================
+  // ESTADO VACÍO CON BOTÓN PARA AGREGAR PRIMERA FOTO
+  // ============================================================================
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: const Color(0xFF6B7280).withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF6B7280).withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.photo_library_outlined,
+            size: 48,
+            color: Color(0xFF6B7280),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Sin Fotos',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'No hay fotos de presentación para este vehículo',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+
+          // ✅ Botón para agregar primera foto
+          ElevatedButton.icon(
+            onPressed: () => _showAgregarFotoForm(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF059669),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            icon: const Icon(Icons.add_a_photo),
+            label: const Text('Agregar Primera Foto'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -150,7 +252,7 @@ class DetalleFotosPresentacion extends StatelessWidget {
                     _buildInfoRow(
                       Icons.location_on,
                       'Condición',
-                      foto.condicion!,
+                      foto.condicion!.value,
                       const Color(0xFF00B4D8),
                     ),
 
@@ -244,47 +346,6 @@ class DetalleFotosPresentacion extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  // ============================================================================
-  // ESTADO VACÍO
-  // ============================================================================
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: const Color(0xFF6B7280).withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF6B7280).withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: const Column(
-        children: [
-          Icon(
-            Icons.photo_library_outlined,
-            size: 48,
-            color: Color(0xFF6B7280),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Sin Fotos',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'No hay fotos de presentación para este vehículo',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 

@@ -63,15 +63,12 @@ class DetalleRegistroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Hero(
-                  tag: 'vin_appbar_${r.vin}',
-                  child: Text(
-                    r.vin,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF003B5C), // Color corporativo para VIN
-                    ),
+                Text(
+                  r.vin,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF003B5C), // Color corporativo para VIN
                   ),
                 ),
                 if (r.serie != null && r.serie!.isNotEmpty) ...[
@@ -114,10 +111,7 @@ class DetalleRegistroCard extends StatelessWidget {
               ).withValues(alpha: 0.1), // Fondo corporativo
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Hero(
-              tag: 'vin_header_${r.vin}', // Mismo tag que en detalle,
-              child: _buildBrandIcon(r.marca ?? 'N/A'),
-            ),
+            child: _buildBrandIcon(r.marca ?? 'N/A'),
           ),
         ],
       ),

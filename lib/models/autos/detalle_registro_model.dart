@@ -25,7 +25,7 @@ class DetalleRegistroModel {
 
   factory DetalleRegistroModel.fromJson(Map<String, dynamic> json) {
     return DetalleRegistroModel(
-      vin: json['vin'],
+      vin: json['vin'] ?? '',
       serie: json['serie'],
       color: json['color'],
       factura: json['factura'],
@@ -54,12 +54,14 @@ class DetalleRegistroModel {
 }
 
 class InformacionUnidad {
+  final int? id;
   final String modelo;
   final String? version;
   final String? tipo;
   final Marca marca;
 
   InformacionUnidad({
+    this.id,
     required this.modelo,
     this.version,
     this.tipo,
@@ -68,7 +70,8 @@ class InformacionUnidad {
 
   factory InformacionUnidad.fromJson(Map<String, dynamic> json) {
     return InformacionUnidad(
-      modelo: json['modelo'],
+      id: json['id'],
+      modelo: json['modelo'] ?? '',
       version: json['version'],
       tipo: json['tipo'],
       marca: Marca.fromJson(json['marca']),
@@ -77,31 +80,45 @@ class InformacionUnidad {
 }
 
 class Marca {
+  final int? id;
   final String marca;
   final String? abrev;
 
-  Marca({required this.marca, this.abrev});
+  Marca({this.id, required this.marca, this.abrev});
 
   factory Marca.fromJson(Map<String, dynamic> json) {
-    return Marca(marca: json['marca'], abrev: json['abrev']);
+    return Marca(
+      id: json['id'],
+      marca: json['marca'] ?? '',
+      abrev: json['abrev'],
+    );
   }
 }
 
+// ✅ CORREGIDO: RegistroVin con manejo seguro de nulls
 class RegistroVin {
+  final int id;
   final String vin;
   final String condicion;
-  final String? zonaInspeccion;
-  final String? bloque;
+  final IdValuePair? zonaInspeccion;
+  final IdValuePair? bloque;
+  final IdValuePair? contenedor;
+  final int? fila;
+  final int? posicion;
   final String? fotoVinUrl;
   final String? fotoVinThumbnailUrl;
   final String? fecha;
   final String? createBy;
 
   RegistroVin({
+    required this.id,
     required this.vin,
     required this.condicion,
     this.zonaInspeccion,
     this.bloque,
+    this.contenedor,
+    this.fila,
+    this.posicion,
     this.fotoVinUrl,
     this.fotoVinThumbnailUrl,
     this.fecha,
@@ -109,11 +126,31 @@ class RegistroVin {
   });
 
   factory RegistroVin.fromJson(Map<String, dynamic> json) {
+    // ✅ DEBUG: Imprimir el JSON para diagnosticar
+    print('🔍 RegistroVin.fromJson recibió: $json');
+
     return RegistroVin(
-      vin: json['vin'],
-      condicion: json['condicion'],
-      zonaInspeccion: json['zona_inspeccion'],
-      bloque: json['bloque'],
+      // ✅ FIX: Validar que id no sea null
+      id:
+          json['id'] ??
+          (throw ArgumentError('RegistroVin id no puede ser null: $json')),
+      vin: json['vin'] ?? '',
+      condicion: json['condicion'] ?? '',
+
+      // ✅ FIX: Verificar que el objeto no sea null Y que sea un Map antes de parsearlo
+      zonaInspeccion:
+          json['zona_inspeccion'] != null && json['zona_inspeccion'] is Map
+          ? IdValuePair.fromJson(json['zona_inspeccion'])
+          : null,
+      bloque: json['bloque'] != null && json['bloque'] is Map
+          ? IdValuePair.fromJson(json['bloque'])
+          : null,
+      contenedor: json['contenedor'] != null && json['contenedor'] is Map
+          ? IdValuePair.fromJson(json['contenedor'])
+          : null,
+
+      fila: json['fila'],
+      posicion: json['posicion'],
       fotoVinUrl: json['foto_vin_url'],
       fotoVinThumbnailUrl: json['foto_vin_thumbnail_url'],
       fecha: json['fecha'],
@@ -122,11 +159,12 @@ class RegistroVin {
   }
 }
 
+// ✅ ACTUALIZADO: FotoPresentacion con condicion formato {id, value}
 class FotoPresentacion {
   final int id;
   final String tipo;
   final String? nDocumento;
-  final String? condicion;
+  final IdValuePair? condicion;
   final String? imagenUrl;
   final String? imagenThumbnailUrl;
   final String? createAt;
@@ -146,9 +184,11 @@ class FotoPresentacion {
   factory FotoPresentacion.fromJson(Map<String, dynamic> json) {
     return FotoPresentacion(
       id: json['id'],
-      tipo: json['tipo'],
+      tipo: json['tipo'] ?? '',
       nDocumento: json['n_documento'],
-      condicion: json['condicion'],
+      condicion: json['condicion'] != null && json['condicion'] is Map
+          ? IdValuePair.fromJson(json['condicion'])
+          : null,
       imagenUrl: json['imagen_url'],
       imagenThumbnailUrl: json['imagen_thumbnail_url'],
       createAt: json['create_at'],
@@ -157,10 +197,11 @@ class FotoPresentacion {
   }
 }
 
+// ✅ ACTUALIZADO: Dano con condicion formato {id, value}
 class Dano {
   final int id;
   final String? descripcion;
-  final String? condicion;
+  final IdValuePair? condicion;
   final TipoDano tipoDano;
   final AreaDano areaDano;
   final Severidad severidad;
@@ -196,7 +237,9 @@ class Dano {
     return Dano(
       id: json['id'],
       descripcion: json['descripcion'],
-      condicion: json['condicion'],
+      condicion: json['condicion'] != null && json['condicion'] is Map
+          ? IdValuePair.fromJson(json['condicion'])
+          : null,
       tipoDano: TipoDano.fromJson(json['tipo_dano']),
       areaDano: AreaDano.fromJson(json['area_dano']),
       severidad: Severidad.fromJson(json['severidad']),
@@ -223,33 +266,64 @@ class Dano {
   }
 }
 
+// ✅ MEJORADO: IdValuePair con manejo de errores más robusto
+class IdValuePair {
+  final int id;
+  final String value;
+
+  IdValuePair({required this.id, required this.value});
+
+  factory IdValuePair.fromJson(Map<String, dynamic> json) {
+    return IdValuePair(id: json['id'], value: json['value']?.toString() ?? '');
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'value': value};
+  }
+
+  @override
+  String toString() => value;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is IdValuePair && other.id == id && other.value == value;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ value.hashCode;
+}
+
 class TipoDano {
+  final int id;
   final String esp;
 
-  TipoDano({required this.esp});
+  TipoDano({required this.id, required this.esp});
 
   factory TipoDano.fromJson(Map<String, dynamic> json) {
-    return TipoDano(esp: json['esp']);
+    return TipoDano(id: json['id'], esp: json['esp'] ?? '');
   }
 }
 
 class AreaDano {
+  final int id;
   final String esp;
 
-  AreaDano({required this.esp});
+  AreaDano({required this.id, required this.esp});
 
   factory AreaDano.fromJson(Map<String, dynamic> json) {
-    return AreaDano(esp: json['esp']);
+    return AreaDano(id: json['id'], esp: json['esp'] ?? '');
   }
 }
 
 class Severidad {
+  final int id;
   final String esp;
 
-  Severidad({required this.esp});
+  Severidad({required this.id, required this.esp});
 
   factory Severidad.fromJson(Map<String, dynamic> json) {
-    return Severidad(esp: json['esp']);
+    return Severidad(id: json['id'], esp: json['esp'] ?? '');
   }
 }
 
@@ -258,12 +332,14 @@ class DanoImagen {
   final String? imagenUrl;
   final String? imagenThumbnailUrl;
   final String? createAt;
+  final String? createBy;
 
   DanoImagen({
     required this.id,
     this.imagenUrl,
     this.imagenThumbnailUrl,
     this.createAt,
+    this.createBy,
   });
 
   factory DanoImagen.fromJson(Map<String, dynamic> json) {
@@ -272,6 +348,7 @@ class DanoImagen {
       imagenUrl: json['imagen_url'],
       imagenThumbnailUrl: json['imagen_thumbnail_url'],
       createAt: json['create_at'],
+      createBy: json['create_by'],
     );
   }
 }
@@ -284,7 +361,11 @@ class Responsabilidad {
   Responsabilidad({required this.id, required this.esp, this.eng});
 
   factory Responsabilidad.fromJson(Map<String, dynamic> json) {
-    return Responsabilidad(id: json['id'], esp: json['esp'], eng: json['eng']);
+    return Responsabilidad(
+      id: json['id'],
+      esp: json['esp'] ?? '',
+      eng: json['eng'],
+    );
   }
 }
 
@@ -295,6 +376,6 @@ class ZonaDano {
   ZonaDano({required this.id, required this.zona});
 
   factory ZonaDano.fromJson(Map<String, dynamic> json) {
-    return ZonaDano(id: json['id'], zona: json['zona']);
+    return ZonaDano(id: json['id'], zona: json['zona'] ?? '');
   }
 }
