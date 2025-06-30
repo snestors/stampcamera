@@ -69,6 +69,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
     final optionsAsync = ref.watch(registroVinOptionsProvider);
 
     return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(

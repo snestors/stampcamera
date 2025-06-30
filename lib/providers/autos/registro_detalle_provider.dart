@@ -41,13 +41,39 @@ class DetalleRegistroNotifier
   // ============================================================================
 
   Future<DetalleRegistroModel> _loadDetalle(String vin) async {
+    _preloadOptionsInBackground();
     return await _service.getByVin(vin);
+  }
+
+  /// Precargar opciones de manera silenciosa en segundo plano
+  void _preloadOptionsInBackground() {
+    // ✅ Disparar las cargas sin await - no bloquean
+
+    // Cargar opciones de registro VIN
+    ref.read(registroVinOptionsProvider.future).catchError((error) {
+      debugPrint('⚠️ Error cargando registroVinOptions (silencioso): $error');
+      // No hacer nada, las opciones se cargarán cuando se necesiten
+    });
+
+    // Cargar opciones de fotos
+    ref.read(fotosOptionsProvider.future).catchError((error) {
+      debugPrint('⚠️ Error cargando fotosOptions (silencioso): $error');
+    });
+
+    // Cargar opciones de daños
+    ref.read(danosOptionsProvider.future).catchError((error) {
+      debugPrint('⚠️ Error cargando danosOptions (silencioso): $error');
+    });
+
+    debugPrint('🚀 Opciones iniciadas en background para VIN: $arg');
   }
 
   /// Refrescar datos del detalle
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     try {
+      // ✅ También recargar opciones en background durante refresh
+
       final detalle = await _loadDetalle(arg);
       state = AsyncValue.data(detalle);
     } catch (e, st) {

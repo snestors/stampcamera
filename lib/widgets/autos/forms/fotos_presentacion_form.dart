@@ -56,6 +56,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     final optionsAsync = ref.watch(fotosOptionsProvider);
 
     return Container(
+      height: MediaQuery.of(context).size.height * 0.9, // ✅ 90% de la pantalla
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -63,33 +64,80 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           topRight: Radius.circular(20),
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            detalleAsync.when(
-              data: (detalle) =>
-                  _buildValidationsAndForm(detalle, optionsAsync),
-              loading: () => _buildLoadingState(),
-              error: (error, _) => _buildErrorState('Error cargando datos'),
+      child: Column(
+        children: [
+          // ✅ Header fijo
+          _buildFixedHeader(),
+
+          // ✅ Contenido scrolleable
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: detalleAsync.when(
+                data: (detalle) =>
+                    _buildScrollableContent(detalle, optionsAsync),
+                loading: () => _buildLoadingState(),
+                error: (error, _) => _buildErrorState('Error cargando datos'),
+              ),
             ),
-          ],
-        ),
+          ),
+
+          // ✅ Botones de acción fijos
+          _buildFixedActionButtons(),
+        ],
       ),
     );
   }
 
   // ============================================================================
-  // VALIDACIONES Y CONSTRUCCIÓN DEL FORMULARIO
+  // HEADER FIJO
   // ============================================================================
 
-  Widget _buildValidationsAndForm(
+  Widget _buildFixedHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isEditMode ? Icons.edit : Icons.add_a_photo,
+            color: const Color(0xFF003B5C),
+            size: 24,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              isEditMode ? 'Editar Foto' : 'Nueva Foto de Presentación',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================================
+  // CONTENIDO SCROLLEABLE
+  // ============================================================================
+
+  Widget _buildScrollableContent(
     DetalleRegistroModel detalle,
     AsyncValue optionsAsync,
   ) {
@@ -110,7 +158,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     }
 
     return optionsAsync.when(
-      data: (options) => _buildForm(options, detalle),
+      data: (options) => _buildFormContent(options, detalle),
       loading: () => _buildLoadingState(),
       error: (error, _) => _buildErrorState('Error cargando tipos de foto'),
     );
@@ -184,61 +232,35 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   }
 
   // ============================================================================
-  // FORMULARIO PRINCIPAL
+  // CONTENIDO DEL FORMULARIO
   // ============================================================================
 
-  Widget _buildForm(
+  Widget _buildFormContent(
+    Map<String, dynamic> options,
+    DetalleRegistroModel detalle,
+  ) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          _buildFormFields(options, detalle),
+          const SizedBox(height: 16),
+          _buildFotoSection(),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormFields(
     Map<String, dynamic> options,
     DetalleRegistroModel detalle,
   ) {
     final tiposDisponibles =
         options['tipos_disponibles'] as List<dynamic>? ?? [];
 
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 16),
-          _buildFormFields(tiposDisponibles, detalle),
-          const SizedBox(height: 16),
-          _buildFotoSection(),
-          const SizedBox(height: 24),
-          _buildActionButtons(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        Icon(
-          isEditMode ? Icons.edit : Icons.add_a_photo,
-          color: const Color(0xFF003B5C),
-          size: 24,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            isEditMode ? 'Editar Foto' : 'Nueva Foto de Presentación',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-        IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.close),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFormFields(
-    List<dynamic> tiposDisponibles,
-    DetalleRegistroModel detalle,
-  ) {
     // Crear lista de IdValuePair desde los registros VIN existentes
     final condicionesDisponibles = detalle.registrosVin
         .map(
@@ -247,7 +269,14 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         .toList();
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Información de la Foto',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+
         // Dropdown de condición/registro VIN
         DropdownButtonFormField<int>(
           value: _selectedRegistroVinId,
@@ -332,51 +361,72 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   }
 
   Widget _buildFotoSection() {
-    return ReusableCameraCard(
-      title: 'Foto *',
-      subtitle: _selectedTipo != null
-          ? 'Fotografía ${_getTipoLabel(_selectedTipo!)}'
-          : 'Selecciona un tipo de foto primero',
-      currentImagePath: _fotoPath,
-      onImageSelected: (path) => setState(() => _fotoPath = path),
-      showGalleryOption: true,
-      primaryColor: _selectedTipo != null
-          ? _getTipoColor(_selectedTipo!)
-          : const Color(0xFF00B4D8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Imagen de la Foto',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        ReusableCameraCard(
+          title: 'Foto *',
+          subtitle: _selectedTipo != null
+              ? 'Fotografía ${_getTipoLabel(_selectedTipo!)}'
+              : 'Selecciona un tipo de foto primero',
+          currentImagePath: _fotoPath,
+          onImageSelected: (path) => setState(() => _fotoPath = path),
+          showGalleryOption: true,
+          primaryColor: _selectedTipo != null
+              ? _getTipoColor(_selectedTipo!)
+              : const Color(0xFF00B4D8),
+        ),
+      ],
     );
   }
 
-  Widget _buildActionButtons() {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: _isLoading ? null : () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: _isLoading ? null : _submitForm,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _selectedTipo != null
-                  ? _getTipoColor(_selectedTipo!)
-                  : const Color(0xFF00B4D8),
+  // ============================================================================
+  // BOTONES DE ACCIÓN FIJOS
+  // ============================================================================
+
+  Widget _buildFixedActionButtons() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey, width: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
+              child: const Text('Cancelar'),
             ),
-            child: _isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(isEditMode ? 'Actualizar' : 'Guardar'),
           ),
-        ),
-      ],
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _submitForm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _selectedTipo != null
+                    ? _getTipoColor(_selectedTipo!)
+                    : const Color(0xFF00B4D8),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(isEditMode ? 'Actualizar' : 'Guardar'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -421,23 +471,23 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   }
 
   // ============================================================================
-  // HELPERS PARA COLORES E ÍCONOS
+  // HELPERS PARA COLORES E ÍCONOS (MISMOS MÉTODOS)
   // ============================================================================
 
   Color _getCondicionColor(String condicion) {
     switch (condicion.toUpperCase()) {
       case 'PUERTO':
-        return const Color(0xFF00B4D8); // Azul
+        return const Color(0xFF00B4D8);
       case 'RECEPCION':
-        return const Color(0xFF8B5CF6); // Púrpura
+        return const Color(0xFF8B5CF6);
       case 'ALMACEN':
-        return const Color(0xFF059669); // Verde
+        return const Color(0xFF059669);
       case 'PDI':
-        return const Color(0xFFF59E0B); // Naranja
+        return const Color(0xFFF59E0B);
       case 'PRE-PDI':
-        return const Color(0xFFEF4444); // Rojo
+        return const Color(0xFFEF4444);
       default:
-        return const Color(0xFF6B7280); // Gris
+        return const Color(0xFF6B7280);
     }
   }
 
@@ -461,34 +511,34 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   Color _getTipoColor(String tipo) {
     switch (tipo.toUpperCase()) {
       case 'TARJA':
-        return const Color(0xFF059669); // Verde - documento oficial
+        return const Color(0xFF059669);
       case 'AUTO':
-        return const Color(0xFF00B4D8); // Azul - foto del vehículo
+        return const Color(0xFF00B4D8);
       case 'KM':
-        return const Color(0xFFF59E0B); // Naranja - kilometraje
+        return const Color(0xFFF59E0B);
       case 'DR':
-        return const Color(0xFFDC2626); // Rojo - damage report
+        return const Color(0xFFDC2626);
       case 'OTRO':
-        return const Color(0xFF8B5CF6); // Púrpura - otros documentos
+        return const Color(0xFF8B5CF6);
       default:
-        return const Color(0xFF6B7280); // Gris - desconocido
+        return const Color(0xFF6B7280);
     }
   }
 
   IconData _getTipoIcon(String tipo) {
     switch (tipo.toUpperCase()) {
       case 'TARJA':
-        return Icons.assignment; // Documento/tarja
+        return Icons.assignment;
       case 'AUTO':
-        return Icons.directions_car; // Vehículo
+        return Icons.directions_car;
       case 'KM':
-        return Icons.speed; // Velocímetro para KM
+        return Icons.speed;
       case 'DR':
-        return Icons.report_problem; // Reporte de daños
+        return Icons.report_problem;
       case 'OTRO':
-        return Icons.description; // Documento genérico
+        return Icons.description;
       default:
-        return Icons.photo; // Foto genérica
+        return Icons.photo;
     }
   }
 
@@ -510,19 +560,17 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   }
 
   // ============================================================================
-  // SUBMIT FORM
+  // SUBMIT FORM (MISMO MÉTODO)
   // ============================================================================
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Validar foto solo en modo crear o si se cambió
     if (!isEditMode && _fotoPath == null) {
       _showError('La foto es obligatoria');
       return;
     }
 
-    // Validar que se haya seleccionado un registro VIN
     if (_selectedRegistroVinId == null) {
       _showError('Seleccione una condición');
       return;
@@ -539,7 +587,6 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           : _nDocumentoController.text.trim();
 
       if (isEditMode) {
-        // Modo edición
         success = await notifier.updateFoto(
           fotoId: widget.fotoId!,
           tipo: _selectedTipo,
@@ -547,7 +594,6 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           nDocumento: nDocumento,
         );
       } else {
-        // Modo crear - usar registro VIN seleccionado específicamente
         success = await notifier.addFoto(
           registroVinId: _selectedRegistroVinId!,
           tipo: _selectedTipo!,
