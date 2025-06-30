@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
+import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
 
-class DetalleRegistrosVin extends StatelessWidget {
+class DetalleRegistrosVin extends ConsumerWidget {
   final List<RegistroVin> items;
   final String vin; // ✅ VIN para el formulario
   final VoidCallback? onAddPressed; // ✅ Callback opcional adicional
@@ -16,7 +18,7 @@ class DetalleRegistrosVin extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (items.isEmpty) {
       return _buildEmptyState(context);
     }
@@ -35,7 +37,7 @@ class DetalleRegistrosVin extends StatelessWidget {
           final registro = entry.value;
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _buildRegistroCard(registro, index),
+            child: _buildRegistroCard(context, ref, registro, index),
           );
         }),
       ],
@@ -116,12 +118,27 @@ class DetalleRegistrosVin extends StatelessWidget {
     // Ejecutar callback adicional si existe
     onAddPressed?.call();
 
-    // Mostrar formulario
+    // ✅ Mostrar formulario en modo CREAR
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => RegistroVinForm(vin: vin),
+      builder: (context) =>
+          RegistroVinForm(vin: vin), // ✅ Sin registroVin = modo crear
+    );
+  }
+
+  void _showEditarRegistroForm(BuildContext context, RegistroVin registro) {
+    // ✅ Mostrar formulario en modo EDITAR
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => RegistroVinForm(
+        // ✅ Mismo componente
+        vin: vin,
+        registroVin: registro, // ✅ Con registroVin = modo editar
+      ),
     );
   }
 
@@ -180,9 +197,14 @@ class DetalleRegistrosVin extends StatelessWidget {
   }
 
   // ============================================================================
-  // CARD DE REGISTRO INDIVIDUAL
+  // CARD DE REGISTRO INDIVIDUAL CON ACCIONES
   // ============================================================================
-  Widget _buildRegistroCard(RegistroVin registro, int index) {
+  Widget _buildRegistroCard(
+    BuildContext context,
+    WidgetRef ref,
+    RegistroVin registro,
+    int index,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -201,8 +223,8 @@ class DetalleRegistrosVin extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ Header del registro
-            _buildRegistroHeader(registro, index),
+            // ✅ Header del registro con botones de acción
+            _buildRegistroHeader(context, ref, registro, index),
 
             const SizedBox(height: 12),
 
@@ -221,9 +243,14 @@ class DetalleRegistrosVin extends StatelessWidget {
   }
 
   // ============================================================================
-  // HEADER DEL REGISTRO
+  // HEADER DEL REGISTRO CON BOTONES DE ACCIÓN
   // ============================================================================
-  Widget _buildRegistroHeader(RegistroVin registro, int index) {
+  Widget _buildRegistroHeader(
+    BuildContext context,
+    WidgetRef ref,
+    RegistroVin registro,
+    int index,
+  ) {
     return Row(
       children: [
         // ✅ Número de orden
@@ -295,8 +322,228 @@ class DetalleRegistrosVin extends StatelessWidget {
             ],
           ),
         ),
+
+        // ✅ BOTONES DE ACCIÓN (Edit y Delete)
+        _buildActionButtons(context, ref, registro),
       ],
     );
+  }
+
+  // ============================================================================
+  // BOTONES DE ACCIÓN (EDIT Y DELETE)
+  // ============================================================================
+  Widget _buildActionButtons(
+    BuildContext context,
+    WidgetRef ref,
+    RegistroVin registro,
+  ) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ✅ Botón Edit
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => _showEditarRegistroForm(context, registro),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.edit, size: 16, color: Colors.orange),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // ✅ Botón Delete
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.red.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => _showDeleteConfirmation(context, ref, registro),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.delete_outline, size: 16, color: Colors.red),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================================
+  // CONFIRMACIÓN DE ELIMINACIÓN
+  // ============================================================================
+  void _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    RegistroVin registro,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber, color: Colors.orange, size: 24),
+              SizedBox(width: 8),
+              Text('Confirmar Eliminación'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '¿Estás seguro de que deseas eliminar este registro de inspección?',
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Condición: ${registro.condicion}',
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    if (registro.fecha != null)
+                      Text('Fecha: ${registro.fecha}'),
+                    if (registro.zonaInspeccion != null)
+                      Text('Zona: ${registro.zonaInspeccion!.value}'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '⚠️ Esta acción no se puede deshacer.',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await _deleteRegistro(context, ref, registro);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteRegistro(
+    BuildContext context,
+    WidgetRef ref,
+    RegistroVin registro,
+  ) async {
+    // Mostrar loading
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 12),
+            Text('Eliminando registro...'),
+          ],
+        ),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    try {
+      final notifier = ref.read(detalleRegistroProvider(vin).notifier);
+      final success = await notifier.deleteRegistroVin(registro.id);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text('Registro eliminado exitosamente'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.error, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text('Error al eliminar registro'),
+                ],
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // ============================================================================

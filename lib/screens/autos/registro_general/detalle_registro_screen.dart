@@ -15,7 +15,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detalleAsync = ref.watch(registroDetalleProvider(vin));
+    final detalleAsync = ref.watch(detalleRegistroProvider(vin));
 
     return DefaultTabController(
       length: 4,
@@ -206,7 +206,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
           ref: ref,
         ),
         _buildScrollableTab(
-          child: DetalleDanos(danos: registro.danos),
+          child: DetalleDanos(danos: registro.danos, vin: registro.vin),
           ref: ref,
         ),
       ],
@@ -225,7 +225,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
   // UTILIDADES
   // ============================================================================
   void _refreshData(BuildContext context, WidgetRef ref) {
-    ref.invalidate(registroDetalleProvider(vin));
+    ref.read(detalleRegistroProvider(vin).notifier).refresh();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

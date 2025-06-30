@@ -1,6 +1,7 @@
 // lib/services/autos/detalle_registro_service.dart
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../models/autos/detalle_registro_model.dart';
 import '../http_service.dart';
 
@@ -25,13 +26,18 @@ class DetalleRegistroService {
   // REGISTRO VIN OPERATIONS
   // ============================================================================
 
-  /// Crear registro VIN simple
-  /// POST /api/v1/autos/registro-vin/
+  /// Obtener opciones de registro VIN
+  Future<Map<String, dynamic>> getRegistroVinOptions() async {
+    final response = await _http.dio.get('/api/v1/autos/registro-vin/options/');
+    return response.data;
+  }
+
+  /// Crear registro VIN simple - FIX para capturar errores 400
   Future<Map<String, dynamic>> createRegistroVin({
     required String vin,
     required String condicion,
     required int zonaInspeccion,
-    required File fotoVin, // ✅ OBLIGATORIA
+    required File fotoVin,
     int? bloque,
     int? fila,
     int? posicion,
@@ -65,12 +71,26 @@ class DetalleRegistroService {
       MapEntry('foto_vin', await MultipartFile.fromFile(fotoVin.path)),
     );
 
-    final response = await _http.dio.post(
-      '/api/v1/autos/registro-vin/',
-      data: formData,
-    );
+    try {
+      final response = await _http.dio.post(
+        '/api/v1/autos/registro-vin/',
+        data: formData,
+      );
 
-    return response.data;
+      return response.data;
+    } on DioException catch (e) {
+      // ✅ Si es error 400, devolver la respuesta como si fuera exitosa
+      // para que el provider pueda leer el mensaje de error
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        debugPrint(
+          '🔧 Interceptando error 400, devolviendo data: ${e.response!.data}',
+        );
+        return e.response!.data as Map<String, dynamic>;
+      }
+
+      // ✅ Para otros errores, re-lanzar la excepción
+      rethrow;
+    }
   }
 
   /// Actualizar registro VIN
@@ -124,17 +144,15 @@ class DetalleRegistroService {
     return response.data;
   }
 
+  /// Eliminar registro VIN
+  /// DELETE /api/v1/autos/registro-vin/{id}/
+  Future<void> deleteRegistroVin(int registroVinId) async {
+    await _http.dio.delete('/api/v1/autos/registro-vin/$registroVinId/');
+  }
+
   // ============================================================================
   // FOTOS DE PRESENTACIÓN OPERATIONS
   // ============================================================================
-
-  /// Obtener tipos de documento disponibles
-  ///
-  // ✅ Nuevo método en DetalleRegistroService
-  Future<Map<String, dynamic>> getRegistroVinOptions() async {
-    final response = await _http.dio.get('/api/v1/autos/registro-vin/options/');
-    return response.data;
-  }
 
   /// GET /api/v1/autos/fotos-presentacion/options/
   Future<Map<String, dynamic>> getFotosOptions() async {
@@ -152,24 +170,30 @@ class DetalleRegistroService {
     required File imagen,
     String? nDocumento,
   }) async {
-    final formData = FormData();
+    final formData = FormData.fromMap({
+      'registro_vin': registroVinId,
+      'tipo': tipo,
+      'imagen': await MultipartFile.fromFile(imagen.path),
+      if (nDocumento != null && nDocumento.isNotEmpty)
+        'n_documento': nDocumento,
+    });
 
-    formData.fields.addAll([
-      MapEntry('registro_vin', registroVinId.toString()),
-      MapEntry('tipo', tipo),
-      if (nDocumento != null) MapEntry('n_documento', nDocumento),
-    ]);
+    try {
+      final response = await _http.dio.post(
+        '/api/v1/autos/fotos-presentacion/',
+        data: formData,
+      );
 
-    formData.files.add(
-      MapEntry('imagen', await MultipartFile.fromFile(imagen.path)),
-    );
+      return response.data;
+    } on DioException catch (e) {
+      // ✅ Si es error 400, devolver la respuesta como si fuera exitosa
+      // para que el provider pueda leer el mensaje de error
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return e.response!.data as Map<String, dynamic>;
+      }
 
-    final response = await _http.dio.post(
-      '/api/v1/autos/fotos-presentacion/',
-      data: formData,
-    );
-
-    return response.data;
+      rethrow;
+    }
   }
 
   /// Actualizar foto
@@ -212,7 +236,7 @@ class DetalleRegistroService {
   }
 
   // ============================================================================
-  // DAÑOS OPERATIONS
+  // DAÑOS OPERATIONS - IMPLEMENTACIÓN COMPLETA SEGÚN MANUAL API
   // ============================================================================
 
   /// Obtener opciones de daños
@@ -222,10 +246,10 @@ class DetalleRegistroService {
     return response.data;
   }
 
-  /// Crear daño con múltiples imágenes (MÉTODO ÚNICO)
-  /// POST /api/v1/autos/danos/ + POST /api/v1/autos/danos/{id}/add_multiple_images/
-  /// Este método unifica la creación del daño y la adición de imágenes en una sola operación
-  Future<Map<String, dynamic>> createDanoWithImages({
+  /// ✅ CREAR DAÑO CON MÚLTIPLES IMÁGENES - IMPLEMENTACIÓN SEGÚN MANUAL
+  /// POST /api/v1/autos/danos/
+  /// Formato FormData con imagen_0, imagen_1, imagen_2, etc.
+  Future<Map<String, dynamic>> createDanoWithFormData({
     required int registroVinId,
     required int tipoDano,
     required int areaDano,
@@ -234,66 +258,99 @@ class DetalleRegistroService {
     String? descripcion,
     int? responsabilidad,
     bool relevante = false,
-    List<File>? imagenes, // ✅ Fotos opcionales
+    List<File>? imagenes,
+    int? nDocumento,
   }) async {
-    // 1. Crear el daño primero
-    final danoPayload = {
-      'registro_vin': registroVinId,
-      'tipo_dano': tipoDano,
-      'area_dano': areaDano,
-      'severidad': severidad,
-      'relevante': relevante,
-    };
+    debugPrint('🔧 createDanoWithFormData - Parámetros:');
+    debugPrint('   registroVinId: $registroVinId');
+    debugPrint('   tipoDano: $tipoDano');
+    debugPrint('   areaDano: $areaDano');
+    debugPrint('   severidad: $severidad');
+    debugPrint('   zonas: $zonas');
+    debugPrint('   descripcion: $descripcion');
+    debugPrint('   responsabilidad: $responsabilidad');
+    debugPrint('   relevante: $relevante');
+    debugPrint('   imagenes: ${imagenes?.length ?? 0}');
 
-    if (zonas != null) danoPayload['zonas'] = zonas;
-    if (descripcion != null) danoPayload['descripcion'] = descripcion;
-    if (responsabilidad != null)
-      danoPayload['responsabilidad'] = responsabilidad;
+    final formData = FormData();
 
-    final danoResponse = await _http.dio.post(
-      '/api/v1/autos/danos/',
-      data: danoPayload,
-    );
+    // ✅ Campos obligatorios
+    formData.fields.addAll([
+      MapEntry('registro_vin', registroVinId.toString()),
+      MapEntry('tipo_dano', tipoDano.toString()),
+      MapEntry('area_dano', areaDano.toString()),
+      MapEntry('severidad', severidad.toString()),
+      MapEntry('relevante', relevante.toString()),
+    ]);
 
-    final danoData = danoResponse.data;
+    // ✅ Campos opcionales
+    if (zonas != null && zonas.isNotEmpty) {
+      // Agregar múltiples valores para zonas
+      for (final zona in zonas) {
+        formData.fields.add(MapEntry('zonas', zona.toString()));
+      }
+    }
 
-    // 2. Si hay imágenes, agregarlas al daño creado
+    if (descripcion != null && descripcion.isNotEmpty) {
+      formData.fields.add(MapEntry('descripcion', descripcion));
+    }
+
+    if (responsabilidad != null) {
+      formData.fields.add(
+        MapEntry('responsabilidad', responsabilidad.toString()),
+      );
+    }
+    if (nDocumento != null) {
+      formData.fields.add(MapEntry('n_documento', nDocumento.toString()));
+    }
+
+    // ✅ Múltiples imágenes con formato imagen_0, imagen_1, imagen_2, etc.
     if (imagenes != null && imagenes.isNotEmpty) {
-      final danoId =
-          danoData['data']['id']; // Asumir que la respuesta tiene este formato
-
-      final formData = FormData();
-
       for (int i = 0; i < imagenes.length; i++) {
         formData.files.add(
           MapEntry('imagen_$i', await MultipartFile.fromFile(imagenes[i].path)),
         );
       }
+    }
 
-      final imagenesResponse = await _http.dio.post(
-        '/api/v1/autos/danos/$danoId/add_multiple_images/',
+    // 🐛 DEBUG: Mostrar datos finales a enviar
+    debugPrint('🔧 FormData fields (${formData.fields.length}):');
+    for (var field in formData.fields) {
+      debugPrint('   ${field.key}: ${field.value}');
+    }
+    debugPrint('🔧 FormData files (${formData.files.length}):');
+    for (var file in formData.files) {
+      debugPrint('   ${file.key}: ${file.value.filename}');
+    }
+
+    try {
+      final response = await _http.dio.post(
+        '/api/v1/autos/danos/',
         data: formData,
       );
 
-      // 3. Combinar respuestas
-      return {
-        'success': true,
-        'message': 'Daño creado con ${imagenes.length} imágenes',
-        'dano': danoData['data'],
-        'imagenes': imagenesResponse.data['data'],
-      };
-    }
+      debugPrint('✅ Response status: ${response.statusCode}');
+      debugPrint('✅ Response data: ${response.data}');
 
-    // Si no hay imágenes, solo retornar el daño creado
-    return {
-      'success': true,
-      'message': 'Daño creado sin imágenes',
-      'dano': danoData['data'],
-      'imagenes': [],
-    };
+      return response.data;
+    } on DioException catch (e) {
+      debugPrint('❌ DioException en createDanoWithFormData:');
+      debugPrint('   Status code: ${e.response?.statusCode}');
+      debugPrint('   Response data: ${e.response?.data}');
+
+      // ✅ Si es error 400, devolver la respuesta para que el provider pueda leer el error
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+
+      rethrow;
+    } catch (e) {
+      debugPrint('❌ Error general en createDanoWithFormData: $e');
+      rethrow;
+    }
   }
 
-  /// Actualizar daño
+  /// ✅ ACTUALIZAR DAÑO - IMPLEMENTACIÓN SEGÚN MANUAL
   /// PUT /api/v1/autos/danos/{id}/
   Future<Map<String, dynamic>> updateDano({
     required int danoId,
@@ -304,33 +361,109 @@ class DetalleRegistroService {
     String? descripcion,
     int? responsabilidad,
     bool? relevante,
+    int? nDocumento,
+    List<File>? newImages, // ✅ Nuevas imágenes a agregar (opcional)
   }) async {
-    final payload = <String, dynamic>{};
+    debugPrint('🔧 updateDano - Parámetros:');
+    debugPrint('   danoId: $danoId');
+    debugPrint('   tipoDano: $tipoDano');
+    debugPrint('   areaDano: $areaDano');
+    debugPrint('   severidad: $severidad');
+    debugPrint('   zonas: $zonas');
+    debugPrint('   descripcion: $descripcion');
+    debugPrint('   responsabilidad: $responsabilidad');
+    debugPrint('   relevante: $relevante');
+    debugPrint('   newImages: ${newImages?.length ?? 0}');
 
-    // Solo agregar campos que se van a actualizar
-    if (tipoDano != null) payload['tipo_dano'] = tipoDano;
-    if (areaDano != null) payload['area_dano'] = areaDano;
-    if (severidad != null) payload['severidad'] = severidad;
-    if (zonas != null) payload['zonas'] = zonas;
-    if (descripcion != null) payload['descripcion'] = descripcion;
-    if (responsabilidad != null) payload['responsabilidad'] = responsabilidad;
-    if (relevante != null) payload['relevante'] = relevante;
+    final formData = FormData();
 
-    final response = await _http.dio.put(
-      '/api/v1/autos/danos/$danoId/',
-      data: payload,
-    );
+    // ✅ Solo agregar campos que no sean null
+    if (tipoDano != null) {
+      formData.fields.add(MapEntry('tipo_dano', tipoDano.toString()));
+    }
+    if (areaDano != null) {
+      formData.fields.add(MapEntry('area_dano', areaDano.toString()));
+    }
+    if (severidad != null) {
+      formData.fields.add(MapEntry('severidad', severidad.toString()));
+    }
+    if (nDocumento != null) {
+      formData.fields.add(MapEntry('n_documento', nDocumento.toString()));
+    }
+    if (zonas != null && zonas.isNotEmpty) {
+      // Agregar múltiples valores para zonas
+      for (final zona in zonas) {
+        formData.fields.add(MapEntry('zonas', zona.toString()));
+      }
+    }
+    if (descripcion != null) {
+      formData.fields.add(MapEntry('descripcion', descripcion));
+    }
+    if (responsabilidad != null) {
+      formData.fields.add(
+        MapEntry('responsabilidad', responsabilidad.toString()),
+      );
+    }
+    if (relevante != null) {
+      formData.fields.add(MapEntry('relevante', relevante.toString()));
+    }
 
-    return response.data;
+    // ✅ Agregar nuevas imágenes (0, 1, o múltiples)
+    if (newImages != null && newImages.isNotEmpty) {
+      for (int i = 0; i < newImages.length; i++) {
+        formData.files.add(
+          MapEntry(
+            'imagen_$i',
+            await MultipartFile.fromFile(newImages[i].path),
+          ),
+        );
+      }
+    }
+
+    // 🐛 DEBUG: Mostrar datos finales a enviar
+    debugPrint('🔧 FormData fields (${formData.fields.length}):');
+    for (var field in formData.fields) {
+      debugPrint('   ${field.key}: ${field.value}');
+    }
+    debugPrint('🔧 FormData files (${formData.files.length}):');
+    for (var file in formData.files) {
+      debugPrint('   ${file.key}: ${file.value.filename}');
+    }
+
+    try {
+      final response = await _http.dio.patch(
+        '/api/v1/autos/danos/$danoId/',
+        data: formData,
+      );
+
+      debugPrint('✅ Response status: ${response.statusCode}');
+      debugPrint('✅ Response data: ${response.data}');
+
+      return response.data;
+    } on DioException catch (e) {
+      debugPrint('❌ DioException en updateDano:');
+      debugPrint('   Status code: ${e.response?.statusCode}');
+      debugPrint('   Response data: ${e.response?.data}');
+
+      // ✅ Si es error 400, devolver la respuesta para que el provider pueda leer el error
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+
+      rethrow;
+    } catch (e) {
+      debugPrint('❌ Error general en updateDano: $e');
+      rethrow;
+    }
   }
 
-  /// Eliminar daño
+  /// ✅ ELIMINAR DAÑO - IMPLEMENTACIÓN SEGÚN MANUAL
   /// DELETE /api/v1/autos/danos/{id}/
   Future<void> deleteDano(int danoId) async {
     await _http.dio.delete('/api/v1/autos/danos/$danoId/');
   }
 
-  /// Agregar imagen a daño existente
+  /// ✅ AGREGAR IMAGEN INDIVIDUAL A DAÑO - IMPLEMENTACIÓN SEGÚN MANUAL
   /// POST /api/v1/autos/danos/{id}/add_image/
   Future<Map<String, dynamic>> addImagenToDano({
     required int danoId,
@@ -350,51 +483,80 @@ class DetalleRegistroService {
     return response.data;
   }
 
-  /// Eliminar imagen de daño
+  /// ✅ ELIMINAR IMAGEN INDIVIDUAL DE DAÑO - IMPLEMENTACIÓN SEGÚN MANUAL
   /// DELETE /api/v1/autos/danos/{id}/remove_image/
+  /// Payload: {"imagen_id": 1}
   Future<Map<String, dynamic>> removeImagenFromDano({
     required int danoId,
     required int imagenId,
   }) async {
+    debugPrint('🔧 removeImagenFromDano:');
+    debugPrint('   danoId: $danoId');
+    debugPrint('   imagenId: $imagenId');
+
     final response = await _http.dio.delete(
-      '/api/v1/autos/danos/$danoId/remove_image/',
-      data: {'imagen_id': imagenId},
+      '/api/v1/autos/danos/$danoId/remove_image/?imagen_id=$imagenId',
+    );
+
+    debugPrint('✅ removeImagenFromDano response: ${response.data}');
+
+    return response.data;
+  }
+
+  /// ✅ AGREGAR MÚLTIPLES IMÁGENES A DAÑO EXISTENTE - IMPLEMENTACIÓN SEGÚN MANUAL
+  /// POST /api/v1/autos/danos/{id}/add_multiple_images/
+  /// Formato: imagen_0, imagen_1, imagen_2, etc.
+  Future<Map<String, dynamic>> addMultipleImagenesToDano({
+    required int danoId,
+    required List<File> imagenes,
+  }) async {
+    final formData = FormData();
+
+    for (int i = 0; i < imagenes.length; i++) {
+      formData.files.add(
+        MapEntry('imagen_$i', await MultipartFile.fromFile(imagenes[i].path)),
+      );
+    }
+
+    final response = await _http.dio.post(
+      '/api/v1/autos/danos/$danoId/add_multiple_images/',
+      data: formData,
     );
 
     return response.data;
   }
-}
 
-// ============================================================================
-// CLASES DE DATOS AUXILIARES
-// ============================================================================
+  // ============================================================================
+  // MÉTODO LEGACY (MANTENER PARA COMPATIBILIDAD)
+  // ============================================================================
 
-class FotoData {
-  final File file;
-  final String tipo;
-  final String? nDocumento;
+  /// Crear daño con múltiples imágenes (MÉTODO LEGACY - PARA COMPATIBILIDAD)
+  /// Este método usa el enfoque de dos pasos del código anterior
 
-  const FotoData({required this.file, required this.tipo, this.nDocumento});
-}
-
-class DanoData {
-  final int tipoDano;
-  final int areaDano;
-  final int severidad;
-  final List<int>? zonas;
-  final String? descripcion;
-  final int? responsabilidad;
-  final bool relevante;
-  final List<File>? imagenes; // ✅ Fotos opcionales para el método unificado
-
-  const DanoData({
-    required this.tipoDano,
-    required this.areaDano,
-    required this.severidad,
-    this.zonas,
-    this.descripcion,
-    this.responsabilidad,
-    this.relevante = false,
-    this.imagenes,
-  });
+  Future<Map<String, dynamic>> createDanoWithImages({
+    required int registroVinId,
+    required int tipoDano,
+    required int areaDano,
+    required int severidad,
+    List<int>? zonas,
+    String? descripcion,
+    int? responsabilidad,
+    bool relevante = false,
+    List<File>? imagenes,
+    int? nDocumento,
+  }) async {
+    // Redirigir al método nuevo
+    return await createDanoWithFormData(
+      registroVinId: registroVinId,
+      tipoDano: tipoDano,
+      areaDano: areaDano,
+      severidad: severidad,
+      zonas: zonas,
+      descripcion: descripcion,
+      responsabilidad: responsabilidad,
+      relevante: relevante,
+      imagenes: imagenes,
+      nDocumento: nDocumento,
+    );
+  }
 }

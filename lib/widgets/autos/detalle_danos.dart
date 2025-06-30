@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
+import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
+import 'package:stampcamera/widgets/autos/forms/dano_form.dart'; // ✅ Import del formulario
 
-class DetalleDanos extends StatelessWidget {
+class DetalleDanos extends ConsumerWidget {
   final List<Dano> danos;
+  final String vin; // ✅ Agregar VIN para las acciones
+  final VoidCallback? onAddPressed; // ✅ Callback opcional adicional
 
-  const DetalleDanos({super.key, required this.danos});
+  const DetalleDanos({
+    super.key,
+    required this.danos,
+    required this.vin,
+    this.onAddPressed,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (danos.isEmpty) {
-      return _buildEmptyState();
+      return _buildEmptyState(context);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ✅ Header de sección
-        _buildSectionHeader(),
+        // ✅ Header de sección con botón agregar
+        _buildSectionHeader(context),
 
         const SizedBox(height: 16),
 
@@ -27,7 +37,7 @@ class DetalleDanos extends StatelessWidget {
           final dano = entry.value;
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: _buildDanoCard(context, dano, index),
+            child: _buildDanoCard(context, ref, dano, index),
           );
         }),
       ],
@@ -35,9 +45,9 @@ class DetalleDanos extends StatelessWidget {
   }
 
   // ============================================================================
-  // HEADER DE SECCIÓN
+  // HEADER DE SECCIÓN CON BOTÓN AGREGAR (IGUAL QUE FOTOS)
   // ============================================================================
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(context) {
     return Row(
       children: [
         Container(
@@ -62,6 +72,8 @@ class DetalleDanos extends StatelessWidget {
           ),
         ),
         const Spacer(),
+
+        // ✅ Counter badge
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -77,14 +89,115 @@ class DetalleDanos extends StatelessWidget {
             ),
           ),
         ),
+
+        const SizedBox(width: 8),
+
+        // ✅ Botón agregar nuevo daño
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFDC2626),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => _showAgregarDanoForm(context),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(
+                  Icons.add_circle_outline,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
 
   // ============================================================================
-  // CARD DE DAÑO INDIVIDUAL
+  // ACCIÓN PARA MOSTRAR FORMULARIO DE CREAR
   // ============================================================================
-  Widget _buildDanoCard(BuildContext context, Dano dano, int index) {
+
+  void _showAgregarDanoForm(BuildContext context) {
+    // Ejecutar callback adicional si existe
+    onAddPressed?.call();
+
+    // Mostrar formulario
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DanoForm(vin: vin),
+    );
+  }
+
+  // ============================================================================
+  // ESTADO VACÍO CON BOTÓN PARA AGREGAR PRIMER DAÑO (IGUAL QUE FOTOS)
+  // ============================================================================
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: const Color(0xFF059669).withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF059669).withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.check_circle_outline,
+            size: 48,
+            color: Color(0xFF059669),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Sin Daños',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF059669),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Este vehículo no tiene daños reportados',
+            style: TextStyle(fontSize: 12, color: Color(0xFF059669)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+
+          // ✅ Botón para agregar primer daño
+          ElevatedButton.icon(
+            onPressed: () => _showAgregarDanoForm(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            icon: const Icon(Icons.add_circle_outline),
+            label: const Text('Reportar Primer Daño'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================================
+  // CARD DE DAÑO INDIVIDUAL CON BOTONES DE ACCIÓN
+  // ============================================================================
+  Widget _buildDanoCard(
+    BuildContext context,
+    WidgetRef ref,
+    Dano dano,
+    int index,
+  ) {
     final condicionTexto = _getCondicionTexto(dano);
 
     return Card(
@@ -105,8 +218,8 @@ class DetalleDanos extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ Header del daño
-            _buildDanoHeader(dano, index, condicionTexto),
+            // ✅ Header del daño CON BOTONES DE ACCIÓN
+            _buildDanoHeader(context, ref, dano, index, condicionTexto),
 
             const SizedBox(height: 12),
 
@@ -131,9 +244,15 @@ class DetalleDanos extends StatelessWidget {
   }
 
   // ============================================================================
-  // HEADER DEL DAÑO
+  // HEADER DEL DAÑO CON BOTONES DE ACCIÓN
   // ============================================================================
-  Widget _buildDanoHeader(Dano dano, int index, String condicionTexto) {
+  Widget _buildDanoHeader(
+    BuildContext context,
+    WidgetRef ref,
+    Dano dano,
+    int index,
+    String condicionTexto,
+  ) {
     return Row(
       children: [
         // ✅ Número de daño
@@ -222,13 +341,136 @@ class DetalleDanos extends StatelessWidget {
             ],
           ),
         ),
+
+        // ✅ BOTONES DE ACCIÓN (EDIT Y DELETE)
+        _buildActionButtons(context, ref, dano),
       ],
     );
   }
 
   // ============================================================================
-  // INFORMACIÓN PRINCIPAL DEL DAÑO
+  // BOTONES DE ACCIÓN (EDIT Y DELETE) - IGUAL QUE FOTOS
   // ============================================================================
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref, Dano dano) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ✅ Botón Edit
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF059669).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => _showEditForm(context, dano),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: Color(0xFF059669),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        // ✅ Botón Delete
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.red.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              onTap: () => _confirmDelete(context, ref, dano),
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.delete_outline, size: 16, color: Colors.red),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ============================================================================
+  // MÉTODOS PARA EDIT/DELETE (IGUAL QUE FOTOS)
+  // ============================================================================
+
+  void _showEditForm(BuildContext context, Dano dano) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DanoForm(
+        vin: vin,
+        danoId: dano.id,
+        // TODO: Agregar parámetros iniciales para edición
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, Dano dano) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar Daño'),
+        content: Text(
+          '¿Estás seguro de eliminar el daño de ${dano.areaDano.esp}?\n\nEsta acción también eliminará todas las fotos asociadas.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteDano(context, ref, dano);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteDano(
+    BuildContext context,
+    WidgetRef ref,
+    Dano dano,
+  ) async {
+    final notifier = ref.read(detalleRegistroProvider(vin).notifier);
+
+    final success = await notifier.deleteDano(dano.id);
+
+    if (context.mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Daño eliminado exitosamente')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Error al eliminar daño')),
+        );
+      }
+    }
+  }
+
+  // ============================================================================
+  // RESTO DE MÉTODOS ORIGINALES (SIN CAMBIOS)
+  // ============================================================================
+
   Widget _buildDanoInfo(Dano dano) {
     return Column(
       children: [
@@ -264,9 +506,6 @@ class DetalleDanos extends StatelessWidget {
     );
   }
 
-  // ============================================================================
-  // INFORMACIÓN ADICIONAL
-  // ============================================================================
   Widget _buildAdditionalInfo(BuildContext context, Dano dano) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -334,9 +573,6 @@ class DetalleDanos extends StatelessWidget {
     );
   }
 
-  // ============================================================================
-  // SECCIÓN DE IMÁGENES
-  // ============================================================================
   Widget _buildImagenesSection(List<DanoImagen> imagenes) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -400,9 +636,6 @@ class DetalleDanos extends StatelessWidget {
     );
   }
 
-  // ============================================================================
-  // WIDGETS AUXILIARES
-  // ============================================================================
   Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
     return Row(
       children: [
@@ -581,6 +814,7 @@ class DetalleDanos extends StatelessWidget {
   }
 
   void _showDocumentoModal(BuildContext context, FotoPresentacion documento) {
+    // Modal implementation (sin cambios del original)
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -723,45 +957,9 @@ class DetalleDanos extends StatelessWidget {
   }
 
   // ============================================================================
-  // ESTADO VACÍO
+  // HELPERS (SIN CAMBIOS)
   // ============================================================================
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: const Color(0xFF059669).withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF059669).withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: const Column(
-        children: [
-          Icon(Icons.check_circle_outline, size: 48, color: Color(0xFF059669)),
-          SizedBox(height: 16),
-          Text(
-            'Sin Daños',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF059669),
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Este vehículo no tiene daños reportados',
-            style: TextStyle(fontSize: 12, color: Color(0xFF059669)),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
 
-  // ============================================================================
-  // HELPERS
-  // ============================================================================
   String _getCondicionTexto(Dano dano) {
     return (dano.condicion?.value == "PUERTO" &&
             (dano.responsabilidad?.esp == "SNMP" ||
@@ -797,6 +995,10 @@ class DetalleDanos extends StatelessWidget {
         return const Color(0xFF8B5CF6);
       case 'ALMACEN':
         return const Color(0xFF059669);
+      case 'PDI':
+        return const Color(0xFFF59E0B);
+      case 'PRE-PDI':
+        return const Color(0xFFEF4444);
       case 'ARRIBO':
         return const Color(0xFF0EA5E9);
       default:
@@ -812,6 +1014,10 @@ class DetalleDanos extends StatelessWidget {
         return Icons.login;
       case 'ALMACEN':
         return Icons.warehouse;
+      case 'PDI':
+        return Icons.build_circle;
+      case 'PRE-PDI':
+        return Icons.search;
       case 'ARRIBO':
         return Icons.flight_land;
       default:

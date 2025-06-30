@@ -1,5 +1,6 @@
 // lib/providers/autos/detalle_registro_provider.dart
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:stampcamera/models/autos/registro_vin_options.dart';
@@ -58,7 +59,8 @@ class DetalleRegistroNotifier
   // REGISTRO VIN OPERATIONS
   // ============================================================================
 
-  /// Crear registro VIN simple
+  /// Crear registro VIN simple - SIMPLE ERROR HANDLING
+  /// Crear registro VIN simple - FIX DioException
   Future<bool> createRegistroVin({
     required String condicion,
     required int zonaInspeccion,
@@ -82,24 +84,27 @@ class DetalleRegistroNotifier
 
       debugPrint("✅ Result: $result");
 
-      // ✅ Verificar que la operación fue exitosa
-      if (result['success'] != true) {
-        debugPrint("❌ Error del servidor: ${result['message']}");
-        return false;
+      // ✅ Verificar si la operación fue exitosa
+      if (result['success'] == false) {
+        // ✅ Extraer mensaje de error
+        final errors = result['errors'];
+        if (errors != null && errors['non_field_errors'] != null) {
+          final errorList = errors['non_field_errors'] as List;
+          if (errorList.isNotEmpty) {
+            throw Exception(errorList.first.toString());
+          }
+        }
+        throw Exception('Error al crear el registro');
       }
 
       // ✅ Actualizar state local con el nuevo registro VIN
       final currentDetalle = state.valueOrNull;
       if (currentDetalle != null) {
-        // ✅ FIX: Extraer 'data' de la respuesta
         final nuevoRegistroVin = RegistroVin.fromJson(result['data']);
         final registrosActualizados = [
           ...currentDetalle.registrosVin,
           nuevoRegistroVin,
         ];
-
-        debugPrint("📋 Registros antes: ${currentDetalle.registrosVin.length}");
-        debugPrint("📋 Registros después: ${registrosActualizados.length}");
 
         final detalleActualizado = DetalleRegistroModel(
           vin: currentDetalle.vin,
@@ -114,22 +119,60 @@ class DetalleRegistroNotifier
           danos: currentDetalle.danos,
         );
 
-        debugPrint("🔄 Actualizando state...");
-        //TODO: Penitente arreglar el Refres de la pantalla.
         state = AsyncValue.data(detalleActualizado);
         debugPrint("✅ State actualizado correctamente");
-      } else {
-        debugPrint("⚠️ currentDetalle es null, no se puede actualizar state");
       }
 
       return true;
+    } on DioException catch (dioError) {
+      // ✅ CAPTURAR DioException y extraer el mensaje real
+      debugPrint('❌ DioException: ${dioError.response?.statusCode}');
+      debugPrint('❌ Response data: ${dioError.response?.data}');
+
+      if (dioError.response?.statusCode == 400 &&
+          dioError.response?.data != null) {
+        final responseData = dioError.response!.data;
+
+        // ✅ Buscar el mensaje de error en la respuesta
+        if (responseData is Map<String, dynamic>) {
+          // Caso 1: {success: false, errors: {non_field_errors: [...]}}
+          if (responseData['success'] == false &&
+              responseData['errors'] != null) {
+            final errors = responseData['errors'];
+            if (errors['non_field_errors'] != null) {
+              final errorList = errors['non_field_errors'] as List;
+              if (errorList.isNotEmpty) {
+                throw Exception(errorList.first.toString());
+              }
+            }
+          }
+
+          // Caso 2: {non_field_errors: [...]}
+          if (responseData['non_field_errors'] != null) {
+            final errorList = responseData['non_field_errors'] as List;
+            if (errorList.isNotEmpty) {
+              throw Exception(errorList.first.toString());
+            }
+          }
+
+          // Caso 3: {detail: "mensaje"}
+          if (responseData['detail'] != null) {
+            throw Exception(responseData['detail'].toString());
+          }
+        }
+      }
+
+      // ✅ Si no encontramos el mensaje específico, usar mensaje genérico
+      throw Exception('VIN duplicado o datos inválidos');
     } catch (e) {
       debugPrint('❌ Error creando registro VIN: $e');
-      return false;
+      // ✅ Re-lanzar la excepción para que el form la capture
+      rethrow;
     }
   }
 
   /// Actualizar registro VIN
+  /// Actualizar registro VIN (CON DEBUG)
   Future<bool> updateRegistroVin({
     required int registroVinId,
     String? condicion,
@@ -140,6 +183,17 @@ class DetalleRegistroNotifier
     int? posicion,
     int? contenedorId,
   }) async {
+    // 🐛 DEBUG: Mostrar todos los parámetros recibidos desde el form
+    debugPrint('📝 PROVIDER updateRegistroVin - Parámetros del formulario:');
+    debugPrint('   registroVinId: $registroVinId');
+    debugPrint('   condicion: $condicion');
+    debugPrint('   zonaInspeccion: $zonaInspeccion');
+    debugPrint('   bloque: $bloque');
+    debugPrint('   fila: $fila');
+    debugPrint('   posicion: $posicion');
+    debugPrint('   contenedorId: $contenedorId');
+    debugPrint('   fotoVin: ${fotoVin?.path ?? 'null'}');
+
     try {
       final result = await _service.updateRegistroVin(
         registroVinId: registroVinId,
@@ -152,12 +206,14 @@ class DetalleRegistroNotifier
         contenedorId: contenedorId,
       );
 
+      debugPrint('✅ Service result: $result');
+
       // ✅ Actualizar state local con el registro modificado
       final currentDetalle = state.valueOrNull;
       if (currentDetalle != null && result['data'] != null) {
         final registroActualizado = RegistroVin.fromJson(result['data']);
         final registrosActualizados = currentDetalle.registrosVin.map((r) {
-          return r.vin.hashCode == registroVinId ? registroActualizado : r;
+          return r.id == registroVinId ? registroActualizado : r;
         }).toList();
 
         final detalleActualizado = DetalleRegistroModel(
@@ -174,11 +230,47 @@ class DetalleRegistroNotifier
         );
 
         state = AsyncValue.data(detalleActualizado);
+        debugPrint('✅ State actualizado correctamente');
       }
 
       return true;
     } catch (e) {
       debugPrint('❌ Error actualizando registro VIN: $e');
+      return false;
+    }
+  }
+
+  /// Eliminar registro VIN
+  Future<bool> deleteRegistroVin(int registroVinId) async {
+    try {
+      await _service.deleteRegistroVin(registroVinId);
+
+      // ✅ Actualizar state local removiendo el registro
+      final currentDetalle = state.valueOrNull;
+      if (currentDetalle != null) {
+        final registrosActualizados = currentDetalle.registrosVin
+            .where((r) => r.id != registroVinId)
+            .toList();
+
+        final detalleActualizado = DetalleRegistroModel(
+          vin: currentDetalle.vin,
+          serie: currentDetalle.serie,
+          color: currentDetalle.color,
+          factura: currentDetalle.factura,
+          bl: currentDetalle.bl,
+          naveDescarga: currentDetalle.naveDescarga,
+          informacionUnidad: currentDetalle.informacionUnidad,
+          registrosVin: registrosActualizados,
+          fotosPresentacion: currentDetalle.fotosPresentacion,
+          danos: currentDetalle.danos,
+        );
+
+        state = AsyncValue.data(detalleActualizado);
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error eliminando registro VIN: $e');
       return false;
     }
   }
@@ -189,6 +281,8 @@ class DetalleRegistroNotifier
 
   /// Agregar foto individual
   Future<bool> addFoto({
+    int?
+    registroVinId, // ✅ Parámetro opcional para seleccionar registro específico
     required String tipo,
     required File imagen,
     String? nDocumento,
@@ -197,15 +291,53 @@ class DetalleRegistroNotifier
       final detalle = state.valueOrNull;
       if (detalle == null) return false;
 
-      final registroVinId = _getLatestRegistroVinId(detalle);
-      if (registroVinId == null) return false;
+      // ✅ Si no se proporciona registroVinId, usar el más reciente (comportamiento anterior)
+      final targetRegistroVinId =
+          registroVinId ?? _getLatestRegistroVinId(detalle);
+      if (targetRegistroVinId == null) return false;
+
+      debugPrint('🔧 addFoto - Parámetros finales:');
+      debugPrint('   targetRegistroVinId: $targetRegistroVinId');
+      debugPrint('   tipo: $tipo');
+      debugPrint('   nDocumento: $nDocumento');
 
       final result = await _service.createFoto(
-        registroVinId: registroVinId,
+        registroVinId: targetRegistroVinId,
         tipo: tipo,
         imagen: imagen,
         nDocumento: nDocumento,
       );
+
+      debugPrint('✅ addFoto result: $result');
+
+      // ✅ Verificar si la operación fue exitosa
+      if (result['success'] == false) {
+        // ✅ Extraer mensaje de error
+        final errors = result['errors'];
+        if (errors != null) {
+          // Caso 1: {errors: {non_field_errors: [...]}}
+          if (errors['non_field_errors'] != null) {
+            final errorList = errors['non_field_errors'] as List;
+            if (errorList.isNotEmpty) {
+              throw Exception(errorList.first.toString());
+            }
+          }
+
+          // Caso 2: {errors: {campo_especifico: [...]}}
+          if (errors is Map<String, dynamic>) {
+            final firstError = errors.values.firstWhere(
+              (value) => value is List && value.isNotEmpty,
+              orElse: () => null,
+            );
+            if (firstError != null) {
+              throw Exception(firstError.first.toString());
+            }
+          }
+        }
+
+        // Si no encontramos error específico
+        throw Exception('Error al crear la foto');
+      }
 
       // ✅ Actualizar state local con la nueva foto
       if (result['data'] != null) {
@@ -229,9 +361,62 @@ class DetalleRegistroNotifier
       }
 
       return true;
+    } on DioException catch (dioError) {
+      // ✅ CAPTURAR DioException similar a createRegistroVin
+      debugPrint('❌ DioException en addFoto: ${dioError.response?.statusCode}');
+      debugPrint('❌ Response data: ${dioError.response?.data}');
+
+      if (dioError.response?.statusCode == 400 &&
+          dioError.response?.data != null) {
+        final responseData = dioError.response!.data;
+
+        // ✅ Buscar el mensaje de error en la respuesta
+        if (responseData is Map<String, dynamic>) {
+          // Caso 1: {success: false, errors: {non_field_errors: [...]}}
+          if (responseData['success'] == false &&
+              responseData['errors'] != null) {
+            final errors = responseData['errors'];
+            if (errors['non_field_errors'] != null) {
+              final errorList = errors['non_field_errors'] as List;
+              if (errorList.isNotEmpty) {
+                throw Exception(errorList.first.toString());
+              }
+            }
+          }
+
+          // Caso 2: {non_field_errors: [...]}
+          if (responseData['non_field_errors'] != null) {
+            final errorList = responseData['non_field_errors'] as List;
+            if (errorList.isNotEmpty) {
+              throw Exception(errorList.first.toString());
+            }
+          }
+
+          // Caso 3: {detail: "mensaje"}
+          if (responseData['detail'] != null) {
+            throw Exception(responseData['detail'].toString());
+          }
+
+          // Caso 4: Errores de campo específico
+          if (responseData['errors'] != null) {
+            final errors = responseData['errors'] as Map<String, dynamic>;
+            final firstError = errors.values.firstWhere(
+              (value) => value is List && value.isNotEmpty,
+              orElse: () => null,
+            );
+            if (firstError != null) {
+              throw Exception(firstError.first.toString());
+            }
+          }
+        }
+      }
+
+      // ✅ Si no encontramos el mensaje específico, usar mensaje genérico
+      throw Exception('Error de validación en la foto');
     } catch (e) {
       debugPrint('❌ Error agregando foto: $e');
-      return false;
+      // ✅ Re-lanzar la excepción para que el form la capture
+      rethrow;
     }
   }
 
@@ -330,6 +515,7 @@ class DetalleRegistroNotifier
     int? responsabilidad,
     bool relevante = false,
     List<File>? imagenes,
+    int? nDocumento,
   }) async {
     try {
       final detalle = state.valueOrNull;
@@ -338,6 +524,7 @@ class DetalleRegistroNotifier
       final registroVinId = _getLatestRegistroVinId(detalle);
       if (registroVinId == null) return false;
 
+      // ✅ Usar el método correcto del servicio
       final result = await _service.createDanoWithImages(
         registroVinId: registroVinId,
         tipoDano: tipoDano,
@@ -348,13 +535,22 @@ class DetalleRegistroNotifier
         responsabilidad: responsabilidad,
         relevante: relevante,
         imagenes: imagenes,
+        nDocumento: nDocumento,
       );
 
-      // ✅ Actualizar state local con el nuevo daño
-      if (result['dano'] != null) {
-        final nuevoDano = Dano.fromJson(result['dano']);
+      debugPrint('🎯 createDanoWithImages result: $result');
+
+      // ✅ ACTUALIZAR STATE LOCAL IGUAL QUE updateDano()
+      if (result['success'] == true && result['data'] != null) {
+        debugPrint('✅ Daño creado exitosamente, actualizando state local...');
+
+        // ✅ Crear el nuevo daño desde la respuesta del servidor
+        final nuevoDano = Dano.fromJson(result['data']);
+
+        // ✅ Agregar el nuevo daño a la lista existente
         final danosActualizados = [...detalle.danos, nuevoDano];
 
+        // ✅ Construir el detalle actualizado
         final detalleActualizado = DetalleRegistroModel(
           vin: detalle.vin,
           serie: detalle.serie,
@@ -368,17 +564,27 @@ class DetalleRegistroNotifier
           danos: danosActualizados,
         );
 
+        // ✅ Actualizar el state
         state = AsyncValue.data(detalleActualizado);
-      }
 
-      return true;
+        debugPrint(
+          '✅ State local actualizado con nuevo daño ID: ${nuevoDano.id}',
+        );
+        return true;
+      } else {
+        debugPrint('❌ Respuesta sin success o data: $result');
+        return false;
+      }
     } catch (e) {
       debugPrint('❌ Error creando daño con imágenes: $e');
       return false;
     }
   }
 
-  /// Actualizar daño existente
+  // Método updateDano corregido en el provider
+
+  // Método updateDano corregido en el provider
+
   Future<bool> updateDano({
     required int danoId,
     int? tipoDano,
@@ -388,8 +594,43 @@ class DetalleRegistroNotifier
     String? descripcion,
     int? responsabilidad,
     bool? relevante,
+    List<File>? newImages, // ✅ Nuevas imágenes a agregar
+    List<int>? removedImageIds, // ✅ IDs de imágenes a eliminar
+    int? nDocumento, // ✅ NUEVO: ID de la foto de presentación
   }) async {
     try {
+      debugPrint('🔧 updateDano - Iniciando actualización:');
+      debugPrint('   danoId: $danoId');
+      debugPrint('   newImages: ${newImages?.length ?? 0}');
+      debugPrint('   removedImageIds: ${removedImageIds?.length ?? 0}');
+
+      final currentDetalle = state.valueOrNull;
+      if (currentDetalle == null) {
+        debugPrint('❌ No hay detalle disponible');
+        return false;
+      }
+
+      // ✅ 1. ELIMINAR imágenes que el usuario quitó
+      if (removedImageIds != null && removedImageIds.isNotEmpty) {
+        debugPrint('🗑️ Eliminando ${removedImageIds.length} imágenes...');
+
+        for (final imagenId in removedImageIds) {
+          try {
+            debugPrint('🗑️ Eliminando imagen ID: $imagenId');
+            await _service.removeImagenFromDano(
+              danoId: danoId,
+              imagenId: imagenId, // ✅ Usar directamente el ID
+            );
+            debugPrint('✅ Imagen $imagenId eliminada exitosamente');
+          } catch (e) {
+            debugPrint('⚠️ Error eliminando imagen $imagenId: $e');
+            // Continuar con las demás imágenes
+          }
+        }
+      }
+
+      // ✅ 2. ACTUALIZAR daño + agregar nuevas imágenes en una operación
+      debugPrint('📝 Actualizando datos del daño...');
       final result = await _service.updateDano(
         danoId: danoId,
         tipoDano: tipoDano,
@@ -399,35 +640,52 @@ class DetalleRegistroNotifier
         descripcion: descripcion,
         responsabilidad: responsabilidad,
         relevante: relevante,
+        newImages: newImages,
+        nDocumento: nDocumento, // ✅ NUEVO: Pasar foto de presentación
       );
 
-      // ✅ Actualizar state local con el daño modificado
-      final currentDetalle = state.valueOrNull;
-      if (currentDetalle != null && result['data'] != null) {
-        final danoActualizado = Dano.fromJson(result['data']);
-        final danosActualizados = currentDetalle.danos.map((d) {
-          return d.id == danoId ? danoActualizado : d;
-        }).toList();
+      debugPrint('📋 Resultado del servicio: $result');
 
-        final detalleActualizado = DetalleRegistroModel(
-          vin: currentDetalle.vin,
-          serie: currentDetalle.serie,
-          color: currentDetalle.color,
-          factura: currentDetalle.factura,
-          bl: currentDetalle.bl,
-          naveDescarga: currentDetalle.naveDescarga,
-          informacionUnidad: currentDetalle.informacionUnidad,
-          registrosVin: currentDetalle.registrosVin,
-          fotosPresentacion: currentDetalle.fotosPresentacion,
-          danos: danosActualizados,
-        );
+      // ✅ 3. ACTUALIZAR state local con los datos más recientes
+      if (result['success'] == true || result['data'] != null) {
+        debugPrint('✅ Actualizando state local...');
 
-        state = AsyncValue.data(detalleActualizado);
+        // Opción 1: Usar datos de la respuesta si están disponibles
+        if (result['data'] != null) {
+          final danoActualizado = Dano.fromJson(result['data']);
+          final danosActualizados = currentDetalle.danos.map((d) {
+            return d.id == danoId ? danoActualizado : d;
+          }).toList();
+
+          final detalleActualizado = DetalleRegistroModel(
+            vin: currentDetalle.vin,
+            serie: currentDetalle.serie,
+            color: currentDetalle.color,
+            factura: currentDetalle.factura,
+            bl: currentDetalle.bl,
+            naveDescarga: currentDetalle.naveDescarga,
+            informacionUnidad: currentDetalle.informacionUnidad,
+            registrosVin: currentDetalle.registrosVin,
+            fotosPresentacion: currentDetalle.fotosPresentacion,
+            danos: danosActualizados,
+          );
+
+          state = AsyncValue.data(detalleActualizado);
+          debugPrint('✅ State actualizado con datos de la respuesta');
+        } else {
+          // Opción 2: Refrescar desde el servidor si no hay datos en la respuesta
+          debugPrint('🔄 Refrescando desde servidor...');
+          await refresh();
+        }
+
+        return true;
+      } else {
+        debugPrint('❌ Respuesta del servicio sin éxito: $result');
+        return false;
       }
-
-      return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('❌ Error actualizando daño: $e');
+      debugPrint('❌ StackTrace: $stackTrace');
       return false;
     }
   }
@@ -600,7 +858,7 @@ class DetalleRegistroNotifier
     final sortedRegistros = List<RegistroVin>.from(detalle.registrosVin);
     sortedRegistros.sort((a, b) => (b.fecha ?? '').compareTo(a.fecha ?? ''));
 
-    return sortedRegistros.first.vin.hashCode;
+    return sortedRegistros.first.id;
   }
 
   /// Limpiar estado actual
@@ -670,19 +928,14 @@ final danosOptionsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 // ============================================================================
 
 /// Provider simplificado para obtener detalle por VIN
-final registroDetalleProvider =
-    FutureProvider.family<DetalleRegistroModel, String>((ref, vin) async {
-      final service = ref.read(detalleRegistroServiceProvider);
-      return await service.getByVin(vin);
-    });
 
-/// Provider para verificar si un VIN tiene detalles
 final vinHasDetalleProvider = FutureProvider.family<bool, String>((
   ref,
   vin,
 ) async {
   try {
-    await ref.watch(registroDetalleProvider(vin).future);
+    // ✅ Usar el provider principal para evitar duplicación
+    await ref.watch(detalleRegistroProvider(vin).future);
     return true;
   } catch (e) {
     return false;

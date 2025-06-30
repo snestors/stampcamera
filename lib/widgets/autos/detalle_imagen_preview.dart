@@ -28,6 +28,8 @@ class NetworkImagePreview extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Image.network(
+          errorBuilder: (context, error, stackTrace) =>
+              Text("❗️Error al cargar imagen"),
           thumbnailUrl,
           width: size,
           height: size,
