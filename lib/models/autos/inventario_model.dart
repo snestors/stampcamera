@@ -1,4 +1,4 @@
-// models/autos/inventario_model.dart
+// models/autos/inventario_base_model.dart
 
 /// Modelo para inventario base
 class InventarioBase {
@@ -26,7 +26,7 @@ class InventarioBase {
   final int tapaPinDeRemolque;
   final int portaplaca;
   final int copasTapasDeAros;
-  final int tapones;
+  final int taponesChasis;
   final int cobertor;
   final int botiquin;
   final int pernoSeguroRueda;
@@ -74,7 +74,7 @@ class InventarioBase {
     required this.tapaPinDeRemolque,
     required this.portaplaca,
     required this.copasTapasDeAros,
-    required this.tapones,
+    required this.taponesChasis,
     required this.cobertor,
     required this.botiquin,
     required this.pernoSeguroRueda,
@@ -111,7 +111,7 @@ class InventarioBase {
       updateAt: json['update_at'] ?? '',
       imagenes:
           (json['imagenes'] as List?)
-              ?.map((e) => InventarioImagen.fromJson(e))
+              ?.map((x) => InventarioImagen.fromJson(x))
               .toList() ??
           [],
       updateBy: json['update_by'] ?? 0,
@@ -130,7 +130,7 @@ class InventarioBase {
       tapaPinDeRemolque: json['TAPA_PIN_DE_REMOLQUE'] ?? 0,
       portaplaca: json['PORTAPLACA'] ?? 0,
       copasTapasDeAros: json['COPAS_TAPAS_DE_AROS'] ?? 0,
-      tapones: json['TAPONES_CHASIS'] ?? 0,
+      taponesChasis: json['TAPONES_CHASIS'] ?? 0,
       cobertor: json['COBERTOR'] ?? 0,
       botiquin: json['BOTIQUIN'] ?? 0,
       pernoSeguroRueda: json['PERNO_SEGURO_RUEDA'] ?? 0,
@@ -160,7 +160,12 @@ class InventarioBase {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'informacion_unidad': informacionUnidad.id,
+      'informacion_unidad': informacionUnidad.toJson(),
+      'create_by': createBy,
+      'create_at': createAt,
+      'update_at': updateAt,
+      'imagenes': imagenes.map((x) => x.toJson()).toList(),
+      'update_by': updateBy,
       'LLAVE_SIMPLE': llaveSimple,
       'LLAVE_COMANDO': llaveComando,
       'LLAVE_INTELIGENTE': llaveInteligente,
@@ -176,7 +181,7 @@ class InventarioBase {
       'TAPA_PIN_DE_REMOLQUE': tapaPinDeRemolque,
       'PORTAPLACA': portaplaca,
       'COPAS_TAPAS_DE_AROS': copasTapasDeAros,
-      'TAPONES_CHASIS': tapones,
+      'TAPONES_CHASIS': taponesChasis,
       'COBERTOR': cobertor,
       'BOTIQUIN': botiquin,
       'PERNO_SEGURO_RUEDA': pernoSeguroRueda,
@@ -203,7 +208,7 @@ class InventarioBase {
     };
   }
 
-  /// Crear copia con nuevos valores
+  /// Método copyWith para crear una copia con campos modificados
   InventarioBase copyWith({
     int? id,
     InformacionUnidad? informacionUnidad,
@@ -227,7 +232,7 @@ class InventarioBase {
     int? tapaPinDeRemolque,
     int? portaplaca,
     int? copasTapasDeAros,
-    int? tapones,
+    int? taponesChasis,
     int? cobertor,
     int? botiquin,
     int? pernoSeguroRueda,
@@ -275,7 +280,7 @@ class InventarioBase {
       tapaPinDeRemolque: tapaPinDeRemolque ?? this.tapaPinDeRemolque,
       portaplaca: portaplaca ?? this.portaplaca,
       copasTapasDeAros: copasTapasDeAros ?? this.copasTapasDeAros,
-      tapones: tapones ?? this.tapones,
+      taponesChasis: taponesChasis ?? this.taponesChasis,
       cobertor: cobertor ?? this.cobertor,
       botiquin: botiquin ?? this.botiquin,
       pernoSeguroRueda: pernoSeguroRueda ?? this.pernoSeguroRueda,
@@ -326,7 +331,7 @@ class InventarioBase {
         tapaPinDeRemolque +
         portaplaca +
         copasTapasDeAros +
-        tapones +
+        taponesChasis +
         cobertor +
         botiquin +
         pernoSeguroRueda +
@@ -349,6 +354,51 @@ class InventarioBase {
         chalecoReflectivo +
         conos +
         extension;
+  }
+
+  /// Convertir a Map para envío al API (solo campos de inventario)
+  Map<String, dynamic> toInventarioData() {
+    return {
+      'LLAVE_SIMPLE': llaveSimple,
+      'LLAVE_COMANDO': llaveComando,
+      'LLAVE_INTELIGENTE': llaveInteligente,
+      'ENCENDEDOR': encendedor,
+      'CENICERO': cenicero,
+      'CABLE_USB_O_AUX': cableUsbOAux,
+      'RETROVISOR': retrovisor,
+      'PISOS': pisos,
+      'LOGOS': logos,
+      'ESTUCHE_MANUAL': estucheManual,
+      'MANUALES_ESTUCHE': manualesEstuche,
+      'PIN_DE_REMOLQUE': pinDeRemolque,
+      'TAPA_PIN_DE_REMOLQUE': tapaPinDeRemolque,
+      'PORTAPLACA': portaplaca,
+      'COPAS_TAPAS_DE_AROS': copasTapasDeAros,
+      'TAPONES_CHASIS': taponesChasis,
+      'COBERTOR': cobertor,
+      'BOTIQUIN': botiquin,
+      'PERNO_SEGURO_RUEDA': pernoSeguroRueda,
+      'AMBIENTADORES': ambientadores,
+      'ESTUCHE_HERRAMIENTA': estucheHerramienta,
+      'DESARMADOR': desarmador,
+      'LLAVE_BOCA_COMBINADA': llaveBocaCombinada,
+      'ALICATE': alicate,
+      'LLAVE_DE_RUEDA': llaveDeRueda,
+      'PALANCA_DE_GATA': palancaDeGata,
+      'GATA': gata,
+      'LLANTA_DE_REPUESTO': llantaDeRepuesto,
+      'TRIANGULO_DE_EMERGENCIA': trianguloDeEmergencia,
+      'MALLA': malla,
+      'ANTENA': antena,
+      'EXTRA': extra,
+      'CABLE_CARGADOR': cableCargador,
+      'CAJA_DE_FUSIBLES': cajaDeFusibles,
+      'EXTINTOR': extintor,
+      'CHALECO_REFLECTIVO': chalecoReflectivo,
+      'CONOS': conos,
+      'EXTENSION': extension,
+      'OTROS': otros,
+    };
   }
 }
 
@@ -486,22 +536,21 @@ class InventarioOptions {
       inventarioPrevio: json['inventario_previo'] ?? {},
       camposInventario:
           (json['campos_inventario'] as List?)
-              ?.map((e) => CampoInventario.fromJson(e))
+              ?.map((x) => CampoInventario.fromJson(x))
               .toList() ??
           [],
     );
   }
 
-  /// Obtener valor previo de un campo específico
-  dynamic getValorPrevio(String fieldName) {
-    return inventarioPrevio[fieldName];
+  Map<String, dynamic> toJson() {
+    return {
+      'inventario_previo': inventarioPrevio,
+      'campos_inventario': camposInventario.map((x) => x.toJson()).toList(),
+    };
   }
-
-  /// Verificar si tiene inventario previo
-  bool get hasInventarioPrevio => inventarioPrevio.isNotEmpty;
 }
 
-/// Modelo para la estructura de campos de inventario
+/// Modelo para campos de inventario
 class CampoInventario {
   final String name;
   final String verboseName;
@@ -521,25 +570,25 @@ class CampoInventario {
     return CampoInventario(
       name: json['name'] ?? '',
       verboseName: json['verbose_name'] ?? '',
-      type: json['type'] ?? 'CharField',
+      type: json['type'] ?? '',
       required: json['required'] ?? false,
       defaultValue: json['default'],
     );
   }
 
-  /// Verificar si es un campo numérico
-  bool get isNumeric => type == 'IntegerField' || type == 'DecimalField';
-
-  /// Verificar si es un campo de texto
-  bool get isText => type == 'CharField' || type == 'TextField';
-
-  /// Obtener widget hint para UI
-  String get displayHint {
-    if (isNumeric) {
-      return 'Ingrese cantidad';
-    } else if (isText) {
-      return 'Ingrese texto';
-    }
-    return 'Ingrese valor';
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'verbose_name': verboseName,
+      'type': type,
+      'required': required,
+      'default': defaultValue,
+    };
   }
+
+  /// Verificar si es campo numérico
+  bool get isNumericField => type == 'IntegerField';
+
+  /// Verificar si es campo de texto
+  bool get isTextField => type == 'CharField';
 }

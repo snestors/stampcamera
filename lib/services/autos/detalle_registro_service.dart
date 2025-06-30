@@ -354,6 +354,7 @@ class DetalleRegistroService {
   /// PUT /api/v1/autos/danos/{id}/
   Future<Map<String, dynamic>> updateDano({
     required int danoId,
+    required registroVinId,
     int? tipoDano,
     int? areaDano,
     int? severidad,
@@ -378,6 +379,9 @@ class DetalleRegistroService {
     final formData = FormData();
 
     // ✅ Solo agregar campos que no sean null
+    if (registroVinId != null) {
+      formData.fields.add(MapEntry('registro_vin', registroVinId.toString()));
+    }
     if (tipoDano != null) {
       formData.fields.add(MapEntry('tipo_dano', tipoDano.toString()));
     }

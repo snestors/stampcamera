@@ -533,6 +533,7 @@ class DetalleRegistroNotifier
 
   /// Crear daño con imágenes
   Future<bool> createDanoWithImages({
+    required registroVinId,
     required int tipoDano,
     required int areaDano,
     required int severidad,
@@ -546,9 +547,6 @@ class DetalleRegistroNotifier
     try {
       final detalle = state.valueOrNull;
       if (detalle == null) return false;
-
-      final registroVinId = _getLatestRegistroVinId(detalle);
-      if (registroVinId == null) return false;
 
       // ✅ Usar el método correcto del servicio
       final result = await _service.createDanoWithImages(
@@ -613,6 +611,7 @@ class DetalleRegistroNotifier
 
   Future<bool> updateDano({
     required int danoId,
+    required registroVinId,
     int? tipoDano,
     int? areaDano,
     int? severidad,
@@ -658,6 +657,7 @@ class DetalleRegistroNotifier
       // ✅ 2. ACTUALIZAR daño + agregar nuevas imágenes en una operación
       debugPrint('📝 Actualizando datos del daño...');
       final result = await _service.updateDano(
+        registroVinId: registroVinId,
         danoId: danoId,
         tipoDano: tipoDano,
         areaDano: areaDano,

@@ -930,6 +930,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         success = await notifier.updateDano(
           danoId: widget.danoId!,
+          registroVinId: _selectedRegistroVinId,
           tipoDano: _selectedTipoDano,
           areaDano: _selectedAreaDano,
           severidad: _selectedSeveridad,
@@ -947,6 +948,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       } else {
         // ✅ MODO CREAR
         success = await notifier.createDanoWithImages(
+          registroVinId: _selectedRegistroVinId,
           tipoDano: _selectedTipoDano!,
           areaDano: _selectedAreaDano!,
           severidad: _selectedSeveridad!,
