@@ -34,6 +34,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   bool _isLoading = false;
   int? _selectedRegistroVinId;
   bool _initialized = false;
+  bool _hasAppliedInitialValues = false;
 
   bool get isEditMode => widget.fotoId != null;
 
@@ -56,7 +57,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     final optionsAsync = ref.watch(fotosOptionsProvider);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.9, // ✅ 90% de la pantalla
+      height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -66,10 +67,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       ),
       child: Column(
         children: [
-          // ✅ Header fijo
           _buildFixedHeader(),
-
-          // ✅ Contenido scrolleable
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
@@ -85,17 +83,11 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
               ),
             ),
           ),
-
-          // ✅ Botones de acción fijos
           _buildFixedActionButtons(),
         ],
       ),
     );
   }
-
-  // ============================================================================
-  // HEADER FIJO
-  // ============================================================================
 
   Widget _buildFixedHeader() {
     return Container(
@@ -133,15 +125,10 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     );
   }
 
-  // ============================================================================
-  // CONTENIDO SCROLLEABLE
-  // ============================================================================
-
   Widget _buildScrollableContent(
     DetalleRegistroModel detalle,
     AsyncValue optionsAsync,
   ) {
-    // Validación: Sin RegistrosVin
     if (detalle.registrosVin.isEmpty) {
       return _buildValidationError(
         'Sin Registros VIN',
@@ -152,21 +139,57 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       );
     }
 
-    // Inicializar selección una sola vez
     if (!_initialized) {
       _initializeSelection(detalle);
     }
 
     return optionsAsync.when(
-      data: (options) => _buildFormContent(options, detalle),
+      data: (options) {
+        // ✅ Aplicar initial_values para tipos de foto
+        if (!isEditMode && !_hasAppliedInitialValues) {
+          _applyInitialValues(options);
+        }
+        return _buildFormContent(options, detalle);
+      },
       loading: () => _buildLoadingState(),
       error: (error, _) => _buildErrorState('Error cargando tipos de foto'),
     );
   }
 
+  // ✅ Aplicar initial_values solo para condición si aplica
+  void _applyInitialValues(Map<String, dynamic> options) {
+    if (_hasAppliedInitialValues) return;
+
+    final fieldPermissions =
+        options['field_permissions'] as Map<String, dynamic>?;
+    final initialValues = options['initial_values'] as Map<String, dynamic>?;
+
+    if (fieldPermissions != null && initialValues != null) {
+      final condicionPermissions =
+          fieldPermissions['condicion'] as Map<String, dynamic>?;
+      final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+      final initialCondicion = initialValues['condicion']?.toString();
+
+      // ✅ Solo aplicar initial_value de condición si existe uno definido
+      if (initialCondicion != null && initialCondicion.isNotEmpty) {
+        // Si es editable O si no es editable pero hay un valor inicial específico
+        if (isCondicionEditable ||
+            (!isCondicionEditable && initialCondicion.isNotEmpty)) {
+          // Buscar el registro VIN que coincida con la condición inicial
+          // Esto se hará al momento de construir las condiciones disponibles
+        }
+      }
+    }
+
+    _hasAppliedInitialValues = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   void _initializeSelection(DetalleRegistroModel detalle) {
     if (isEditMode && widget.fotoId != null) {
-      // Modo edición: encontrar el registro VIN de la foto actual
       final fotoActual = detalle.fotosPresentacion
           .where((f) => f.id == widget.fotoId)
           .firstOrNull;
@@ -181,7 +204,6 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         }
       }
     } else {
-      // Modo crear: seleccionar el registro más reciente
       if (detalle.registrosVin.isNotEmpty) {
         final sortedRegistros = List<RegistroVin>.from(detalle.registrosVin);
         sortedRegistros.sort(
@@ -231,10 +253,6 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     );
   }
 
-  // ============================================================================
-  // CONTENIDO DEL FORMULARIO
-  // ============================================================================
-
   Widget _buildFormContent(
     Map<String, dynamic> options,
     DetalleRegistroModel detalle,
@@ -245,6 +263,10 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
+
+          // ✅ Validación de permisos para tipos de foto
+          _buildPermissionValidation(options),
+
           _buildFormFields(options, detalle),
           const SizedBox(height: 16),
           _buildFotoSection(),
@@ -254,19 +276,133 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     );
   }
 
+  // ✅ Validación de permisos solo para condiciones
+  Widget _buildPermissionValidation(Map<String, dynamic> options) {
+    final fieldPermissions =
+        options['field_permissions'] as Map<String, dynamic>?;
+    final initialValues = options['initial_values'] as Map<String, dynamic>?;
+
+    if (fieldPermissions == null) return const SizedBox.shrink();
+
+    final condicionPermissions =
+        fieldPermissions['condicion'] as Map<String, dynamic>?;
+    final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+    final initialCondicion = initialValues?['condicion']?.toString();
+
+    // ✅ Si no es editable y no hay valor inicial
+    if (!isCondicionEditable &&
+        (initialCondicion == null || initialCondicion.isEmpty)) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Colors.red.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: const Column(
+          children: [
+            Icon(Icons.block, color: Colors.red, size: 32),
+            SizedBox(height: 8),
+            Text(
+              'Sin permisos para crear fotos',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            SizedBox(height: 4),
+            Text(
+              'No tienes una condición asignada para crear nuevas fotos de presentación.',
+              style: TextStyle(color: Colors.red, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ✅ Si condición fija (no editable pero hay un valor inicial)
+    if (!isCondicionEditable &&
+        initialCondicion != null &&
+        initialCondicion.isNotEmpty) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _getCondicionColor(initialCondicion).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: _getCondicionColor(initialCondicion).withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.lock,
+              color: _getCondicionColor(initialCondicion),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Condición fija: $initialCondicion',
+                style: TextStyle(
+                  color: _getCondicionColor(initialCondicion),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
   Widget _buildFormFields(
     Map<String, dynamic> options,
     DetalleRegistroModel detalle,
   ) {
-    final tiposDisponibles =
-        options['tipos_disponibles'] as List<dynamic>? ?? [];
+    // ✅ Obtener permisos y valores iniciales
+    final fieldPermissions =
+        options['field_permissions'] as Map<String, dynamic>?;
+    final initialValues = options['initial_values'] as Map<String, dynamic>?;
+    final condicionPermissions =
+        fieldPermissions?['condicion'] as Map<String, dynamic>?;
+    final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+    final initialCondicion = initialValues?['condicion']?.toString();
 
-    // Crear lista de IdValuePair desde los registros VIN existentes
-    final condicionesDisponibles = detalle.registrosVin
+    // ✅ Filtrar condiciones disponibles según permisos
+    List<IdValuePair> condicionesDisponibles = detalle.registrosVin
         .map(
           (registro) => IdValuePair(id: registro.id, value: registro.condicion),
         )
         .toList();
+
+    // ✅ FILTRAR solo si NO es editable Y hay un valor inicial específico
+    if (!isCondicionEditable &&
+        initialCondicion != null &&
+        initialCondicion.isNotEmpty) {
+      condicionesDisponibles = condicionesDisponibles
+          .where((condicion) => condicion.value == initialCondicion)
+          .toList();
+    } else if (!isCondicionEditable &&
+        (initialCondicion == null || initialCondicion.isEmpty)) {
+      // Si no es editable y no hay valor inicial, vaciar opciones
+      condicionesDisponibles = [];
+    }
+    // ✅ Si es editable (true), mostrar todas las condiciones sin filtrar
+
+    final tiposDisponibles =
+        options['tipos_disponibles'] as List<dynamic>? ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,14 +413,17 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         ),
         const SizedBox(height: 12),
 
-        // Dropdown de condición/registro VIN
+        // ✅ Dropdown de condición/registro VIN con filtrado por permisos
         DropdownButtonFormField<int>(
           value: _selectedRegistroVinId,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Condición *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.timeline),
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.timeline),
             helperText: 'Selecciona la condición del registro VIN',
+            suffixIcon: !isCondicionEditable
+                ? const Icon(Icons.lock, size: 16, color: Colors.grey)
+                : null,
           ),
           items: condicionesDisponibles.map<DropdownMenuItem<int>>((condicion) {
             return DropdownMenuItem<int>(
@@ -308,14 +447,16 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
               ),
             );
           }).toList(),
-          onChanged: (value) => setState(() => _selectedRegistroVinId = value),
+          onChanged: isCondicionEditable
+              ? (value) => setState(() => _selectedRegistroVinId = value)
+              : null,
           validator: (value) =>
               value == null ? 'Seleccione una condición' : null,
         ),
 
         const SizedBox(height: 16),
 
-        // Dropdown de tipo
+        // ✅ Dropdown de tipo (sin cambios)
         DropdownButtonFormField<String>(
           value: _selectedTipo,
           decoration: const InputDecoration(
@@ -385,54 +526,91 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     );
   }
 
-  // ============================================================================
-  // BOTONES DE ACCIÓN FIJOS
-  // ============================================================================
-
   Widget _buildFixedActionButtons() {
+    final optionsAsync = ref.watch(fotosOptionsProvider);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey, width: 0.2)),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: _isLoading ? null : () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _submitForm,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _selectedTipo != null
-                    ? _getTipoColor(_selectedTipo!)
-                    : const Color(0xFF00B4D8),
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(isEditMode ? 'Actualizar' : 'Guardar'),
-            ),
-          ),
-        ],
+      child: optionsAsync.when(
+        data: (options) => _buildActionButtonsContent(options),
+        loading: () => _buildDisabledButtons(),
+        error: (_, __) => _buildDisabledButtons(),
       ),
     );
   }
 
-  // ============================================================================
-  // ESTADOS DE CARGA Y ERROR
-  // ============================================================================
+  Widget _buildActionButtonsContent(Map<String, dynamic> options) {
+    // ✅ Verificar permisos solo para condición
+    final fieldPermissions =
+        options['field_permissions'] as Map<String, dynamic>?;
+    final initialValues = options['initial_values'] as Map<String, dynamic>?;
+    final condicionPermissions =
+        fieldPermissions?['condicion'] as Map<String, dynamic>?;
+    final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+    final initialCondicion = initialValues?['condicion']?.toString();
+
+    // ✅ Determinar si se puede guardar según condición
+    final canSave =
+        isCondicionEditable ||
+        (initialCondicion != null && initialCondicion.isNotEmpty);
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _isLoading ? null : () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: (_isLoading || !canSave) ? null : _submitForm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: canSave && _selectedTipo != null
+                  ? _getTipoColor(_selectedTipo!)
+                  : (canSave ? const Color(0xFF00B4D8) : Colors.grey),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(isEditMode ? 'Actualizar' : 'Guardar'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDisabledButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: null,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
+            child: const Text('Cargar...'),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildLoadingState() {
     return const Column(
@@ -471,7 +649,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   }
 
   // ============================================================================
-  // HELPERS PARA COLORES E ÍCONOS (MISMOS MÉTODOS)
+  // HELPERS PARA COLORES E ÍCONOS
   // ============================================================================
 
   Color _getCondicionColor(String condicion) {
@@ -560,7 +738,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   }
 
   // ============================================================================
-  // SUBMIT FORM (MISMO MÉTODO)
+  // SUBMIT FORM
   // ============================================================================
 
   Future<void> _submitForm() async {
@@ -638,4 +816,12 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
+}
+
+// ✅ Clase helper para las condiciones
+class IdValuePair {
+  final int id;
+  final String value;
+
+  IdValuePair({required this.id, required this.value});
 }

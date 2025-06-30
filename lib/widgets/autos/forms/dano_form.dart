@@ -379,38 +379,76 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         )
         .toList();
 
-    return DropdownButtonFormField<int>(
-      value: _selectedRegistroVinId,
-      decoration: const InputDecoration(
-        labelText: 'Condición *',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.timeline),
-        helperText: 'Selecciona el registro VIN al que pertenece el daño',
-      ),
-      items: condicionesDisponibles.map<DropdownMenuItem<int>>((condicion) {
-        return DropdownMenuItem<int>(
-          value: condicion.id,
-          child: Row(
-            children: [
-              Icon(
-                _getCondicionIcon(condicion.value),
-                size: 18,
-                color: _getCondicionColor(condicion.value),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                condicion.value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ref.read(danosOptionsProvider.future),
+      builder: (context, snapshot) {
+        // ✅ Obtener permisos si las opciones están disponibles
+        final options = snapshot.data;
+        final fieldPermissions =
+            options?['field_permissions'] as Map<String, dynamic>?;
+        final initialValues =
+            options?['initial_values'] as Map<String, dynamic>?;
+        final condicionPermissions =
+            fieldPermissions?['condicion'] as Map<String, dynamic>?;
+        final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+        final initialCondicion = initialValues?['condicion']?.toString();
+
+        // ✅ Filtrar condiciones según permisos
+        List<IdValuePair> condicionesFiltradas = condicionesDisponibles;
+
+        if (!isCondicionEditable &&
+            initialCondicion != null &&
+            initialCondicion.isNotEmpty) {
+          // Solo mostrar la condición inicial
+          condicionesFiltradas = condicionesDisponibles
+              .where((condicion) => condicion.value == initialCondicion)
+              .toList();
+        } else if (!isCondicionEditable &&
+            (initialCondicion == null || initialCondicion.isEmpty)) {
+          // Sin opciones disponibles
+          condicionesFiltradas = [];
+        }
+
+        return DropdownButtonFormField<int>(
+          value: _selectedRegistroVinId,
+          decoration: InputDecoration(
+            labelText: 'Condición *',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.timeline),
+            helperText: 'Selecciona el registro VIN al que pertenece el daño',
+            suffixIcon: !isCondicionEditable
+                ? const Icon(Icons.lock, size: 16, color: Colors.grey)
+                : null,
           ),
+          items: condicionesFiltradas.map<DropdownMenuItem<int>>((condicion) {
+            return DropdownMenuItem<int>(
+              value: condicion.id,
+              child: Row(
+                children: [
+                  Icon(
+                    _getCondicionIcon(condicion.value),
+                    size: 18,
+                    color: _getCondicionColor(condicion.value),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    condicion.value,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: isCondicionEditable
+              ? (value) => setState(() => _selectedRegistroVinId = value)
+              : null,
+          validator: (value) =>
+              value == null ? 'Seleccione una condición' : null,
         );
-      }).toList(),
-      onChanged: (value) => setState(() => _selectedRegistroVinId = value),
-      validator: (value) => value == null ? 'Seleccione una condición' : null,
+      },
     );
   }
 
