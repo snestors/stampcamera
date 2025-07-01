@@ -32,8 +32,8 @@ class InventarioBaseService {
     }
   }
 
-  /// Listar inventarios con paginación
-  Future<PaginatedResponse<InventarioBase>> list({
+  /// Listar inventarios agrupados con paginación - CORREGIDO PARA USAR MODELO TIPADO
+  Future<InventarioListResponse> list({
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
@@ -41,17 +41,15 @@ class InventarioBaseService {
         '/api/v1/autos/inventarios-base/',
         queryParameters: queryParameters,
       );
-      return PaginatedResponse<InventarioBase>.fromJson(
-        response.data,
-        (json) => InventarioBase.fromJson(json),
-      );
+
+      return InventarioListResponse.fromJson(response.data);
     } catch (e) {
       throw Exception('Error al listar inventarios: $e');
     }
   }
 
-  /// Buscar inventarios
-  Future<PaginatedResponse<InventarioBase>> search(
+  /// Buscar inventarios - CORREGIDO PARA USAR MODELO TIPADO
+  Future<InventarioListResponse> search(
     String query, {
     Map<String, dynamic>? filters,
   }) async {
@@ -62,54 +60,37 @@ class InventarioBaseService {
         '/api/v1/autos/inventarios-base/',
         queryParameters: params,
       );
-      return PaginatedResponse<InventarioBase>.fromJson(
-        response.data,
-        (json) => InventarioBase.fromJson(json),
-      );
+
+      return InventarioListResponse.fromJson(response.data);
     } catch (e) {
       throw Exception('Error en búsqueda de inventarios: $e');
     }
   }
 
-  /// Cargar más inventarios (siguiente página)
-  Future<PaginatedResponse<InventarioBase>> loadMore(String url) async {
+  /// Cargar más inventarios (siguiente página) - CORREGIDO PARA USAR MODELO TIPADO
+  Future<InventarioListResponse> loadMore(String url) async {
     try {
       final uri = Uri.parse(url);
       final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
       final response = await _http.dio.get(path);
-      return PaginatedResponse<InventarioBase>.fromJson(
-        response.data,
-        (json) => InventarioBase.fromJson(json),
-      );
+
+      return InventarioListResponse.fromJson(response.data);
     } catch (e) {
       throw Exception('Error al cargar más inventarios: $e');
     }
   }
 
-  /// Obtener inventario por ID
-  Future<InventarioBase> retrieve(int id) async {
-    try {
-      final response = await _http.dio.get(
-        '/api/v1/autos/inventarios-base/$id/',
-      );
-      return InventarioBase.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Error al obtener inventario: $e');
-    }
-  }
-
-  /// Obtener inventario por información de unidad
-  Future<InventarioBase?> getByInformacionUnidad(
+  /// Obtener inventario específico por información de unidad ID
+  Future<InventarioBaseResponse> getByInformacionUnidad(
     int informacionUnidadId,
   ) async {
     try {
-      final response = await list(
-        queryParameters: {'informacion_unidad_id': informacionUnidadId},
+      final response = await _http.dio.get(
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/',
       );
-
-      return response.results.isNotEmpty ? response.results.first : null;
+      return InventarioBaseResponse.fromJson(response.data);
     } catch (e) {
-      throw Exception('Error al obtener inventario por unidad: $e');
+      throw Exception('Error al obtener inventario: $e');
     }
   }
 
@@ -119,14 +100,9 @@ class InventarioBaseService {
     required Map<String, dynamic> inventarioData,
   }) async {
     try {
-      final data = {
-        'informacion_unidad': informacionUnidadId,
-        ...inventarioData,
-      };
-
       final response = await _http.dio.post(
-        '/api/v1/autos/inventarios-base/',
-        data: data,
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/',
+        data: inventarioData,
       );
 
       return InventarioBase.fromJson(response.data);
@@ -134,15 +110,10 @@ class InventarioBaseService {
       if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
         if (errorData is Map<String, dynamic>) {
-          // Errores globales
-          if (errorData.containsKey('non_field_errors')) {
-            final nonFieldErrors = errorData['non_field_errors'];
-            if (nonFieldErrors is List && nonFieldErrors.isNotEmpty) {
-              throw Exception(nonFieldErrors.first.toString());
-            }
+          if (errorData.containsKey('detail')) {
+            throw Exception(errorData['detail']);
           }
 
-          // Errores por campo
           final firstError = _extractFirstFieldError(errorData);
           if (firstError != null) {
             throw Exception(firstError);
@@ -166,19 +137,14 @@ class InventarioBaseService {
     }
   }
 
-  /// Crear inventario desde objeto InventarioBase
-  Future<InventarioBase> createFromInventario(InventarioBase inventario) async {
-    return await create(
-      informacionUnidadId: inventario.informacionUnidad.id,
-      inventarioData: inventario.toInventarioData(),
-    );
-  }
-
   /// Actualizar inventario completo
-  Future<InventarioBase> update(int id, Map<String, dynamic> data) async {
+  Future<InventarioBase> update(
+    int informacionUnidadId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _http.dio.put(
-        '/api/v1/autos/inventarios-base/$id/',
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/',
         data: data,
       );
       return InventarioBase.fromJson(response.data);
@@ -189,12 +155,12 @@ class InventarioBaseService {
 
   /// Actualizar inventario parcialmente
   Future<InventarioBase> partialUpdate(
-    int id,
+    int informacionUnidadId,
     Map<String, dynamic> data,
   ) async {
     try {
       final response = await _http.dio.patch(
-        '/api/v1/autos/inventarios-base/$id/',
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/',
         data: data,
       );
       return InventarioBase.fromJson(response.data);
@@ -204,9 +170,11 @@ class InventarioBaseService {
   }
 
   /// Eliminar inventario
-  Future<void> delete(int id) async {
+  Future<void> delete(int informacionUnidadId) async {
     try {
-      await _http.dio.delete('/api/v1/autos/inventarios-base/$id/');
+      await _http.dio.delete(
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/',
+      );
     } catch (e) {
       throw Exception('Error al eliminar inventario: $e');
     }
@@ -220,13 +188,12 @@ class InventarioBaseService {
   }) async {
     try {
       final formData = FormData.fromMap({
-        'informacion_unidad': informacionUnidadId,
         'imagen': await MultipartFile.fromFile(imagePath),
         if (descripcion != null) 'descripcion': descripcion,
       });
 
       final response = await _http.dio.post(
-        '/api/v1/autos/inventarios-base-imagenes/',
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/imagenes/',
         data: formData,
         options: Options(
           extra: {
@@ -245,22 +212,71 @@ class InventarioBaseService {
   Future<List<InventarioImagen>> getImages(int informacionUnidadId) async {
     try {
       final response = await _http.dio.get(
-        '/api/v1/autos/inventarios-base-imagenes/',
-        queryParameters: {'informacion_unidad_id': informacionUnidadId},
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/imagenes/',
       );
 
-      final results = response.data['results'] as List;
-      return results.map((json) => InventarioImagen.fromJson(json)).toList();
+      if (response.data is List) {
+        final results = response.data as List;
+        return results.map((json) => InventarioImagen.fromJson(json)).toList();
+      }
+
+      if (response.data is Map && response.data['results'] != null) {
+        final results = response.data['results'] as List;
+        return results.map((json) => InventarioImagen.fromJson(json)).toList();
+      }
+
+      return [];
     } catch (e) {
       throw Exception('Error al obtener imágenes: $e');
     }
   }
 
+  /// Actualizar imagen de inventario
+  Future<InventarioImagen> updateImage({
+    required int informacionUnidadId,
+    required int imageId,
+    String? imagePath,
+    String? descripcion,
+  }) async {
+    try {
+      final formData = FormData();
+
+      if (imagePath != null) {
+        formData.files.add(
+          MapEntry('imagen', await MultipartFile.fromFile(imagePath)),
+        );
+      }
+
+      if (descripcion != null) {
+        formData.fields.add(MapEntry('descripcion', descripcion));
+      }
+
+      final response = await _http.dio.patch(
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/imagenes/$imageId/',
+        data: formData,
+        options: Options(
+          extra: imagePath != null
+              ? {
+                  'file_paths': {'imagen': imagePath},
+                }
+              : null,
+        ),
+      );
+
+      return InventarioImagen.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Error al actualizar imagen: $e');
+    }
+  }
+
   /// Eliminar imagen de inventario
-  Future<void> deleteImage(int imageId) async {
+  Future<void> deleteImage({
+    required int informacionUnidadId,
+    required int imageId,
+  }) async {
     try {
       await _http.dio.delete(
-        '/api/v1/autos/inventarios-base-imagenes/$imageId/',
+        '/api/v1/autos/inventarios-base/$informacionUnidadId/imagenes/$imageId/',
       );
     } catch (e) {
       throw Exception('Error al eliminar imagen: $e');
@@ -273,51 +289,35 @@ class InventarioBaseService {
     required List<String> imagePaths,
     List<String>? descripciones,
   }) async {
-    try {
-      final formData = FormData();
-      formData.fields.add(
-        MapEntry('informacion_unidad', informacionUnidadId.toString()),
-      );
+    final createdImages = <InventarioImagen>[];
 
-      // Agregar imágenes
-      for (int i = 0; i < imagePaths.length; i++) {
-        formData.files.add(
-          MapEntry('imagen_$i', await MultipartFile.fromFile(imagePaths[i])),
+    for (int i = 0; i < imagePaths.length; i++) {
+      try {
+        final imagen = await createImage(
+          informacionUnidadId: informacionUnidadId,
+          imagePath: imagePaths[i],
+          descripcion: descripciones != null && i < descripciones.length
+              ? descripciones[i]
+              : null,
         );
-
-        // Agregar descripción si existe
-        if (descripciones != null && i < descripciones.length) {
-          formData.fields.add(MapEntry('descripcion_$i', descripciones[i]));
-        }
+        createdImages.add(imagen);
+      } catch (e) {
+        print('Error creando imagen ${i + 1}: $e');
       }
-
-      final response = await _http.dio.post(
-        '/api/v1/autos/inventarios-base-imagenes/bulk_create/',
-        data: formData,
-        options: Options(
-          extra: {
-            'file_paths': Map.fromIterables(
-              imagePaths.asMap().keys.map((i) => 'imagen_$i'),
-              imagePaths,
-            ),
-          },
-        ),
-      );
-
-      final data = response.data['data'] as Map<String, dynamic>;
-      final imagenes = data['imagenes'] as List;
-      return imagenes.map((json) => InventarioImagen.fromJson(json)).toList();
-    } catch (e) {
-      throw Exception('Error al crear múltiples imágenes: $e');
     }
+
+    return createdImages;
   }
 
-  /// Buscar inventarios por filtros específicos
-  Future<List<InventarioBase>> searchByFilters({
+  /// Buscar inventarios por filtros específicos - CORREGIDO PARA USAR MODELO TIPADO
+  Future<List<InventarioNave>> searchByFilters({
     int? marcaId,
     String? modelo,
     String? version,
     String? embarque,
+    int? naveDescargaId,
+    int? agenteId,
+    bool? tieneInventario,
     int page = 1,
   }) async {
     try {
@@ -326,6 +326,9 @@ class InventarioBaseService {
         if (modelo != null && modelo.isNotEmpty) 'modelo': modelo,
         if (version != null && version.isNotEmpty) 'version': version,
         if (embarque != null && embarque.isNotEmpty) 'embarque': embarque,
+        if (naveDescargaId != null) 'nave_descarga_id': naveDescargaId,
+        if (agenteId != null) 'agente_id': agenteId,
+        if (tieneInventario != null) 'tiene_inventario': tieneInventario,
         'page': page,
       };
 
@@ -334,8 +337,8 @@ class InventarioBaseService {
         queryParameters: queryParams,
       );
 
-      final results = response.data['results'] as List;
-      return results.map((json) => InventarioBase.fromJson(json)).toList();
+      final listResponse = InventarioListResponse.fromJson(response.data);
+      return listResponse.results;
     } catch (e) {
       throw Exception('Error en búsqueda por filtros: $e');
     }
@@ -355,7 +358,7 @@ class InventarioBaseService {
 
   /// Exportar inventarios a Excel/CSV
   Future<String> exportToFile({
-    String format = 'excel', // 'excel' o 'csv'
+    String format = 'excel',
     Map<String, dynamic>? filters,
   }) async {
     try {
@@ -380,14 +383,12 @@ class InventarioBaseService {
     String? version,
   }) async {
     try {
-      // Obtener opciones con inventario previo
       final options = await getOptions(
         marcaId: marcaId,
         modelo: modelo,
         version: version,
       );
 
-      // Crear inventario con datos previos
       final inventarioData = Map<String, dynamic>.from(
         options.inventarioPrevio,
       );
@@ -411,13 +412,11 @@ class InventarioBaseService {
     for (final campo in campos) {
       final value = data[campo.name];
 
-      // Validar campos requeridos
       if (campo.required && (value == null || value.toString().isEmpty)) {
         errors[campo.name] = '${campo.verboseName} es requerido';
         continue;
       }
 
-      // Validar tipos de datos
       if (value != null) {
         if (campo.isNumericField && value is! int) {
           try {
@@ -432,10 +431,70 @@ class InventarioBaseService {
     return errors;
   }
 
+  /// Crear inventario desde un objeto InventarioBase
+  Future<InventarioBase> createFromInventario({
+    required int informacionUnidadId,
+    required InventarioBase inventario,
+  }) async {
+    return await create(
+      informacionUnidadId: informacionUnidadId,
+      inventarioData: inventario.toInventarioData(),
+    );
+  }
+
+  /// Actualizar inventario desde un objeto InventarioBase
+  Future<InventarioBase> updateFromInventario({
+    required int informacionUnidadId,
+    required InventarioBase inventario,
+  }) async {
+    return await partialUpdate(
+      informacionUnidadId,
+      inventario.toInventarioData(),
+    );
+  }
+
+  /// Obtener lista de unidades sin inventario - CORREGIDO PARA USAR MODELO TIPADO
+  Future<List<InventarioNave>> getUnidadesSinInventario({
+    int? marcaId,
+    int? agenteId,
+    int? naveDescargaId,
+  }) async {
+    return await searchByFilters(
+      marcaId: marcaId,
+      agenteId: agenteId,
+      naveDescargaId: naveDescargaId,
+      tieneInventario: false,
+    );
+  }
+
+  /// Obtener lista de unidades con inventario - CORREGIDO PARA USAR MODELO TIPADO
+  Future<List<InventarioNave>> getUnidadesConInventario({
+    int? marcaId,
+    int? agenteId,
+    int? naveDescargaId,
+  }) async {
+    return await searchByFilters(
+      marcaId: marcaId,
+      agenteId: agenteId,
+      naveDescargaId: naveDescargaId,
+      tieneInventario: true,
+    );
+  }
+
+  /// Obtener inventarios por agente - CORREGIDO PARA USAR MODELO TIPADO
+  Future<List<InventarioNave>> getInventariosByAgente(int agenteId) async {
+    return await searchByFilters(agenteId: agenteId);
+  }
+
+  /// Obtener inventarios por nave - CORREGIDO PARA USAR MODELO TIPADO
+  Future<List<InventarioNave>> getInventariosByNave(int naveId) async {
+    return await searchByFilters(naveDescargaId: naveId);
+  }
+
   /// Extraer primer error de campo para mostrar al usuario
   String? _extractFirstFieldError(Map<String, dynamic> errorData) {
     for (final entry in errorData.entries) {
-      if (entry.key != 'non_field_errors' && entry.value is List) {
+      if (entry.key != 'detail' && entry.value is List) {
         final errors = entry.value as List;
         if (errors.isNotEmpty) {
           return '${entry.key}: ${errors.first}';

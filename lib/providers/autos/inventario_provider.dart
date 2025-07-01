@@ -20,15 +20,15 @@ final inventarioBaseServiceProvider = Provider<InventarioBaseService>((ref) {
 });
 
 // ============================================================================
-// PROVIDER PRINCIPAL DE LISTA
+// PROVIDER PRINCIPAL DE LISTA AGRUPADA - CORREGIDO PARA USAR MODELO TIPADO
 // ============================================================================
 
 final inventarioBaseProvider =
-    AsyncNotifierProvider<InventarioBaseNotifier, List<InventarioBase>>(
+    AsyncNotifierProvider<InventarioBaseNotifier, List<InventarioNave>>(
       InventarioBaseNotifier.new,
     );
 
-class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
+class InventarioBaseNotifier extends AsyncNotifier<List<InventarioNave>> {
   late final InventarioBaseService _service;
 
   String? _searchQuery;
@@ -46,7 +46,7 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
   String? get currentSearchQuery => _searchQuery;
 
   @override
-  Future<List<InventarioBase>> build() async {
+  Future<List<InventarioNave>> build() async {
     _service = ref.read(inventarioBaseServiceProvider);
     ref.keepAlive();
     return await loadInitial();
@@ -56,7 +56,7 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
   // MÉTODOS DE NAVEGACIÓN Y CARGA
   // ============================================================================
 
-  Future<List<InventarioBase>> loadInitial() async {
+  Future<List<InventarioNave>> loadInitial() async {
     try {
       final paginated = await _service.list();
       _nextUrl = paginated.next;
@@ -82,7 +82,6 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
       _nextUrl = paginated.next;
       state = AsyncValue.data(newResults);
     } catch (e) {
-      // No cambiar el estado en caso de error, solo log
       print('❌ Error cargando más resultados: ${parseError(e)}');
     } finally {
       _isLoadingMore = false;
@@ -131,7 +130,6 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
   }
 
   void debouncedSearch(String query) {
-    // Implementación simple sin debounce por ahora
     search(query);
   }
 
@@ -154,131 +152,60 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
   // MÉTODOS ESPECÍFICOS DEL DOMINIO
   // ============================================================================
 
-  /// Buscar inventarios por filtros específicos
   Future<void> searchByFilters({
     int? marcaId,
     String? modelo,
     String? version,
     String? embarque,
+    int? naveDescargaId,
+    int? agenteId,
+    bool? tieneInventario,
   }) async {
     state = const AsyncValue.loading();
 
     try {
-      final inventarios = await _service.searchByFilters(
+      final naves = await _service.searchByFilters(
         marcaId: marcaId,
         modelo: modelo,
         version: version,
         embarque: embarque,
+        naveDescargaId: naveDescargaId,
+        agenteId: agenteId,
+        tieneInventario: tieneInventario,
       );
 
       _searchQuery = 'filters';
-      _nextUrl = null; // Los filtros no tienen paginación por ahora
-      state = AsyncValue.data(inventarios);
+      _nextUrl = null;
+      state = AsyncValue.data(naves);
     } catch (e, st) {
       state = AsyncValue.error(Exception(parseError(e)), st);
     }
   }
 
-  /// Obtener inventario por información de unidad
-  Future<InventarioBase?> getByInformacionUnidad(
-    int informacionUnidadId,
-  ) async {
-    try {
-      return await _service.getByInformacionUnidad(informacionUnidadId);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Crear inventario con datos específicos
-  Future<InventarioBase?> createInventario({
-    required int informacionUnidadId,
-    required Map<String, dynamic> inventarioData,
-  }) async {
-    try {
-      final inventario = await _service.create(
-        informacionUnidadId: informacionUnidadId,
-        inventarioData: inventarioData,
-      );
-
-      // Agregar al inicio de la lista actual
-      final current = state.value ?? [];
-      state = AsyncValue.data([inventario, ...current]);
-
-      return inventario;
-    } catch (e) {
-      throw Exception(parseError(e));
-    }
-  }
-
-  /// Actualizar inventario existente
-  Future<InventarioBase?> updateInventario({
-    required int inventarioId,
-    required Map<String, dynamic> inventarioData,
-  }) async {
-    try {
-      final updatedInventario = await _service.partialUpdate(
-        inventarioId,
-        inventarioData,
-      );
-
-      // Actualizar en la lista actual
-      final current = state.value ?? [];
-      final updatedList = current.map((item) {
-        if (item.id == inventarioId) {
-          return updatedInventario;
-        }
-        return item;
-      }).toList();
-
-      state = AsyncValue.data(updatedList);
-      return updatedInventario;
-    } catch (e) {
-      throw Exception(parseError(e));
-    }
-  }
-
-  /// Eliminar inventario
-  Future<bool> deleteInventario(int inventarioId) async {
-    try {
-      await _service.delete(inventarioId);
-
-      // Remover de la lista actual
-      final current = state.value ?? [];
-      final filteredList = current
-          .where((item) => item.id != inventarioId)
-          .toList();
-
-      state = AsyncValue.data(filteredList);
-      return true;
-    } catch (e) {
-      throw Exception(parseError(e));
-    }
-  }
-
-  /// Sincronizar con inventario base previo
-  Future<InventarioBase?> syncWithPrevious({
-    required int informacionUnidadId,
+  Future<void> filterSinInventario({
     int? marcaId,
-    String? modelo,
-    String? version,
+    int? agenteId,
+    int? naveDescargaId,
   }) async {
-    try {
-      final inventario = await _service.syncWithPrevious(
-        informacionUnidadId: informacionUnidadId,
-        marcaId: marcaId,
-        modelo: modelo,
-        version: version,
-      );
+    await searchByFilters(
+      marcaId: marcaId,
+      agenteId: agenteId,
+      naveDescargaId: naveDescargaId,
+      tieneInventario: false,
+    );
+  }
 
-      // Agregar al inicio de la lista actual
-      final current = state.value ?? [];
-      state = AsyncValue.data([inventario, ...current]);
-
-      return inventario;
-    } catch (e) {
-      throw Exception(parseError(e));
-    }
+  Future<void> filterConInventario({
+    int? marcaId,
+    int? agenteId,
+    int? naveDescargaId,
+  }) async {
+    await searchByFilters(
+      marcaId: marcaId,
+      agenteId: agenteId,
+      naveDescargaId: naveDescargaId,
+      tieneInventario: true,
+    );
   }
 
   // ============================================================================
@@ -286,7 +213,6 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
   // ============================================================================
 
   void _notifyState() {
-    // Forzar notificación del estado para actualizar UI
     if (state.hasValue) {
       state = AsyncValue.data([...state.value!]);
     }
@@ -294,7 +220,184 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioBase>> {
 }
 
 // ============================================================================
-// PROVIDER DE OPCIONES
+// PROVIDER PARA INVENTARIO ESPECÍFICO - SIN CAMBIOS
+// ============================================================================
+
+final inventarioDetalleProvider =
+    AsyncNotifierProvider.family<
+      InventarioDetalleNotifier,
+      InventarioBaseResponse,
+      int
+    >(InventarioDetalleNotifier.new);
+
+class InventarioDetalleNotifier
+    extends FamilyAsyncNotifier<InventarioBaseResponse, int> {
+  @override
+  Future<InventarioBaseResponse> build(int informacionUnidadId) async {
+    final service = ref.read(inventarioBaseServiceProvider);
+    return await service.getByInformacionUnidad(informacionUnidadId);
+  }
+
+  Future<InventarioBase> createInventario(
+    Map<String, dynamic> inventarioData,
+  ) async {
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      final inventario = await service.create(
+        informacionUnidadId: arg,
+        inventarioData: inventarioData,
+      );
+
+      final current = state.value;
+      if (current != null) {
+        final updated = InventarioBaseResponse(
+          informacionUnidad: current.informacionUnidad,
+          imagenes: current.imagenes,
+          inventario: inventario,
+        );
+        state = AsyncValue.data(updated);
+      }
+
+      return inventario;
+    } catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
+  Future<InventarioBase> updateInventario(
+    Map<String, dynamic> inventarioData,
+  ) async {
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      final inventario = await service.partialUpdate(arg, inventarioData);
+
+      final current = state.value;
+      if (current != null) {
+        final updated = InventarioBaseResponse(
+          informacionUnidad: current.informacionUnidad,
+          imagenes: current.imagenes,
+          inventario: inventario,
+        );
+        state = AsyncValue.data(updated);
+      }
+
+      return inventario;
+    } catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
+  Future<void> deleteInventario() async {
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      await service.delete(arg);
+
+      final current = state.value;
+      if (current != null) {
+        final updated = InventarioBaseResponse(
+          informacionUnidad: current.informacionUnidad,
+          imagenes: current.imagenes,
+          inventario: null,
+        );
+        state = AsyncValue.data(updated);
+      }
+    } catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
+  Future<void> addImage({
+    required String imagePath,
+    String? descripcion,
+  }) async {
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      final newImage = await service.createImage(
+        informacionUnidadId: arg,
+        imagePath: imagePath,
+        descripcion: descripcion,
+      );
+
+      final current = state.value;
+      if (current != null) {
+        final updated = InventarioBaseResponse(
+          informacionUnidad: current.informacionUnidad,
+          imagenes: [...current.imagenes, newImage],
+          inventario: current.inventario,
+        );
+        state = AsyncValue.data(updated);
+      }
+    } catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
+  Future<void> deleteImage(int imageId) async {
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      await service.deleteImage(informacionUnidadId: arg, imageId: imageId);
+
+      final current = state.value;
+      if (current != null) {
+        final filtered = current.imagenes
+            .where((img) => img.id != imageId)
+            .toList();
+        final updated = InventarioBaseResponse(
+          informacionUnidad: current.informacionUnidad,
+          imagenes: filtered,
+          inventario: current.inventario,
+        );
+        state = AsyncValue.data(updated);
+      }
+    } catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      final response = await service.getByInformacionUnidad(arg);
+      state = AsyncValue.data(response);
+    } catch (e, st) {
+      state = AsyncValue.error(Exception(parseError(e)), st);
+    }
+  }
+
+  Future<InventarioBase> syncWithPrevious({
+    int? marcaId,
+    String? modelo,
+    String? version,
+  }) async {
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      final inventario = await service.syncWithPrevious(
+        informacionUnidadId: arg,
+        marcaId: marcaId,
+        modelo: modelo,
+        version: version,
+      );
+
+      final current = state.value;
+      if (current != null) {
+        final updated = InventarioBaseResponse(
+          informacionUnidad: current.informacionUnidad,
+          imagenes: current.imagenes,
+          inventario: inventario,
+        );
+        state = AsyncValue.data(updated);
+      }
+
+      return inventario;
+    } catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+}
+
+// ============================================================================
+// PROVIDER DE OPCIONES - SIN CAMBIOS
 // ============================================================================
 
 final inventarioOptionsProvider =
@@ -311,23 +414,7 @@ final inventarioOptionsProvider =
     });
 
 // ============================================================================
-// PROVIDER DE DETALLE POR INFORMACIÓN DE UNIDAD
-// ============================================================================
-
-final inventarioByUnidadProvider = FutureProvider.family<InventarioBase?, int>((
-  ref,
-  informacionUnidadId,
-) async {
-  final service = ref.read(inventarioBaseServiceProvider);
-  try {
-    return await service.getByInformacionUnidad(informacionUnidadId);
-  } catch (e) {
-    return null;
-  }
-});
-
-// ============================================================================
-// PROVIDER DE ESTADÍSTICAS
+// PROVIDER DE ESTADÍSTICAS - SIN CAMBIOS
 // ============================================================================
 
 final inventarioStatsProvider = FutureProvider<Map<String, dynamic>>((
@@ -338,7 +425,7 @@ final inventarioStatsProvider = FutureProvider<Map<String, dynamic>>((
 });
 
 // ============================================================================
-// PROVIDER PARA MANEJO DE IMÁGENES
+// PROVIDER PARA MANEJO DE IMÁGENES - SIN CAMBIOS
 // ============================================================================
 
 final inventarioImageProvider =
@@ -394,10 +481,38 @@ class InventarioImageNotifier
     }
   }
 
+  Future<void> updateImage({
+    required int imageId,
+    String? imagePath,
+    String? descripcion,
+  }) async {
+    try {
+      final service = ref.read(inventarioBaseServiceProvider);
+      final updatedImage = await service.updateImage(
+        informacionUnidadId: arg,
+        imageId: imageId,
+        imagePath: imagePath,
+        descripcion: descripcion,
+      );
+
+      final current = state.value ?? [];
+      final updatedList = current.map((img) {
+        if (img.id == imageId) {
+          return updatedImage;
+        }
+        return img;
+      }).toList();
+
+      state = AsyncValue.data(updatedList);
+    } catch (e) {
+      throw Exception(parseError(e));
+    }
+  }
+
   Future<void> deleteImage(int imageId) async {
     try {
       final service = ref.read(inventarioBaseServiceProvider);
-      await service.deleteImage(imageId);
+      await service.deleteImage(informacionUnidadId: arg, imageId: imageId);
 
       final current = state.value ?? [];
       final filtered = current.where((img) => img.id != imageId).toList();
@@ -416,5 +531,106 @@ class InventarioImageNotifier
     } catch (e, st) {
       state = AsyncValue.error(Exception(parseError(e)), st);
     }
+  }
+}
+
+// ============================================================================
+// PROVIDERS DE FILTROS ESPECÍFICOS - CORREGIDOS PARA USAR MODELO TIPADO
+// ============================================================================
+
+final unidadesSinInventarioProvider =
+    FutureProvider.family<List<InventarioNave>, Map<String, dynamic>>((
+      ref,
+      filters,
+    ) async {
+      final service = ref.read(inventarioBaseServiceProvider);
+      return await service.getUnidadesSinInventario(
+        marcaId: filters['marcaId'],
+        agenteId: filters['agenteId'],
+        naveDescargaId: filters['naveDescargaId'],
+      );
+    });
+
+final unidadesConInventarioProvider =
+    FutureProvider.family<List<InventarioNave>, Map<String, dynamic>>((
+      ref,
+      filters,
+    ) async {
+      final service = ref.read(inventarioBaseServiceProvider);
+      return await service.getUnidadesConInventario(
+        marcaId: filters['marcaId'],
+        agenteId: filters['agenteId'],
+        naveDescargaId: filters['naveDescargaId'],
+      );
+    });
+
+final inventariosByAgenteProvider =
+    FutureProvider.family<List<InventarioNave>, int>((ref, agenteId) async {
+      final service = ref.read(inventarioBaseServiceProvider);
+      return await service.getInventariosByAgente(agenteId);
+    });
+
+final inventariosByNaveProvider =
+    FutureProvider.family<List<InventarioNave>, int>((ref, naveId) async {
+      final service = ref.read(inventarioBaseServiceProvider);
+      return await service.getInventariosByNave(naveId);
+    });
+
+// ============================================================================
+// PROVIDERS AUXILIARES - SIN CAMBIOS
+// ============================================================================
+
+final inventarioFormProvider =
+    NotifierProvider.family<InventarioFormNotifier, Map<String, dynamic>, int>(
+      InventarioFormNotifier.new,
+    );
+
+class InventarioFormNotifier extends FamilyNotifier<Map<String, dynamic>, int> {
+  @override
+  Map<String, dynamic> build(int informacionUnidadId) {
+    return {};
+  }
+
+  void updateField(String field, dynamic value) {
+    state = {...state, field: value};
+  }
+
+  void updateMultipleFields(Map<String, dynamic> fields) {
+    state = {...state, ...fields};
+  }
+
+  void resetForm() {
+    state = {};
+  }
+
+  void loadFromOptions(InventarioOptions options) {
+    state = Map<String, dynamic>.from(options.inventarioPrevio);
+  }
+
+  void loadFromInventario(InventarioBase inventario) {
+    state = inventario.toInventarioData();
+  }
+
+  Map<String, String> validateForm(List<CampoInventario> campos) {
+    final service = ref.read(inventarioBaseServiceProvider);
+    return service.validateInventarioData(state, campos);
+  }
+
+  Future<InventarioBase> submitForm() async {
+    final service = ref.read(inventarioBaseServiceProvider);
+    final inventario = await service.create(
+      informacionUnidadId: arg,
+      inventarioData: state,
+    );
+
+    resetForm();
+    return inventario;
+  }
+
+  Future<InventarioBase> updateForm() async {
+    final service = ref.read(inventarioBaseServiceProvider);
+    final inventario = await service.partialUpdate(arg, state);
+
+    return inventario;
   }
 }

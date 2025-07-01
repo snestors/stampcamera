@@ -1,16 +1,245 @@
 // models/autos/inventario_base_model.dart
 
-/// Modelo para inventario base
-class InventarioBase {
-  final int id;
+/// Modelo para la respuesta del API de inventario base (DETALLE)
+class InventarioBaseResponse {
   final InformacionUnidad informacionUnidad;
-  final String createBy;
-  final String createAt;
-  final String updateAt;
   final List<InventarioImagen> imagenes;
-  final int updateBy;
+  final InventarioBase? inventario;
 
-  // Campos dinámicos del inventario
+  const InventarioBaseResponse({
+    required this.informacionUnidad,
+    required this.imagenes,
+    this.inventario,
+  });
+
+  factory InventarioBaseResponse.fromJson(Map<String, dynamic> json) {
+    return InventarioBaseResponse(
+      informacionUnidad: InformacionUnidad.fromJson(
+        json['informacion_unidad'] ?? {},
+      ),
+      imagenes:
+          (json['imagenes'] as List?)
+              ?.map((x) => InventarioImagen.fromJson(x))
+              .toList() ??
+          [],
+      inventario: json['inventario'] != null
+          ? InventarioBase.fromJson(json['inventario'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'informacion_unidad': informacionUnidad.toJson(),
+      'imagenes': imagenes.map((x) => x.toJson()).toList(),
+      'inventario': inventario?.toJson(),
+    };
+  }
+
+  bool get hasInventario => inventario != null;
+  bool get hasImages => imagenes.isNotEmpty;
+  int get imageCount => imagenes.length;
+}
+
+/// Modelo para la lista de inventarios (LISTA)
+class InventarioListResponse {
+  final int count;
+  final String? next;
+  final String? previous;
+  final List<InventarioNave> results;
+
+  const InventarioListResponse({
+    required this.count,
+    this.next,
+    this.previous,
+    required this.results,
+  });
+
+  factory InventarioListResponse.fromJson(Map<String, dynamic> json) {
+    return InventarioListResponse(
+      count: json['count'] ?? 0,
+      next: json['next'],
+      previous: json['previous'],
+      results:
+          (json['results'] as List?)
+              ?.map((x) => InventarioNave.fromJson(x))
+              .toList() ??
+          [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'count': count,
+      'next': next,
+      'previous': previous,
+      'results': results.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+/// Modelo para nave en la lista de inventarios
+class InventarioNave {
+  final int naveDescargaId;
+  final String naveDescargaNombre;
+  final String naveDescargaPuerto;
+  final String naveDescargaRubro;
+  final String naveDescargaFechaAtraque;
+  final List<InventarioModelo> modelos;
+
+  const InventarioNave({
+    required this.naveDescargaId,
+    required this.naveDescargaNombre,
+    required this.naveDescargaPuerto,
+    required this.naveDescargaRubro,
+    required this.naveDescargaFechaAtraque,
+    required this.modelos,
+  });
+
+  factory InventarioNave.fromJson(Map<String, dynamic> json) {
+    return InventarioNave(
+      naveDescargaId: json['nave_descarga_id'] ?? 0,
+      naveDescargaNombre: json['nave_descarga_nombre'] ?? '',
+      naveDescargaPuerto: json['nave_descarga_puerto'] ?? '',
+      naveDescargaRubro: json['nave_descarga_rubro'] ?? '',
+      naveDescargaFechaAtraque: json['nave_descarga_fecha_atraque'] ?? '',
+      modelos:
+          (json['modelos'] as List?)
+              ?.map((x) => InventarioModelo.fromJson(x))
+              .toList() ??
+          [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'nave_descarga_id': naveDescargaId,
+      'nave_descarga_nombre': naveDescargaNombre,
+      'nave_descarga_puerto': naveDescargaPuerto,
+      'nave_descarga_rubro': naveDescargaRubro,
+      'nave_descarga_fecha_atraque': naveDescargaFechaAtraque,
+      'modelos': modelos.map((x) => x.toJson()).toList(),
+    };
+  }
+
+  // Getters calculados
+  bool get isFPR => naveDescargaRubro.toUpperCase().contains('FPR');
+  bool get isSIC => naveDescargaRubro.toUpperCase().contains('SIC');
+
+  int get totalUnidades {
+    return modelos.fold(0, (sum, modelo) => sum + modelo.cantidadUnidades);
+  }
+
+  int get totalDescargadoPuerto {
+    return modelos.fold(0, (sum, modelo) => sum + modelo.descargadoPuerto);
+  }
+
+  int get totalDescargadoAlmacen {
+    return modelos.fold(0, (sum, modelo) => sum + modelo.descargadoAlmacen);
+  }
+
+  int get totalDescargadoRecepcion {
+    return modelos.fold(0, (sum, modelo) => sum + modelo.descargadoRecepcion);
+  }
+
+  int get totalDescargadas {
+    return isFPR ? totalDescargadoPuerto : totalDescargadoAlmacen;
+  }
+}
+
+/// Modelo para modelo de vehículo en inventario
+class InventarioModelo {
+  final String marca;
+  final String modelo;
+  final int cantidadUnidades;
+  final int descargadoPuerto;
+  final int descargadoAlmacen;
+  final int descargadoRecepcion;
+  final String agente;
+  final List<InventarioVersion> versiones;
+
+  const InventarioModelo({
+    required this.marca,
+    required this.modelo,
+    required this.cantidadUnidades,
+    required this.descargadoPuerto,
+    required this.descargadoAlmacen,
+    required this.descargadoRecepcion,
+    required this.agente,
+    required this.versiones,
+  });
+
+  factory InventarioModelo.fromJson(Map<String, dynamic> json) {
+    return InventarioModelo(
+      marca: json['marca'] ?? '',
+      modelo: json['modelo'] ?? '',
+      cantidadUnidades: json['cantidad_unidades'] ?? 0,
+      descargadoPuerto: json['descargado_puerto'] ?? 0,
+      descargadoAlmacen: json['descargado_almacen'] ?? 0,
+      descargadoRecepcion: json['descargado_recepcion'] ?? 0,
+      agente: json['agente'] ?? '',
+      versiones:
+          (json['versiones'] as List?)
+              ?.map((x) => InventarioVersion.fromJson(x))
+              .toList() ??
+          [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'marca': marca,
+      'modelo': modelo,
+      'cantidad_unidades': cantidadUnidades,
+      'descargado_puerto': descargadoPuerto,
+      'descargado_almacen': descargadoAlmacen,
+      'descargado_recepcion': descargadoRecepcion,
+      'agente': agente,
+      'versiones': versiones.map((x) => x.toJson()).toList(),
+    };
+  }
+
+  int get versionesConInventario {
+    return versiones.where((v) => v.inventario).length;
+  }
+}
+
+/// Modelo para versión de vehículo en inventario
+class InventarioVersion {
+  final int informacionUnidadId;
+  final String version;
+  final int cantidadUnidades;
+  final bool inventario;
+
+  const InventarioVersion({
+    required this.informacionUnidadId,
+    required this.version,
+    required this.cantidadUnidades,
+    required this.inventario,
+  });
+
+  factory InventarioVersion.fromJson(Map<String, dynamic> json) {
+    return InventarioVersion(
+      informacionUnidadId: json['informacion_unidad_id'] ?? 0,
+      version: json['version'] ?? '',
+      cantidadUnidades: json['cantidad_unidades'] ?? 0,
+      inventario: json['inventario'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'informacion_unidad_id': informacionUnidadId,
+      'version': version,
+      'cantidad_unidades': cantidadUnidades,
+      'inventario': inventario,
+    };
+  }
+}
+
+/// Modelo para inventario base (sin cambios - está correcto)
+class InventarioBase {
+  final int? id;
   final int llaveSimple;
   final int llaveComando;
   final int llaveInteligente;
@@ -51,14 +280,8 @@ class InventarioBase {
   final int extension;
   final String otros;
 
-  InventarioBase({
-    required this.id,
-    required this.informacionUnidad,
-    required this.createBy,
-    required this.createAt,
-    required this.updateAt,
-    required this.imagenes,
-    required this.updateBy,
+  const InventarioBase({
+    this.id,
     required this.llaveSimple,
     required this.llaveComando,
     required this.llaveInteligente,
@@ -102,19 +325,7 @@ class InventarioBase {
 
   factory InventarioBase.fromJson(Map<String, dynamic> json) {
     return InventarioBase(
-      id: json['id'] ?? 0,
-      informacionUnidad: InformacionUnidad.fromJson(
-        json['informacion_unidad'] ?? {},
-      ),
-      createBy: json['create_by'] ?? '',
-      createAt: json['create_at'] ?? '',
-      updateAt: json['update_at'] ?? '',
-      imagenes:
-          (json['imagenes'] as List?)
-              ?.map((x) => InventarioImagen.fromJson(x))
-              .toList() ??
-          [],
-      updateBy: json['update_by'] ?? 0,
+      id: json['id'],
       llaveSimple: json['LLAVE_SIMPLE'] ?? 0,
       llaveComando: json['LLAVE_COMANDO'] ?? 0,
       llaveInteligente: json['LLAVE_INTELIGENTE'] ?? 0,
@@ -159,13 +370,7 @@ class InventarioBase {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'informacion_unidad': informacionUnidad.toJson(),
-      'create_by': createBy,
-      'create_at': createAt,
-      'update_at': updateAt,
-      'imagenes': imagenes.map((x) => x.toJson()).toList(),
-      'update_by': updateBy,
+      if (id != null) 'id': id,
       'LLAVE_SIMPLE': llaveSimple,
       'LLAVE_COMANDO': llaveComando,
       'LLAVE_INTELIGENTE': llaveInteligente,
@@ -208,15 +413,8 @@ class InventarioBase {
     };
   }
 
-  /// Método copyWith para crear una copia con campos modificados
   InventarioBase copyWith({
     int? id,
-    InformacionUnidad? informacionUnidad,
-    String? createBy,
-    String? createAt,
-    String? updateAt,
-    List<InventarioImagen>? imagenes,
-    int? updateBy,
     int? llaveSimple,
     int? llaveComando,
     int? llaveInteligente,
@@ -259,12 +457,6 @@ class InventarioBase {
   }) {
     return InventarioBase(
       id: id ?? this.id,
-      informacionUnidad: informacionUnidad ?? this.informacionUnidad,
-      createBy: createBy ?? this.createBy,
-      createAt: createAt ?? this.createAt,
-      updateAt: updateAt ?? this.updateAt,
-      imagenes: imagenes ?? this.imagenes,
-      updateBy: updateBy ?? this.updateBy,
       llaveSimple: llaveSimple ?? this.llaveSimple,
       llaveComando: llaveComando ?? this.llaveComando,
       llaveInteligente: llaveInteligente ?? this.llaveInteligente,
@@ -308,13 +500,6 @@ class InventarioBase {
     );
   }
 
-  /// Verificar si tiene imágenes
-  bool get hasImages => imagenes.isNotEmpty;
-
-  /// Obtener número de imágenes
-  int get imageCount => imagenes.length;
-
-  /// Obtener total de elementos numéricos
   int get totalElementos {
     return llaveSimple +
         llaveComando +
@@ -356,7 +541,6 @@ class InventarioBase {
         extension;
   }
 
-  /// Convertir a Map para envío al API (solo campos de inventario)
   Map<String, dynamic> toInventarioData() {
     return {
       'LLAVE_SIMPLE': llaveSimple,
@@ -402,7 +586,7 @@ class InventarioBase {
   }
 }
 
-/// Modelo para información de unidad
+/// Resto de modelos sin cambios...
 class InformacionUnidad {
   final int id;
   final String embarque;
@@ -412,7 +596,7 @@ class InformacionUnidad {
   final String tipo;
   final int cantidadVins;
 
-  InformacionUnidad({
+  const InformacionUnidad({
     required this.id,
     required this.embarque,
     required this.marca,
@@ -447,13 +631,12 @@ class InformacionUnidad {
   }
 }
 
-/// Modelo para marca
 class Marca {
   final int id;
   final String marca;
   final String abrev;
 
-  Marca({required this.id, required this.marca, required this.abrev});
+  const Marca({required this.id, required this.marca, required this.abrev});
 
   factory Marca.fromJson(Map<String, dynamic> json) {
     return Marca(
@@ -468,7 +651,6 @@ class Marca {
   }
 }
 
-/// Modelo para imágenes de inventario
 class InventarioImagen {
   final int id;
   final int informacionUnidadId;
@@ -478,7 +660,7 @@ class InventarioImagen {
   final String? createAt;
   final String? createBy;
 
-  InventarioImagen({
+  const InventarioImagen({
     required this.id,
     required this.informacionUnidadId,
     this.descripcion,
@@ -514,19 +696,16 @@ class InventarioImagen {
     };
   }
 
-  /// Verificar si tiene imagen válida
   bool get hasValidImage => imagenUrl != null && imagenUrl!.isNotEmpty;
-
-  /// Obtener URL para mostrar (thumbnail si existe, sino la original)
   String? get displayUrl => imagenThumbnailUrl ?? imagenUrl;
 }
 
-/// Modelo para las opciones de inventario (para /options endpoint)
+// Resto de modelos para opciones...
 class InventarioOptions {
   final Map<String, dynamic> inventarioPrevio;
   final List<CampoInventario> camposInventario;
 
-  InventarioOptions({
+  const InventarioOptions({
     required this.inventarioPrevio,
     required this.camposInventario,
   });
@@ -550,7 +729,6 @@ class InventarioOptions {
   }
 }
 
-/// Modelo para campos de inventario
 class CampoInventario {
   final String name;
   final String verboseName;
@@ -558,7 +736,7 @@ class CampoInventario {
   final bool required;
   final dynamic defaultValue;
 
-  CampoInventario({
+  const CampoInventario({
     required this.name,
     required this.verboseName,
     required this.type,
@@ -586,9 +764,6 @@ class CampoInventario {
     };
   }
 
-  /// Verificar si es campo numérico
   bool get isNumericField => type == 'IntegerField';
-
-  /// Verificar si es campo de texto
   bool get isTextField => type == 'CharField';
 }

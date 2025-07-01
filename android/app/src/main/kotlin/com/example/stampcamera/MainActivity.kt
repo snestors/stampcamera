@@ -1,4 +1,4 @@
-package com.example.stampcamera
+package com.nestorfar.stampcamera
 
 import android.content.Intent
 import android.net.Uri
