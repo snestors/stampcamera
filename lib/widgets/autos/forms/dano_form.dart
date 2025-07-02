@@ -29,13 +29,12 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   // Campos opcionales
   List<int> _selectedZonas = [];
   int? _selectedResponsabilidad;
-  int? _selectedFotoPresentacion; // ✅ NUEVO: ID de la foto de presentación
+  int? _selectedFotoPresentacion;
   bool _relevante = false;
 
   // Gestión de imágenes
-  List<String?> _imagenesPaths =
-      []; // Lista de paths/URLs (nulls para cards vacíos)
-  List<DanoImagen> _imagenesOriginales = []; // Imágenes originales con ID y URL
+  List<String?> _imagenesPaths = [];
+  List<DanoImagen> _imagenesOriginales = [];
 
   // Estado
   bool _isLoading = false;
@@ -70,10 +69,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       ),
       child: Column(
         children: [
-          // ✅ Header fijo
-          _buildFixedHeader(),
-
-          // ✅ Contenido scrolleable
+          _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
@@ -82,106 +78,22 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                 bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
               child: detalleAsync.when(
-                data: (detalle) =>
-                    _buildScrollableContent(detalle, optionsAsync),
+                data: (detalle) => _buildContent(detalle, optionsAsync),
                 loading: () => _buildLoadingState(),
                 error: (error, _) => _buildErrorState('Error cargando datos'),
               ),
             ),
           ),
-
-          // ✅ Botones de acción fijos
-          _buildFixedActionButtons(),
+          _buildActionButtons(),
         ],
       ),
     );
   }
 
   // ============================================================================
-  // CAMPO DE FOTO DE PRESENTACIÓN (DOCUMENTO)
-  // ============================================================================
-
-  Widget _buildFotoPresentacionField(DetalleRegistroModel detalle) {
-    final fotosDisponibles = detalle.fotosPresentacion
-        .where((foto) => foto.nDocumento != null && foto.nDocumento!.isNotEmpty)
-        .toList();
-
-    return DropdownButtonFormField<int>(
-      value: _selectedFotoPresentacion,
-      decoration: const InputDecoration(
-        labelText: 'Documento de Referencia',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
-        helperText: 'Asocia una foto/documento existente al daño (opcional)',
-      ),
-      items: [
-        const DropdownMenuItem<int>(
-          value: null,
-          child: Text(
-            'Sin documento asociado',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ),
-        ...fotosDisponibles.map<DropdownMenuItem<int>>((foto) {
-          return DropdownMenuItem<int>(
-            value: foto.id,
-            child: Row(
-              mainAxisSize: MainAxisSize.min, // ✅ Evita overflow
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: _getFotoTipoColor(foto.tipo).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Icon(
-                    _getFotoTipoIcon(foto.tipo),
-                    size: 16,
-                    color: _getFotoTipoColor(foto.tipo),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  fit: FlexFit.loose, // ✅ Se ajusta sin forzar expansión
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _getFotoTipoLabel(foto.tipo),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(
-                        width: 8,
-                      ), // ✅ Espaciado entre tipo y documento
-                      Text(
-                        '- ${foto.nDocumento!}', // ✅ Añadir bullet point para separar visualmente
-                        style: const TextStyle(
-                          fontSize: 15, // ✅ Mismo tamaño que el tipo (era 11)
-                          // ✅ Color verde para destacar
-                          fontWeight: FontWeight.w600, // ✅ Un poco más bold
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-      onChanged: (value) => setState(() => _selectedFotoPresentacion = value),
-    );
-  }
-  // ============================================================================
   // HEADER FIJO
   // ============================================================================
-
-  Widget _buildFixedHeader() {
+  Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -218,14 +130,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   // ============================================================================
-  // CONTENIDO SCROLLEABLE
+  // CONTENIDO PRINCIPAL
   // ============================================================================
-
-  Widget _buildScrollableContent(
-    DetalleRegistroModel detalle,
-    AsyncValue optionsAsync,
-  ) {
-    // Validación: Sin RegistrosVin
+  Widget _buildContent(DetalleRegistroModel detalle, AsyncValue optionsAsync) {
     if (detalle.registrosVin.isEmpty) {
       return _buildValidationError(
         'Sin Registros VIN',
@@ -236,37 +143,36 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       );
     }
 
-    // Inicializar selección una sola vez
     if (!_initialized) {
       _initializeSelection(detalle);
     }
 
     return optionsAsync.when(
-      data: (options) => _buildFormContent(options, detalle),
+      data: (options) => _buildForm(options, detalle),
       loading: () => _buildLoadingState(),
       error: (error, _) => _buildErrorState('Error cargando opciones'),
     );
   }
 
+  // ============================================================================
+  // INICIALIZACIÓN
+  // ============================================================================
   void _initializeSelection(DetalleRegistroModel detalle) {
     if (isEditMode && widget.danoId != null) {
-      // ✅ MODO EDICIÓN: Buscar el daño actual y precargar valores
       final danoActual = detalle.danos.firstWhere(
         (d) => d.id == widget.danoId,
         orElse: () => throw Exception('Daño no encontrado'),
       );
 
-      // Precargar campos del formulario
       _selectedTipoDano = danoActual.tipoDano.id;
       _selectedAreaDano = danoActual.areaDano.id;
       _selectedSeveridad = danoActual.severidad.id;
       _selectedZonas = danoActual.zonas.map((z) => z.id).toList();
       _selectedResponsabilidad = danoActual.responsabilidad?.id;
-      _selectedFotoPresentacion = danoActual.nDocumento?.id; // ✅ NUEVO
+      _selectedFotoPresentacion = danoActual.nDocumento?.id;
       _relevante = danoActual.relevante;
       _descripcionController.text = danoActual.descripcion ?? '';
 
-      // Buscar el registro VIN asociado
       if (danoActual.condicion?.id != null) {
         final registroVin = detalle.registrosVin.firstWhere(
           (r) => r.condicion == danoActual.condicion!.value,
@@ -277,76 +183,27 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         _selectedRegistroVinId = detalle.registrosVin.first.id;
       }
 
-      // ✅ Precargar imágenes existentes con ID y URL
       _imagenesOriginales = danoActual.imagenes.toList();
       _imagenesPaths = _imagenesOriginales
           .map((img) => img.imagenUrl!)
           .cast<String?>()
           .toList();
 
-      // Si no hay imágenes, agregar un card vacío
       if (_imagenesPaths.isEmpty) {
         _imagenesPaths.add(null);
       }
     } else {
-      // ✅ MODO CREAR: seleccionar el registro más reciente
-      if (detalle.registrosVin.isNotEmpty) {
-        final sortedRegistros = List<RegistroVin>.from(detalle.registrosVin);
-        sortedRegistros.sort(
-          (a, b) => (b.fecha ?? '').compareTo(a.fecha ?? ''),
-        );
-        _selectedRegistroVinId = sortedRegistros.first.id;
-      }
-
-      // Agregar un card vacío por defecto
+      // Modo crear: La autoselección se maneja en _buildCondicionField
       _imagenesPaths.add(null);
     }
 
     _initialized = true;
   }
 
-  Widget _buildValidationError(
-    String title,
-    String message, {
-    required IconData icon,
-    required String buttonText,
-    required VoidCallback onPressed,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 20),
-        Icon(icon, size: 48, color: const Color(0xFFDC2626)),
-        const SizedBox(height: 16),
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          message,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF003B5C),
-            foregroundColor: Colors.white,
-          ),
-          child: Text(buttonText),
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
   // ============================================================================
-  // CONTENIDO DEL FORMULARIO
+  // FORMULARIO
   // ============================================================================
-
-  Widget _buildFormContent(
+  Widget _buildForm(
     Map<String, dynamic> options,
     DetalleRegistroModel detalle,
   ) {
@@ -356,103 +213,171 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
-          _buildCondicionField(detalle),
+          _buildCondicionField(detalle, options),
+          _buildCondicionErrorMessage(options),
           const SizedBox(height: 16),
-          _buildCamposRequeridos(options),
+          _buildRequiredFields(options),
           const SizedBox(height: 16),
-          _buildCamposOpcionales(
-            options,
-            detalle,
-          ), // ✅ Pasar detalle como parámetro
+          _buildOptionalFields(options, detalle),
           const SizedBox(height: 16),
-          _buildImagenesSection(),
+          _buildImagesSection(),
           const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildCondicionField(DetalleRegistroModel detalle) {
+  // ============================================================================
+  // CAMPO CONDICIÓN
+  // ============================================================================
+  Widget _buildCondicionField(
+    DetalleRegistroModel detalle,
+    Map<String, dynamic> options,
+  ) {
     final condicionesDisponibles = detalle.registrosVin
         .map(
           (registro) => IdValuePair(id: registro.id, value: registro.condicion),
         )
         .toList();
 
-    return FutureBuilder<Map<String, dynamic>>(
-      future: ref.read(danosOptionsProvider.future),
-      builder: (context, snapshot) {
-        // ✅ Obtener permisos si las opciones están disponibles
-        final options = snapshot.data;
-        final fieldPermissions =
-            options?['field_permissions'] as Map<String, dynamic>?;
-        final initialValues =
-            options?['initial_values'] as Map<String, dynamic>?;
-        final condicionPermissions =
-            fieldPermissions?['condicion'] as Map<String, dynamic>?;
-        final isCondicionEditable = condicionPermissions?['editable'] ?? true;
-        final initialCondicion = initialValues?['condicion']?.toString();
+    final fieldPermissions =
+        options['field_permissions'] as Map<String, dynamic>?;
+    final initialValues = options['initial_values'] as Map<String, dynamic>?;
+    final condicionPermissions =
+        fieldPermissions?['condicion'] as Map<String, dynamic>?;
+    final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+    final initialCondicion = initialValues?['condicion']?.toString();
 
-        // ✅ Filtrar condiciones según permisos
-        List<IdValuePair> condicionesFiltradas = condicionesDisponibles;
+    // Filtrar condiciones según permisos
+    List<IdValuePair> condicionesFiltradas = [...condicionesDisponibles];
 
-        if (!isCondicionEditable &&
-            initialCondicion != null &&
-            initialCondicion.isNotEmpty) {
-          // Solo mostrar la condición inicial
-          condicionesFiltradas = condicionesDisponibles
-              .where((condicion) => condicion.value == initialCondicion)
-              .toList();
-        } else if (!isCondicionEditable &&
-            (initialCondicion == null || initialCondicion.isEmpty)) {
-          // Sin opciones disponibles
-          condicionesFiltradas = [];
-        }
+    if (!isCondicionEditable) {
+      if (initialCondicion != null && initialCondicion.isNotEmpty) {
+        condicionesFiltradas = condicionesDisponibles
+            .where((condicion) => condicion.value == initialCondicion)
+            .toList();
+      } else {
+        condicionesFiltradas = [];
+      }
+    }
 
-        return DropdownButtonFormField<int>(
-          value: _selectedRegistroVinId,
-          decoration: InputDecoration(
-            labelText: 'Condición *',
-            border: const OutlineInputBorder(),
-            prefixIcon: const Icon(Icons.timeline),
-            helperText: 'Selecciona el registro VIN al que pertenece el daño',
-            suffixIcon: !isCondicionEditable
-                ? const Icon(Icons.lock, size: 16, color: Colors.grey)
-                : null,
-          ),
-          items: condicionesFiltradas.map<DropdownMenuItem<int>>((condicion) {
-            return DropdownMenuItem<int>(
-              value: condicion.id,
-              child: Row(
-                children: [
-                  Icon(
-                    _getCondicionIcon(condicion.value),
-                    size: 18,
-                    color: _getCondicionColor(condicion.value),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    condicion.value,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+    // Autoselección estricta
+    if (initialCondicion != null &&
+        initialCondicion.isNotEmpty &&
+        _selectedRegistroVinId == null &&
+        condicionesFiltradas.isNotEmpty) {
+      final registroCoincidente = condicionesFiltradas
+          .where((registro) => registro.value == initialCondicion)
+          .firstOrNull;
+
+      if (registroCoincidente != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _selectedRegistroVinId == null) {
+            setState(() {
+              _selectedRegistroVinId = registroCoincidente.id;
+            });
+          }
+        });
+      }
+    }
+
+    return DropdownButtonFormField<int>(
+      isExpanded: true,
+      value: _selectedRegistroVinId,
+      decoration: InputDecoration(
+        labelText: 'Condición *',
+        border: const OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.timeline),
+        helperText: 'Selecciona el registro VIN al que pertenece el daño',
+        suffixIcon: !isCondicionEditable
+            ? const Icon(Icons.lock, size: 16, color: Colors.grey)
+            : null,
+      ),
+      items: condicionesFiltradas.isNotEmpty
+          ? condicionesFiltradas.map<DropdownMenuItem<int>>((condicion) {
+              return DropdownMenuItem<int>(
+                value: condicion.id,
+                child: Row(
+                  children: [
+                    Icon(
+                      _getCondicionIcon(condicion.value),
+                      size: 18,
+                      color: _getCondicionColor(condicion.value),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-          onChanged: isCondicionEditable
-              ? (value) => setState(() => _selectedRegistroVinId = value)
-              : null,
-          validator: (value) =>
-              value == null ? 'Seleccione una condición' : null,
-        );
-      },
+                    const SizedBox(width: 12),
+                    Text(
+                      condicion.value,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList()
+          : null,
+      onChanged: isCondicionEditable && condicionesFiltradas.isNotEmpty
+          ? (value) => setState(() => _selectedRegistroVinId = value)
+          : null,
+      validator: (value) => value == null ? 'Seleccione una condición' : null,
+      disabledHint: condicionesFiltradas.isEmpty
+          ? const Text(
+              'Sin condiciones disponibles',
+              style: TextStyle(color: Colors.grey),
+              overflow: TextOverflow.ellipsis,
+            )
+          : null,
     );
   }
 
-  Widget _buildCamposRequeridos(Map<String, dynamic> options) {
+  Widget _buildCondicionErrorMessage(Map<String, dynamic> options) {
+    final fieldPermissions =
+        options['field_permissions'] as Map<String, dynamic>?;
+    final initialValues = options['initial_values'] as Map<String, dynamic>?;
+    final condicionPermissions =
+        fieldPermissions?['condicion'] as Map<String, dynamic>?;
+    final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+    final initialCondicion = initialValues?['condicion']?.toString();
+
+    if (!isCondicionEditable &&
+        initialCondicion != null &&
+        initialCondicion.isNotEmpty &&
+        _selectedRegistroVinId == null) {
+      return Container(
+        margin: const EdgeInsets.only(top: 8, bottom: 16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.orange, width: 1),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning, color: Colors.orange, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'No se puede crear daño: No existe un registro VIN con condición "$initialCondicion" para este vehículo.',
+                style: const TextStyle(
+                  color: Colors.orange,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  // ============================================================================
+  // CAMPOS REQUERIDOS
+  // ============================================================================
+  Widget _buildRequiredFields(Map<String, dynamic> options) {
     final tiposDano = options['tipos_dano'] as List<dynamic>? ?? [];
     final areasDano = options['areas_dano'] as List<dynamic>? ?? [];
     final severidades = options['severidades'] as List<dynamic>? ?? [];
@@ -464,10 +389,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           'Campos Requeridos',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
-
         const SizedBox(height: 12),
 
-        // Tipo de Daño
         DropdownButtonFormField<int>(
           isExpanded: true,
           value: _selectedTipoDano,
@@ -489,7 +412,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        // Área de Daño
         DropdownButtonFormField<int>(
           isExpanded: true,
           value: _selectedAreaDano,
@@ -511,7 +433,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        // Severidad
         DropdownButtonFormField<int>(
           value: _selectedSeveridad,
           decoration: const InputDecoration(
@@ -549,9 +470,12 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     );
   }
 
-  Widget _buildCamposOpcionales(
+  // ============================================================================
+  // CAMPOS OPCIONALES
+  // ============================================================================
+  Widget _buildOptionalFields(
     Map<String, dynamic> options,
-    DetalleRegistroModel detalle, // ✅ Agregar detalle como parámetro
+    DetalleRegistroModel detalle,
   ) {
     final zonasDano = options['zonas_danos'] as List<dynamic>? ?? [];
     final responsabilidades =
@@ -566,7 +490,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         ),
         const SizedBox(height: 12),
 
-        // Zonas (Múltiple selección)
         _buildMultiSelectField(
           'Zonas',
           zonasDano,
@@ -574,13 +497,13 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           Icons.grid_view,
           (values) => setState(() => _selectedZonas = values),
         ),
+
         const SizedBox(height: 12),
 
-        // Foto de Presentación (Documento)
         _buildFotoPresentacionField(detalle),
+
         const SizedBox(height: 12),
 
-        // Responsabilidad
         DropdownButtonFormField<int>(
           value: _selectedResponsabilidad,
           decoration: const InputDecoration(
@@ -600,7 +523,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        // Descripción
         TextFormField(
           controller: _descripcionController,
           decoration: const InputDecoration(
@@ -614,7 +536,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        // Relevante
         SwitchListTile(
           title: const Text('Marcar como relevante'),
           subtitle: const Text('El daño es significativo para la inspección'),
@@ -623,6 +544,79 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           activeColor: const Color(0xFFDC2626),
         ),
       ],
+    );
+  }
+
+  Widget _buildFotoPresentacionField(DetalleRegistroModel detalle) {
+    final fotosDisponibles = detalle.fotosPresentacion
+        .where((foto) => foto.nDocumento != null && foto.nDocumento!.isNotEmpty)
+        .toList();
+
+    return DropdownButtonFormField<int>(
+      value: _selectedFotoPresentacion,
+      decoration: const InputDecoration(
+        labelText: 'Documento de Referencia',
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
+        helperText: 'Asocia una foto/documento existente al daño (opcional)',
+      ),
+      items: [
+        const DropdownMenuItem<int>(
+          value: null,
+          child: Text(
+            'Sin documento asociado',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+        ...fotosDisponibles.map<DropdownMenuItem<int>>((foto) {
+          return DropdownMenuItem<int>(
+            value: foto.id,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: _getFotoTipoColor(foto.tipo).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(
+                    _getFotoTipoIcon(foto.tipo),
+                    size: 16,
+                    color: _getFotoTipoColor(foto.tipo),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _getFotoTipoLabel(foto.tipo),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '- ${foto.nDocumento!}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+      onChanged: (value) => setState(() => _selectedFotoPresentacion = value),
     );
   }
 
@@ -681,10 +675,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   // ============================================================================
-  // SECCIÓN DE IMÁGENES MEJORADA
+  // SECCIÓN DE IMÁGENES
   // ============================================================================
-
-  Widget _buildImagenesSection() {
+  Widget _buildImagesSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -704,22 +697,18 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           ],
         ),
         const SizedBox(height: 12),
-
-        // ✅ Lista de ReusableCameraCard
-        ..._buildCameraCardsList(),
+        ..._buildCameraCards(),
       ],
     );
   }
 
-  List<Widget> _buildCameraCardsList() {
+  List<Widget> _buildCameraCards() {
     List<Widget> widgets = [];
 
-    // Si no hay cards, agregar uno vacío por defecto (solo en modo crear)
     if (_imagenesPaths.isEmpty && !isEditMode) {
       _imagenesPaths.add(null);
     }
 
-    // Renderizar cada ReusableCameraCard
     for (int i = 0; i < _imagenesPaths.length; i++) {
       final isNetworkImage =
           _imagenesPaths[i] != null && _imagenesPaths[i]!.startsWith('http');
@@ -730,14 +719,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           subtitle: _imagenesPaths[i] == null
               ? 'Toma o selecciona una imagen del daño'
               : 'Documenta el daño encontrado',
-          // ✅ Soporte para imágenes existentes (URLs) e imágenes nuevas (paths)
           currentImagePath: isNetworkImage ? null : _imagenesPaths[i],
           currentImageUrl: isNetworkImage ? _imagenesPaths[i] : null,
-          onImageSelected: (path) {
-            setState(() {
-              _imagenesPaths[i] = path; // Reemplazar con nueva imagen local
-            });
-          },
+          onImageSelected: (path) => setState(() => _imagenesPaths[i] = path),
           showGalleryOption: true,
           primaryColor: const Color(0xFFDC2626),
         ),
@@ -745,7 +729,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
       widgets.add(const SizedBox(height: 12));
 
-      // Botón eliminar solo si la foto ya tiene imagen
       if (_imagenesPaths[i] != null) {
         widgets.add(
           Row(
@@ -764,14 +747,10 @@ class _DanoFormState extends ConsumerState<DanoForm> {
             ],
           ),
         );
-
         widgets.add(const SizedBox(height: 16));
-      } else {
-        widgets.add(const SizedBox(height: 4));
       }
     }
 
-    // Botón "Agregar Otra Foto" (siempre al final)
     widgets.add(
       Row(
         children: [
@@ -794,11 +773,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     return widgets;
   }
 
-  void _agregarNuevaFoto() {
-    setState(() {
-      _imagenesPaths.add(null); // Agregar un card vacío
-    });
-  }
+  void _agregarNuevaFoto() => setState(() => _imagenesPaths.add(null));
 
   void _eliminarImagen(int index) {
     final imagePath = _imagenesPaths[index];
@@ -845,8 +820,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
             onPressed: () {
               setState(() {
                 _imagenesPaths.removeAt(index);
-                // En modo crear: Si no quedan fotos, agregar un card vacío
-                // En modo editar: Permitir eliminar todas las fotos
                 if (_imagenesPaths.isEmpty && !isEditMode) {
                   _imagenesPaths.add(null);
                 }
@@ -862,10 +835,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   // ============================================================================
-  // BOTONES DE ACCIÓN FIJOS
+  // BOTONES DE ACCIÓN
   // ============================================================================
-
-  Widget _buildFixedActionButtons() {
+  Widget _buildActionButtons() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
@@ -906,8 +878,65 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   // ============================================================================
-  // SUBMIT FORM
+  // VALIDACIÓN Y SUBMIT
   // ============================================================================
+  bool get _canSubmit {
+    if (_selectedRegistroVinId == null ||
+        _selectedTipoDano == null ||
+        _selectedAreaDano == null ||
+        _selectedSeveridad == null) {
+      return false;
+    }
+
+    if (!isEditMode) {
+      final options = ref.read(danosOptionsProvider).valueOrNull;
+      if (options != null) {
+        final fieldPermissions =
+            options['field_permissions'] as Map<String, dynamic>?;
+        final initialValues =
+            options['initial_values'] as Map<String, dynamic>?;
+        final condicionPermissions =
+            fieldPermissions?['condicion'] as Map<String, dynamic>?;
+        final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+        final initialCondicion = initialValues?['condicion']?.toString();
+
+        if (!isCondicionEditable &&
+            initialCondicion != null &&
+            initialCondicion.isNotEmpty &&
+            _selectedRegistroVinId == null) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  String get _submitButtonText {
+    if (_isLoading) return '...';
+    if (isEditMode) return 'Actualizar Daño';
+
+    if (!_canSubmit && _selectedRegistroVinId == null) {
+      final options = ref.read(danosOptionsProvider).valueOrNull;
+      if (options != null) {
+        final fieldPermissions =
+            options['field_permissions'] as Map<String, dynamic>?;
+        final condicionPermissions =
+            fieldPermissions?['condicion'] as Map<String, dynamic>?;
+        final isCondicionEditable = condicionPermissions?['editable'] ?? true;
+
+        if (!isCondicionEditable) {
+          return 'Sin condición válida';
+        }
+      }
+      return 'Datos incompletos';
+    }
+
+    final imageCount = _getValidImages()?.length ?? 0;
+    return imageCount > 0
+        ? 'Crear Daño ($imageCount foto${imageCount != 1 ? 's' : ''})'
+        : 'Crear Daño';
+  }
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
@@ -924,7 +953,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       bool success = false;
 
       if (isEditMode) {
-        // ✅ MODO EDICIÓN
         final nuevasImagenes = _getNewImages();
         final imagenesEliminadas = _getRemovedImageIds();
 
@@ -941,12 +969,10 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           responsabilidad: _selectedResponsabilidad,
           relevante: _relevante,
           newImages: nuevasImagenes,
-          removedImageIds: imagenesEliminadas, // ✅ Cambio: ahora son IDs
-          nDocumento:
-              _selectedFotoPresentacion, // ✅ NUEVO: Foto de presentación
+          removedImageIds: imagenesEliminadas,
+          nDocumento: _selectedFotoPresentacion,
         );
       } else {
-        // ✅ MODO CREAR
         success = await notifier.createDanoWithImages(
           registroVinId: _selectedRegistroVinId,
           tipoDano: _selectedTipoDano!,
@@ -959,8 +985,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           responsabilidad: _selectedResponsabilidad,
           relevante: _relevante,
           imagenes: _getValidImages(),
-          nDocumento:
-              _selectedFotoPresentacion, // ✅ NUEVO: Foto de presentación
+          nDocumento: _selectedFotoPresentacion,
         );
       }
 
@@ -992,9 +1017,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   // ============================================================================
   // HELPERS PARA GESTIÓN DE IMÁGENES
   // ============================================================================
-
   List<File>? _getValidImages() {
-    // Para modo crear: solo paths locales válidos
     if (isEditMode) return null;
 
     final validPaths = _imagenesPaths
@@ -1002,18 +1025,15 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         .toList();
 
     if (validPaths.isEmpty) return null;
-
     return validPaths.map((path) => File(path!)).toList();
   }
 
   List<File>? _getNewImages() {
-    // Para modo editar: solo paths locales que no son URLs originales
     if (!isEditMode) return null;
 
     final nuevasImagenes = <File>[];
     for (final imagePath in _imagenesPaths) {
       if (imagePath != null && !imagePath.startsWith('http')) {
-        // Verificar que no sea una URL original (comparando con las URLs originales)
         final esImagenOriginal = _imagenesOriginales.any(
           (img) => img.imagenUrl == imagePath,
         );
@@ -1027,12 +1047,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   List<int>? _getRemovedImageIds() {
-    // Para modo editar: IDs de imágenes originales que ya no están en la lista actual
     if (!isEditMode) return null;
 
     final eliminadas = <int>[];
-
-    // Comparar las URLs originales con las actuales
     for (final imagenOriginal in _imagenesOriginales) {
       final urlOriginal = imagenOriginal.imagenUrl!;
       if (!_imagenesPaths.contains(urlOriginal)) {
@@ -1044,86 +1061,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   // ============================================================================
-  // MÉTODOS DE VALIDACIÓN PARA UI
+  // DIÁLOGOS Y MENSAJES
   // ============================================================================
-
-  /// Verifica si el formulario está listo para enviar
-  bool get _canSubmit {
-    // Campos requeridos básicos
-    if (_selectedRegistroVinId == null ||
-        _selectedTipoDano == null ||
-        _selectedAreaDano == null ||
-        _selectedSeveridad == null) {
-      return false;
-    }
-
-    // En modo crear, al menos debe tener una imagen válida o permitir sin imágenes
-    // En modo editar, puede no tener imágenes
-    return true;
-  }
-
-  /// Obtiene el texto del botón de submit
-  String get _submitButtonText {
-    if (_isLoading) return '...';
-    if (isEditMode) return 'Actualizar Daño';
-
-    final imageCount = _getValidImages()?.length ?? 0;
-    return imageCount > 0
-        ? 'Crear Daño ($imageCount foto${imageCount != 1 ? 's' : ''})'
-        : 'Crear Daño';
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  // ============================================================================
-  // ESTADOS DE CARGA Y ERROR
-  // ============================================================================
-
-  Widget _buildLoadingState() {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(height: 100),
-        CircularProgressIndicator(),
-        SizedBox(height: 16),
-        Text('Cargando opciones...'),
-        SizedBox(height: 100),
-      ],
-    );
-  }
-
-  Widget _buildErrorState(String message) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 50),
-        const Icon(Icons.error, size: 48, color: Colors.red),
-        const SizedBox(height: 16),
-        Text(message),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: () => ref.refresh(danosOptionsProvider),
-          child: const Text('Reintentar'),
-        ),
-        const SizedBox(height: 50),
-      ],
-    );
-  }
-
-  // ============================================================================
-  // MÉTODOS DE INTERACCIÓN
-  // ============================================================================
-
   void _showMultiSelectDialog(
     String title,
     List<dynamic> options,
@@ -1170,10 +1109,92 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     );
   }
 
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  // ============================================================================
+  // ESTADOS DE ERROR Y CARGA
+  // ============================================================================
+  Widget _buildValidationError(
+    String title,
+    String message, {
+    required IconData icon,
+    required String buttonText,
+    required VoidCallback onPressed,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 20),
+        Icon(icon, size: 48, color: const Color(0xFFDC2626)),
+        const SizedBox(height: 16),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          message,
+          style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF003B5C),
+            foregroundColor: Colors.white,
+          ),
+          child: Text(buttonText),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(height: 100),
+        CircularProgressIndicator(),
+        SizedBox(height: 16),
+        Text('Cargando opciones...'),
+        SizedBox(height: 100),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 50),
+        const Icon(Icons.error, size: 48, color: Colors.red),
+        const SizedBox(height: 16),
+        Text(message),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: () => ref.refresh(danosOptionsProvider),
+          child: const Text('Reintentar'),
+        ),
+        const SizedBox(height: 50),
+      ],
+    );
+  }
+
   // ============================================================================
   // HELPERS PARA COLORES E ÍCONOS
   // ============================================================================
-
   Color _getCondicionColor(String condicion) {
     switch (condicion.toUpperCase()) {
       case 'PUERTO':
@@ -1209,50 +1230,45 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   Color _getSeveridadColor(String severidad) {
-    if (severidad.contains('LEVE')) return const Color(0xFF059669); // Verde
-    if (severidad.contains('MEDIO')) return const Color(0xFFF59E0B); // Naranja
-    if (severidad.contains('GRAVE')) return const Color(0xFFDC2626); // Rojo
-    if (severidad.contains('FALTANTE'))
-      return const Color(0xFF8B5CF6); // Púrpura
-    if (severidad.contains('CERO')) return const Color(0xFF6B7280); // Gris
+    if (severidad.contains('LEVE')) return const Color(0xFF059669);
+    if (severidad.contains('MEDIO')) return const Color(0xFFF59E0B);
+    if (severidad.contains('GRAVE')) return const Color(0xFFDC2626);
+    if (severidad.contains('FALTANTE')) return const Color(0xFF8B5CF6);
+    if (severidad.contains('CERO')) return const Color(0xFF6B7280);
     return const Color(0xFF6B7280);
   }
-
-  // ============================================================================
-  // HELPERS PARA FOTOS DE PRESENTACIÓN
-  // ============================================================================
 
   Color _getFotoTipoColor(String tipo) {
     switch (tipo.toUpperCase()) {
       case 'TARJA':
-        return const Color(0xFF059669); // Verde - documento oficial
+        return const Color(0xFF059669);
       case 'AUTO':
-        return const Color(0xFF00B4D8); // Azul - foto del vehículo
+        return const Color(0xFF00B4D8);
       case 'KM':
-        return const Color(0xFFF59E0B); // Naranja - kilometraje
+        return const Color(0xFFF59E0B);
       case 'DR':
-        return const Color(0xFFDC2626); // Rojo - damage report
+        return const Color(0xFFDC2626);
       case 'OTRO':
-        return const Color(0xFF8B5CF6); // Púrpura - otros documentos
+        return const Color(0xFF8B5CF6);
       default:
-        return const Color(0xFF6B7280); // Gris - desconocido
+        return const Color(0xFF6B7280);
     }
   }
 
   IconData _getFotoTipoIcon(String tipo) {
     switch (tipo.toUpperCase()) {
       case 'TARJA':
-        return Icons.assignment; // Documento/tarja
+        return Icons.assignment;
       case 'AUTO':
-        return Icons.directions_car; // Vehículo
+        return Icons.directions_car;
       case 'KM':
-        return Icons.speed; // Velocímetro para KM
+        return Icons.speed;
       case 'DR':
-        return Icons.report_problem; // Reporte de daños
+        return Icons.report_problem;
       case 'OTRO':
-        return Icons.description; // Documento genérico
+        return Icons.description;
       default:
-        return Icons.photo; // Foto genérica
+        return Icons.photo;
     }
   }
 

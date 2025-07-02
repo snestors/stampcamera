@@ -642,9 +642,12 @@ class _InventarioDetalleNaveScreenState
         if (mounted) Navigator.pop(context);
 
         // Compartir
-        await Share.shareXFiles([
-          XFile(file.path),
-        ], text: 'Reporte de Inventario: $marca - $agente');
+        await SharePlus.instance.share(
+          ShareParams(
+            text: 'Reporte de Unidades: $marca - $agente',
+            files: [XFile(file.path)],
+          ),
+        );
 
         // Mostrar éxito
         if (mounted) {
