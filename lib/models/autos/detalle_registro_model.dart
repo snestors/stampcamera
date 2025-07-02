@@ -59,6 +59,7 @@ class InformacionUnidad {
   final String? version;
   final String? tipo;
   final Marca marca;
+  final bool inventario;
 
   InformacionUnidad({
     this.id,
@@ -66,6 +67,7 @@ class InformacionUnidad {
     this.version,
     this.tipo,
     required this.marca,
+    required this.inventario,
   });
 
   factory InformacionUnidad.fromJson(Map<String, dynamic> json) {
@@ -75,6 +77,7 @@ class InformacionUnidad {
       version: json['version'],
       tipo: json['tipo'],
       marca: Marca.fromJson(json['marca']),
+      inventario: json['inventario'] ?? false,
     );
   }
 }

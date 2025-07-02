@@ -24,6 +24,32 @@ class InventarioDetalleNaveScreen extends ConsumerStatefulWidget {
 class _InventarioDetalleNaveScreenState
     extends ConsumerState<InventarioDetalleNaveScreen> {
   final Map<String, bool> _expandedAgentes = {};
+  final ScrollController _scrollController = ScrollController();
+  bool _isHeaderVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Ocultar header cuando scroll > 50 pixels
+    final shouldShowHeader = _scrollController.offset <= 50;
+
+    if (shouldShowHeader != _isHeaderVisible) {
+      setState(() {
+        _isHeaderVisible = shouldShowHeader;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,12 +112,22 @@ class _InventarioDetalleNaveScreenState
 
     return Column(
       children: [
-        // Header de la nave
-        _buildNaveHeader(nave),
+        // Header animado que se oculta con scroll
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 1800),
+          curve: Curves.easeInOut,
+          height: _isHeaderVisible ? null : 0,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 1800),
+            opacity: _isHeaderVisible ? 1.0 : 0.0,
+            child: _buildNaveHeader(nave),
+          ),
+        ),
 
-        // Lista de agentes, marcas y modelos
+        // Lista de agentes, marcas y modelos con ScrollController
         Expanded(
           child: ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.all(16),
             children: modelosPorAgenteYMarca.entries.map((agenteEntry) {
               final agente = agenteEntry.key;
@@ -407,7 +443,6 @@ class _InventarioDetalleNaveScreenState
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                   ),
                 ),
-
                 Expanded(
                   flex: 2,
                   child: Text(

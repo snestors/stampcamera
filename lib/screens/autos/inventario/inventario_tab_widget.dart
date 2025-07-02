@@ -442,11 +442,86 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
         'CONOS': inventario.conos,
         'EXTENSION': inventario.extension,
       });
-
       _otrosController.text = inventario.otros;
     } else {
-      // Inicializar con valores por defecto (0)
+      // Modo creación: obtener opciones del API y cargar inventario previo
+      _loadOptionsForNewInventory();
+    }
+  }
+
+  Future<void> _loadOptionsForNewInventory() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Obtener información de la unidad para los parámetros
+      final inventarioDetail = await ref.read(
+        inventarioDetalleProvider(widget.informacionUnidadId).future,
+      );
+
+      // Extraer marca, modelo y versión de la información de la unidad
+      final informacionUnidad = inventarioDetail.informacionUnidad;
+      final marcaId = informacionUnidad.marca.id;
+      final modelo = informacionUnidad.modelo;
+      final version = informacionUnidad.version;
+
+      // Llamar al servicio para obtener las opciones usando el provider existente
+      final service = ref.read(inventarioBaseServiceProvider);
+      final options = await service.getOptions(
+        marcaId: marcaId,
+        modelo: modelo,
+        version: version,
+      );
+
+      // Cargar los valores del inventario previo en el formulario
+      if (options.inventarioPrevio.isNotEmpty) {
+        // Convertir los valores del Map<String, dynamic> a Map<String, int>
+        final inventarioPrevio = <String, int>{};
+        options.inventarioPrevio.forEach((key, value) {
+          if (key != 'OTROS') {
+            inventarioPrevio[key] = (value is int)
+                ? value
+                : int.tryParse(value.toString()) ?? 0;
+          }
+        });
+
+        _inventarioValues.addAll(inventarioPrevio);
+
+        // Cargar observaciones si existen
+        final otros = options.inventarioPrevio['OTROS'];
+        if (otros != null && otros.toString().isNotEmpty) {
+          _otrosController.text = otros.toString();
+        }
+      } else {
+        // Si no hay inventario previo, inicializar con valores por defecto
+        _initializeDefaultValues();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Plantilla de inventario cargada'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // En caso de error, inicializar con valores por defecto
       _initializeDefaultValues();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚠️ No se pudo cargar la plantilla: ${e.toString()}'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

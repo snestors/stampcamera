@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
+import 'package:go_router/go_router.dart';
 
 class DetalleInfoGeneral extends StatelessWidget {
   final DetalleRegistroModel r;
@@ -17,7 +18,7 @@ class DetalleInfoGeneral extends StatelessWidget {
         const SizedBox(height: 16),
 
         // ✅ Información del vehículo
-        _buildVehicleInfo(),
+        _buildVehicleInfo(context),
 
         const SizedBox(height: 16),
 
@@ -148,7 +149,7 @@ class DetalleInfoGeneral extends StatelessWidget {
   // ============================================================================
   // INFORMACIÓN DEL VEHÍCULO
   // ============================================================================
-  Widget _buildVehicleInfo() {
+  Widget _buildVehicleInfo(BuildContext context) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -187,11 +188,23 @@ class DetalleInfoGeneral extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Versión
-            _buildInfoRow(
-              Icons.info_outline,
-              'Versión',
-              r.informacionUnidad?.version ?? 'N/A',
-              const Color(0xFF00B4D8),
+            GestureDetector(
+              onTap: r.informacionUnidad?.id != null
+                  ? () => _navigateToInventarioDetail(
+                      context,
+                      r.informacionUnidad!.id!,
+                    )
+                  : null,
+              child: _buildInfoRow(
+                r.informacionUnidad?.inventario == true
+                    ? Icons.inventory_2
+                    : Icons.inventory_2_outlined,
+                'Versión / Inventario',
+                '${r.informacionUnidad?.version ?? 'N/A'} • ${r.informacionUnidad?.inventario == true ? 'Completado' : 'Pendiente'}',
+                r.informacionUnidad?.inventario == true
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFF44336),
+              ),
             ),
 
             const SizedBox(height: 12),
@@ -376,5 +389,12 @@ class DetalleInfoGeneral extends StatelessWidget {
         color: Color(0xFF003B5C),
       );
     }
+  }
+
+  void _navigateToInventarioDetail(
+    BuildContext context,
+    int informacionUnidadId,
+  ) {
+    context.push('/autos/inventario/detalle/$informacionUnidadId');
   }
 }

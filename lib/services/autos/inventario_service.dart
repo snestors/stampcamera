@@ -1,7 +1,6 @@
 // services/inventario_base_service.dart
 import 'package:dio/dio.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
-import 'package:stampcamera/models/paginated_response.dart';
 import 'package:stampcamera/services/http_service.dart';
 
 class InventarioBaseService {
@@ -100,11 +99,16 @@ class InventarioBaseService {
     required int informacionUnidadId,
     required Map<String, dynamic> inventarioData,
   }) async {
-    print("Data: $inventarioData");
     try {
+      // Agregar informacion_unidad_id a los datos
+      final dataToSend = {
+        ...inventarioData,
+        'informacion_unidad_id': informacionUnidadId,
+      };
+      print(dataToSend);
       final response = await _http.dio.post(
-        '/api/v1/autos/inventarios-base/$informacionUnidadId/',
-        data: inventarioData,
+        '/api/v1/autos/inventarios-base/',
+        data: dataToSend,
       );
 
       return InventarioBase.fromJson(response.data);
@@ -322,7 +326,6 @@ class InventarioBaseService {
     int? naveDescargaId,
     int? agenteId,
     bool? tieneInventario,
-    int page = 1,
   }) async {
     try {
       final queryParams = <String, dynamic>{
@@ -333,7 +336,6 @@ class InventarioBaseService {
         if (naveDescargaId != null) 'nave_descarga_id': naveDescargaId,
         if (agenteId != null) 'agente_id': agenteId,
         if (tieneInventario != null) 'tiene_inventario': tieneInventario,
-        'page': page,
       };
 
       final response = await _http.dio.get(
