@@ -2,6 +2,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/screens/autos/autos_screen.dart';
+import 'package:stampcamera/screens/autos/inventario/inventario_detalle_nave_screen.dart';
+import 'package:stampcamera/screens/autos/inventario/inventario_detalle_screen.dart';
 import 'package:stampcamera/screens/autos/registro_general/detalle_registro_screen.dart';
 import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
@@ -41,6 +43,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final vin = state.pathParameters['vin']!;
               return DetalleRegistroScreen(vin: vin);
+            },
+          ),
+          GoRoute(
+            path: 'inventario/nave/:naveId',
+            builder: (context, state) {
+              final naveIdString = state.pathParameters['naveId']!;
+              final naveId = int.parse(naveIdString);
+              return InventarioDetalleNaveScreen(naveId: naveId);
+            },
+          ),
+          GoRoute(
+            path: 'inventario/detalle/:infId',
+            builder: (context, state) {
+              final infIdString = state.pathParameters['infId']!;
+              final infId = int.parse(infIdString);
+              return InventarioDetalleScreen(informacionUnidadId: infId);
             },
           ),
         ],

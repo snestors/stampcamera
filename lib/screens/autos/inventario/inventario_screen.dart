@@ -57,7 +57,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
       body: Column(
         children: [
           _buildSearchBar(),
-          _buildQuickFilters(),
+
           Expanded(child: _buildResultsList(inventariosAsync, notifier)),
         ],
       ),
@@ -102,54 +102,6 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
           }
         },
       ),
-    );
-  }
-
-  Widget _buildQuickFilters() {
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          _buildFilterChip(
-            label: 'Sin Inventario',
-            icon: Icons.playlist_add,
-            onTap: () => _filterSinInventario(),
-          ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: 'Con Inventario',
-            icon: Icons.playlist_add_check,
-            onTap: () => _filterConInventario(),
-          ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: 'Por Agente',
-            icon: Icons.business,
-            onTap: () => _showAgenteFilter(),
-          ),
-          const SizedBox(width: 8),
-          _buildFilterChip(
-            label: 'Estadísticas',
-            icon: Icons.analytics,
-            onTap: () => _showStats(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return ActionChip(
-      avatar: Icon(icon, size: 18),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      onPressed: onTap,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 
@@ -423,101 +375,11 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
   // ============================================================================
 
   void _navigateToNaveDetail(int naveId) {
-    context.push('/autos/inventario/nave/$naveId');
+    print("To inventario Detalle ID: $naveId");
+    context.push('/autos/inventario/nave/${naveId.toString()}');
   }
 
   // ============================================================================
   // MÉTODOS DE FILTROS
   // ============================================================================
-
-  void _filterSinInventario() {
-    ref.read(inventarioBaseProvider.notifier).filterSinInventario();
-  }
-
-  void _filterConInventario() {
-    ref.read(inventarioBaseProvider.notifier).filterConInventario();
-  }
-
-  void _showAgenteFilter() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        minChildSize: 0.3,
-        expand: false,
-        builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Filtrar por Agente',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.business),
-                      title: const Text('TLI ADUANAS S.A.C.'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _applyAgenteFilter(1);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.business),
-                      title: const Text('NEPTUNIA S.A.'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _applyAgenteFilter(2);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.business),
-                      title: const Text('COSMOS AGENCIA MARITIMA'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _applyAgenteFilter(3);
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.clear_all),
-                      title: const Text('Limpiar filtro'),
-                      onTap: () {
-                        Navigator.pop(context);
-                        ref.read(inventarioBaseProvider.notifier).refresh();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _applyAgenteFilter(int agenteId) {
-    ref
-        .read(inventarioBaseProvider.notifier)
-        .searchByFilters(agenteId: agenteId);
-  }
-
-  void _showStats() {
-    context.push('/autos/inventario/estadisticas');
-  }
 }

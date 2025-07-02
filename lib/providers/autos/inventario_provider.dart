@@ -1,4 +1,5 @@
 // lib/providers/autos/inventario_base_provider.dart
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/services/autos/inventario_service.dart';
@@ -268,6 +269,7 @@ class InventarioDetalleNotifier
     Map<String, dynamic> inventarioData,
   ) async {
     try {
+      print("arg: $arg, invetarioData: $inventarioData");
       final service = ref.read(inventarioBaseServiceProvider);
       final inventario = await service.partialUpdate(arg, inventarioData);
 
@@ -282,7 +284,8 @@ class InventarioDetalleNotifier
       }
 
       return inventario;
-    } catch (e) {
+    } on DioException catch (e) {
+      print("Error: ${e.message}");
       throw Exception(parseError(e));
     }
   }

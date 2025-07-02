@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stampcamera/screens/autos/contenedores/contenedores_tab.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
-import 'package:stampcamera/screens/autos/registro_general/inventario_screen.dart';
+import 'package:stampcamera/screens/autos/inventario/inventario_screen.dart';
 import 'package:stampcamera/theme/custom_colors.dart';
 import 'package:stampcamera/widgets/pedeteo/queue_badget.dart';
 import 'registro_general/registro_screen.dart';

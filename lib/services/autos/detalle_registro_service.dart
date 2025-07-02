@@ -75,6 +75,11 @@ class DetalleRegistroService {
       final response = await _http.dio.post(
         '/api/v1/autos/registro-vin/',
         data: formData,
+        options: Options(
+          extra: {
+            'file_paths': {'foto_vin': fotoVin.path},
+          },
+        ),
       );
 
       return response.data;
@@ -182,6 +187,11 @@ class DetalleRegistroService {
       final response = await _http.dio.post(
         '/api/v1/autos/fotos-presentacion/',
         data: formData,
+        options: Options(
+          extra: {
+            'file_paths': {'foto_vin': imagen.path},
+          },
+        ),
       );
 
       return response.data;

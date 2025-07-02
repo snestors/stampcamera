@@ -85,6 +85,7 @@ class InventarioBaseService {
     int informacionUnidadId,
   ) async {
     try {
+      print('/api/v1/autos/inventarios-base/$informacionUnidadId/');
       final response = await _http.dio.get(
         '/api/v1/autos/inventarios-base/$informacionUnidadId/',
       );
@@ -99,6 +100,7 @@ class InventarioBaseService {
     required int informacionUnidadId,
     required Map<String, dynamic> inventarioData,
   }) async {
+    print("Data: $inventarioData");
     try {
       final response = await _http.dio.post(
         '/api/v1/autos/inventarios-base/$informacionUnidadId/',
@@ -107,6 +109,7 @@ class InventarioBaseService {
 
       return InventarioBase.fromJson(response.data);
     } on DioException catch (e) {
+      print(e.response?.data);
       if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
         if (errorData is Map<String, dynamic>) {
@@ -164,7 +167,8 @@ class InventarioBaseService {
         data: data,
       );
       return InventarioBase.fromJson(response.data);
-    } catch (e) {
+    } on DioException catch (e) {
+      print("Error DIo: ${e.message}");
       throw Exception('Error al actualizar inventario: $e');
     }
   }
