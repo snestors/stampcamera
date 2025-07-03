@@ -580,16 +580,17 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             fotoContenedorVacioPath: _fotoContenedorVacioPath,
           );
 
-      if (success && mounted) {
+      if (!mounted) return;
+
+      if (success) {
         Navigator.of(context).pop();
         _showSuccess(context, 'Contenedor creado exitosamente');
-      } else if (mounted) {
+      } else {
         _showError(context, 'Error al crear el contenedor');
       }
     } catch (e) {
-      if (mounted) {
-        _showError(context, 'Error: $e');
-      }
+      if (!mounted) return;
+      _showError(context, 'Error: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

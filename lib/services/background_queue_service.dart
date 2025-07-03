@@ -121,7 +121,7 @@ class BackgroundQueueService {
   Future<bool> _hasInternetConnection() async {
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
-      return connectivityResult != ConnectivityResult.none;
+      return !connectivityResult.contains(ConnectivityResult.none);
     } catch (e) {
       print('Error verificando conectividad: $e');
       return false;
