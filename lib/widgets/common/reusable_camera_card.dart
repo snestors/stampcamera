@@ -1,64 +1,63 @@
 // widgets/common/reusable_camera_card.dart
-/**
- * 📸 COMPONENTE REUTILIZABLE DE CÁMARA (v2.0)
- * 
- * 🎯 PROPÓSITO:
- * Componente que permite tomar fotos con cámara o seleccionar de galería.
- * Soporte para preview de imágenes desde URL (para formularios de edición).
- * Procesa automáticamente las imágenes con logo y timestamp.
- * 
- * 📝 CARACTERÍSTICAS:
- * - ✅ Tomar foto con cámara
- * - ✅ Seleccionar imagen de galería  
- * - ✅ Vista previa con zoom (local + URL)
- * - ✅ Procesamiento automático (logo + timestamp)
- * - ✅ Soporte para URLs existentes (formularios de edición)
- * - ✅ Títulos y colores personalizables
- * - ✅ Opción de ocultar galería
- * - ✅ Manejo de errores y estados de carga
- * 
- * 🚀 EJEMPLOS DE USO:
- * 
- * // Formulario nuevo (path local)
- * String? photoPath;
- * ReusableCameraCard(
- *   title: 'Foto del VIN',
- *   currentImagePath: photoPath,
- *   onImageSelected: (path) => setState(() => photoPath = path),
- * )
- * 
- * // Formulario de edición (URL existente)
- * ReusableCameraCard(
- *   title: 'Foto del Vehículo',
- *   currentImagePath: localPhotoPath, // null si no se ha cambiado
- *   currentImageUrl: 'https://api.example.com/photos/123.jpg',
- *   onImageSelected: (path) => setState(() => localPhotoPath = path),
- * )
- * 
- * // Con Provider/Riverpod
- * ReusableCameraCard(
- *   title: 'Foto del Vehículo',
- *   currentImagePath: ref.watch(vehicleProvider).newPhotoPath,
- *   currentImageUrl: ref.watch(vehicleProvider).existingPhotoUrl,
- *   onImageSelected: (path) {
- *     ref.read(vehicleProvider.notifier).setNewPhoto(path);
- *   },
- * )
- * 
- * 📋 PARÁMETROS NUEVOS:
- * - currentImageUrl: URL de imagen existente (para formularios de edición)
- * - thumbnailUrl: URL del thumbnail (opcional, mejora performance)
- * 
- * 🔄 LÓGICA DE PRIORIDAD:
- * 1. Si currentImagePath != null → Muestra imagen local (nueva)
- * 2. Si currentImageUrl != null → Muestra imagen desde URL (existente)
- * 3. Si ambos null → Muestra placeholder
- * 
- * 📱 COMPORTAMIENTO:
- * - Al tomar nueva foto: currentImagePath se actualiza, currentImageUrl se ignora
- * - Permite cambiar foto existente manteniendo funcionalidad completa
- * - Badge diferente para fotos locales vs URLs
- */
+/// 📸 COMPONENTE REUTILIZABLE DE CÁMARA (v2.0)
+///
+/// 🎯 PROPÓSITO:
+/// Componente que permite tomar fotos con cámara o seleccionar de galería.
+/// Soporte para preview de imágenes desde URL (para formularios de edición).
+/// Procesa automáticamente las imágenes con logo y timestamp.
+///
+/// 📝 CARACTERÍSTICAS:
+/// - ✅ Tomar foto con cámara
+/// - ✅ Seleccionar imagen de galería
+/// - ✅ Vista previa con zoom (local + URL)
+/// - ✅ Procesamiento automático (logo + timestamp)
+/// - ✅ Soporte para URLs existentes (formularios de edición)
+/// - ✅ Títulos y colores personalizables
+/// - ✅ Opción de ocultar galería
+/// - ✅ Manejo de errores y estados de carga
+///
+/// 🚀 EJEMPLOS DE USO:
+///
+/// // Formulario nuevo (path local)
+/// String? photoPath;
+/// ReusableCameraCard(
+///   title: 'Foto del VIN',
+///   currentImagePath: photoPath,
+///   onImageSelected: (path) => setState(() => photoPath = path),
+/// )
+///
+/// // Formulario de edición (URL existente)
+/// ReusableCameraCard(
+///   title: 'Foto del Vehículo',
+///   currentImagePath: localPhotoPath, // null si no se ha cambiado
+///   currentImageUrl: 'https://api.example.com/photos/123.jpg',
+///   onImageSelected: (path) => setState(() => localPhotoPath = path),
+/// )
+///
+/// // Con Provider/Riverpod
+/// ReusableCameraCard(
+///   title: 'Foto del Vehículo',
+///   currentImagePath: ref.watch(vehicleProvider).newPhotoPath,
+///   currentImageUrl: ref.watch(vehicleProvider).existingPhotoUrl,
+///   onImageSelected: (path) {
+///     ref.read(vehicleProvider.notifier).setNewPhoto(path);
+///   },
+/// )
+///
+/// 📋 PARÁMETROS NUEVOS:
+/// - currentImageUrl: URL de imagen existente (para formularios de edición)
+/// - thumbnailUrl: URL del thumbnail (opcional, mejora performance)
+///
+/// 🔄 LÓGICA DE PRIORIDAD:
+/// 1. Si currentImagePath != null → Muestra imagen local (nueva)
+/// 2. Si currentImageUrl != null → Muestra imagen desde URL (existente)
+/// 3. Si ambos null → Muestra placeholder
+///
+/// 📱 COMPORTAMIENTO:
+/// - Al tomar nueva foto: currentImagePath se actualiza, currentImageUrl se ignora
+/// - Permite cambiar foto existente manteniendo funcionalidad completa
+/// - Badge diferente para fotos locales vs URLs
+library;
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -580,12 +579,10 @@ class ReusableCameraCard extends StatelessWidget {
   }
 }
 
-/**
- * 📷 MODAL DE CÁMARA REUTILIZABLE (Sin cambios)
- * 
- * Modal que maneja la captura de fotos con preview y confirmación.
- * Procesa automáticamente las imágenes tomadas.
- */
+/// 📷 MODAL DE CÁMARA REUTILIZABLE (Sin cambios)
+///
+/// Modal que maneja la captura de fotos con preview y confirmación.
+/// Procesa automáticamente las imágenes tomadas.
 
 // Modal de cámara reutilizable
 class _CameraModal extends StatefulWidget {

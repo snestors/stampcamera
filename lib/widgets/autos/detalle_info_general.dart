@@ -88,7 +88,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        '${r.informacionUnidad?.marca.marca ?? 'N/A'}',
+                        r.informacionUnidad?.marca.marca ?? 'N/A',
                         style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.accent,
@@ -278,7 +278,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                     Icons.description,
                     'Factura',
                     r.factura ?? 'N/A',
-                    const AppColors.primary,
+                    AppColors.primary,
                   ),
                 ),
               ],
@@ -352,7 +352,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isLarge ? 16 : 14,
                   fontWeight: FontWeight.w600,
-                  color: const AppColors.textPrimary,
+                  color: AppColors.textPrimary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

@@ -235,7 +235,10 @@ class _InventarioDetalleNaveScreenState
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 12,
+          ),
         ),
         Text(
           value.isNotEmpty ? value : 'N/A',
@@ -264,7 +267,10 @@ class _InventarioDetalleNaveScreenState
         ),
         Text(
           label,
-          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 10),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 10,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
@@ -423,7 +429,7 @@ class _InventarioDetalleNaveScreenState
           ),
 
           // Filas de modelos
-          ...modelos.map((modelo) => _buildModeloRowSimple(modelo)).toList(),
+          ...modelos.map((modelo) => _buildModeloRowSimple(modelo)),
 
           // Fila de totales
           Container(
@@ -528,9 +534,9 @@ class _InventarioDetalleNaveScreenState
                 ),
               ),
               const SizedBox(height: 8),
-              ...modelo.versiones
-                  .map((version) => _buildVersionRowSimple(version))
-                  .toList(),
+              ...modelo.versiones.map(
+                (version) => _buildVersionRowSimple(version),
+              ),
             ],
           ),
         ),
@@ -857,7 +863,7 @@ class _InventarioDetalleNaveScreenState
                 ],
               ),
             );
-          }).toList(),
+          }),
 
           // Fila de totales
           Container(

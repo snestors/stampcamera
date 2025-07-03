@@ -39,8 +39,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   bool get isEditMode => widget.registroVin != null;
   String get formTitle => isEditMode ? 'Editar Inspección' : 'Nueva Inspección';
   String get submitButtonText => isEditMode ? 'Actualizar' : 'Guardar';
-  Color get primaryColor =>
-      isEditMode ? Colors.orange : AppColors.secondary;
+  Color get primaryColor => isEditMode ? Colors.orange : AppColors.secondary;
 
   @override
   void initState() {
@@ -421,10 +420,12 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                     onChanged: (value) => _selectedFila = int.tryParse(value),
                     validator: _isFieldRequired(options, 'fila')
                         ? (value) {
-                            if (value?.isEmpty ?? true)
+                            if (value?.isEmpty ?? true) {
                               return 'Campo obligatorio';
-                            if (int.tryParse(value!) == null)
+                            }
+                            if (int.tryParse(value!) == null) {
                               return 'Debe ser un número';
+                            }
                             return null;
                           }
                         : null,
@@ -454,10 +455,12 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                         _selectedPosicion = int.tryParse(value),
                     validator: _isFieldRequired(options, 'posicion')
                         ? (value) {
-                            if (value?.isEmpty ?? true)
+                            if (value?.isEmpty ?? true) {
                               return 'Campo obligatorio';
-                            if (int.tryParse(value!) == null)
+                            }
+                            if (int.tryParse(value!) == null) {
                               return 'Debe ser un número';
+                            }
                             return null;
                           }
                         : null,
@@ -581,7 +584,9 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                   child: Text(
                     'Esta condición no requiere campos adicionales',
                     style: TextStyle(
-                      color: VehicleHelpers.getCondicionColor(_selectedCondicion!),
+                      color: VehicleHelpers.getCondicionColor(
+                        _selectedCondicion!,
+                      ),
                       fontWeight: FontWeight.w500,
                       fontSize: 12,
                     ),
@@ -757,4 +762,3 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
     }
   }
 }
-

@@ -389,7 +389,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
               final fieldKey = parts[0];
               final fieldLabel = parts[1];
               return _buildNumberField(fieldKey, fieldLabel);
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -532,7 +532,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
             child: ElevatedButton(
               onPressed: _isLoading ? null : _submitForm,
               style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
               ),
               child: _isLoading

@@ -527,7 +527,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
 
-                          return Container(
+                          return SizedBox(
                             height: 300,
                             child: Center(
                               child: Column(
@@ -557,7 +557,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                           );
                         },
                         errorBuilder: (context, error, stackTrace) {
-                          return Container(
+                          return SizedBox(
                             height: 300,
                             child: Center(
                               child: Column(
