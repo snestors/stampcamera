@@ -295,7 +295,6 @@ class DetalleRegistroService {
 
     // ✅ Campos opcionales
     if (zonas != null && zonas.isNotEmpty) {
-      // Agregar múltiples valores para zonas
       for (final zona in zonas) {
         formData.fields.add(MapEntry('zonas', zona.toString()));
       }
@@ -310,16 +309,27 @@ class DetalleRegistroService {
         MapEntry('responsabilidad', responsabilidad.toString()),
       );
     }
+
     if (nDocumento != null) {
       formData.fields.add(MapEntry('n_documento', nDocumento.toString()));
     }
 
+    // ✅ Preparar mapa de file paths para múltiples imágenes
+    final Map<String, String> filePaths = {};
+
     // ✅ Múltiples imágenes con formato imagen_0, imagen_1, imagen_2, etc.
     if (imagenes != null && imagenes.isNotEmpty) {
       for (int i = 0; i < imagenes.length; i++) {
+        final fieldName = 'imagen_$i';
+        final filePath = imagenes[i].path;
+
+        // Agregar archivo al FormData
         formData.files.add(
-          MapEntry('imagen_$i', await MultipartFile.fromFile(imagenes[i].path)),
+          MapEntry(fieldName, await MultipartFile.fromFile(filePath)),
         );
+
+        // ✅ CRUCIAL: Guardar path para reconexión automática
+        filePaths[fieldName] = filePath;
       }
     }
 
@@ -332,11 +342,19 @@ class DetalleRegistroService {
     for (var file in formData.files) {
       debugPrint('   ${file.key}: ${file.value.filename}');
     }
+    debugPrint('🔧 File paths for reconnection: $filePaths');
 
     try {
-      final response = await _http.dio.post(
+      final response = await _http.requestWithConnectivity(
         '/api/v1/autos/danos/',
+        method: 'POST',
         data: formData,
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+          extra: {
+            'file_paths': filePaths, // ✅ Esencial para reconexión automática
+          },
+        ),
       );
 
       debugPrint('✅ Response status: ${response.statusCode}');
@@ -422,15 +440,22 @@ class DetalleRegistroService {
       formData.fields.add(MapEntry('relevante', relevante.toString()));
     }
 
+    // ✅ Preparar mapa de file paths para múltiples imágenes
+    final Map<String, String> filePaths = {};
+
     // ✅ Agregar nuevas imágenes (0, 1, o múltiples)
     if (newImages != null && newImages.isNotEmpty) {
       for (int i = 0; i < newImages.length; i++) {
+        final fieldName = 'imagen_$i';
+        final filePath = newImages[i].path;
+
+        // Agregar archivo al FormData
         formData.files.add(
-          MapEntry(
-            'imagen_$i',
-            await MultipartFile.fromFile(newImages[i].path),
-          ),
+          MapEntry(fieldName, await MultipartFile.fromFile(filePath)),
         );
+
+        // ✅ CRUCIAL: Guardar path para reconexión automática
+        filePaths[fieldName] = filePath;
       }
     }
 
@@ -443,11 +468,19 @@ class DetalleRegistroService {
     for (var file in formData.files) {
       debugPrint('   ${file.key}: ${file.value.filename}');
     }
+    debugPrint('🔧 File paths for reconnection: $filePaths');
 
     try {
-      final response = await _http.dio.patch(
+      final response = await _http.requestWithConnectivity(
         '/api/v1/autos/danos/$danoId/',
+        method: 'PATCH',
         data: formData,
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+          extra: {
+            'file_paths': filePaths, // ✅ Esencial para reconexión automática
+          },
+        ),
       );
 
       debugPrint('✅ Response status: ${response.statusCode}');
