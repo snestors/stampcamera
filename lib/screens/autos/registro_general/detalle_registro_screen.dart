@@ -7,6 +7,7 @@ import 'package:stampcamera/widgets/autos/detalle_registros_vin.dart';
 import 'package:stampcamera/widgets/autos/detalle_fotos_presentacion.dart';
 import 'package:stampcamera/widgets/autos/detalle_danos.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
+import 'package:stampcamera/theme/custom_colors.dart';
 
 class DetalleRegistroScreen extends ConsumerWidget {
   final String vin;
@@ -20,7 +21,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: AppColors.backgroundLight,
         appBar: _buildAppBar(context, ref, detalleAsync),
         body: detalleAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -42,7 +43,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
   ) {
     return AppBar(
       elevation: 0,
-      backgroundColor: const Color(0xFF003B5C),
+      backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.zero, // Cuadrado sin bordes
@@ -60,7 +61,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(48),
         child: Container(
-          color: const Color(0xFF003B5C),
+          color: AppColors.primary,
           child: detalleAsync.when(
             loading: () => _buildLoadingTabs(),
             error: (_, __) => _buildErrorTabs(),
@@ -135,8 +136,8 @@ class DetalleRegistroScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
                 color: isWarning
-                    ? const Color(0xFFDC2626)
-                    : const Color(0xFF00B4D8),
+                    ? AppColors.error
+                    : AppColors.secondary,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.white, width: 1),
               ),
@@ -236,7 +237,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
             Text('Actualizando datos...'),
           ],
         ),
-        backgroundColor: const Color(0xFF003B5C),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: const Duration(seconds: 2),
