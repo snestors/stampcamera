@@ -12,7 +12,12 @@
     
 
 
-
+    <supports-screens 
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="false"
+        android:xlargeScreens="false" />
+        
     <application
         android:label="A&amp;G"
         android:name="${applicationName}"
