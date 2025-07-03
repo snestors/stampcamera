@@ -187,7 +187,7 @@ class QueueService {
     try {
       // Verificar conectividad
       final connectivity = await Connectivity().checkConnectivity();
-      if (connectivity == ConnectivityResult.none) {
+      if (connectivity.contains(ConnectivityResult.none)) {
         debugPrint('Sin conectividad, skipping queue processing');
         return;
       }
@@ -261,8 +261,8 @@ class QueueService {
   }
 
   void _listenToConnectivity() {
-    Connectivity().onConnectivityChanged.listen((result) {
-      if (result != ConnectivityResult.none &&
+    Connectivity().onConnectivityChanged.listen((results) {
+      if (!results.contains(ConnectivityResult.none) &&
           _currentSnapshot.pendingCount > 0) {
         debugPrint('Connectivity restored, processing queue');
         _tryImmediateProcessing();

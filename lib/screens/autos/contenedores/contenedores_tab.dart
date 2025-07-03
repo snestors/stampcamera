@@ -684,20 +684,19 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                   .read(contenedorProvider.notifier)
                   .deleteContenedor(contenedor.id);
 
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      success
-                          ? 'Contenedor eliminado correctamente'
-                          : 'Error al eliminar contenedor',
-                    ),
-                    backgroundColor: success
-                        ? AppColors.success
-                        : AppColors.error,
+              if (!mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    success
+                        ? 'Contenedor eliminado correctamente'
+                        : 'Error al eliminar contenedor',
                   ),
-                );
-              }
+                  backgroundColor:
+                      success ? AppColors.success : AppColors.error,
+                ),
+              );
             },
             child: const Text(
               'Eliminar',
