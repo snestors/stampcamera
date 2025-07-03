@@ -4,6 +4,7 @@ import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
+import 'package:stampcamera/theme/custom_colors.dart';
 
 class DetalleRegistrosVin extends ConsumerWidget {
   final List<RegistroVin> items;
@@ -53,10 +54,10 @@ class DetalleRegistrosVin extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Icon(Icons.history, size: 18, color: Color(0xFF003B5C)),
+          child: const Icon(Icons.history, size: 18, color: AppColors.primary),
         ),
         const SizedBox(width: 10),
         const Text(
@@ -64,7 +65,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+            color: AppColors.textPrimary,
           ),
         ),
         const Spacer(),
@@ -73,13 +74,13 @@ class DetalleRegistrosVin extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             '${items.length}',
             style: const TextStyle(
-              color: Color(0xFF003B5C),
+              color: AppColors.primary,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -91,7 +92,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
         // ✅ Botón agregar nuevo registro
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF00B4D8),
+            color: AppColors.secondary,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Material(
@@ -149,10 +150,10 @@ class DetalleRegistrosVin extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: const Color(0xFF6B7280).withValues(alpha: 0.03),
+        color: AppColors.textSecondary.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF6B7280).withValues(alpha: 0.1),
+          color: AppColors.textSecondary.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -161,7 +162,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
           const Icon(
             Icons.history_outlined,
             size: 48,
-            color: Color(0xFF6B7280),
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 16),
           const Text(
@@ -169,13 +170,13 @@ class DetalleRegistrosVin extends ConsumerWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF6B7280),
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             'No hay registros de inspecciones para este vehículo',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -184,7 +185,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
           ElevatedButton.icon(
             onPressed: () => _showAgregarRegistroForm(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00B4D8),
+              backgroundColor: AppColors.secondary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
@@ -210,14 +211,14 @@ class DetalleRegistrosVin extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF003B5C).withValues(alpha: 0.03),
+          color: AppColors.primary.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -258,7 +259,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: _getCondicionColor(registro.condicion),
+            color: VehicleHelpers.getCondicionColor(registro.condicion),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Center(
@@ -285,15 +286,15 @@ class DetalleRegistrosVin extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: _getCondicionColor(
-                        registro.condicion,
-                      ).withValues(alpha: 0.1),
+                      color: VehicleHelpers
+                          .getCondicionColor(registro.condicion)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
-                      _getCondicionIcon(registro.condicion),
+                      VehicleHelpers.getCondicionIcon(registro.condicion),
                       size: 14,
-                      color: _getCondicionColor(registro.condicion),
+                      color: VehicleHelpers.getCondicionColor(registro.condicion),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -302,7 +303,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: _getCondicionColor(registro.condicion),
+                      color: VehicleHelpers.getCondicionColor(registro.condicion),
                     ),
                   ),
                 ],
@@ -558,7 +559,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
             Icons.location_on,
             'Zona de Inspección',
             registro.zonaInspeccion!.value,
-            const Color(0xFF00B4D8),
+            AppColors.secondary,
           ),
 
         // Bloque si existe
@@ -568,7 +569,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
             Icons.view_module,
             'Bloque',
             registro.bloque!.value,
-            const Color(0xFF059669),
+            AppColors.accent,
           ),
         ],
 
@@ -579,7 +580,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
             Icons.person,
             'Registrado por',
             registro.createBy!,
-            const Color(0xFF6B7280),
+            AppColors.textSecondary,
           ),
         ],
       ],
@@ -615,7 +616,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -634,13 +635,13 @@ class DetalleRegistrosVin extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: const Color(0xFF059669).withValues(alpha: 0.1),
+            color: AppColors.accent.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: const Icon(
             Icons.camera_alt,
             size: 14,
-            color: Color(0xFF059669),
+            color: AppColors.accent,
           ),
         ),
         const SizedBox(width: 8),
@@ -652,7 +653,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
                 'Foto VIN',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Color(0xFF6B7280),
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -671,40 +672,4 @@ class DetalleRegistrosVin extends ConsumerWidget {
     );
   }
 
-  // ============================================================================
-  // HELPERS PARA COLORES E ÍCONOS POR LUGAR DE REVISIÓN
-  // ============================================================================
-  Color _getCondicionColor(String condicion) {
-    switch (condicion.toUpperCase()) {
-      case 'PUERTO':
-        return const Color(0xFF00B4D8); // Azul - zona portuaria
-      case 'RECEPCION':
-        return const Color(0xFF8B5CF6); // Púrpura - área de recepción
-      case 'ALMACEN':
-        return const Color(0xFF059669); // Verde - zona de almacenamiento
-      case 'PDI':
-        return const Color(0xFFF59E0B); // Naranja - inspección pre-entrega
-      case 'PRE-PDI':
-        return const Color(0xFFEF4444); // Rojo - inspección previa
-      default:
-        return const Color(0xFF6B7280); // Gris - desconocido
-    }
-  }
-
-  IconData _getCondicionIcon(String condicion) {
-    switch (condicion.toUpperCase()) {
-      case 'PUERTO':
-        return Icons.anchor; // Ancla para puerto
-      case 'RECEPCION':
-        return Icons.login; // Entrada para recepción
-      case 'ALMACEN':
-        return Icons.warehouse; // Almacén
-      case 'PDI':
-        return Icons.build_circle; // Herramientas para inspección final
-      case 'PRE-PDI':
-        return Icons.search; // Lupa para inspección previa
-      default:
-        return Icons.location_on; // Ubicación genérica
-    }
-  }
 }

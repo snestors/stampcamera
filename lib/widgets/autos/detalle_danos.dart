@@ -4,6 +4,7 @@ import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 import 'package:stampcamera/widgets/autos/forms/dano_form.dart'; // ✅ Import del formulario
+import 'package:stampcamera/theme/custom_colors.dart';
 
 class DetalleDanos extends ConsumerWidget {
   final List<Dano> danos;
@@ -260,7 +261,7 @@ class DetalleDanos extends ConsumerWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: _getSeveridadColor(dano.severidad.esp),
+            color: VehicleHelpers.getSeveridadColor(dano.severidad.esp),
             borderRadius: BorderRadius.circular(14),
           ),
           child: Center(
@@ -288,15 +289,15 @@ class DetalleDanos extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: _getCondicionColor(
-                        condicionTexto,
-                      ).withValues(alpha: 0.1),
+                      color: VehicleHelpers
+                          .getCondicionColor(condicionTexto)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
-                      _getCondicionIcon(condicionTexto),
+                      VehicleHelpers.getCondicionIcon(condicionTexto),
                       size: 14,
-                      color: _getCondicionColor(condicionTexto),
+                      color: VehicleHelpers.getCondicionColor(condicionTexto),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -305,7 +306,7 @@ class DetalleDanos extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: _getCondicionColor(condicionTexto),
+                      color: VehicleHelpers.getCondicionColor(condicionTexto),
                     ),
                   ),
                 ],
@@ -976,52 +977,4 @@ class DetalleDanos extends ConsumerWidget {
         dano.createBy != null;
   }
 
-  Color _getSeveridadColor(String severidad) {
-    if (severidad.contains('LEVE')) {
-      return const Color(0xFFF59E0B); // Naranja
-    } else if (severidad.contains('MEDIO')) {
-      return const Color(0xFFDC2626); // Rojo
-    } else if (severidad.contains('GRAVE')) {
-      return const Color(0xFF7C2D12); // Rojo oscuro
-    }
-    return const Color(0xFF6B7280); // Gris por defecto
-  }
-
-  Color _getCondicionColor(String condicion) {
-    switch (condicion.toUpperCase()) {
-      case 'PUERTO':
-        return const Color(0xFF00B4D8);
-      case 'RECEPCION':
-        return const Color(0xFF8B5CF6);
-      case 'ALMACEN':
-        return const Color(0xFF059669);
-      case 'PDI':
-        return const Color(0xFFF59E0B);
-      case 'PRE-PDI':
-        return const Color(0xFFEF4444);
-      case 'ARRIBO':
-        return const Color(0xFF0EA5E9);
-      default:
-        return const Color(0xFF6B7280);
-    }
-  }
-
-  IconData _getCondicionIcon(String condicion) {
-    switch (condicion.toUpperCase()) {
-      case 'PUERTO':
-        return Icons.anchor;
-      case 'RECEPCION':
-        return Icons.login;
-      case 'ALMACEN':
-        return Icons.warehouse;
-      case 'PDI':
-        return Icons.build_circle;
-      case 'PRE-PDI':
-        return Icons.search;
-      case 'ARRIBO':
-        return Icons.flight_land;
-      default:
-        return Icons.location_on;
-    }
-  }
 }

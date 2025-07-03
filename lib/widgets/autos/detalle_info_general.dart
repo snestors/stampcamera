@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stampcamera/theme/custom_colors.dart';
 
 class DetalleInfoGeneral extends StatelessWidget {
   final DetalleRegistroModel r;
@@ -36,11 +37,11 @@ class DetalleInfoGeneral extends StatelessWidget {
       type: MaterialType.transparency,
       child: Card(
         elevation: 4,
-        shadowColor: const Color(0xFF003B5C).withValues(alpha: 0.15),
+        shadowColor: AppColors.primary.withValues(alpha: 0.15),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -57,7 +58,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                       'VIN',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Color(0xFF64748B),
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -67,7 +68,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF003B5C),
+                        color: AppColors.primary,
                       ),
                     ),
 
@@ -79,10 +80,10 @@ class DetalleInfoGeneral extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF059669).withValues(alpha: 0.1),
+                        color: AppColors.accent.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFF059669).withValues(alpha: 0.3),
+                          color: AppColors.accent.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -90,7 +91,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                         '${r.informacionUnidad?.marca.marca ?? 'N/A'}',
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF059669),
+                          color: AppColors.accent,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -105,12 +106,10 @@ class DetalleInfoGeneral extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00B4D8).withValues(alpha: 0.1),
+                          color: AppColors.secondary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(
-                              0xFF00B4D8,
-                            ).withValues(alpha: 0.3),
+                            color: AppColors.secondary.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -118,7 +117,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                           'Serie: ${r.serie}',
                           style: const TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF00B4D8),
+                            color: AppColors.secondary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -132,7 +131,7 @@ class DetalleInfoGeneral extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: _buildBrandLogo(
@@ -155,14 +154,14 @@ class DetalleInfoGeneral extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF003B5C).withValues(alpha: 0.03),
+          color: AppColors.primary.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -181,7 +180,7 @@ class DetalleInfoGeneral extends StatelessWidget {
               Icons.directions_car,
               'Modelo',
               r.informacionUnidad?.modelo ?? 'N/A',
-              const Color(0xFF003B5C),
+              AppColors.primary,
               isLarge: true,
             ),
 
@@ -202,8 +201,8 @@ class DetalleInfoGeneral extends StatelessWidget {
                 'Versión / Inventario',
                 '${r.informacionUnidad?.version ?? 'N/A'} • ${r.informacionUnidad?.inventario == true ? 'Completado' : 'Pendiente'}',
                 r.informacionUnidad?.inventario == true
-                    ? const Color(0xFF4CAF50)
-                    : const Color(0xFFF44336),
+                    ? AppColors.success
+                    : AppColors.error,
               ),
             ),
 
@@ -214,7 +213,7 @@ class DetalleInfoGeneral extends StatelessWidget {
               Icons.palette,
               'Color',
               r.color ?? 'N/A',
-              const Color(0xFF059669),
+              AppColors.accent,
             ),
           ],
         ),
@@ -231,14 +230,14 @@ class DetalleInfoGeneral extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: const Color(0xFF00B4D8).withValues(alpha: 0.2),
+          color: AppColors.secondary.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF00B4D8).withValues(alpha: 0.05),
+          color: AppColors.secondary.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -257,7 +256,7 @@ class DetalleInfoGeneral extends StatelessWidget {
               Icons.local_shipping,
               'Nave de Descarga',
               r.naveDescarga ?? 'N/A',
-              const Color(0xFF00B4D8),
+              AppColors.secondary,
             ),
 
             const SizedBox(height: 12),
@@ -270,7 +269,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                     Icons.receipt_long,
                     'BL',
                     r.bl ?? 'N/A',
-                    const Color(0xFF003B5C),
+                    AppColors.primary,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -279,7 +278,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                     Icons.description,
                     'Factura',
                     r.factura ?? 'N/A',
-                    const Color(0xFF1A5B75),
+                    const AppColors.primary,
                   ),
                 ),
               ],
@@ -299,10 +298,10 @@ class DetalleInfoGeneral extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 18, color: const Color(0xFF003B5C)),
+          child: Icon(icon, size: 18, color: AppColors.primary),
         ),
         const SizedBox(width: 10),
         Text(
@@ -310,7 +309,7 @@ class DetalleInfoGeneral extends StatelessWidget {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -353,7 +352,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                 style: TextStyle(
                   fontSize: isLarge ? 16 : 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1F2937),
+                  color: const AppColors.textPrimary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -369,26 +368,11 @@ class DetalleInfoGeneral extends StatelessWidget {
   // HELPER PARA ÍCONOS POR TIPO DE VEHÍCULO
   // ============================================================================
   Widget _buildBrandLogo(String marca) {
-    // Marcas que son principalmente camiones/comerciales
-    final truckBrands = {
-      'HINO', 'FUSO', 'T-KING', 'UD TRUCKS', 'JAC PESADO', 'KOMATSU',
-      'JAC', // JAC también maneja comerciales
-    };
-
-    if (truckBrands.contains(marca.toUpperCase())) {
-      return const Icon(
-        Icons.local_shipping, // Camión
-        size: 28,
-        color: Color(0xFF003B5C),
-      );
-    } else {
-      // Default para autos
-      return const Icon(
-        Icons.directions_car, // Auto
-        size: 28,
-        color: Color(0xFF003B5C),
-      );
-    }
+    return Icon(
+      VehicleHelpers.getVehicleIcon(marca),
+      size: 28,
+      color: AppColors.primary,
+    );
   }
 
   void _navigateToInventarioDetail(

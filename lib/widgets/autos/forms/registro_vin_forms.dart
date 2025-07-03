@@ -6,6 +6,7 @@ import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
+import 'package:stampcamera/theme/custom_colors.dart';
 
 class RegistroVinForm extends ConsumerStatefulWidget {
   final String vin;
@@ -39,7 +40,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   String get formTitle => isEditMode ? 'Editar Inspección' : 'Nueva Inspección';
   String get submitButtonText => isEditMode ? 'Actualizar' : 'Guardar';
   Color get primaryColor =>
-      isEditMode ? Colors.orange : const Color(0xFF00B4D8);
+      isEditMode ? Colors.orange : AppColors.secondary;
 
   @override
   void initState() {
@@ -337,22 +338,22 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF00B4D8).withValues(alpha: 0.1),
+              color: AppColors.secondary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: const Color(0xFF00B4D8).withValues(alpha: 0.3),
+                color: AppColors.secondary.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
             child: const Row(
               children: [
-                Icon(Icons.anchor, color: Color(0xFF00B4D8), size: 20),
+                Icon(Icons.anchor, color: AppColors.secondary, size: 20),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Campos específicos para zona portuaria',
                     style: TextStyle(
-                      color: Color(0xFF00B4D8),
+                      color: AppColors.secondary,
                       fontWeight: FontWeight.w500,
                       fontSize: 12,
                     ),
@@ -374,7 +375,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(
                   Icons.view_module,
-                  color: Color(0xFF00B4D8),
+                  color: AppColors.secondary,
                 ),
               ),
               items: [
@@ -413,7 +414,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(
                         Icons.table_rows,
-                        color: Color(0xFF00B4D8),
+                        color: AppColors.secondary,
                       ),
                     ),
                     keyboardType: TextInputType.number,
@@ -445,7 +446,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(
                         Icons.place,
-                        color: Color(0xFF00B4D8),
+                        color: AppColors.secondary,
                       ),
                     ),
                     keyboardType: TextInputType.number,
@@ -475,22 +476,22 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF059669).withValues(alpha: 0.1),
+              color: AppColors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: const Color(0xFF059669).withValues(alpha: 0.3),
+                color: AppColors.accent.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
             child: const Row(
               children: [
-                Icon(Icons.warehouse, color: Color(0xFF059669), size: 20),
+                Icon(Icons.warehouse, color: AppColors.accent, size: 20),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Campos específicos para zona de almacenamiento',
                     style: TextStyle(
-                      color: Color(0xFF059669),
+                      color: AppColors.accent,
                       fontWeight: FontWeight.w500,
                       fontSize: 12,
                     ),
@@ -508,7 +509,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
             decoration: const InputDecoration(
               labelText: 'Contenedor',
               border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.inventory, color: Color(0xFF059669)),
+              prefixIcon: Icon(Icons.inventory, color: AppColors.accent),
               suffixIcon: Icon(Icons.construction, color: Colors.orange),
             ),
             items: const [
@@ -571,8 +572,8 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
             child: Row(
               children: [
                 Icon(
-                  _getCondicionIcon(_selectedCondicion!),
-                  color: _getCondicionColor(_selectedCondicion!),
+                  VehicleHelpers.getCondicionIcon(_selectedCondicion!),
+                  color: VehicleHelpers.getCondicionColor(_selectedCondicion!),
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -580,7 +581,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                   child: Text(
                     'Esta condición no requiere campos adicionales',
                     style: TextStyle(
-                      color: _getCondicionColor(_selectedCondicion!),
+                      color: VehicleHelpers.getCondicionColor(_selectedCondicion!),
                       fontWeight: FontWeight.w500,
                       fontSize: 12,
                     ),
@@ -757,38 +758,3 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   }
 }
 
-// ✅ Agregar estos métodos helper al final de la clase:
-
-Color _getCondicionColor(String condicion) {
-  switch (condicion.toUpperCase()) {
-    case 'PUERTO':
-      return const Color(0xFF00B4D8); // Azul
-    case 'RECEPCION':
-      return const Color(0xFF8B5CF6); // Púrpura
-    case 'ALMACEN':
-      return const Color(0xFF059669); // Verde
-    case 'PDI':
-      return const Color(0xFFF59E0B); // Naranja
-    case 'PRE-PDI':
-      return const Color(0xFFEF4444); // Rojo
-    default:
-      return const Color(0xFF6B7280); // Gris
-  }
-}
-
-IconData _getCondicionIcon(String condicion) {
-  switch (condicion.toUpperCase()) {
-    case 'PUERTO':
-      return Icons.anchor;
-    case 'RECEPCION':
-      return Icons.login;
-    case 'ALMACEN':
-      return Icons.warehouse;
-    case 'PDI':
-      return Icons.build_circle;
-    case 'PRE-PDI':
-      return Icons.search;
-    default:
-      return Icons.location_on;
-  }
-}
