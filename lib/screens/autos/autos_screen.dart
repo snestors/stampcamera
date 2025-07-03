@@ -67,7 +67,7 @@ class _AutosScreenState extends State<AutosScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppColors.primary.withOpacity(0.02),
+              AppColors.primary.withValues(alpha: 0.02),
               AppColors.backgroundLight,
             ],
           ),
@@ -89,7 +89,7 @@ class _AutosScreenState extends State<AutosScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),

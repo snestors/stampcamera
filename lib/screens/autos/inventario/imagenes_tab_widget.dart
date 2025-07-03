@@ -265,7 +265,7 @@ class ImagenesTabWidget extends ConsumerWidget {
                   right: 8,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
+                      color: Colors.black.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: IconButton(
@@ -479,7 +479,7 @@ class ImagenesTabWidget extends ConsumerWidget {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close, color: Colors.white, size: 32),
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.5),
+                  backgroundColor: Colors.black.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -493,7 +493,7 @@ class ImagenesTabWidget extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.7),
+                    color: Colors.black.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
