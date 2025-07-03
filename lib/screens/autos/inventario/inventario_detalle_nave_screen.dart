@@ -148,7 +148,7 @@ class _InventarioDetalleNaveScreenState
         color: const Color(0xFF003B5C),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -193,7 +193,7 @@ class _InventarioDetalleNaveScreenState
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -235,7 +235,7 @@ class _InventarioDetalleNaveScreenState
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
         ),
         Text(
           value.isNotEmpty ? value : 'N/A',
@@ -264,7 +264,7 @@ class _InventarioDetalleNaveScreenState
         ),
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 10),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 10),
           textAlign: TextAlign.center,
         ),
       ],
@@ -297,7 +297,7 @@ class _InventarioDetalleNaveScreenState
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF003B5C).withOpacity(0.1),
+                color: const Color(0xFF003B5C).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -592,7 +592,7 @@ class _InventarioDetalleNaveScreenState
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: const Color(0xFF003B5C).withOpacity(0.1),
+                color: const Color(0xFF003B5C).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: const Icon(
@@ -733,7 +733,7 @@ class _InventarioDetalleNaveScreenState
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

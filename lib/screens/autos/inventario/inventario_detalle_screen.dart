@@ -100,7 +100,7 @@ class _InventarioDetalleScreenState
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.6),
+          unselectedLabelColor: Colors.white.withValues(alpha: 0.6),
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           tabs: [
@@ -168,7 +168,7 @@ class _InventarioDetalleScreenState
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF003B5C).withOpacity(0.1),
+              color: const Color(0xFF003B5C).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
