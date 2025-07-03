@@ -14,7 +14,7 @@ class RegistroVinService {
   Future<RegistroVinOptions> getOptions() async {
     try {
       final response = await _http.dio.get(
-        '/api/v1/autos/registro-vin/options/',
+        '/api/v1/autos/registro-vin/options/?registros=True',
       );
       return RegistroVinOptions.fromJson(response.data);
     } catch (e) {

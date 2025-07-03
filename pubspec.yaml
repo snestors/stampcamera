@@ -1,7 +1,7 @@
-name: stampcamera
-description: "A new Flutter project."
-publish_to: "none"
-version: 1.1.4
+name: stampcamera # ✅ DEJAR IGUAL
+description: "Aplicación de inspección vehicular para A&G Ajustadores" # ✅ CAMBIAR ESTA
+publish_to: "none" # ✅ DEJAR IGUAL
+version: 1.1.5+0 # ✅ CAMBIAR ESTA (tu versión actual + 1)
 
 environment:
   sdk: ^3.8.1
@@ -31,6 +31,7 @@ dependencies:
   uuid: ^4.5.1
   geocoding: ^4.0.0
   path: ^1.9.1
+  in_app_update: ^4.2.3
 
 dev_dependencies:
   flutter_test:

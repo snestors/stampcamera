@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:stampcamera/providers/auth_provider.dart';
-import 'package:stampcamera/utils/verificar_version_app.dart';
+import 'package:stampcamera/services/update_service.dart';
 import 'package:stampcamera/widgets/connectivity_app_bar.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
@@ -16,17 +16,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _versionChecked = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_versionChecked) {
-      _versionChecked = true;
-      verificarVersionApp(context, ref);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);

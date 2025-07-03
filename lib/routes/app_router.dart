@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stampcamera/screens/autos/autos_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_nave_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_screen.dart';
@@ -8,6 +9,7 @@ import 'package:stampcamera/screens/autos/registro_general/detalle_registro_scre
 import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
 import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
+import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 
 import '../providers/auth_provider.dart';
@@ -25,6 +27,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
     routes: [
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
+      GoRoute(
+        path: '/privacy',
+        builder: (context, state) => const PrivacyAcceptanceScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
@@ -32,12 +38,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'asistencia',
         builder: (context, state) => const RegistroAsistenciaScreen(),
       ),
-      //'/screen_registro': (context) => const ScreenRegistro(),
       GoRoute(
         path: '/autos',
         builder: (context, state) => const AutosScreen(),
         routes: [
-          // Aquí puedes agregar rutas hijas para AutosScreen si es necesario
           GoRoute(
             path: 'detalle/:vin',
             builder: (context, state) {
@@ -63,7 +67,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-
       GoRoute(
         path: '/camera',
         name: 'camera',
@@ -95,29 +98,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
-    redirect: (context, state) {
-      final authState = ref.read(authProvider);
+    redirect: (context, state) async {
+      // 🔥 VERIFICAR POLÍTICA PRIMERO
+      final prefs = await SharedPreferences.getInstance();
+      final privacyAccepted = prefs.getBool('privacy_policy_accepted') ?? false;
 
-      // Mientras se carga el estado de auth, quédate en splash
-      if (authState is AsyncLoading) return '/';
-
-      // Si hubo un error, tratamos como loggedOut
-      if (authState is AsyncError) return '/login';
-
-      final auth = authState.value;
-
-      if (auth == null || auth.status == AuthStatus.loggedOut) {
-        return '/login';
+      // Si no ha aceptado la política y no está en /privacy, redirigir
+      if (!privacyAccepted && state.fullPath != '/privacy') {
+        return '/privacy';
       }
 
-      if (auth.status == AuthStatus.loggedIn) {
-        // Si intenta ir a login pero ya está logueado, redirigimos a home
-        if (state.fullPath == '/login' || state.fullPath == '/') {
-          return '/home';
+      // Si ya aceptó la política, continuar con lógica de auth
+      if (privacyAccepted) {
+        final authState = ref.read(authProvider);
+
+        if (authState is AsyncLoading) return '/';
+        if (authState is AsyncError) return '/login';
+
+        final auth = authState.value;
+
+        if (auth == null || auth.status == AuthStatus.loggedOut) {
+          // Si está en privacy y no está logueado, ir a login
+          if (state.fullPath == '/privacy') return '/login';
+          return '/login';
+        }
+
+        if (auth.status == AuthStatus.loggedIn) {
+          if (state.fullPath == '/login' ||
+              state.fullPath == '/' ||
+              state.fullPath == '/privacy') {
+            return '/home';
+          }
         }
       }
 
-      return null; // No redirigir, continuar con la ruta
+      return null;
     },
   );
 });
