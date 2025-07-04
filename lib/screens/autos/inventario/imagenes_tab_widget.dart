@@ -1,9 +1,13 @@
+// screens/autos/inventario/imagenes_tab_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
+import 'package:stampcamera/screens/autos/inventario/simple_add_image_modal.dart';
+import 'package:stampcamera/utils/debouncer.dart';
+import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 
-class ImagenesTabWidget extends ConsumerWidget {
+class ImagenesTabWidget extends ConsumerStatefulWidget {
   final InventarioBaseResponse response;
   final int informacionUnidadId;
 
@@ -14,15 +18,235 @@ class ImagenesTabWidget extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (!response.hasImages) {
-      return _buildEmptyState(context, ref);
-    }
+  ConsumerState<ImagenesTabWidget> createState() => _ImagenesTabWidgetState();
+}
 
-    return _buildImagenesContent(context, ref);
+class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
+  final Map<int, Debouncer> _debounceMap = {};
+
+  @override
+  void dispose() {
+    for (final debouncer in _debounceMap.values) {
+      debouncer.cancel();
+    }
+    super.dispose();
   }
 
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: widget.response.hasImages
+                ? _buildImagesList()
+                : _buildEmptyState(),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddImageModal(context),
+        backgroundColor: const Color(0xFF003B5C),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // HEADER
+  // ============================================================================
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.photo_library, color: const Color(0xFF003B5C), size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Imágenes del Inventario',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${widget.response.imageCount} imagen${widget.response.imageCount != 1 ? 'es' : ''} registrada${widget.response.imageCount != 1 ? 's' : ''}',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================================
+  // LISTA DE IMÁGENES
+  // ============================================================================
+
+  Widget _buildImagesList() {
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(inventarioDetalleProvider(widget.informacionUnidadId));
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: widget.response.imagenes.length,
+        itemBuilder: (context, index) {
+          final imagen = widget.response.imagenes[index];
+          return _buildImageListItem(context, imagen, index);
+        },
+      ),
+    );
+  }
+
+  Widget _buildImageListItem(
+    BuildContext context,
+    InventarioImagen imagen,
+    int index,
+  ) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Preview de imagen
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 80,
+                height: 80,
+                child: imagen.hasValidImage
+                    ? NetworkImagePreview(
+                        thumbnailUrl: imagen.displayUrl!,
+                        fullImageUrl: imagen.imagenUrl!,
+                        size: 80,
+                      )
+                    : Container(
+                        color: Colors.grey.shade200,
+                        child: const Icon(
+                          Icons.image,
+                          color: Colors.grey,
+                          size: 32,
+                        ),
+                      ),
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // Información de la imagen
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Campo de descripción editable
+                  TextField(
+                    controller: TextEditingController(
+                      text: imagen.descripcion ?? '',
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Agregar descripción...',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                    ),
+                    style: const TextStyle(fontSize: 14),
+                    onChanged: (value) {
+                      // Crear debouncer para esta imagen si no existe
+                      _debounceMap[imagen.id] ??= Debouncer(
+                        delay: const Duration(milliseconds: 500),
+                      );
+
+                      // Ejecutar con debounce
+                      _debounceMap[imagen.id]!.run(() {
+                        _updateImageDescription(context, imagen.id, value, ref);
+                      });
+                    },
+                    onSubmitted: (value) {
+                      _updateImageDescription(context, imagen.id, value, ref);
+                    },
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule,
+                        size: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        imagen.createAt ?? 'Fecha no disponible',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (imagen.createBy != null) ...[
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            imagen.createBy ?? 'Usuario no disponible',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Botones de acción
+            Column(
+              children: [
+                IconButton(
+                  onPressed: () => _confirmDeleteImage(context, imagen),
+                  icon: const Icon(Icons.delete),
+                  color: Colors.red,
+                  iconSize: 20,
+                  tooltip: 'Eliminar',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // ESTADO VACÍO
+  // ============================================================================
+
+  Widget _buildEmptyState() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -36,369 +260,65 @@ class ImagenesTabWidget extends ConsumerWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.photo_outlined,
+                Icons.photo_library_outlined,
                 size: 64,
                 color: Colors.grey.shade400,
               ),
             ),
-
             const SizedBox(height: 24),
-
             Text(
               'No hay imágenes registradas',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade700,
               ),
             ),
-
             const SizedBox(height: 8),
-
             Text(
-              'Esta unidad aún no tiene imágenes del inventario.\nPuedes agregar fotos ahora.',
+              'Toca el botón + para agregar la primera imagen del inventario',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 color: Colors.grey.shade600,
                 height: 1.5,
               ),
             ),
-
             const SizedBox(height: 32),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => _addSingleImage(context, ref),
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Tomar Foto'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF003B5C),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                ElevatedButton.icon(
-                  onPressed: () => _addMultipleImages(context, ref),
-                  icon: const Icon(Icons.photo_library),
-                  label: const Text('Galería'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            Icon(Icons.arrow_downward, size: 32, color: Colors.grey.shade400),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildImagenesContent(BuildContext context, WidgetRef ref) {
-    final imagenes = response.imagenes;
+  // ============================================================================
+  // MODALES
+  // ============================================================================
 
-    return Column(
-      children: [
-        // Header con controles
-        _buildImagenesHeader(context, ref),
-
-        // Grid de imágenes
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 0.8,
-            ),
-            itemCount: imagenes.length,
-            itemBuilder: (context, index) {
-              final imagen = imagenes[index];
-              return _buildImageCard(context, ref, imagen);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImagenesHeader(BuildContext context, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Imágenes del Inventario',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${response.imageCount} foto${response.imageCount != 1 ? 's' : ''} registrada${response.imageCount != 1 ? 's' : ''}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ),
-
-          // Botones de acción
-          Row(
-            children: [
-              IconButton(
-                onPressed: () => _addSingleImage(context, ref),
-                icon: const Icon(Icons.camera_alt),
-                style: IconButton.styleFrom(
-                  backgroundColor: const Color(0xFF003B5C),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(12),
-                ),
-                tooltip: 'Tomar foto',
-              ),
-
-              const SizedBox(width: 8),
-
-              IconButton(
-                onPressed: () => _addMultipleImages(context, ref),
-                icon: const Icon(Icons.photo_library),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.grey.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(12),
-                ),
-                tooltip: 'Seleccionar de galería',
-              ),
-            ],
-          ),
-        ],
+  void _showAddImageModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SimpleAddImageModal(
+        informacionUnidadId: widget.informacionUnidadId,
+        onImageAdded: () {
+          ref.invalidate(inventarioDetalleProvider(widget.informacionUnidadId));
+        },
       ),
     );
   }
 
-  Widget _buildImageCard(
+  // ============================================================================
+  // ELIMINACIÓN DE IMÁGENES
+  // ============================================================================
+
+  Future<void> _confirmDeleteImage(
     BuildContext context,
-    WidgetRef ref,
     InventarioImagen imagen,
-  ) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Imagen
-          Expanded(
-            child: Stack(
-              children: [
-                // Imagen principal
-                imagen.hasValidImage
-                    ? Image.network(
-                        imagen.displayUrl!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: Colors.grey.shade100,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey.shade100,
-                            child: const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    : Container(
-                        color: Colors.grey.shade100,
-                        child: const Center(
-                          child: Icon(
-                            Icons.image,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ),
-
-                // Botón de eliminar
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: IconButton(
-                      onPressed: () => _deleteImage(context, ref, imagen),
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Overlay de tap para ver en grande
-                Positioned.fill(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _viewImageFullscreen(context, imagen),
-                      child: Container(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Información de la imagen
-          Container(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (imagen.descripcion != null &&
-                    imagen.descripcion!.isNotEmpty)
-                  Text(
-                    imagen.descripcion!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                else
-                  Text(
-                    'Sin descripción',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-
-                const SizedBox(height: 4),
-
-                Row(
-                  children: [
-                    Icon(Icons.schedule, size: 12, color: Colors.grey.shade500),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        imagen.createAt ?? 'Fecha no disponible',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-
-                if (imagen.createBy != null) ...[
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(Icons.person, size: 12, color: Colors.grey.shade500),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          _extractUserName(imagen.createBy!),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _extractUserName(String fullUserInfo) {
-    // Extraer solo el nombre del formato "Apellido, Nombre (email)"
-    final match = RegExp(r'^([^(]+)').firstMatch(fullUserInfo);
-    return match?.group(1)?.trim() ?? fullUserInfo;
-  }
-
-  void _addSingleImage(BuildContext context, WidgetRef ref) {
-    // TODO: Implementar funcionalidad de tomar foto
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('🚧 Funcionalidad de cámara en desarrollo')),
-    );
-  }
-
-  void _addMultipleImages(BuildContext context, WidgetRef ref) {
-    // TODO: Implementar funcionalidad de seleccionar múltiples imágenes
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('🚧 Funcionalidad de galería en desarrollo'),
-      ),
-    );
-  }
-
-  void _deleteImage(
-    BuildContext context,
-    WidgetRef ref,
-    InventarioImagen imagen,
-  ) {
-    showDialog(
+  ) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar imagen'),
@@ -407,105 +327,113 @@ class ImagenesTabWidget extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _confirmDeleteImage(context, ref, imagen);
-            },
+            onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Eliminar'),
           ),
         ],
       ),
     );
+
+    if (confirmed == true && context.mounted) {
+      await _deleteImage(context, imagen);
+    }
   }
 
-  void _confirmDeleteImage(
+  Future<void> _deleteImage(
     BuildContext context,
-    WidgetRef ref,
     InventarioImagen imagen,
-  ) {
-    // TODO: Implementar eliminación real
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('🚧 Funcionalidad de eliminación en desarrollo'),
-      ),
-    );
-  }
-
-  void _viewImageFullscreen(BuildContext context, InventarioImagen imagen) {
-    if (!imagen.hasValidImage) return;
-
+  ) async {
+    // Mostrar loading
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.black,
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
           children: [
-            // Imagen en pantalla completa
-            Center(
-              child: InteractiveViewer(
-                child: Image.network(
-                  imagen.imagenUrl!, // Usar imagen original, no thumbnail
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(
-                        Icons.broken_image,
-                        size: 64,
-                        color: Colors.white,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            // Botón de cerrar
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close, color: Colors.white, size: 32),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withValues(alpha: 0.5),
-                ),
-              ),
-            ),
-
-            // Información de la imagen (opcional)
-            if (imagen.descripcion != null && imagen.descripcion!.isNotEmpty)
-              Positioned(
-                bottom: 40,
-                left: 20,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    imagen.descripcion!,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Eliminando imagen...'),
           ],
         ),
       ),
     );
+
+    try {
+      final notifier = ref.read(
+        inventarioDetalleProvider(widget.informacionUnidadId).notifier,
+      );
+
+      await notifier.deleteImage(imagen.id);
+
+      if (context.mounted) {
+        Navigator.pop(context); // Cerrar loading
+
+        // Actualizar automáticamente la lista
+        ref.invalidate(inventarioDetalleProvider(widget.informacionUnidadId));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Imagen eliminada exitosamente'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Cerrar loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error al eliminar imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // ============================================================================
+  // ACTUALIZACIÓN DE DESCRIPCIÓN
+  // ============================================================================
+
+  void _updateImageDescription(
+    BuildContext context,
+    int imageId,
+    String description,
+    WidgetRef ref,
+  ) async {
+    try {
+      final imageNotifier = ref.read(
+        inventarioImageProvider(widget.informacionUnidadId).notifier,
+      );
+
+      await imageNotifier.updateImage(
+        imageId: imageId,
+        descripcion: description.trim(),
+      );
+
+      // Actualizar la lista después de editar
+      ref.invalidate(inventarioDetalleProvider(widget.informacionUnidadId));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Descripción actualizada'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Error al actualizar: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

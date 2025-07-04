@@ -126,7 +126,6 @@ class _InventarioDetalleScreenState
       body: Column(
         children: [
           // Header con información de la unidad
-          _buildHeaderInfo(response),
 
           // Contenido de las tabs
           Expanded(

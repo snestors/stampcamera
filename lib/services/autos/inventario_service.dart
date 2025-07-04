@@ -249,16 +249,10 @@ class InventarioBaseService {
     try {
       final formData = FormData();
 
-      if (imagePath != null) {
-        formData.files.add(
-          MapEntry('imagen', await MultipartFile.fromFile(imagePath)),
-        );
-      }
-
       if (descripcion != null) {
         formData.fields.add(MapEntry('descripcion', descripcion));
       }
-
+      print("Desciption : $descripcion");
       final response = await _http.dio.patch(
         '/api/v1/autos/inventarios-base/$informacionUnidadId/imagenes/$imageId/',
         data: formData,
