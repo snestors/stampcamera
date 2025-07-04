@@ -1,7 +1,7 @@
 name: stampcamera # ✅ DEJAR IGUAL
 description: "Aplicación de inspección vehicular para A&G Ajustadores" # ✅ CAMBIAR ESTA
 publish_to: "none" # ✅ DEJAR IGUAL
-version: 1.1.6+9 # ✅ CAMBIAR ESTA (tu versión actual + 1)
+version: 1.1.7+11 # ✅ CAMBIAR ESTA (tu versión actual + 1)
 
 environment:
   sdk: ^3.8.1
