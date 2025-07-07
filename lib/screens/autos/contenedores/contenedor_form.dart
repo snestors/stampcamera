@@ -53,8 +53,9 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
       _nContenedorController.text = contenedor.nContenedor;
       _precinto1Controller.text = contenedor.precinto1 ?? '';
       _precinto2Controller.text = contenedor.precinto2 ?? '';
+      // ✅ CAMBIO: Usar el ID de la nave del objeto
+      _selectedNaveId = contenedor.naveDescarga.id;
       _selectedZonaId = contenedor.zonaInspeccion?.id;
-      // La nave no se puede cambiar en edición
     }
   }
 
@@ -82,13 +83,11 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
         ],
       ),
       body: optionsAsync.when(
-        data: (options) =>
-            _buildForm(context, options, isEdit), // ✅ Pasar context
-        loading: () => _buildLoadingState(context), // ✅ Pasar context
-        error: (error, _) =>
-            _buildErrorState(context, error), // ✅ Pasar context
+        data: (options) => _buildForm(context, options, isEdit),
+        loading: () => _buildLoadingState(context),
+        error: (error, _) => _buildErrorState(context, error),
       ),
-      bottomNavigationBar: _buildBottomBar(context), // ✅ Pasar context
+      bottomNavigationBar: _buildBottomBar(context),
     );
   }
 
@@ -118,7 +117,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
 
                   // Nave de descarga
                   _buildDropdown<int>(
-                    context: context, // ✅ Pasar context
+                    context: context,
                     label: 'Nave de Descarga *',
                     value: _selectedNaveId,
                     items: options.navesDisponibles
@@ -147,7 +146,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
 
                   // Zona de inspección
                   _buildDropdown<int>(
-                    context: context, // ✅ Pasar context
+                    context: context,
                     label: 'Zona de Inspección',
                     value: _selectedZonaId,
                     items: options.zonasDisponibles
@@ -186,7 +185,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
 
                   // Número de contenedor
                   _buildTextField(
-                    context: context, // ✅ Pasar context
+                    context: context,
                     controller: _nContenedorController,
                     label: 'Número de Contenedor *',
                     hint: 'Ej: TCLU1234567',
@@ -236,7 +235,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
 
                   // Precinto 1
                   _buildTextField(
-                    context: context, // ✅ Pasar context
+                    context: context,
                     controller: _precinto1Controller,
                     label: 'Precinto 1',
                     hint: 'Ej: CV877664',
@@ -261,7 +260,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
 
                   // Precinto 2
                   _buildTextField(
-                    context: context, // ✅ Pasar context
+                    context: context,
                     controller: _precinto2Controller,
                     label: 'Precinto 2',
                     hint: 'Ej: CV877665',
@@ -323,7 +322,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
   }
 
   Widget _buildTextField({
-    required BuildContext context, // ✅ Recibir context
+    required BuildContext context,
     required TextEditingController controller,
     required String label,
     String? hint,
@@ -385,7 +384,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
   }
 
   Widget _buildDropdown<T>({
-    required BuildContext context, // ✅ Recibir context
+    required BuildContext context,
     required String label,
     required T? value,
     required List<DropdownMenuItem<T>> items,
@@ -515,9 +514,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             Expanded(
               flex: 2,
               child: ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () => _submitForm(context), // ✅ Pasar context
+                onPressed: _isLoading ? null : () => _submitForm(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -562,31 +559,62 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     setState(() => _isLoading = true);
 
     try {
-      final success = await ref
-          .read(contenedorProvider.notifier)
-          .createContenedor(
-            nContenedor: _nContenedorController.text.trim(),
-            naveDescarga: _selectedNaveId!,
-            zonaInspeccion: _selectedZonaId,
-            fotoContenedorPath: _fotoContenedorPath,
-            precinto1: _precinto1Controller.text.trim().isNotEmpty
-                ? _precinto1Controller.text.trim()
-                : null,
-            fotoPrecinto1Path: _fotoPrecinto1Path,
-            precinto2: _precinto2Controller.text.trim().isNotEmpty
-                ? _precinto2Controller.text.trim()
-                : null,
-            fotoPrecinto2Path: _fotoPrecinto2Path,
-            fotoContenedorVacioPath: _fotoContenedorVacioPath,
-          );
+      bool success;
+
+      if (widget.contenedor != null) {
+        // ✅ MODO EDICIÓN: Usar updateContenedor
+        success = await ref
+            .read(contenedorProvider.notifier)
+            .updateContenedor(
+              id: widget.contenedor!.id,
+              nContenedor: _nContenedorController.text.trim(),
+              naveDescarga: _selectedNaveId!,
+              zonaInspeccion: _selectedZonaId,
+              precinto1: _precinto1Controller.text.trim().isNotEmpty
+                  ? _precinto1Controller.text.trim()
+                  : null,
+              precinto2: _precinto2Controller.text.trim().isNotEmpty
+                  ? _precinto2Controller.text.trim()
+                  : null,
+            );
+      } else {
+        // ✅ MODO CREACIÓN: Usar createContenedor
+        success = await ref
+            .read(contenedorProvider.notifier)
+            .createContenedor(
+              nContenedor: _nContenedorController.text.trim(),
+              naveDescarga: _selectedNaveId!,
+              zonaInspeccion: _selectedZonaId,
+              fotoContenedorPath: _fotoContenedorPath,
+              precinto1: _precinto1Controller.text.trim().isNotEmpty
+                  ? _precinto1Controller.text.trim()
+                  : null,
+              fotoPrecinto1Path: _fotoPrecinto1Path,
+              precinto2: _precinto2Controller.text.trim().isNotEmpty
+                  ? _precinto2Controller.text.trim()
+                  : null,
+              fotoPrecinto2Path: _fotoPrecinto2Path,
+              fotoContenedorVacioPath: _fotoContenedorVacioPath,
+            );
+      }
 
       if (!mounted) return;
 
       if (success) {
         Navigator.of(context).pop();
-        _showSuccess(context, 'Contenedor creado exitosamente');
+        _showSuccess(
+          context,
+          widget.contenedor != null
+              ? 'Contenedor actualizado exitosamente'
+              : 'Contenedor creado exitosamente',
+        );
       } else {
-        _showError(context, 'Error al crear el contenedor');
+        _showError(
+          context,
+          widget.contenedor != null
+              ? 'Error al actualizar el contenedor'
+              : 'Error al crear el contenedor',
+        );
       }
     } catch (e) {
       if (!mounted) return;

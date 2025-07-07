@@ -1,192 +1,44 @@
 // providers/autos/contenedor_provider.dart
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/core/base_provider_imp.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:stampcamera/services/contenedor_service.dart';
-import 'package:stampcamera/utils/debouncer.dart';
 
-// Provider del servicio
-final contenedorServiceProvider = Provider((ref) => ContenedorService());
+// ============================================================================
+// PROVIDER DEL SERVICIO
+// ============================================================================
 
-// Provider de opciones
+final contenedorServiceProvider = Provider<ContenedorService>((ref) {
+  return ContenedorService();
+});
+
+// ============================================================================
+// PROVIDER DE OPCIONES
+// ============================================================================
+
 final contenedorOptionsProvider = FutureProvider<ContenedorOptions>((ref) {
   final service = ref.read(contenedorServiceProvider);
   return service.getOptions();
 });
 
-// Provider principal de contenedores con paginación
+// ============================================================================
+// PROVIDER PRINCIPAL DE LISTA (usando AsyncNotifierProvider)
+// ============================================================================
+
 final contenedorProvider =
-    StateNotifierProvider<
-      ContenedorNotifier,
-      AsyncValue<List<ContenedorModel>>
-    >((ref) {
-      final service = ref.read(contenedorServiceProvider);
-      return ContenedorNotifier(service);
-    });
+    AsyncNotifierProvider<ContenedorNotifier, List<ContenedorModel>>(
+      ContenedorNotifier.new,
+    );
 
-class ContenedorNotifier
-    extends StateNotifier<AsyncValue<List<ContenedorModel>>> {
-  final ContenedorService _service;
-  final _debouncer = Debouncer();
+class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
+  @override
+  ContenedorService get service => ref.read(contenedorServiceProvider);
 
-  // Estado interno para paginación
-  String? _searchQuery;
-  String? _nextUrl; // Para lista inicial
-  String? _searchNextUrl; // Para búsqueda
-  bool _isLoadingMore = false;
-  bool _isSearching = false;
-  int _searchToken = 0; // Para cancelar búsquedas obsoletas
+  // ============================================================================
+  // MÉTODOS ESPECÍFICOS DEL DOMINIO (CRUD)
+  // ============================================================================
 
-  ContenedorNotifier(this._service) : super(const AsyncValue.loading()) {
-    _loadInitial();
-  }
-
-  // Getters públicos
-  bool get isLoadingMore => _isLoadingMore;
-  bool get isSearching => _isSearching;
-  String? get searchQuery => _searchQuery;
-
-  /// Cargar datos iniciales
-  Future<void> _loadInitial() async {
-    try {
-      // ✅ CORREGIDO: No pasar page=1, Django maneja la paginación automáticamente
-      final paginated = await _service.searchContenedores();
-      _nextUrl = paginated.next;
-      state = AsyncValue.data(paginated.results);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-
-  /// Búsqueda con debounce automático
-  void debouncedSearch(String query) {
-    _debouncer.run(() {
-      final trimmed = query.trim();
-      if (trimmed.isEmpty) {
-        clearFilters();
-      } else {
-        search(trimmed);
-      }
-    });
-  }
-
-  /// Búsqueda inmediata
-  Future<void> search(String query) async {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) {
-      return clearFilters();
-    }
-
-    // Evitar búsquedas duplicadas
-    if (_searchQuery == trimmed && state.hasValue) {
-      return;
-    }
-
-    debugPrint('🔍 Buscando contenedores: "$trimmed"');
-
-    _isSearching = true;
-    state = const AsyncValue.loading();
-    _searchQuery = trimmed;
-    _searchToken++;
-    final currentToken = _searchToken;
-
-    try {
-      // ✅ CORREGIDO: No pasar page=1, solo los filtros de búsqueda
-      final paginated = await _service.searchContenedores(search: trimmed);
-
-      // Verificar si esta búsqueda aún es relevante
-      if (_searchToken != currentToken) {
-        debugPrint('🔥 Ignorando respuesta de búsqueda obsoleta');
-        return;
-      }
-
-      _searchNextUrl = paginated.next;
-      state = AsyncValue.data(paginated.results);
-    } catch (e, st) {
-      if (_searchToken == currentToken) {
-        final errorMsg = _parseError(e);
-        state = AsyncValue.error(Exception(errorMsg), st);
-      }
-    } finally {
-      if (_searchToken == currentToken) {
-        _isSearching = false;
-        // Trigger rebuild para actualizar isSearching
-        if (!state.hasError) {
-          state = AsyncValue.data([...?state.value]);
-        }
-      }
-    }
-  }
-
-  /// Limpiar filtros y volver a lista inicial
-  Future<void> clearFilters() async {
-    if (_searchQuery == null) return; // Ya está en modo inicial
-
-    debugPrint('🔄 Limpiando filtros de contenedores');
-
-    state = const AsyncValue.loading();
-    _searchQuery = null;
-    _searchNextUrl = null;
-    _isSearching = false;
-
-    try {
-      // ✅ CORREGIDO: No pasar page=1 para cargar inicial
-      final paginated = await _service.searchContenedores();
-      _nextUrl = paginated.next;
-      state = AsyncValue.data(paginated.results);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
-    }
-  }
-
-  /// Cargar más elementos (paginación) - CORREGIDO para usar next URL completo
-  Future<void> loadMore() async {
-    if (_isLoadingMore) return;
-
-    // Usar el next URL apropiado según si estamos en búsqueda o no
-    final nextUrl = _searchQuery != null ? _searchNextUrl : _nextUrl;
-    if (nextUrl == null) return;
-
-    _isLoadingMore = true;
-
-    try {
-      // ✅ CORREGIDO: Usar nextUrl directamente en lugar de construir /?page1
-      final paginated = await _service.searchContenedores(nextUrl: nextUrl);
-
-      final current = state.value ?? [];
-      final newResults = [...current, ...paginated.results];
-
-      state = AsyncValue.data(newResults);
-
-      // Actualizar URLs para siguiente página
-      if (_searchQuery != null) {
-        _searchNextUrl = paginated.next;
-      } else {
-        _nextUrl = paginated.next;
-      }
-    } catch (e) {
-      // Error silencioso en loadMore - no romper UI existente
-      debugPrint('❌ Error cargando más contenedores: ${_parseError(e)}');
-    } finally {
-      _isLoadingMore = false;
-      // Trigger rebuild para actualizar isLoadingMore
-      state = AsyncValue.data([...?state.value]);
-    }
-  }
-
-  /// Refresh manual (pull-to-refresh)
-  Future<void> refresh() async {
-    if (_searchQuery != null) {
-      // Si estamos en búsqueda, rehacer la búsqueda
-      await search(_searchQuery!);
-    } else {
-      // Si estamos en lista inicial, recargar
-      state = const AsyncValue.loading();
-      await _loadInitial();
-    }
-  }
-
-  /// Crear nuevo contenedor
+  /// Crear nuevo contenedor con fotos
   Future<bool> createContenedor({
     required String nContenedor,
     required int naveDescarga,
@@ -199,9 +51,7 @@ class ContenedorNotifier
     String? fotoContenedorVacioPath,
   }) async {
     try {
-      debugPrint('📦 Creando contenedor: $nContenedor');
-
-      final newContenedor = await _service.createContenedor(
+      final newContenedor = await service.createContenedor(
         nContenedor: nContenedor,
         naveDescarga: naveDescarga,
         zonaInspeccion: zonaInspeccion,
@@ -213,19 +63,17 @@ class ContenedorNotifier
         fotoContenedorVacioPath: fotoContenedorVacioPath,
       );
 
-      // Actualizar lista agregando al inicio
+      // Agregar al inicio de la lista actual
       final current = state.value ?? [];
       state = AsyncValue.data([newContenedor, ...current]);
 
-      debugPrint('✅ Contenedor creado exitosamente: ${newContenedor.id}');
       return true;
     } catch (e) {
-      debugPrint('❌ Error creando contenedor: $e');
       rethrow;
     }
   }
 
-  /// Actualizar contenedor existente
+  /// Actualizar contenedor existente (usando método específico del servicio)
   Future<bool> updateContenedor({
     required int id,
     required String nContenedor,
@@ -235,7 +83,7 @@ class ContenedorNotifier
     String? precinto2,
   }) async {
     try {
-      final updatedContenedor = await _service.updateContenedor(
+      final updatedContenedor = await service.updateContenedor(
         id: id,
         nContenedor: nContenedor,
         naveDescarga: naveDescarga,
@@ -253,39 +101,49 @@ class ContenedorNotifier
       state = AsyncValue.data(updatedList);
       return true;
     } catch (e) {
-      debugPrint('❌ Error actualizando contenedor: $e');
       rethrow;
     }
   }
 
-  /// Eliminar contenedor
+  /// Eliminar contenedor (método específico para UI)
   Future<bool> deleteContenedor(int id) async {
     try {
-      await _service.deleteContenedor(id);
+      await service.delete(id);
 
-      // Remover de la lista
+      // Remover de la lista actual
       final current = state.value ?? [];
-      final updatedList = current
-          .where((contenedor) => contenedor.id != id)
-          .toList();
+      final filteredList = current.where((item) => item.id != id).toList();
 
-      state = AsyncValue.data(updatedList);
+      state = AsyncValue.data(filteredList);
       return true;
     } catch (e) {
-      debugPrint('❌ Error eliminando contenedor: $e');
       return false;
     }
   }
 
-  /// Parsear errores para mostrar mensajes amigables
-  String _parseError(Object error) {
-    if (error is Exception) {
-      final message = error.toString();
-      if (message.contains('Exception: ')) {
-        return message.replaceAll('Exception: ', '');
-      }
-      return message;
+  /// Obtener contenedor por ID (usar método base)
+  @override
+  Future<ContenedorModel?> getById(int id) async {
+    try {
+      return await service.retrieve(id);
+    } catch (e) {
+      return null;
     }
-    return 'Error inesperado: ${error.toString()}';
   }
 }
+
+// ============================================================================
+// PROVIDER DE DETALLE POR ID
+// ============================================================================
+
+final contenedorDetalleProvider = FutureProvider.family<ContenedorModel?, int>((
+  ref,
+  id,
+) async {
+  final service = ref.read(contenedorServiceProvider);
+  try {
+    return await service.retrieve(id);
+  } catch (e) {
+    return null;
+  }
+});

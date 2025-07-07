@@ -1,66 +1,32 @@
-// services/contenedor_service.dart
-import 'package:dio/dio.dart';
+// services/autos/contenedor_service.dart
+import 'package:stampcamera/core/base_service_imp.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:stampcamera/models/paginated_response.dart';
-import 'package:stampcamera/services/http_service.dart';
+import 'package:dio/dio.dart';
 
-class ContenedorService {
-  final _http = HttpService();
+class ContenedorService extends BaseServiceImpl<ContenedorModel> {
+  @override
+  String get endpoint => '/api/v1/autos/contenedores/';
+
+  @override
+  ContenedorModel Function(Map<String, dynamic>) get fromJson =>
+      ContenedorModel.fromJson;
+
+  // ============================================================================
+  // MÉTODOS ESPECÍFICOS DE CONTENEDORES
+  // ============================================================================
 
   /// Obtener opciones dinámicas para formulario
   Future<ContenedorOptions> getOptions() async {
     try {
-      final response = await _http.dio.get(
-        '/api/v1/autos/contenedores/options/',
-      );
-      return ContenedorOptions.fromJson(response.data);
+      final response = await getAction('options');
+      return ContenedorOptions.fromJson(response);
     } catch (e) {
       throw Exception('Error al obtener opciones: $e');
     }
   }
 
-  /// Listar contenedores con paginación completa
-  Future<PaginatedResponse<ContenedorModel>> searchContenedores({
-    String? search,
-    int? naveDescargaId,
-    int? zonaInspeccionId,
-    String? nextUrl, // Para usar el next URL completo de Django
-  }) async {
-    try {
-      String endpoint;
-      Map<String, dynamic>? queryParams;
-
-      if (nextUrl != null) {
-        // ✅ CORREGIDO: Si hay nextUrl, usar ese directamente
-        final uri = Uri.parse(nextUrl);
-        endpoint = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
-        queryParams = null; // No enviar parámetros adicionales
-      } else {
-        // ✅ CORREGIDO: Si no hay nextUrl, crear la consulta inicial sin page
-        endpoint = '/api/v1/autos/contenedores/';
-        queryParams = <String, dynamic>{
-          if (search != null && search.isNotEmpty) 'search': search,
-          if (naveDescargaId != null) 'nave_descarga_id': naveDescargaId,
-          if (zonaInspeccionId != null) 'zona_inspeccion_id': zonaInspeccionId,
-          // ❌ ELIMINADO: 'page': page - Django maneja la paginación automáticamente
-        };
-      }
-
-      final response = await _http.dio.get(
-        endpoint,
-        queryParameters: queryParams,
-      );
-
-      return PaginatedResponse.fromJson(
-        response.data,
-        (json) => ContenedorModel.fromJson(json),
-      );
-    } catch (e) {
-      throw Exception('Error en búsqueda: $e');
-    }
-  }
-
-  /// Crear contenedor con fotos - CORREGIDO el campo nave_descarga_id
+  /// Crear contenedor con archivos (sobrescribir método base para manejar FormData complejo)
   Future<ContenedorModel> createContenedor({
     required String nContenedor,
     required int naveDescarga,
@@ -73,59 +39,29 @@ class ContenedorService {
     String? fotoContenedorVacioPath,
   }) async {
     try {
-      final formData = FormData.fromMap({
+      final data = <String, dynamic>{
         'n_contenedor': nContenedor,
-        'nave_descarga_id': naveDescarga, // ✅ CORREGIDO: usar nave_descarga_id
-        if (zonaInspeccion != null)
-          'zona_inspeccion_id':
-              zonaInspeccion, // ✅ CORREGIDO: usar zona_inspeccion_id
+        'nave_descarga_id': naveDescarga,
+        if (zonaInspeccion != null) 'zona_inspeccion_id': zonaInspeccion,
         if (precinto1 != null && precinto1.isNotEmpty) 'precinto1': precinto1,
         if (precinto2 != null && precinto2.isNotEmpty) 'precinto2': precinto2,
-      });
+      };
 
-      // Agregar fotos si existen
+      final filePaths = <String, String>{};
       if (fotoContenedorPath != null) {
-        formData.files.add(
-          MapEntry(
-            'foto_contenedor',
-            await MultipartFile.fromFile(fotoContenedorPath),
-          ),
-        );
+        filePaths['foto_contenedor'] = fotoContenedorPath;
       }
-
       if (fotoPrecinto1Path != null) {
-        formData.files.add(
-          MapEntry(
-            'foto_precinto1',
-            await MultipartFile.fromFile(fotoPrecinto1Path),
-          ),
-        );
+        filePaths['foto_precinto1'] = fotoPrecinto1Path;
       }
-
       if (fotoPrecinto2Path != null) {
-        formData.files.add(
-          MapEntry(
-            'foto_precinto2',
-            await MultipartFile.fromFile(fotoPrecinto2Path),
-          ),
-        );
+        filePaths['foto_precinto2'] = fotoPrecinto2Path;
       }
-
       if (fotoContenedorVacioPath != null) {
-        formData.files.add(
-          MapEntry(
-            'foto_contenedor_vacio',
-            await MultipartFile.fromFile(fotoContenedorVacioPath),
-          ),
-        );
+        filePaths['foto_contenedor_vacio'] = fotoContenedorVacioPath;
       }
 
-      final response = await _http.dio.post(
-        '/api/v1/autos/contenedores/',
-        data: formData,
-      );
-
-      return ContenedorModel.fromJson(response.data);
+      return await createWithFiles(data, filePaths);
     } on DioException catch (e) {
       if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
@@ -157,17 +93,7 @@ class ContenedorService {
     }
   }
 
-  /// Obtener detalles de un contenedor específico
-  Future<ContenedorModel> getContenedor(int id) async {
-    try {
-      final response = await _http.dio.get('/api/v1/autos/contenedores/$id/');
-      return ContenedorModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Error al obtener contenedor: $e');
-    }
-  }
-
-  /// Actualizar contenedor
+  /// Actualizar contenedor (usar método base partialUpdate)
   Future<ContenedorModel> updateContenedor({
     required int id,
     required String nContenedor,
@@ -176,36 +102,20 @@ class ContenedorService {
     String? precinto1,
     String? precinto2,
   }) async {
-    try {
-      final data = {
-        'n_contenedor': nContenedor,
-        'nave_descarga_id': naveDescarga, // ✅ CORREGIDO: usar nave_descarga_id
-        if (zonaInspeccion != null)
-          'zona_inspeccion_id':
-              zonaInspeccion, // ✅ CORREGIDO: usar zona_inspeccion_id
-        if (precinto1 != null) 'precinto1': precinto1,
-        if (precinto2 != null) 'precinto2': precinto2,
-      };
+    final data = {
+      'n_contenedor': nContenedor,
+      'nave_descarga_id': naveDescarga,
+      if (zonaInspeccion != null) 'zona_inspeccion_id': zonaInspeccion,
+      if (precinto1 != null) 'precinto1': precinto1,
+      if (precinto2 != null) 'precinto2': precinto2,
+    };
 
-      final response = await _http.dio.patch(
-        '/api/v1/autos/contenedores/$id/',
-        data: data,
-      );
-
-      return ContenedorModel.fromJson(response.data);
-    } catch (e) {
-      throw Exception('Error al actualizar contenedor: $e');
-    }
+    return await partialUpdate(id, data);
   }
 
-  /// Eliminar contenedor
-  Future<void> deleteContenedor(int id) async {
-    try {
-      await _http.dio.delete('/api/v1/autos/contenedores/$id/');
-    } catch (e) {
-      throw Exception('Error al eliminar contenedor: $e');
-    }
-  }
+  // ============================================================================
+  // MÉTODOS AUXILIARES PRIVADOS
+  // ============================================================================
 
   /// Extraer primer error de campo para mostrar al usuario
   String? _extractFirstFieldError(Map<String, dynamic> errorData) {
@@ -213,7 +123,6 @@ class ContenedorService {
       if (entry.key != 'non_field_errors' && entry.value is List) {
         final errors = entry.value as List;
         if (errors.isNotEmpty) {
-          // Mapear nombres de campos técnicos a nombres amigables
           String fieldName = _getFieldDisplayName(entry.key);
           return '$fieldName: ${errors.first}';
         }

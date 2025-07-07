@@ -33,8 +33,11 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      // Cargar más cuando esté cerca del final
-      // ref.read(contenedorProvider.notifier).loadMore();
+      // ✅ ACTIVADO: Cargar más usando el método de BaseListProviderImpl
+      final notifier = ref.read(contenedorProvider.notifier);
+      if (notifier.hasNextPage && !notifier.isLoadingMore) {
+        notifier.loadMore();
+      }
     }
   }
 
@@ -94,7 +97,10 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
       ),
       child: TextField(
         controller: _searchController,
-        onChanged: notifier.debouncedSearch,
+        onChanged: (value) {
+          // ✅ USAR: debouncedSearch del BaseListProviderImpl
+          notifier.debouncedSearch(value);
+        },
         decoration: InputDecoration(
           hintText: 'Buscar por número de contenedor...',
           prefixIcon: Icon(
@@ -107,7 +113,8 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                   icon: const Icon(Icons.clear),
                   onPressed: () {
                     _searchController.clear();
-                    notifier.clearFilters();
+                    // ✅ USAR: clearSearch del BaseListProviderImpl
+                    notifier.clearSearch();
                   },
                 )
               : notifier.isSearching
@@ -154,19 +161,52 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     }
 
     return RefreshIndicator(
+      // ✅ USAR: refresh del BaseListProviderImpl
       onRefresh: notifier.refresh,
       color: AppColors.secondary,
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(AppDimensions.paddingL),
-        itemCount: contenedores.length,
+        // ✅ CORREGIDO: Agregar +1 si está cargando más para mostrar indicator
+        itemCount: contenedores.length + (notifier.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
+          // ✅ NUEVO: Mostrar indicator de carga al final
+          if (index == contenedores.length) {
+            return _buildLoadMoreIndicator();
+          }
+
           final contenedor = contenedores[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: AppDimensions.paddingM),
             child: _buildContenedorCard(contenedor),
           );
         },
+      ),
+    );
+  }
+
+  // ✅ NUEVO: Indicador de "cargando más"
+  Widget _buildLoadMoreIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      alignment: Alignment.center,
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.secondary,
+            ),
+          ),
+          SizedBox(width: AppDimensions.paddingM),
+          Text(
+            'Cargando más contenedores...',
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          ),
+        ],
       ),
     );
   }
@@ -206,7 +246,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      contenedor.naveDescarga,
+                      contenedor.naveDescarga.displayName,
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
@@ -616,6 +656,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         subtitle: error.toString(),
         color: AppColors.error,
         action: ElevatedButton.icon(
+          // ✅ USAR: refresh del BaseListProviderImpl
           onPressed: notifier.refresh,
           icon: const Icon(Icons.refresh),
           label: const Text('Reintentar'),
@@ -680,6 +721,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
+              // ✅ USAR: deleteContenedor específico del provider
               final success = await ref
                   .read(contenedorProvider.notifier)
                   .deleteContenedor(contenedor.id);
@@ -693,8 +735,9 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                         ? 'Contenedor eliminado correctamente'
                         : 'Error al eliminar contenedor',
                   ),
-                  backgroundColor:
-                      success ? AppColors.success : AppColors.error,
+                  backgroundColor: success
+                      ? AppColors.success
+                      : AppColors.error,
                 ),
               );
             },

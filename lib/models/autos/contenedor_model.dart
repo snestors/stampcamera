@@ -2,7 +2,7 @@
 class ContenedorModel {
   final int id;
   final String nContenedor;
-  final String naveDescarga;
+  final NaveDescargaModel naveDescarga; // ✅ CAMBIO: Ahora es un objeto
   final ZonaInspeccionModel? zonaInspeccion;
   final String? precinto1;
   final String? precinto2;
@@ -50,7 +50,8 @@ class ContenedorModel {
     return ContenedorModel(
       id: json['id'] ?? 0,
       nContenedor: json['n_contenedor'] ?? '',
-      naveDescarga: json['nave_descarga'] ?? '',
+      // ✅ CAMBIO: Parsear nave_descarga como objeto
+      naveDescarga: NaveDescargaModel.fromJson(json['nave_descarga'] ?? {}),
       zonaInspeccion: json['zona_inspeccion'] != null
           ? ZonaInspeccionModel.fromJson(json['zona_inspeccion'])
           : null,
@@ -79,7 +80,8 @@ class ContenedorModel {
     return {
       'id': id,
       'n_contenedor': nContenedor,
-      'nave_descarga': naveDescarga,
+      // ✅ CAMBIO: Solo enviar el ID de la nave
+      'nave_descarga_id': naveDescarga.id,
       'zona_inspeccion': zonaInspeccion?.toJson(),
       'precinto1': precinto1,
       'precinto2': precinto2,
@@ -91,7 +93,7 @@ class ContenedorModel {
   ContenedorModel copyWith({
     int? id,
     String? nContenedor,
-    String? naveDescarga,
+    NaveDescargaModel? naveDescarga, // ✅ CAMBIO: Tipo actualizado
     ZonaInspeccionModel? zonaInspeccion,
     String? precinto1,
     String? precinto2,
@@ -155,6 +157,28 @@ class ContenedorModel {
       imagenThumbnailPrecinto2Url ?? fotoPrecinto2Url;
   String? get displayContenedorVacioImage =>
       imagenThumbnailContenedorVacioUrl ?? fotoContenedorVacioUrl;
+}
+
+// ✅ NUEVO: Modelo para nave de descarga
+class NaveDescargaModel {
+  final int id;
+  final String naveDescarga;
+
+  NaveDescargaModel({required this.id, required this.naveDescarga});
+
+  factory NaveDescargaModel.fromJson(Map<String, dynamic> json) {
+    return NaveDescargaModel(
+      id: json['id'] ?? 0,
+      naveDescarga: json['nave_descarga'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'id': id, 'nave_descarga': naveDescarga};
+  }
+
+  // Getter para mostrar solo el nombre limpio
+  String get displayName => naveDescarga;
 }
 
 // Modelo para zona de inspección
