@@ -514,6 +514,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         ),
         const SizedBox(height: 12),
         ReusableCameraCard(
+          cameraResolution: CameraResolution.veryHigh,
           title: 'Foto *',
           subtitle: _selectedTipo != null
               ? 'Fotografía ${_getTipoLabel(_selectedTipo!)}'

@@ -1,5 +1,5 @@
 // widgets/common/reusable_camera_card.dart
-/// 📸 COMPONENTE REUTILIZABLE DE CÁMARA (v2.0)
+/// 📸 COMPONENTE REUTILIZABLE DE CÁMARA (v2.1)
 ///
 /// 🎯 PROPÓSITO:
 /// Componente que permite tomar fotos con cámara o seleccionar de galería.
@@ -15,10 +15,11 @@
 /// - ✅ Títulos y colores personalizables
 /// - ✅ Opción de ocultar galería
 /// - ✅ Manejo de errores y estados de carga
+/// - ✅ Resolución de cámara configurable
 ///
 /// 🚀 EJEMPLOS DE USO:
 ///
-/// // Formulario nuevo (path local)
+/// // Formulario nuevo con resolución por defecto (veryHigh)
 /// String? photoPath;
 /// ReusableCameraCard(
 ///   title: 'Foto del VIN',
@@ -26,37 +27,22 @@
 ///   onImageSelected: (path) => setState(() => photoPath = path),
 /// )
 ///
-/// // Formulario de edición (URL existente)
+/// // Con resolución específica
 /// ReusableCameraCard(
 ///   title: 'Foto del Vehículo',
-///   currentImagePath: localPhotoPath, // null si no se ha cambiado
+///   currentImagePath: photoPath,
+///   cameraResolution: CameraResolution.high,
+///   onImageSelected: (path) => setState(() => photoPath = path),
+/// )
+///
+/// // Formulario de edición con resolución custom
+/// ReusableCameraCard(
+///   title: 'Foto del Vehículo',
+///   currentImagePath: localPhotoPath,
 ///   currentImageUrl: 'https://api.example.com/photos/123.jpg',
+///   cameraResolution: CameraResolution.high,
 ///   onImageSelected: (path) => setState(() => localPhotoPath = path),
 /// )
-///
-/// // Con Provider/Riverpod
-/// ReusableCameraCard(
-///   title: 'Foto del Vehículo',
-///   currentImagePath: ref.watch(vehicleProvider).newPhotoPath,
-///   currentImageUrl: ref.watch(vehicleProvider).existingPhotoUrl,
-///   onImageSelected: (path) {
-///     ref.read(vehicleProvider.notifier).setNewPhoto(path);
-///   },
-/// )
-///
-/// 📋 PARÁMETROS NUEVOS:
-/// - currentImageUrl: URL de imagen existente (para formularios de edición)
-/// - thumbnailUrl: URL del thumbnail (opcional, mejora performance)
-///
-/// 🔄 LÓGICA DE PRIORIDAD:
-/// 1. Si currentImagePath != null → Muestra imagen local (nueva)
-/// 2. Si currentImageUrl != null → Muestra imagen desde URL (existente)
-/// 3. Si ambos null → Muestra placeholder
-///
-/// 📱 COMPORTAMIENTO:
-/// - Al tomar nueva foto: currentImagePath se actualiza, currentImageUrl se ignora
-/// - Permite cambiar foto existente manteniendo funcionalidad completa
-/// - Badge diferente para fotos locales vs URLs
 library;
 
 import 'package:flutter/material.dart';
@@ -65,6 +51,28 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import 'package:stampcamera/utils/image_processor.dart';
+
+/// Enum personalizado para resoluciones de cámara
+/// Evita la necesidad de importar la librería camera en otros archivos
+enum CameraResolution {
+  /// Alta resolución (ResolutionPreset.high)
+  high,
+
+  /// Muy alta resolución (ResolutionPreset.veryHigh)
+  veryHigh,
+}
+
+/// Extensión para convertir CameraResolution a ResolutionPreset
+extension CameraResolutionExtension on CameraResolution {
+  ResolutionPreset get toResolutionPreset {
+    switch (this) {
+      case CameraResolution.high:
+        return ResolutionPreset.high;
+      case CameraResolution.veryHigh:
+        return ResolutionPreset.veryHigh;
+    }
+  }
+}
 
 class ReusableCameraCard extends StatelessWidget {
   /// Título principal de la card
@@ -98,6 +106,10 @@ class ReusableCameraCard extends StatelessWidget {
   /// Color principal para botones (default: Color(0xFF0A2D3E))
   final Color? primaryColor;
 
+  /// Resolución de la cámara (default: CameraResolution.veryHigh)
+  /// Solo permite high o veryHigh
+  final CameraResolution cameraResolution;
+
   /// Constructor del componente reutilizable de cámara
   ///
   /// [title] es obligatorio y aparece como título principal
@@ -105,6 +117,7 @@ class ReusableCameraCard extends StatelessWidget {
   /// [currentImagePath] tiene prioridad sobre [currentImageUrl]
   /// [currentImageUrl] útil para formularios de edición con imágenes existentes
   /// [thumbnailUrl] mejora performance al mostrar preview de URLs
+  /// [cameraResolution] permite configurar la resolución (solo high o veryHigh)
   const ReusableCameraCard({
     super.key,
     required this.title,
@@ -117,6 +130,7 @@ class ReusableCameraCard extends StatelessWidget {
     this.cameraButtonText = 'Tomar foto',
     this.galleryButtonText = 'Elegir de galería',
     this.primaryColor,
+    this.cameraResolution = CameraResolution.veryHigh,
   });
 
   /// Determina si hay una imagen para mostrar
@@ -415,8 +429,11 @@ class ReusableCameraCard extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) =>
-          _CameraModal(title: title, onImageCaptured: onImageSelected),
+      builder: (context) => _CameraModal(
+        title: title,
+        cameraResolution: cameraResolution,
+        onImageCaptured: onImageSelected,
+      ),
     );
   }
 
@@ -579,17 +596,23 @@ class ReusableCameraCard extends StatelessWidget {
   }
 }
 
-/// 📷 MODAL DE CÁMARA REUTILIZABLE (Sin cambios)
+/// 📷 MODAL DE CÁMARA REUTILIZABLE (Actualizado con resolución configurable)
 ///
 /// Modal que maneja la captura de fotos con preview y confirmación.
 /// Procesa automáticamente las imágenes tomadas.
+/// Ahora soporta resolución configurable.
 
 // Modal de cámara reutilizable
 class _CameraModal extends StatefulWidget {
   final String title;
+  final CameraResolution cameraResolution;
   final Function(String) onImageCaptured;
 
-  const _CameraModal({required this.title, required this.onImageCaptured});
+  const _CameraModal({
+    required this.title,
+    required this.cameraResolution,
+    required this.onImageCaptured,
+  });
 
   @override
   State<_CameraModal> createState() => _CameraModalState();
@@ -613,7 +636,9 @@ class _CameraModalState extends State<_CameraModal> {
       if (cameras.isNotEmpty) {
         _cameraController = CameraController(
           cameras.first,
-          ResolutionPreset.high,
+          widget
+              .cameraResolution
+              .toResolutionPreset, // Convertir usando la extensión
           imageFormatGroup: ImageFormatGroup.jpeg,
         );
         await _cameraController!.initialize();
@@ -634,6 +659,12 @@ class _CameraModalState extends State<_CameraModal> {
 
       final image = await _cameraController!.takePicture();
 
+      // Determinar el tamaño de fuente según la resolución
+      final FontSize fontSize =
+          widget.cameraResolution == CameraResolution.veryHigh
+          ? FontSize.large
+          : FontSize.medium;
+
       final config = WatermarkConfig(
         showLogo: true,
         showTimestamp: true,
@@ -642,7 +673,7 @@ class _CameraModalState extends State<_CameraModal> {
         timestampPosition: WatermarkPosition.bottomRight,
         locationPosition: WatermarkPosition.bottomLeft,
         compressionQuality: 95,
-        timestampFontSize: FontSize.large,
+        timestampFontSize: fontSize,
       );
 
       final processedImagePath = await processImageWithWatermark(

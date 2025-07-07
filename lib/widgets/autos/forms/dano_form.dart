@@ -715,6 +715,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
       widgets.add(
         ReusableCameraCard(
+          cameraResolution: CameraResolution.veryHigh,
           title: 'Foto ${i + 1} del Daño',
           subtitle: _imagenesPaths[i] == null
               ? 'Toma o selecciona una imagen del daño'
