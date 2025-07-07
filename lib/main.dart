@@ -42,7 +42,7 @@ class MyApp extends ConsumerWidget {
       title: 'AYG',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: agTheme,
+      theme: appTheme,
     );
   }
 }
