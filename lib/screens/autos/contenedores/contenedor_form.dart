@@ -59,6 +59,21 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     }
   }
 
+  void _initializeWithOptions(ContenedorOptions options) {
+    // Solo aplicar initial_values si estamos creando (no editando)
+    if (widget.contenedor == null && options.initialValues.isNotEmpty) {
+      // Aplicar valores iniciales para nave_descarga
+      if (options.initialValues.containsKey('nave_descarga')) {
+        _selectedNaveId = options.initialValues['nave_descarga'] as int?;
+      }
+
+      // Aplicar valores iniciales para zona_inspeccion
+      if (options.initialValues.containsKey('zona_inspeccion')) {
+        _selectedZonaId = options.initialValues['zona_inspeccion'] as int?;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final optionsAsync = ref.watch(contenedorOptionsProvider);
@@ -83,7 +98,13 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
         ],
       ),
       body: optionsAsync.when(
-        data: (options) => _buildForm(context, options, isEdit),
+        data: (options) {
+          // Inicializar valores una sola vez cuando las opciones están disponibles
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _initializeWithOptions(options);
+          });
+          return _buildForm(context, options, isEdit);
+        },
         loading: () => _buildLoadingState(context),
         error: (error, _) => _buildErrorState(context, error),
       ),
@@ -127,6 +148,9 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                             child: Text(
                               nave.nombre,
                               overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                              ), // ✅ Texto más pequeño
                             ),
                           ),
                         )
@@ -138,8 +162,10 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                             }
                           }
                         : null,
-                    validator: (value) =>
-                        value == null ? 'Seleccione una nave' : null,
+                    validator: _fieldRequired('nave_descarga', options)
+                        ? (value) =>
+                              value == null ? 'Seleccione una nave' : null
+                        : null,
                   ),
 
                   const SizedBox(height: AppDimensions.paddingL),
@@ -147,13 +173,20 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   // Zona de inspección
                   _buildDropdown<int>(
                     context: context,
-                    label: 'Zona de Inspección',
+                    label: _fieldRequired('zona_inspeccion', options)
+                        ? 'Zona de Inspección *'
+                        : 'Zona de Inspección',
                     value: _selectedZonaId,
                     items: options.zonasDisponibles
                         .map(
                           (zona) => DropdownMenuItem(
                             value: zona.id,
-                            child: Text(zona.nombre),
+                            child: Text(
+                              zona.nombre,
+                              style: const TextStyle(
+                                fontSize: 13,
+                              ), // ✅ Texto más pequeño
+                            ),
                           ),
                         )
                         .toList(),
@@ -163,6 +196,10 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                               setState(() => _selectedZonaId = value);
                             }
                           }
+                        : null,
+                    validator: _fieldRequired('zona_inspeccion', options)
+                        ? (value) =>
+                              value == null ? 'Seleccione una zona' : null
                         : null,
                   ),
                 ],
@@ -208,6 +245,12 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                     title: 'Foto del Contenedor',
                     subtitle: 'Capture una imagen clara del contenedor',
                     currentImagePath: _fotoContenedorPath,
+                    currentImageUrl: _getValidUrl(
+                      widget.contenedor?.fotoContenedorUrl,
+                    ), // ✅ VALIDADO
+                    thumbnailUrl: _getValidUrl(
+                      widget.contenedor?.imagenThumbnailUrl,
+                    ), // ✅ VALIDADO
                     onImageSelected: (path) {
                       if (mounted) {
                         setState(() => _fotoContenedorPath = path);
@@ -248,6 +291,12 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                     title: 'Foto Precinto 1',
                     subtitle: 'Capture el primer precinto si existe',
                     currentImagePath: _fotoPrecinto1Path,
+                    currentImageUrl: _getValidUrl(
+                      widget.contenedor?.fotoPrecinto1Url,
+                    ), // ✅ VALIDADO
+                    thumbnailUrl: _getValidUrl(
+                      widget.contenedor?.imagenThumbnailPrecintoUrl,
+                    ), // ✅ VALIDADO
                     onImageSelected: (path) {
                       if (mounted) {
                         setState(() => _fotoPrecinto1Path = path);
@@ -273,6 +322,12 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                     title: 'Foto Precinto 2',
                     subtitle: 'Capture el segundo precinto si existe',
                     currentImagePath: _fotoPrecinto2Path,
+                    currentImageUrl: _getValidUrl(
+                      widget.contenedor?.fotoPrecinto2Url,
+                    ), // ✅ VALIDADO
+                    thumbnailUrl: _getValidUrl(
+                      widget.contenedor?.imagenThumbnailPrecinto2Url,
+                    ), // ✅ VALIDADO
                     onImageSelected: (path) {
                       if (mounted) {
                         setState(() => _fotoPrecinto2Path = path);
@@ -303,6 +358,12 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                     title: 'Foto Contenedor Vacío',
                     subtitle: 'Capture el contenedor una vez esté vacío',
                     currentImagePath: _fotoContenedorVacioPath,
+                    currentImageUrl: _getValidUrl(
+                      widget.contenedor?.fotoContenedorVacioUrl,
+                    ), // ✅ VALIDADO
+                    thumbnailUrl: _getValidUrl(
+                      widget.contenedor?.imagenThumbnailContenedorVacioUrl,
+                    ), // ✅ VALIDADO
                     onImageSelected: (path) {
                       if (mounted) {
                         setState(() => _fotoContenedorVacioPath = path);
@@ -410,6 +471,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
           items: items,
           onChanged: onChanged,
           validator: validator,
+          isExpanded: true, // ✅ AGREGADO: Soluciona overflow
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -549,9 +611,37 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     return options.fieldPermissions[fieldName]?.editable ?? true;
   }
 
+  bool _fieldRequired(String fieldName, ContenedorOptions options) {
+    return options.fieldPermissions[fieldName]?.required ?? false;
+  }
+
+  /// Valida que la URL no esté vacía o sea null
+  /// Retorna null si la URL no es válida para evitar errores de carga
+  String? _getValidUrl(String? url) {
+    if (url == null || url.isEmpty || url.trim().isEmpty) {
+      return null;
+    }
+    return url;
+  }
+
   Future<void> _submitForm(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedNaveId == null) {
+
+    // Validar nave_descarga solo si es requerido
+    final optionsAsync = ref.read(contenedorOptionsProvider);
+    if (optionsAsync.hasValue) {
+      final options = optionsAsync.value!;
+      if (_fieldRequired('nave_descarga', options) && _selectedNaveId == null) {
+        _showError(context, 'Debe seleccionar una nave');
+        return;
+      }
+      if (_fieldRequired('zona_inspeccion', options) &&
+          _selectedZonaId == null) {
+        _showError(context, 'Debe seleccionar una zona de inspección');
+        return;
+      }
+    } else if (_selectedNaveId == null) {
+      // Fallback si no hay opciones disponibles
       _showError(context, 'Debe seleccionar una nave');
       return;
     }
