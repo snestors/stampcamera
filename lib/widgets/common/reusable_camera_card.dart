@@ -130,7 +130,7 @@ class ReusableCameraCard extends StatelessWidget {
     this.cameraButtonText = 'Tomar foto',
     this.galleryButtonText = 'Elegir de galería',
     this.primaryColor,
-    this.cameraResolution = CameraResolution.veryHigh,
+    this.cameraResolution = CameraResolution.high,
   });
 
   /// Determina si hay una imagen para mostrar
