@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/widgets/connectivity_app_bar.dart';
-import 'package:stampcamera/widgets/theme_toggle_action.dart';
+import 'package:stampcamera/widgets/biometric_setup_widget.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
 
@@ -28,7 +28,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
-          //const ThemeToggleAction(), // Botón para cambiar tema
           Container(
             margin: const EdgeInsets.only(right: 8),
             child: IconButton(
@@ -46,19 +45,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // ✅ Header con información del usuario
-            _buildUserHeader(authState),
-
-            // ✅ Grid de aplicaciones
-            _buildApplicationsGrid(context),
-
-            // ✅ Footer informativo
-            _buildFooter(),
-          ],
-        ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildUserHeader(authState),
+                _buildApplicationsGrid(context),
+                _buildFooter(),
+              ],
+            ),
+          ),
+          // Widget para manejar configuración de biometría
+          const BiometricSetupWidget(),
+        ],
       ),
     );
   }
@@ -105,7 +105,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Título de sección
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 16),
             child: Text(
@@ -117,21 +116,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-
-          // Grid de aplicaciones
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 0.9, // ✅ Aumentar un poco más la altura
+            childAspectRatio: 0.9,
             children: [
               _AppCard(
                 title: 'Cámara',
                 subtitle: 'Captura y gestiona fotos',
                 icon: Icons.camera_alt,
-                color: const Color(0xFF003B5C), // Color corporativo principal
+                color: const Color(0xFF003B5C),
                 onTap: () =>
                     context.push('/camera', extra: {'camera': cameras.first}),
               ),
@@ -139,21 +136,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 title: 'Asistencia',
                 subtitle: 'Registro de entrada y salida',
                 icon: Icons.access_time,
-                color: const Color(0xFF00B4D8), // Color secundario corporativo
+                color: const Color(0xFF00B4D8),
                 onTap: () => context.pushNamed('asistencia'),
               ),
               _AppCard(
                 title: 'Autos',
                 subtitle: 'Gestión de vehículos',
                 icon: Icons.directions_car,
-                color: const Color(0xFF1A5B75), // Variación del color primario
+                color: const Color(0xFF1A5B75),
                 onTap: () => context.push('/autos'),
               ),
               _AppCard(
                 title: 'Próximamente',
                 subtitle: 'Nuevas funcionalidades',
                 icon: Icons.upcoming,
-                color: const Color(0xFF6B7280), // Gris corporativo
+                color: const Color(0xFF6B7280),
                 onTap: () => _showComingSoonDialog(context),
                 isDisabled: true,
               ),
@@ -205,14 +202,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.logout, color: Colors.red),
-            SizedBox(width: 8),
-            Text('Cerrar Sesión'),
-          ],
-        ),
+        title: const Text('Cerrar Sesión'),
         content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
         actions: [
           TextButton(
@@ -220,17 +210,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () async {
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
               Navigator.pop(context);
-              await ref.read(authProvider.notifier).logout(ref);
-              if (!context.mounted) return;
-              context.go('/login');
+              ref.read(authProvider.notifier).logout(ref);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+            child: const Text(
+              'Cerrar Sesión',
+              style: TextStyle(color: Colors.white),
             ),
-            child: const Text('Cerrar Sesión'),
           ),
         ],
       ),
@@ -241,15 +229,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.upcoming, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Próximamente'),
-          ],
+        title: const Text('Próximamente'),
+        content: const Text(
+          'Esta funcionalidad estará disponible en una próxima actualización.',
         ),
-        content: const Text('Esta funcionalidad estará disponible pronto.'),
         actions: [
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
@@ -261,10 +244,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-// ============================================================================
-// WIDGETS AUXILIARES
-// ============================================================================
-
+// Widgets auxiliares
 class _AppCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -294,7 +274,7 @@ class _AppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: isDisabled ? null : onTap,
         child: Container(
-          padding: const EdgeInsets.all(16), // ✅ Reducir padding
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: isDisabled
@@ -325,31 +305,26 @@ class _AppCard extends StatelessWidget {
                   color: isDisabled ? Colors.grey : color,
                 ),
               ),
-              const SizedBox(height: 8), // ✅ Reducir espacio
+              const SizedBox(height: 8),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 15, // ✅ Reducir un poco el tamaño
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: isDisabled ? Colors.grey : Colors.grey[800],
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1, // ✅ Solo una línea para el título
-                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 2), // ✅ Reducir espacio
-              Flexible(
-                // ✅ Usar Flexible en lugar de texto directo
-                child: Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11, // ✅ Reducir tamaño del subtítulo
-                    color: isDisabled ? Colors.grey : Colors.grey[600],
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDisabled ? Colors.grey : Colors.grey[600],
                 ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -366,24 +341,27 @@ class _UserInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Usar propiedades correctas del UserModel
     final displayName = _getDisplayName(user);
+    final userInitials = _getUserInitials(user);
     final userEmail = user.email ?? '';
 
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          width: 50,
+          height: 50,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
+            color: const Color(0xFF00B4D8),
+            borderRadius: BorderRadius.circular(25),
           ),
-          child: Text(
-            _getUserInitials(user),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          child: Center(
+            child: Text(
+              userInitials,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -392,8 +370,8 @@ class _UserInfo extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '¡Bienvenido!',
+              Text(
+                '¡Hola!',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -421,12 +399,7 @@ class _UserInfo extends StatelessWidget {
         ),
         Icon(
           Icons.waving_hand,
-          color: const Color.fromARGB(
-            255,
-            221,
-            239,
-            32,
-          ), // Color secundario corporativo
+          color: const Color.fromARGB(255, 221, 239, 32),
           size: 24,
         ),
       ],
@@ -434,7 +407,6 @@ class _UserInfo extends StatelessWidget {
   }
 
   String _getDisplayName(dynamic user) {
-    // Combinar firstName y lastName, o usar username como fallback
     final firstName = user.firstName ?? '';
     final lastName = user.lastName ?? '';
     final username = user.username ?? 'Usuario';
@@ -503,7 +475,7 @@ class _WelcomeMessage extends StatelessWidget {
                 ),
               ),
               Text(
-                'Centro de aplicaciones corporativas',
+                'Accede a todas las herramientas disponibles',
                 style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
             ],

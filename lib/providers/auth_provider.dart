@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:stampcamera/providers/session_manager_provider.dart';
 import 'dart:async';
-import 'dart:convert'; // ✅ Para jsonEncode/jsonDecode
+import 'dart:convert';
 
 import '../models/user_model.dart';
 import '../models/auth_state.dart';
@@ -25,16 +25,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   final _storage = const FlutterSecureStorage();
   final _http = HttpService();
 
-  /// ✅ NUEVO: Inicialización con persistencia
   Future<void> _initializeAuth() async {
     try {
-      //await Future.delayed(Duration(seconds: 1));
-      // 2. Intentar actualizar con servidor en paralelo
       await _checkAuthWithRetry();
-      // 1. Cargar estado guardado inmediatamente
       await _loadPersistedAuthState();
     } catch (e) {
-      // Si falla verificación del servidor, mantener estado local si existe
       final currentState = state.value;
       if (currentState?.status != AuthStatus.loggedIn) {
         state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
@@ -42,7 +37,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  /// ✅ NUEVO: Cargar estado persistido
   Future<void> _loadPersistedAuthState() async {
     try {
       final access = await _storage.read(key: 'access');
@@ -50,7 +44,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
       if (access != null) {
         if (userDataJson != null) {
-          // Hay token y datos de usuario guardados
           final userData = jsonDecode(userDataJson);
           final user = UserModel.fromJson(userData);
 
@@ -62,7 +55,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
             ),
           );
         } else {
-          // Hay token pero no datos de usuario (modo offline)
           state = AsyncValue.data(
             AuthState(
               status: AuthStatus.loggedIn,
@@ -72,36 +64,33 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
           );
         }
       } else {
-        // No hay token
         state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
       }
     } catch (e) {
-      // Error al cargar datos persistidos
       state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
     }
   }
 
-  /// ✅ NUEVO: Persistir datos de usuario
   Future<void> _persistUserData(UserModel user) async {
     try {
       final userJson = jsonEncode(user.toJson());
       await _storage.write(key: 'user_data', value: userJson);
     } catch (e) {
-      //print('Error guardando datos de usuario: $e');
+      // Error silencioso
     }
   }
 
-  /// ✅ NUEVO: Limpiar datos persistidos
   Future<void> _clearPersistedUserData() async {
     try {
       await _storage.delete(key: 'user_data');
     } catch (e) {
-      //print('Error limpiando datos de usuario: $e');
+      // Error silencioso
     }
   }
 
-  /// Login con manejo de errores
   Future<void> login(String username, String password) async {
+    print('🔐 AuthProvider: Iniciando login para: $username');
+
     if (username.trim().isEmpty || password.trim().isEmpty) {
       state = AsyncValue.data(
         AuthState(
@@ -127,13 +116,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
         throw Exception('Respuesta inválida del servidor');
       }
 
-      // Guardar tokens
       await _storage.write(key: 'access', value: accessToken);
       await _storage.write(key: 'refresh', value: refreshToken);
 
-      // Obtener y guardar datos del usuario
       await _fetchUserAndSetState();
+
+      print('✅ Login exitoso para: ${username.trim()}');
     } catch (e) {
+      print('❌ AuthProvider: Error en login: $e');
+
       final errorMessage = _handleGenericError(e);
       state = AsyncValue.data(
         AuthState(status: AuthStatus.loggedOut, errorMessage: errorMessage),
@@ -141,7 +132,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  /// Verificación con manejo de conectividad
   Future<void> _checkAuthWithRetry() async {
     final access = await _storage.read(key: 'access');
     if (access == null) {
@@ -151,12 +141,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
     try {
       await _fetchUserAndSetStateWithRetry();
-      return; // Éxito, datos actualizados
+      return;
     } catch (e) {
       if (_isUnauthorizedError(e)) {
         await logout();
       } else {
-        // Para errores de conectividad, mantener estado actual
         final currentState = state.value;
         if (currentState?.user == null &&
             currentState?.status == AuthStatus.loggedIn) {
@@ -170,7 +159,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  /// Fetch de usuario con persistencia
   Future<void> _fetchUserAndSetState() async {
     try {
       final response = await _http.dio.get('api/v1/check-auth/');
@@ -181,8 +169,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       }
 
       final user = UserModel.fromJson(userData);
-
-      // ✅ CLAVE: Guardar datos en storage
       await _persistUserData(user);
 
       state = AsyncValue.data(
@@ -199,7 +185,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  /// Retry con manejo de conectividad
   Future<void> _fetchUserAndSetStateWithRetry() async {
     const maxRetries = 2;
     const baseDelay = Duration(seconds: 1);
@@ -207,7 +192,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         await _fetchUserAndSetState();
-        return; // Éxito
+        return;
       } catch (e) {
         final isConnectionIssue = _isConnectionError(e);
         final isUnauthorized = _isUnauthorizedError(e);
@@ -218,7 +203,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
         if (isConnectionIssue) {
           if (attempt == maxRetries) {
-            // Último intento falló por conectividad
             final access = await _storage.read(key: 'access');
             if (access != null) {
               state = AsyncValue.data(
@@ -243,9 +227,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  /// Logout con limpieza completa
   Future<void> logout([WidgetRef? ref]) async {
-    // 🔥 Limpiar todos los providers relacionados con el usuario
     if (ref != null) {
       ref.read(sessionManagerProvider.notifier).clearSession(ref);
     }
@@ -253,32 +235,24 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
 
     try {
-      await _http.dio
-          .post('/api/v1/auth/logout/')
-          .timeout(
-            Duration(seconds: 5),
-            onTimeout: () => Response(
-              requestOptions: RequestOptions(path: ''),
-              statusCode: 200,
-            ),
-          );
-    } catch (e) {
-      // Ignorar errores de logout del servidor
-    }
-
-    // Limpiar todo el storage
-    try {
-      await _http.logout();
-      await _storage.deleteAll();
-      await _clearPersistedUserData();
-    } catch (e) {
+      // ✅ SOLO borrar claves específicas del AUTH, NO deleteAll()
       await _storage.delete(key: 'access');
       await _storage.delete(key: 'refresh');
       await _storage.delete(key: 'user_data');
+      await _clearPersistedUserData();
+
+      print(
+        '🗑️ AuthProvider: Solo limpiando datos de autenticación (manteniendo biometría)',
+      );
+    } catch (e) {
+      // Fallback si falla el borrado individual
+      await _storage.delete(key: 'access');
+      await _storage.delete(key: 'refresh');
+      await _storage.delete(key: 'user_data');
+      print('❌ AuthProvider: Error en logout, usando fallback');
     }
   }
 
-  /// Refresh manual de datos
   Future<void> refreshUser() async {
     if (!isLoggedIn) return;
 
@@ -289,7 +263,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  /// Manejo de errores genérico
   String _handleGenericError(dynamic error) {
     if (error.runtimeType.toString().contains('Dio')) {
       final response = _getResponseFromError(error);
@@ -326,7 +299,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     return 'Error inesperado: ${error.toString()}';
   }
 
-  /// Helpers de error
   Response? _getResponseFromError(dynamic error) {
     try {
       return error.response as Response?;
@@ -375,7 +347,6 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  /// Accesos rápidos
   bool get isLoggedIn => state.value?.status == AuthStatus.loggedIn;
   UserModel? get user => state.value?.user;
   String? get errorMessage => state.value?.errorMessage;

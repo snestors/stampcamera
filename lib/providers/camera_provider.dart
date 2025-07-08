@@ -72,10 +72,10 @@ class CameraNotifier extends StateNotifier<CameraState> {
       final config = WatermarkConfig(
         showLogo: true,
         showTimestamp: true,
-        showLocation: true,
+        showLocation: false,
         logoPosition: WatermarkPosition.topRight,
         timestampPosition: WatermarkPosition.bottomRight,
-        locationPosition: WatermarkPosition.bottomRight, // GPS abajo izquierda
+
         compressionQuality: 88,
         timestampFontSize: FontSize.large,
         locationFontSize: FontSize.large, // Posiciones fijas
