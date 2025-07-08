@@ -33,7 +33,6 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      // ✅ ACTIVADO: Cargar más usando el método de BaseListProviderImpl
       final notifier = ref.read(contenedorProvider.notifier);
       if (notifier.hasNextPage && !notifier.isLoadingMore) {
         notifier.loadMore();
@@ -78,7 +77,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateDialog(context),
+        onPressed: () => _showCreateForm(context),
         backgroundColor: AppColors.secondary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -98,7 +97,6 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
       child: TextField(
         controller: _searchController,
         onChanged: (value) {
-          // ✅ USAR: debouncedSearch del BaseListProviderImpl
           notifier.debouncedSearch(value);
         },
         decoration: InputDecoration(
@@ -113,7 +111,6 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                   icon: const Icon(Icons.clear),
                   onPressed: () {
                     _searchController.clear();
-                    // ✅ USAR: clearSearch del BaseListProviderImpl
                     notifier.clearSearch();
                   },
                 )
@@ -148,7 +145,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
               'No se encontraron contenedores que coincidan con tu búsqueda',
           color: AppColors.textSecondary,
           action: ElevatedButton.icon(
-            onPressed: () => _showCreateDialog(context),
+            onPressed: () => _showCreateForm(context),
             icon: const Icon(Icons.add),
             label: const Text('Crear Contenedor'),
             style: ElevatedButton.styleFrom(
@@ -161,16 +158,13 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     }
 
     return RefreshIndicator(
-      // ✅ USAR: refresh del BaseListProviderImpl
       onRefresh: notifier.refresh,
       color: AppColors.secondary,
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(AppDimensions.paddingL),
-        // ✅ CORREGIDO: Agregar +1 si está cargando más para mostrar indicator
         itemCount: contenedores.length + (notifier.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
-          // ✅ NUEVO: Mostrar indicator de carga al final
           if (index == contenedores.length) {
             return _buildLoadMoreIndicator();
           }
@@ -185,7 +179,6 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     );
   }
 
-  // ✅ NUEVO: Indicador de "cargando más"
   Widget _buildLoadMoreIndicator() {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingL),
@@ -656,7 +649,6 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         subtitle: error.toString(),
         color: AppColors.error,
         action: ElevatedButton.icon(
-          // ✅ USAR: refresh del BaseListProviderImpl
           onPressed: notifier.refresh,
           icon: const Icon(Icons.refresh),
           label: const Text('Reintentar'),
@@ -681,7 +673,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
   void _handleMenuAction(String action, ContenedorModel contenedor) {
     switch (action) {
       case 'editar':
-        _showEditDialog(contenedor);
+        _showEditForm(contenedor);
         break;
       case 'eliminar':
         _confirmDelete(contenedor);
@@ -689,46 +681,59 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     }
   }
 
-  // Para crear nuevo contenedor (desde FAB o botón)
-  void _showCreateDialog(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (context) => const ContenedorForm()));
+  // ============================================================================
+  // MODAL BOTTOM SHEET PARA CREAR CONTENEDOR
+  // ============================================================================
+  void _showCreateForm(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ContenedorForm(),
+    );
   }
 
-  // Para editar contenedor existente (desde menú)
-  void _showEditDialog(ContenedorModel contenedor) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ContenedorForm(contenedor: contenedor),
-      ),
+  // ============================================================================
+  // MODAL BOTTOM SHEET PARA EDITAR CONTENEDOR
+  // ============================================================================
+  void _showEditForm(ContenedorModel contenedor) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ContenedorForm(contenedor: contenedor),
     );
   }
 
   void _confirmDelete(ContenedorModel contenedor) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Confirmar eliminación'),
         content: Text(
           '¿Estás seguro de eliminar el contenedor ${contenedor.nContenedor}?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.of(context).pop();
-              // ✅ USAR: deleteContenedor específico del provider
+              // ✅ SOLUCIÓN: Usar el contexto local del dialog y guardar referencia
+              final navigator = Navigator.of(dialogContext);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+              navigator.pop();
+
               final success = await ref
                   .read(contenedorProvider.notifier)
                   .deleteContenedor(contenedor.id);
 
+              // ✅ PROTECCIÓN: Verificar que el widget siga montado
               if (!mounted) return;
 
-              ScaffoldMessenger.of(context).showSnackBar(
+              scaffoldMessenger.showSnackBar(
                 SnackBar(
                   content: Text(
                     success

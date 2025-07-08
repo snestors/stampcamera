@@ -362,20 +362,6 @@ class DetalleFotosPresentacion extends ConsumerWidget {
   // MÉTODOS PARA EDIT/DELETE
   // ============================================================================
 
-  void _showEditForm(BuildContext context, FotoPresentacion foto) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FotoPresentacionForm(
-        vin: vin,
-        fotoId: foto.id,
-        tipoInicial: foto.tipo,
-        nDocumentoInicial: foto.nDocumento,
-      ),
-    );
-  }
-
   void _confirmDelete(
     BuildContext context,
     WidgetRef ref,

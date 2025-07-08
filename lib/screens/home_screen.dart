@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:stampcamera/providers/auth_provider.dart';
-import 'package:stampcamera/services/update_service.dart';
 import 'package:stampcamera/widgets/connectivity_app_bar.dart';
 
 import '../main.dart'; // Para acceder a `cameras`

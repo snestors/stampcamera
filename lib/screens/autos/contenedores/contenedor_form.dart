@@ -24,13 +24,21 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
   int? _selectedNaveId;
   int? _selectedZonaId;
 
-  // Paths de imágenes
+  // Paths de imágenes NUEVAS
   String? _fotoContenedorPath;
   String? _fotoPrecinto1Path;
   String? _fotoPrecinto2Path;
   String? _fotoContenedorVacioPath;
 
+  // ✅ NUEVO: Flags para eliminar fotos existentes
+  bool _removeFotoContenedor = false;
+  bool _removeFotoPrecinto1 = false;
+  bool _removeFotoPrecinto2 = false;
+  bool _removeFotoContenedorVacio = false;
+
   bool _isLoading = false;
+
+  bool get isEditMode => widget.contenedor != null;
 
   @override
   void initState() {
@@ -53,7 +61,6 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
       _nContenedorController.text = contenedor.nContenedor;
       _precinto1Controller.text = contenedor.precinto1 ?? '';
       _precinto2Controller.text = contenedor.precinto2 ?? '';
-      // ✅ CAMBIO: Usar el ID de la nave del objeto
       _selectedNaveId = contenedor.naveDescarga.id;
       _selectedZonaId = contenedor.zonaInspeccion?.id;
     }
@@ -61,15 +68,31 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
 
   void _initializeWithOptions(ContenedorOptions options) {
     // Solo aplicar initial_values si estamos creando (no editando)
-    if (widget.contenedor == null && options.initialValues.isNotEmpty) {
+    if (widget.contenedor == null &&
+        options.initialValues.isNotEmpty &&
+        mounted) {
       // Aplicar valores iniciales para nave_descarga
       if (options.initialValues.containsKey('nave_descarga')) {
-        _selectedNaveId = options.initialValues['nave_descarga'] as int?;
+        final naveId = options.initialValues['nave_descarga'] as int?;
+        if (naveId != null && _selectedNaveId == null) {
+          if (mounted) {
+            setState(() {
+              _selectedNaveId = naveId;
+            });
+          }
+        }
       }
 
       // Aplicar valores iniciales para zona_inspeccion
       if (options.initialValues.containsKey('zona_inspeccion')) {
-        _selectedZonaId = options.initialValues['zona_inspeccion'] as int?;
+        final zonaId = options.initialValues['zona_inspeccion'] as int?;
+        if (zonaId != null && _selectedZonaId == null) {
+          if (mounted) {
+            setState(() {
+              _selectedZonaId = zonaId;
+            });
+          }
+        }
       }
     }
   }
@@ -77,311 +100,523 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
   @override
   Widget build(BuildContext context) {
     final optionsAsync = ref.watch(contenedorOptionsProvider);
-    final isEdit = widget.contenedor != null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? 'Editar Contenedor' : 'Nuevo Contenedor'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: [
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: optionsAsync.when(
+                data: (options) {
+                  // Inicializar valores una sola vez cuando las opciones están disponibles
+                  if (widget.contenedor == null) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        _initializeWithOptions(options);
+                      }
+                    });
+                  }
+                  return _buildForm(context, options);
+                },
+                loading: () => _buildLoadingState(),
+                error: (error, _) => _buildErrorState(error),
+              ),
+            ),
+          ),
+          _buildActionButtons(),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================================
+  // HEADER FIJO
+  // ============================================================================
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isEditMode ? Icons.edit : Icons.add_circle_outline,
+            color: AppColors.primary,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              isEditMode ? 'Editar Contenedor' : 'Nuevo Contenedor',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+          ),
           if (_isLoading)
             Container(
-              margin: const EdgeInsets.all(AppDimensions.paddingM),
               width: 20,
               height: 20,
               child: const CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.white,
+                color: AppColors.primary,
               ),
+            )
+          else
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
             ),
         ],
       ),
-      body: optionsAsync.when(
-        data: (options) {
-          // Inicializar valores una sola vez cuando las opciones están disponibles
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _initializeWithOptions(options);
-          });
-          return _buildForm(context, options, isEdit);
-        },
-        loading: () => _buildLoadingState(context),
-        error: (error, _) => _buildErrorState(context, error),
-      ),
-      bottomNavigationBar: _buildBottomBar(context),
     );
   }
 
-  Widget _buildForm(
-    BuildContext context,
-    ContenedorOptions options,
-    bool isEdit,
-  ) {
+  Widget _buildForm(BuildContext context, ContenedorOptions options) {
     return Form(
       key: _formKey,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // SECCIÓN 1: NAVE Y ZONA
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppSectionHeader(
-                    icon: Icons.directions_boat,
-                    title: 'Nave y Zona',
-                    iconColor: AppColors.primary,
-                  ),
-                  const SizedBox(height: AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
 
-                  // Nave de descarga
-                  _buildDropdown<int>(
-                    context: context,
-                    label: 'Nave de Descarga *',
-                    value: _selectedNaveId,
-                    items: options.navesDisponibles
-                        .map(
-                          (nave) => DropdownMenuItem(
-                            value: nave.id,
+          // SECCIÓN 1: NAVE Y ZONA
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppSectionHeader(
+                  icon: Icons.directions_boat,
+                  title: 'Nave y Zona',
+                  iconColor: AppColors.primary,
+                ),
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Nave de descarga
+                _buildDropdown<int>(
+                  context: context,
+                  label: 'Nave de Descarga *',
+                  value: _selectedNaveId,
+                  items: options.navesDisponibles
+                      .map(
+                        (nave) => DropdownMenuItem(
+                          value: nave.id,
+                          child: Text(
+                            nave.nombre,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: _canEditField('nave_descarga', options)
+                      ? (value) {
+                          if (mounted) {
+                            setState(() => _selectedNaveId = value);
+                          }
+                        }
+                      : null,
+                  validator: _fieldRequired('nave_descarga', options)
+                      ? (value) => value == null ? 'Seleccione una nave' : null
+                      : null,
+                ),
+
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Zona de inspección
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDropdown<int>(
+                        context: context,
+                        label: _fieldRequired('zona_inspeccion', options)
+                            ? 'Zona de Inspección *'
+                            : 'Zona de Inspección',
+                        value: _selectedZonaId,
+                        items: [
+                          // ✅ NUEVO: Opción para limpiar zona
+                          const DropdownMenuItem<int>(
+                            value: null,
                             child: Text(
-                              nave.nombre,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              'Sin zona asignada',
+                              style: TextStyle(
                                 fontSize: 13,
-                              ), // ✅ Texto más pequeño
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
-                        )
-                        .toList(),
-                    onChanged: _canEditField('nave_descarga', options)
-                        ? (value) {
-                            if (mounted) {
-                              setState(() => _selectedNaveId = value);
-                            }
-                          }
-                        : null,
-                    validator: _fieldRequired('nave_descarga', options)
-                        ? (value) =>
-                              value == null ? 'Seleccione una nave' : null
-                        : null,
-                  ),
-
-                  const SizedBox(height: AppDimensions.paddingL),
-
-                  // Zona de inspección
-                  _buildDropdown<int>(
-                    context: context,
-                    label: _fieldRequired('zona_inspeccion', options)
-                        ? 'Zona de Inspección *'
-                        : 'Zona de Inspección',
-                    value: _selectedZonaId,
-                    items: options.zonasDisponibles
-                        .map(
-                          (zona) => DropdownMenuItem(
-                            value: zona.id,
-                            child: Text(
-                              zona.nombre,
-                              style: const TextStyle(
-                                fontSize: 13,
-                              ), // ✅ Texto más pequeño
+                          ...options.zonasDisponibles.map(
+                            (zona) => DropdownMenuItem(
+                              value: zona.id,
+                              child: Text(
+                                zona.nombre,
+                                style: const TextStyle(fontSize: 13),
+                              ),
                             ),
                           ),
-                        )
-                        .toList(),
-                    onChanged: _canEditField('zona_inspeccion', options)
-                        ? (value) {
-                            if (mounted) {
-                              setState(() => _selectedZonaId = value);
-                            }
-                          }
-                        : null,
-                    validator: _fieldRequired('zona_inspeccion', options)
-                        ? (value) =>
-                              value == null ? 'Seleccione una zona' : null
-                        : null,
-                  ),
-                ],
-              ),
+                        ],
+                        onChanged: _canEditField('zona_inspeccion', options)
+                            ? (value) {
+                                if (mounted) {
+                                  setState(() => _selectedZonaId = value);
+                                }
+                              }
+                            : null,
+                        validator: _fieldRequired('zona_inspeccion', options)
+                            ? (value) =>
+                                  value == null ? 'Seleccione una zona' : null
+                            : null,
+                      ),
+                    ),
+
+                    // ✅ NUEVO: Botón para limpiar zona (solo en edición)
+                  ],
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: AppDimensions.paddingL),
+          const SizedBox(height: AppDimensions.paddingL),
 
-            // SECCIÓN 2: NÚMERO DE CONTENEDOR Y FOTO
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppSectionHeader(
-                    icon: Icons.inventory_2,
-                    title: 'Información del Contenedor',
-                    iconColor: AppColors.secondary,
+          // SECCIÓN 2: NÚMERO DE CONTENEDOR Y FOTO
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppSectionHeader(
+                  icon: Icons.inventory_2,
+                  title: 'Información del Contenedor',
+                  iconColor: AppColors.secondary,
+                ),
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Número de contenedor
+                _buildTextField(
+                  context: context,
+                  controller: _nContenedorController,
+                  label: 'Número de Contenedor *',
+                  hint: 'Ej: TCLU1234567',
+                  enabled: _canEditField('n_contenedor', options),
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'Este campo es requerido';
+                    }
+                    if (value!.length < 10) {
+                      return 'Debe tener al menos 10 caracteres';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Foto del contenedor CON opción de eliminar
+                _buildCameraCardWithRemove(
+                  title: 'Foto del Contenedor',
+                  subtitle: 'Capture una imagen clara del contenedor',
+                  currentImagePath: _fotoContenedorPath,
+                  currentImageUrl: _getValidUrl(
+                    widget.contenedor?.fotoContenedorUrl,
                   ),
-                  const SizedBox(height: AppDimensions.paddingL),
-
-                  // Número de contenedor
-                  _buildTextField(
-                    context: context,
-                    controller: _nContenedorController,
-                    label: 'Número de Contenedor *',
-                    hint: 'Ej: TCLU1234567',
-                    enabled: _canEditField('n_contenedor', options),
-                    validator: (value) {
-                      if (value?.isEmpty ?? true) {
-                        return 'Este campo es requerido';
-                      }
-                      if (value!.length < 10) {
-                        return 'Debe tener al menos 10 caracteres';
-                      }
-                      return null;
-                    },
+                  thumbnailUrl: _getValidUrl(
+                    widget.contenedor?.imagenThumbnailUrl,
                   ),
-
-                  const SizedBox(height: AppDimensions.paddingL),
-
-                  // Foto del contenedor
-                  ReusableCameraCard(
-                    title: 'Foto del Contenedor',
-                    subtitle: 'Capture una imagen clara del contenedor',
-                    currentImagePath: _fotoContenedorPath,
-                    currentImageUrl: _getValidUrl(
-                      widget.contenedor?.fotoContenedorUrl,
-                    ), // ✅ VALIDADO
-                    thumbnailUrl: _getValidUrl(
-                      widget.contenedor?.imagenThumbnailUrl,
-                    ), // ✅ VALIDADO
-                    onImageSelected: (path) {
-                      if (mounted) {
-                        setState(() => _fotoContenedorPath = path);
-                      }
-                    },
-                    primaryColor: AppColors.secondary,
-                  ),
-                ],
-              ),
+                  removeFlag: _removeFotoContenedor,
+                  onImageSelected: (path) {
+                    setState(() {
+                      _fotoContenedorPath = path;
+                      _removeFotoContenedor =
+                          false; // Reset flag si se toma nueva foto
+                    });
+                  },
+                  onRemoveToggle: (remove) {
+                    setState(() {
+                      _removeFotoContenedor = remove;
+                      if (remove)
+                        _fotoContenedorPath = null; // Limpiar nueva foto
+                    });
+                  },
+                  primaryColor: AppColors.secondary,
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: AppDimensions.paddingL),
+          const SizedBox(height: AppDimensions.paddingL),
 
-            // SECCIÓN 3: PRECINTOS Y FOTOS
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppSectionHeader(
-                    icon: Icons.lock_outline,
-                    title: 'Precintos',
-                    iconColor: AppColors.warning,
+          // SECCIÓN 3: PRECINTOS Y FOTOS
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppSectionHeader(
+                  icon: Icons.lock_outline,
+                  title: 'Precintos',
+                  iconColor: AppColors.warning,
+                ),
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Precinto 1 CON botón limpiar
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        context: context,
+                        controller: _precinto1Controller,
+                        label: 'Precinto 1',
+                        hint: 'Ej: CV877664',
+                      ),
+                    ),
+                    if (isEditMode && _precinto1Controller.text.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          setState(() => _precinto1Controller.clear());
+                        },
+                        icon: const Icon(Icons.clear, size: 18),
+                        tooltip: 'Limpiar precinto 1',
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ],
+                ),
+
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Foto Precinto 1 CON opción de eliminar
+                _buildCameraCardWithRemove(
+                  title: 'Foto Precinto 1',
+                  subtitle: 'Capture el primer precinto si existe',
+                  currentImagePath: _fotoPrecinto1Path,
+                  currentImageUrl: _getValidUrl(
+                    widget.contenedor?.fotoPrecinto1Url,
                   ),
-                  const SizedBox(height: AppDimensions.paddingL),
-
-                  // Precinto 1
-                  _buildTextField(
-                    context: context,
-                    controller: _precinto1Controller,
-                    label: 'Precinto 1',
-                    hint: 'Ej: CV877664',
+                  thumbnailUrl: _getValidUrl(
+                    widget.contenedor?.imagenThumbnailPrecintoUrl,
                   ),
+                  removeFlag: _removeFotoPrecinto1,
+                  onImageSelected: (path) {
+                    setState(() {
+                      _fotoPrecinto1Path = path;
+                      _removeFotoPrecinto1 = false;
+                    });
+                  },
+                  onRemoveToggle: (remove) {
+                    setState(() {
+                      _removeFotoPrecinto1 = remove;
+                      if (remove) _fotoPrecinto1Path = null;
+                    });
+                  },
+                  primaryColor: AppColors.warning,
+                ),
 
-                  const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: AppDimensions.paddingL),
 
-                  // Foto Precinto 1
-                  ReusableCameraCard(
-                    title: 'Foto Precinto 1',
-                    subtitle: 'Capture el primer precinto si existe',
-                    currentImagePath: _fotoPrecinto1Path,
-                    currentImageUrl: _getValidUrl(
-                      widget.contenedor?.fotoPrecinto1Url,
-                    ), // ✅ VALIDADO
-                    thumbnailUrl: _getValidUrl(
-                      widget.contenedor?.imagenThumbnailPrecintoUrl,
-                    ), // ✅ VALIDADO
-                    onImageSelected: (path) {
-                      if (mounted) {
-                        setState(() => _fotoPrecinto1Path = path);
-                      }
-                    },
-                    primaryColor: AppColors.warning,
+                // Precinto 2 CON botón limpiar
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        context: context,
+                        controller: _precinto2Controller,
+                        label: 'Precinto 2',
+                        hint: 'Ej: CV877665',
+                      ),
+                    ),
+                    if (isEditMode && _precinto2Controller.text.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () {
+                          setState(() => _precinto2Controller.clear());
+                        },
+                        icon: const Icon(Icons.clear, size: 18),
+                        tooltip: 'Limpiar precinto 2',
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ],
+                ),
+
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Foto Precinto 2 CON opción de eliminar
+                _buildCameraCardWithRemove(
+                  title: 'Foto Precinto 2',
+                  subtitle: 'Capture el segundo precinto si existe',
+                  currentImagePath: _fotoPrecinto2Path,
+                  currentImageUrl: _getValidUrl(
+                    widget.contenedor?.fotoPrecinto2Url,
                   ),
-
-                  const SizedBox(height: AppDimensions.paddingL),
-
-                  // Precinto 2
-                  _buildTextField(
-                    context: context,
-                    controller: _precinto2Controller,
-                    label: 'Precinto 2',
-                    hint: 'Ej: CV877665',
+                  thumbnailUrl: _getValidUrl(
+                    widget.contenedor?.imagenThumbnailPrecinto2Url,
                   ),
-
-                  const SizedBox(height: AppDimensions.paddingL),
-
-                  // Foto Precinto 2
-                  ReusableCameraCard(
-                    title: 'Foto Precinto 2',
-                    subtitle: 'Capture el segundo precinto si existe',
-                    currentImagePath: _fotoPrecinto2Path,
-                    currentImageUrl: _getValidUrl(
-                      widget.contenedor?.fotoPrecinto2Url,
-                    ), // ✅ VALIDADO
-                    thumbnailUrl: _getValidUrl(
-                      widget.contenedor?.imagenThumbnailPrecinto2Url,
-                    ), // ✅ VALIDADO
-                    onImageSelected: (path) {
-                      if (mounted) {
-                        setState(() => _fotoPrecinto2Path = path);
-                      }
-                    },
-                    primaryColor: AppColors.warning,
-                  ),
-                ],
-              ),
+                  removeFlag: _removeFotoPrecinto2,
+                  onImageSelected: (path) {
+                    setState(() {
+                      _fotoPrecinto2Path = path;
+                      _removeFotoPrecinto2 = false;
+                    });
+                  },
+                  onRemoveToggle: (remove) {
+                    setState(() {
+                      _removeFotoPrecinto2 = remove;
+                      if (remove) _fotoPrecinto2Path = null;
+                    });
+                  },
+                  primaryColor: AppColors.warning,
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: AppDimensions.paddingL),
+          const SizedBox(height: AppDimensions.paddingL),
 
-            // SECCIÓN 4: CONTENEDOR VACÍO
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AppSectionHeader(
-                    icon: Icons.view_in_ar,
-                    title: 'Contenedor Vacío',
-                    iconColor: AppColors.info,
+          // SECCIÓN 4: CONTENEDOR VACÍO
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppSectionHeader(
+                  icon: Icons.view_in_ar,
+                  title: 'Contenedor Vacío',
+                  iconColor: AppColors.info,
+                ),
+                const SizedBox(height: AppDimensions.paddingL),
+
+                // Foto Contenedor Vacío CON opción de eliminar
+                _buildCameraCardWithRemove(
+                  title: 'Foto Contenedor Vacío',
+                  subtitle: 'Capture el contenedor una vez esté vacío',
+                  currentImagePath: _fotoContenedorVacioPath,
+                  currentImageUrl: _getValidUrl(
+                    widget.contenedor?.fotoContenedorVacioUrl,
                   ),
-                  const SizedBox(height: AppDimensions.paddingL),
-
-                  // Foto Contenedor Vacío
-                  ReusableCameraCard(
-                    title: 'Foto Contenedor Vacío',
-                    subtitle: 'Capture el contenedor una vez esté vacío',
-                    currentImagePath: _fotoContenedorVacioPath,
-                    currentImageUrl: _getValidUrl(
-                      widget.contenedor?.fotoContenedorVacioUrl,
-                    ), // ✅ VALIDADO
-                    thumbnailUrl: _getValidUrl(
-                      widget.contenedor?.imagenThumbnailContenedorVacioUrl,
-                    ), // ✅ VALIDADO
-                    onImageSelected: (path) {
-                      if (mounted) {
-                        setState(() => _fotoContenedorVacioPath = path);
-                      }
-                    },
-                    primaryColor: AppColors.info,
+                  thumbnailUrl: _getValidUrl(
+                    widget.contenedor?.imagenThumbnailContenedorVacioUrl,
                   ),
-                ],
-              ),
+                  removeFlag: _removeFotoContenedorVacio,
+                  onImageSelected: (path) {
+                    setState(() {
+                      _fotoContenedorVacioPath = path;
+                      _removeFotoContenedorVacio = false;
+                    });
+                  },
+                  onRemoveToggle: (remove) {
+                    setState(() {
+                      _removeFotoContenedorVacio = remove;
+                      if (remove) _fotoContenedorVacioPath = null;
+                    });
+                  },
+                  primaryColor: AppColors.info,
+                ),
+              ],
             ),
+          ),
 
-            const SizedBox(height: AppDimensions.paddingXXL),
-          ],
-        ),
+          const SizedBox(height: AppDimensions.paddingXXL),
+        ],
       ),
     );
   }
 
+  // ✅ NUEVO: Widget para cámara CON opción de eliminar (solo en edición)
+  Widget _buildCameraCardWithRemove({
+    required String title,
+    required String subtitle,
+    required String? currentImagePath,
+    required String? currentImageUrl,
+    required String? thumbnailUrl,
+    required bool removeFlag,
+    required Function(String) onImageSelected,
+    required Function(bool) onRemoveToggle,
+    required Color primaryColor,
+  }) {
+    // Si está marcado para eliminar, mostrar estado de eliminación
+    if (removeFlag && isEditMode) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '$title - Será eliminada',
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => onRemoveToggle(false),
+                  child: const Text('Cancelar'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        ReusableCameraCard(
+          title: title,
+          subtitle: subtitle,
+          currentImagePath: currentImagePath,
+          currentImageUrl: currentImageUrl,
+          thumbnailUrl: thumbnailUrl,
+          onImageSelected: onImageSelected,
+          primaryColor: primaryColor,
+        ),
+        // ✅ Botón para eliminar foto existente (solo en modo edición)
+        if (isEditMode && currentImageUrl != null && !removeFlag)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextButton.icon(
+              onPressed: () => onRemoveToggle(true),
+              icon: const Icon(Icons.delete_outline, size: 16),
+              label: const Text('Eliminar foto existente'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.error,
+                textStyle: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // Resto de widgets auxiliares (sin cambios)...
   Widget _buildTextField({
     required BuildContext context,
     required TextEditingController controller,
@@ -471,7 +706,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
           items: items,
           onChanged: onChanged,
           validator: validator,
-          isExpanded: true, // ✅ AGREGADO: Soluciona overflow
+          isExpanded: true,
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -509,7 +744,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     );
   }
 
-  Widget _buildLoadingState(BuildContext context) {
+  Widget _buildLoadingState() {
     return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -522,7 +757,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, Object error) {
+  Widget _buildErrorState(Object error) {
     return Center(
       child: AppEmptyState(
         icon: Icons.error_outline,
@@ -542,9 +777,12 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     );
   }
 
-  Widget _buildBottomBar(BuildContext context) {
+  // ============================================================================
+  // BOTONES DE ACCIÓN FIJOS EN LA PARTE INFERIOR
+  // ============================================================================
+  Widget _buildActionButtons() {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -560,29 +798,23 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                onPressed: _isLoading ? null : () => Navigator.pop(context),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppDimensions.paddingL,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   side: const BorderSide(color: AppColors.textSecondary),
                 ),
                 child: const Text('Cancelar'),
               ),
             ),
-            const SizedBox(width: AppDimensions.paddingL),
+            const SizedBox(width: 16),
             Expanded(
               flex: 2,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : () => _submitForm(context),
+                onPressed: _isLoading ? null : _submitForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppDimensions.paddingL,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: _isLoading
                     ? const SizedBox(
@@ -593,11 +825,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                           color: Colors.white,
                         ),
                       )
-                    : Text(
-                        widget.contenedor != null
-                            ? 'Actualizar'
-                            : 'Crear Contenedor',
-                      ),
+                    : Text(isEditMode ? 'Actualizar' : 'Crear Contenedor'),
               ),
             ),
           ],
@@ -615,8 +843,6 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     return options.fieldPermissions[fieldName]?.required ?? false;
   }
 
-  /// Valida que la URL no esté vacía o sea null
-  /// Retorna null si la URL no es válida para evitar errores de carga
   String? _getValidUrl(String? url) {
     if (url == null || url.isEmpty || url.trim().isEmpty) {
       return null;
@@ -624,7 +850,10 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     return url;
   }
 
-  Future<void> _submitForm(BuildContext context) async {
+  // ============================================================================
+  // ✅ SUBMIT MEJORADO - Usa updateContenedorWithFiles
+  // ============================================================================
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
     // Validar nave_descarga solo si es requerido
@@ -632,17 +861,17 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     if (optionsAsync.hasValue) {
       final options = optionsAsync.value!;
       if (_fieldRequired('nave_descarga', options) && _selectedNaveId == null) {
-        _showError(context, 'Debe seleccionar una nave');
+        _showError('Debe seleccionar una nave');
         return;
       }
       if (_fieldRequired('zona_inspeccion', options) &&
           _selectedZonaId == null) {
-        _showError(context, 'Debe seleccionar una zona de inspección');
+        _showError('Debe seleccionar una zona de inspección');
         return;
       }
     } else if (_selectedNaveId == null) {
       // Fallback si no hay opciones disponibles
-      _showError(context, 'Debe seleccionar una nave');
+      _showError('Debe seleccionar una nave');
       return;
     }
 
@@ -652,23 +881,34 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
       bool success;
 
       if (widget.contenedor != null) {
-        // ✅ MODO EDICIÓN: Usar updateContenedor
+        // ✅ MODO EDICIÓN - Usar updateContenedorWithFiles
         success = await ref
             .read(contenedorProvider.notifier)
-            .updateContenedor(
+            .updateContenedorWithFiles(
               id: widget.contenedor!.id,
               nContenedor: _nContenedorController.text.trim(),
               naveDescarga: _selectedNaveId!,
-              zonaInspeccion: _selectedZonaId,
+              zonaInspeccion: _selectedZonaId, // null limpiará la zona
               precinto1: _precinto1Controller.text.trim().isNotEmpty
                   ? _precinto1Controller.text.trim()
-                  : null,
+                  : '', // String vacío limpiará el precinto
               precinto2: _precinto2Controller.text.trim().isNotEmpty
                   ? _precinto2Controller.text.trim()
-                  : null,
+                  : '', // String vacío limpiará el precinto
+              // ✅ Nuevas fotos (si las hay)
+              fotoContenedorPath: _fotoContenedorPath,
+              fotoPrecinto1Path: _fotoPrecinto1Path,
+              fotoPrecinto2Path: _fotoPrecinto2Path,
+              fotoContenedorVacioPath: _fotoContenedorVacioPath,
+
+              // ✅ Flags para eliminar fotos existentes
+              removeFotoContenedor: _removeFotoContenedor,
+              removeFotoPrecinto1: _removeFotoPrecinto1,
+              removeFotoPrecinto2: _removeFotoPrecinto2,
+              removeFotoContenedorVacio: _removeFotoContenedorVacio,
             );
       } else {
-        // ✅ MODO CREACIÓN: Usar createContenedor
+        // ✅ MODO CREACIÓN - Usar createContenedor (sin cambios)
         success = await ref
             .read(contenedorProvider.notifier)
             .createContenedor(
@@ -691,24 +931,22 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
       if (!mounted) return;
 
       if (success) {
-        Navigator.of(context).pop();
+        Navigator.pop(context);
         _showSuccess(
-          context,
-          widget.contenedor != null
+          isEditMode
               ? 'Contenedor actualizado exitosamente'
               : 'Contenedor creado exitosamente',
         );
       } else {
         _showError(
-          context,
-          widget.contenedor != null
+          isEditMode
               ? 'Error al actualizar el contenedor'
               : 'Error al crear el contenedor',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      _showError(context, 'Error: $e');
+      _showError('Error: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -716,7 +954,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     }
   }
 
-  void _showError(BuildContext context, String message) {
+  void _showError(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: AppColors.error),
@@ -724,7 +962,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     }
   }
 
-  void _showSuccess(BuildContext context, String message) {
+  void _showSuccess(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message), backgroundColor: AppColors.success),

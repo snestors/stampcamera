@@ -1,7 +1,6 @@
 // services/autos/contenedor_service.dart
 import 'package:stampcamera/core/base_service_imp.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
-import 'package:stampcamera/models/paginated_response.dart';
 import 'package:dio/dio.dart';
 
 class ContenedorService extends BaseServiceImpl<ContenedorModel> {
@@ -26,7 +25,7 @@ class ContenedorService extends BaseServiceImpl<ContenedorModel> {
     }
   }
 
-  /// Crear contenedor con archivos (sobrescribir método base para manejar FormData complejo)
+  /// Crear contenedor con archivos
   Future<ContenedorModel> createContenedor({
     required String nContenedor,
     required int naveDescarga,
@@ -93,7 +92,7 @@ class ContenedorService extends BaseServiceImpl<ContenedorModel> {
     }
   }
 
-  /// Actualizar contenedor (usar método base partialUpdate)
+  /// Actualizar contenedor (MEJORADO para limpiar campos)
   Future<ContenedorModel> updateContenedor({
     required int id,
     required String nContenedor,
@@ -105,12 +104,114 @@ class ContenedorService extends BaseServiceImpl<ContenedorModel> {
     final data = {
       'n_contenedor': nContenedor,
       'nave_descarga_id': naveDescarga,
-      if (zonaInspeccion != null) 'zona_inspeccion_id': zonaInspeccion,
-      if (precinto1 != null) 'precinto1': precinto1,
-      if (precinto2 != null) 'precinto2': precinto2,
+      // ✅ Para limpiar zona_inspeccion, enviar null explícitamente
+      'zona_inspeccion_id': zonaInspeccion,
+      // ✅ Para limpiar precintos, enviar string vacío o null
+      'precinto1': precinto1?.isEmpty == true ? null : precinto1,
+      'precinto2': precinto2?.isEmpty == true ? null : precinto2,
     };
-
+    print("ContenedorService.updateContenedor: $data");
     return await partialUpdate(id, data);
+  }
+
+  /// Limpiar campos específicos del contenedor
+  Future<ContenedorModel> clearContenedorFields({
+    required int id,
+    bool clearPrecinto1 = false,
+    bool clearPrecinto2 = false,
+    bool clearZonaInspeccion = false,
+    bool clearFotoPrecinto1 = false,
+    bool clearFotoPrecinto2 = false,
+    bool clearFotoContenedorVacio = false,
+  }) async {
+    final data = <String, dynamic>{};
+
+    // ✅ Para limpiar campos de texto
+    if (clearPrecinto1) data['precinto1'] = null;
+    if (clearPrecinto2) data['precinto2'] = null;
+    if (clearZonaInspeccion) data['zona_inspeccion_id'] = null;
+
+    // ✅ Para eliminar fotos específicas
+    if (clearFotoPrecinto1) data['foto_precinto1'] = null;
+    if (clearFotoPrecinto2) data['foto_precinto2'] = null;
+    if (clearFotoContenedorVacio) data['foto_contenedor_vacio'] = null;
+
+    if (data.isEmpty) {
+      throw Exception('No se especificaron campos para limpiar');
+    }
+
+    print("ContenedorService.clearContenedorFields: $data");
+    return await partialUpdate(id, data);
+  }
+
+  /// Actualizar con archivos nuevos y limpieza de campos
+  Future<ContenedorModel> updateContenedorWithFiles({
+    required int id,
+    String? nContenedor,
+    int? naveDescarga,
+    int? zonaInspeccion,
+    String? precinto1,
+    String? precinto2,
+    String? fotoContenedorPath,
+    String? fotoPrecinto1Path,
+    String? fotoPrecinto2Path,
+    String? fotoContenedorVacioPath,
+    // ✅ Flags para eliminar fotos existentes
+    bool removeFotoContenedor = false,
+    bool removeFotoPrecinto1 = false,
+    bool removeFotoPrecinto2 = false,
+    bool removeFotoContenedorVacio = false,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      final filePaths = <String, String>{};
+
+      // ✅ Actualizar campos básicos
+      if (nContenedor != null) data['n_contenedor'] = nContenedor;
+      if (naveDescarga != null) data['nave_descarga_id'] = naveDescarga;
+
+      // ✅ Manejar zona_inspeccion (null para limpiar)
+      if (zonaInspeccion != null) {
+        data['zona_inspeccion_id'] = zonaInspeccion;
+      }
+
+      // ✅ Manejar precintos (null o string vacío para limpiar)
+      if (precinto1 != null) {
+        data['precinto1'] = precinto1.isEmpty ? null : precinto1;
+      }
+      if (precinto2 != null) {
+        data['precinto2'] = precinto2.isEmpty ? null : precinto2;
+      }
+
+      // ✅ Eliminar fotos existentes
+      if (removeFotoContenedor) data['foto_contenedor'] = null;
+      if (removeFotoPrecinto1) data['foto_precinto1'] = null;
+      if (removeFotoPrecinto2) data['foto_precinto2'] = null;
+      if (removeFotoContenedorVacio) data['foto_contenedor_vacio'] = null;
+
+      // ✅ Agregar nuevas fotos
+      if (fotoContenedorPath != null) {
+        filePaths['foto_contenedor'] = fotoContenedorPath;
+      }
+      if (fotoPrecinto1Path != null) {
+        filePaths['foto_precinto1'] = fotoPrecinto1Path;
+      }
+      if (fotoPrecinto2Path != null) {
+        filePaths['foto_precinto2'] = fotoPrecinto2Path;
+      }
+      if (fotoContenedorVacioPath != null) {
+        filePaths['foto_contenedor_vacio'] = fotoContenedorVacioPath;
+      }
+
+      // ✅ Usar updateWithFiles si hay archivos, sino partialUpdate
+      if (filePaths.isNotEmpty) {
+        return await updateWithFiles(id, data, filePaths);
+      } else {
+        return await partialUpdate(id, data);
+      }
+    } catch (e) {
+      throw Exception('Error al actualizar contenedor: $e');
+    }
   }
 
   // ============================================================================

@@ -75,17 +75,12 @@ class RegistroGeneralNotifier extends BaseListProviderImpl<RegistroGeneral> {
 
   void _updateSearchState(dynamic paginated, {String? query}) {
     // Simular búsqueda para mantener consistencia con BaseListProviderImpl
-    if (query != null) {
-      _searchQuery = query;
-      _searchNextUrl = paginated.next;
-    }
+    if (query != null) {}
 
     state = AsyncValue.data(paginated.results);
   }
 
   // Acceso a variables privadas de la clase base (workaround)
-  String? _searchQuery;
-  String? _searchNextUrl;
 }
 
 // ============================================================================
@@ -130,14 +125,11 @@ class RegistrosConDanosNotifier extends BaseListProviderImpl<RegistroGeneral> {
   Future<List<RegistroGeneral>> loadInitial() async {
     try {
       final paginated = await service.getWithDanos();
-      _nextUrl = paginated.next;
       return paginated.results;
     } catch (e) {
       throw Exception(parseError(e));
     }
   }
-
-  String? _nextUrl;
 }
 
 /// Provider para registros pedeteados
@@ -156,12 +148,9 @@ class RegistrosPedeteadosNotifier
   Future<List<RegistroGeneral>> loadInitial() async {
     try {
       final paginated = await service.getPedeteados();
-      _nextUrl = paginated.next;
       return paginated.results;
     } catch (e) {
       throw Exception(parseError(e));
     }
   }
-
-  String? _nextUrl;
 }

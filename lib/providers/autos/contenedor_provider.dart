@@ -73,7 +73,7 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
     }
   }
 
-  /// Actualizar contenedor existente (usando método específico del servicio)
+  /// Actualizar contenedor existente
   Future<bool> updateContenedor({
     required int id,
     required String nContenedor,
@@ -91,6 +91,7 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
         precinto1: precinto1,
         precinto2: precinto2,
       );
+      print('Contenedor actualizado: $updatedContenedor');
 
       // Actualizar en la lista
       final current = state.value ?? [];
@@ -105,7 +106,89 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
     }
   }
 
-  /// Eliminar contenedor (método específico para UI)
+  /// ✅ NUEVO: Limpiar campos específicos del contenedor
+  Future<bool> clearContenedorFields({
+    required int id,
+    bool clearPrecinto1 = false,
+    bool clearPrecinto2 = false,
+    bool clearZonaInspeccion = false,
+    bool clearFotoPrecinto1 = false,
+    bool clearFotoPrecinto2 = false,
+    bool clearFotoContenedorVacio = false,
+  }) async {
+    try {
+      final updatedContenedor = await service.clearContenedorFields(
+        id: id,
+        clearPrecinto1: clearPrecinto1,
+        clearPrecinto2: clearPrecinto2,
+        clearZonaInspeccion: clearZonaInspeccion,
+        clearFotoPrecinto1: clearFotoPrecinto1,
+        clearFotoPrecinto2: clearFotoPrecinto2,
+        clearFotoContenedorVacio: clearFotoContenedorVacio,
+      );
+
+      // Actualizar en la lista
+      final current = state.value ?? [];
+      final updatedList = current.map((contenedor) {
+        return contenedor.id == id ? updatedContenedor : contenedor;
+      }).toList();
+
+      state = AsyncValue.data(updatedList);
+      return true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// ✅ NUEVO: Actualizar contenedor con archivos y limpieza
+  Future<bool> updateContenedorWithFiles({
+    required int id,
+    String? nContenedor,
+    int? naveDescarga,
+    int? zonaInspeccion,
+    String? precinto1,
+    String? precinto2,
+    String? fotoContenedorPath,
+    String? fotoPrecinto1Path,
+    String? fotoPrecinto2Path,
+    String? fotoContenedorVacioPath,
+    bool removeFotoContenedor = false,
+    bool removeFotoPrecinto1 = false,
+    bool removeFotoPrecinto2 = false,
+    bool removeFotoContenedorVacio = false,
+  }) async {
+    try {
+      final updatedContenedor = await service.updateContenedorWithFiles(
+        id: id,
+        nContenedor: nContenedor,
+        naveDescarga: naveDescarga,
+        zonaInspeccion: zonaInspeccion,
+        precinto1: precinto1,
+        precinto2: precinto2,
+        fotoContenedorPath: fotoContenedorPath,
+        fotoPrecinto1Path: fotoPrecinto1Path,
+        fotoPrecinto2Path: fotoPrecinto2Path,
+        fotoContenedorVacioPath: fotoContenedorVacioPath,
+        removeFotoContenedor: removeFotoContenedor,
+        removeFotoPrecinto1: removeFotoPrecinto1,
+        removeFotoPrecinto2: removeFotoPrecinto2,
+        removeFotoContenedorVacio: removeFotoContenedorVacio,
+      );
+
+      // Actualizar en la lista
+      final current = state.value ?? [];
+      final updatedList = current.map((contenedor) {
+        return contenedor.id == id ? updatedContenedor : contenedor;
+      }).toList();
+
+      state = AsyncValue.data(updatedList);
+      return true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Eliminar contenedor
   Future<bool> deleteContenedor(int id) async {
     try {
       await service.delete(id);
@@ -121,7 +204,7 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
     }
   }
 
-  /// Obtener contenedor por ID (usar método base)
+  /// Obtener contenedor por ID
   @override
   Future<ContenedorModel?> getById(int id) async {
     try {
