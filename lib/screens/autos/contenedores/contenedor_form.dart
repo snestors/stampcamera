@@ -174,7 +174,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             ),
           ),
           if (_isLoading)
-            Container(
+            SizedBox(
               width: 20,
               height: 20,
               child: const CircularProgressIndicator(
