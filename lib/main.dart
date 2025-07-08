@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:camera/camera.dart';
+import 'package:stampcamera/providers/theme_provider.dart';
 import 'package:stampcamera/services/background_queue_service.dart';
 import 'package:stampcamera/services/update_service.dart'; // ✅ AGREGAR
 import 'package:stampcamera/theme/app_theme.dart';
@@ -38,11 +39,18 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
 
+    // ✅ Obtener el modo del tema desde el provider
+    final themeMode = ref.watch(materialThemeModeProvider);
+
     return MaterialApp.router(
-      title: 'AYG',
+      title: 'A&G Inspección Vehicular',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: appTheme,
+
+      // ✅ Usar los temas corporativos A&G desde AppTheme
+      theme: AppTheme.lightTheme, // Tema claro corporativo
+      darkTheme: AppTheme.darkTheme, // Tema oscuro corporativo
+      themeMode: themeMode, // Modo desde provider (light por defecto)
     );
   }
 }

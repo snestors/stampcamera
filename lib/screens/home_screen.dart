@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/widgets/connectivity_app_bar.dart';
+import 'package:stampcamera/widgets/theme_toggle_action.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
 
@@ -27,6 +28,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
+          //const ThemeToggleAction(), // Botón para cambiar tema
           Container(
             margin: const EdgeInsets.only(right: 8),
             child: IconButton(
