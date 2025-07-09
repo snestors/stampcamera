@@ -40,7 +40,6 @@ class QueueState {
 // ✅ OPTIMIZACIÓN: UN SOLO PROVIDER EN LUGAR DE MÚLTIPLES
 // ============================================================================
 
-/// Provider unificado que maneja TODO el estado de la cola
 final queueStateProvider =
     StateNotifierProvider<QueueStateNotifier, QueueState>((ref) {
       return QueueStateNotifier();

@@ -21,7 +21,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+        //backgroundColor: AppColors.backgroundLight,
         appBar: _buildAppBar(context, ref, detalleAsync),
         body: detalleAsync.when(
           loading: () => const Center(
@@ -54,7 +54,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
         vin,
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          fontSize: DesignTokens.fontSizeL,
+          fontSize: DesignTokens.fontSizeM,
         ),
       ),
       actions: [
@@ -92,7 +92,10 @@ class DetalleRegistroScreen extends ConsumerWidget {
         fontSize: DesignTokens.fontSizeXS * 0.7,
       ),
       tabs: [
-        const Tab(icon: Icon(Icons.info_outline, size: 16), text: 'General'),
+        const Tab(
+          icon: Icon(Icons.info_outline, size: DesignTokens.iconXL),
+          text: 'General',
+        ),
         Tab(
           child: _buildTabWithBadge(
             icon: Icons.history,
@@ -131,7 +134,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16),
+            Icon(icon, size: DesignTokens.iconXL, color: Colors.white),
             const SizedBox(height: 2),
             Text(text),
           ],
@@ -147,7 +150,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
               ),
               decoration: BoxDecoration(
                 color: isWarning ? AppColors.error : AppColors.secondary,
-                borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusRound),
                 border: Border.all(
                   color: Colors.white,
                   width: DesignTokens.borderWidthNormal,
@@ -161,7 +164,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
                 count.toString(),
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: DesignTokens.fontSizeXS * 0.5,
+                  fontSize: DesignTokens.fontSizeM * 0.5,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -231,7 +234,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
 
   Widget _buildScrollableTab({required Widget child, required WidgetRef ref}) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(DesignTokens.spaceS),
+      padding: EdgeInsets.all(DesignTokens.spaceM),
       physics: const AlwaysScrollableScrollPhysics(),
       child: child,
     );

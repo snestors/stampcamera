@@ -56,7 +56,7 @@ class DetalleRegistroCard extends StatelessWidget {
                 Text(
                   r.vin,
                   style: TextStyle(
-                    fontSize: DesignTokens.fontSizeL,
+                    fontSize: DesignTokens.fontSizeL * 0.9,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
                   ),

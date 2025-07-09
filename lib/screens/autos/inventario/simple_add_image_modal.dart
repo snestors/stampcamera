@@ -21,7 +21,7 @@ class SimpleAddImageModal extends ConsumerStatefulWidget {
 }
 
 class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void dispose() {

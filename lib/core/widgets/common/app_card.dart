@@ -6,18 +6,9 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/design_tokens.dart';
 
-enum AppCardType {
-  basic,
-  elevated,
-  outlined,
-  filled,
-}
+enum AppCardType { basic, elevated, outlined, filled }
 
-enum AppCardSize {
-  small,
-  medium,
-  large,
-}
+enum AppCardSize { small, medium, large }
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -204,10 +195,11 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = _getColors();
     final dimensions = _getDimensions();
-    final effectiveBorderRadius = borderRadius ?? BorderRadius.circular(dimensions.borderRadius);
+    final effectiveBorderRadius =
+        borderRadius ?? BorderRadius.circular(dimensions.borderRadius);
     final effectivePadding = padding ?? dimensions.padding;
     final effectiveMargin = margin ?? dimensions.margin;
-    
+
     final isInteractive = onTap != null || onLongPress != null;
     final effectiveOnTap = isDisabled ? null : onTap;
     final effectiveOnLongPress = isDisabled ? null : onLongPress;
@@ -219,7 +211,7 @@ class AppCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.backgroundColor,
         borderRadius: effectiveBorderRadius,
-        border: colors.borderColor != null 
+        border: colors.borderColor != null
             ? Border.all(
                 color: colors.borderColor!,
                 width: borderWidth ?? DesignTokens.borderWidthNormal,
@@ -234,8 +226,12 @@ class AppCard extends StatelessWidget {
                 onTap: effectiveOnTap,
                 onLongPress: effectiveOnLongPress,
                 borderRadius: effectiveBorderRadius,
-                splashColor: AppColors.primary.withValues(alpha: DesignTokens.opacityPressed),
-                highlightColor: AppColors.primary.withValues(alpha: DesignTokens.opacityFocused),
+                splashColor: AppColors.primary.withValues(
+                  alpha: DesignTokens.opacityPressed,
+                ),
+                highlightColor: AppColors.primary.withValues(
+                  alpha: DesignTokens.opacityFocused,
+                ),
                 child: _buildContent(effectivePadding),
               )
             : _buildContent(effectivePadding),
@@ -243,10 +239,7 @@ class AppCard extends StatelessWidget {
     );
 
     if (tooltip != null) {
-      card = Tooltip(
-        message: tooltip!,
-        child: card,
-      );
+      card = Tooltip(message: tooltip!, child: card);
     }
 
     if (semanticsLabel != null) {
@@ -270,7 +263,10 @@ class AppCard extends StatelessWidget {
     }
 
     // Título y subtítulo si existen
-    if (title != null || subtitle != null || leading != null || trailing != null) {
+    if (title != null ||
+        subtitle != null ||
+        leading != null ||
+        trailing != null) {
       children.add(_buildTitleSection());
     }
 
@@ -300,7 +296,10 @@ class AppCard extends StatelessWidget {
   }
 
   Widget _buildTitleSection() {
-    if (title == null && subtitle == null && leading == null && trailing == null) {
+    if (title == null &&
+        subtitle == null &&
+        leading == null &&
+        trailing == null) {
       return const SizedBox.shrink();
     }
 
@@ -321,7 +320,9 @@ class AppCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeM,
                     fontWeight: FontWeight.w600,
-                    color: isDisabled ? AppColors.textLight : AppColors.textPrimary,
+                    color: isDisabled
+                        ? AppColors.textLight
+                        : AppColors.textPrimary,
                   ),
                 ),
               if (subtitle != null) ...[
@@ -330,7 +331,9 @@ class AppCard extends StatelessWidget {
                   subtitle!,
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
-                    color: isDisabled ? AppColors.textLight : AppColors.textSecondary,
+                    color: isDisabled
+                        ? AppColors.textLight
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -352,9 +355,11 @@ class AppCard extends StatelessWidget {
 
     // Aplicar colores por estado
     if (isDisabled) {
-      effectiveBackgroundColor = disabledColor ?? AppColors.neutral.withValues(alpha: 0.1);
+      effectiveBackgroundColor =
+          disabledColor ?? AppColors.neutral.withValues(alpha: 0.1);
     } else if (isSelected) {
-      effectiveBackgroundColor = selectedColor ?? AppColors.primary.withValues(alpha: 0.1);
+      effectiveBackgroundColor =
+          selectedColor ?? AppColors.primary.withValues(alpha: 0.1);
       effectiveBorderColor = AppColors.primary;
     }
 

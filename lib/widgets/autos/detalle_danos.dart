@@ -60,7 +60,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
         ),
         SizedBox(width: DesignTokens.spaceXS),
-        
+
         // ✅ Botón agregar nuevo daño
         Container(
           decoration: BoxDecoration(
@@ -257,9 +257,9 @@ class DetalleDanos extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: VehicleHelpers
-                          .getCondicionColor(condicionTexto)
-                          .withValues(alpha: 0.1),
+                      color: VehicleHelpers.getCondicionColor(
+                        condicionTexto,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
@@ -380,11 +380,7 @@ class DetalleDanos extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DanoForm(
-        vin: vin,
-        danoId: dano.id,
-        // TODO: Agregar parámetros iniciales para edición
-      ),
+      builder: (context) => DanoForm(vin: vin, danoId: dano.id),
     );
   }
 
@@ -944,5 +940,4 @@ class DetalleDanos extends ConsumerWidget {
         dano.createAt != null ||
         dano.createBy != null;
   }
-
 }

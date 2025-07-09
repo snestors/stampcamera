@@ -115,11 +115,6 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
           _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
               child: optionsAsync.when(
                 data: (options) {
                   // Inicializar valores una sola vez cuando las opciones están disponibles
@@ -198,7 +193,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 20),
+          //const SizedBox(height: 20),
 
           // SECCIÓN 1: NAVE Y ZONA
           AppCard(
@@ -353,8 +348,9 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   onRemoveToggle: (remove) {
                     setState(() {
                       _removeFotoContenedor = remove;
-                      if (remove)
+                      if (remove) {
                         _fotoContenedorPath = null; // Limpiar nueva foto
+                      }
                     });
                   },
                   primaryColor: AppColors.secondary,
@@ -748,6 +744,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircularProgressIndicator(color: AppColors.primary),
           SizedBox(height: DesignTokens.spaceL),

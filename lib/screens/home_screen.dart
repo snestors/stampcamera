@@ -216,11 +216,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
         actions: [
           AppButton.ghost(
+            size: AppButtonSize.small,
             text: 'Cancelar',
             onPressed: () => Navigator.pop(context),
           ),
           AppButton.error(
             text: 'Cerrar Sesión',
+            size: AppButtonSize.small,
             onPressed: () {
               Navigator.pop(context);
               ref.read(authProvider.notifier).logout(ref);

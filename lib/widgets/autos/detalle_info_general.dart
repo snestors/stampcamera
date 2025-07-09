@@ -35,7 +35,7 @@ class DetalleInfoGeneral extends StatelessWidget {
   Widget _buildMainHeader() {
     return Material(
       type: MaterialType.transparency,
-      child: AppCard.outlined(
+      child: AppCard.elevated(
         child: Row(
           children: [
             // VIN principal
@@ -55,7 +55,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                   Text(
                     r.vin,
                     style: TextStyle(
-                      fontSize: DesignTokens.fontSizeRegular,
+                      fontSize: DesignTokens.fontSizeM,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
                     ),
@@ -137,7 +137,7 @@ class DetalleInfoGeneral extends StatelessWidget {
   // INFORMACIÓN DEL VEHÍCULO
   // ============================================================================
   Widget _buildVehicleInfo(BuildContext context) {
-    return AppCard.outlined(
+    return AppCard.elevated(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -198,7 +198,7 @@ class DetalleInfoGeneral extends StatelessWidget {
   // INFORMACIÓN DE LOGÍSTICA
   // ============================================================================
   Widget _buildLogisticsInfo() {
-    return AppCard.outlined(
+    return AppCard.elevated(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

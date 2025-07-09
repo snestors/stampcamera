@@ -17,12 +17,7 @@ enum AppButtonType {
   ghost,
 }
 
-enum AppButtonSize {
-  small,
-  medium,
-  large,
-  extraLarge,
-}
+enum AppButtonSize { small, medium, large, extraLarge }
 
 class AppButton extends StatelessWidget {
   final String text;
@@ -239,7 +234,8 @@ class AppButton extends StatelessWidget {
     final colors = _getColors();
     final dimensions = _getDimensions();
     final textStyle = _getTextStyle();
-    final borderRadius = customBorderRadius ?? BorderRadius.circular(dimensions.borderRadius);
+    final borderRadius =
+        customBorderRadius ?? BorderRadius.circular(dimensions.borderRadius);
     final padding = customPadding ?? dimensions.padding;
     final isButtonDisabled = isDisabled || isLoading;
     final effectiveOnPressed = isButtonDisabled ? null : onPressed;
@@ -255,15 +251,22 @@ class AppButton extends StatelessWidget {
         color: colors.backgroundColor,
         borderRadius: borderRadius,
         border: isOutlined || type == AppButtonType.ghost
-            ? Border.all(color: colors.borderColor, width: DesignTokens.borderWidthNormal)
+            ? Border.all(
+                color: colors.borderColor,
+                width: DesignTokens.borderWidthNormal,
+              )
             : null,
-        boxShadow: customShadow ?? (elevation != null ? [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: elevation!,
-            offset: Offset(0, elevation! / 2),
-          )
-        ] : null),
+        boxShadow:
+            customShadow ??
+            (elevation != null
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: elevation!,
+                      offset: Offset(0, elevation! / 2),
+                    ),
+                  ]
+                : null),
       ),
       child: Material(
         color: Colors.transparent,
@@ -273,12 +276,16 @@ class AppButton extends StatelessWidget {
                   if (hapticFeedback) {
                     // HapticFeedback.lightImpact();
                   }
-                  effectiveOnPressed!();
+                  effectiveOnPressed();
                 }
               : null,
           borderRadius: borderRadius,
-          splashColor: colors.textColor.withValues(alpha: DesignTokens.opacityPressed),
-          highlightColor: colors.textColor.withValues(alpha: DesignTokens.opacityFocused),
+          splashColor: colors.textColor.withValues(
+            alpha: DesignTokens.opacityPressed,
+          ),
+          highlightColor: colors.textColor.withValues(
+            alpha: DesignTokens.opacityFocused,
+          ),
           child: AnimatedContainer(
             duration: animationDuration ?? DesignTokens.animationButton,
             curve: DesignTokens.curveEaseInOut,
@@ -290,10 +297,7 @@ class AppButton extends StatelessWidget {
     );
 
     if (tooltip != null) {
-      button = Tooltip(
-        message: tooltip!,
-        child: button,
-      );
+      button = Tooltip(message: tooltip!, child: button);
     }
 
     if (semanticsLabel != null) {
@@ -308,7 +312,11 @@ class AppButton extends StatelessWidget {
     return button;
   }
 
-  Widget _buildContent(_ButtonColors colors, TextStyle textStyle, _ButtonDimensions dimensions) {
+  Widget _buildContent(
+    _ButtonColors colors,
+    TextStyle textStyle,
+    _ButtonDimensions dimensions,
+  ) {
     if (customChild != null) {
       return customChild!;
     }
@@ -374,7 +382,10 @@ class AppButton extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingIndicator(_ButtonColors colors, _ButtonDimensions dimensions) {
+  Widget _buildLoadingIndicator(
+    _ButtonColors colors,
+    _ButtonDimensions dimensions,
+  ) {
     return SizedBox(
       width: dimensions.iconSize,
       height: dimensions.iconSize,
@@ -451,9 +462,13 @@ class AppButton extends StatelessWidget {
 
     if (isDisabled) {
       return _ButtonColors(
-        backgroundColor: backgroundColor.withValues(alpha: DesignTokens.opacityDisabled),
+        backgroundColor: backgroundColor.withValues(
+          alpha: DesignTokens.opacityDisabled,
+        ),
         textColor: textColor.withValues(alpha: DesignTokens.opacityDisabled),
-        borderColor: borderColor.withValues(alpha: DesignTokens.opacityDisabled),
+        borderColor: borderColor.withValues(
+          alpha: DesignTokens.opacityDisabled,
+        ),
       );
     }
 
@@ -508,13 +523,25 @@ class AppButton extends StatelessWidget {
 
     switch (size) {
       case AppButtonSize.small:
-        return DesignTokens.getTextStyle('s', weight: DesignTokens.fontWeightSemiBold);
+        return DesignTokens.getTextStyle(
+          's',
+          weight: DesignTokens.fontWeightSemiBold,
+        );
       case AppButtonSize.medium:
-        return DesignTokens.getTextStyle('regular', weight: DesignTokens.fontWeightSemiBold);
+        return DesignTokens.getTextStyle(
+          'regular',
+          weight: DesignTokens.fontWeightSemiBold,
+        );
       case AppButtonSize.large:
-        return DesignTokens.getTextStyle('m', weight: DesignTokens.fontWeightSemiBold);
+        return DesignTokens.getTextStyle(
+          'm',
+          weight: DesignTokens.fontWeightSemiBold,
+        );
       case AppButtonSize.extraLarge:
-        return DesignTokens.getTextStyle('l', weight: DesignTokens.fontWeightSemiBold);
+        return DesignTokens.getTextStyle(
+          'l',
+          weight: DesignTokens.fontWeightSemiBold,
+        );
     }
   }
 }

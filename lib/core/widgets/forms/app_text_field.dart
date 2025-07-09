@@ -18,11 +18,7 @@ enum AppTextFieldType {
   url,
 }
 
-enum AppTextFieldSize {
-  small,
-  medium,
-  large,
-}
+enum AppTextFieldSize { small, medium, large }
 
 class AppTextField extends StatefulWidget {
   final String? label;
@@ -351,10 +347,11 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController(text: widget.initialValue);
+    _controller =
+        widget.controller ?? TextEditingController(text: widget.initialValue);
     _focusNode = widget.focusNode ?? FocusNode();
     _obscureText = widget.obscureText;
-    
+
     _focusNode.addListener(_onFocusChange);
   }
 
@@ -403,7 +400,9 @@ class _AppTextFieldState extends State<AppTextField> {
       textCapitalization: widget.textCapitalization,
       maxLength: widget.maxLength,
       maxLines: widget.type == AppTextFieldType.multiline ? widget.maxLines : 1,
-      minLines: widget.type == AppTextFieldType.multiline ? widget.minLines : null,
+      minLines: widget.type == AppTextFieldType.multiline
+          ? widget.minLines
+          : null,
       expands: widget.expands,
       textAlign: widget.textAlign,
       textAlignVertical: widget.textAlignVertical,
@@ -458,11 +457,13 @@ class _AppTextFieldState extends State<AppTextField> {
     return RichText(
       text: TextSpan(
         text: widget.label!,
-        style: widget.customLabelStyle ?? TextStyle(
-          fontSize: DesignTokens.fontSizeS,
-          fontWeight: DesignTokens.fontWeightMedium,
-          color: AppColors.textPrimary,
-        ),
+        style:
+            widget.customLabelStyle ??
+            TextStyle(
+              fontSize: DesignTokens.fontSizeS,
+              fontWeight: DesignTokens.fontWeightMedium,
+              color: AppColors.textPrimary,
+            ),
         children: [
           if (widget.isRequired)
             TextSpan(
@@ -489,18 +490,21 @@ class _AppTextFieldState extends State<AppTextField> {
 
   InputDecoration _getInputDecoration(_TextFieldDimensions dimensions) {
     final hasError = widget.errorText != null;
-    final borderColor = hasError 
-        ? AppColors.error 
-        : _hasFocus 
-            ? AppColors.primary 
-            : widget.customBorderColor ?? AppColors.textSecondary.withValues(alpha: 0.3);
+    final borderColor = hasError
+        ? AppColors.error
+        : _hasFocus
+        ? AppColors.primary
+        : widget.customBorderColor ??
+              AppColors.textSecondary.withValues(alpha: 0.3);
 
     return InputDecoration(
       hintText: widget.hint,
-      hintStyle: widget.customHintStyle ?? TextStyle(
-        fontSize: dimensions.fontSize,
-        color: AppColors.textSecondary,
-      ),
+      hintStyle:
+          widget.customHintStyle ??
+          TextStyle(
+            fontSize: dimensions.fontSize,
+            color: AppColors.textSecondary,
+          ),
       errorText: widget.errorText,
       errorStyle: TextStyle(
         fontSize: DesignTokens.fontSizeXS,
@@ -511,16 +515,18 @@ class _AppTextFieldState extends State<AppTextField> {
       prefix: widget.prefix,
       suffix: widget.suffix,
       filled: widget.filled,
-      fillColor: widget.customFillColor ?? (widget.isDisabled 
-          ? AppColors.backgroundLight 
-          : Colors.white),
+      fillColor:
+          widget.customFillColor ??
+          (widget.isDisabled ? AppColors.backgroundLight : Colors.white),
       contentPadding: widget.customPadding ?? dimensions.padding,
       border: _buildBorder(borderColor),
       enabledBorder: _buildBorder(borderColor),
       focusedBorder: _buildBorder(AppColors.primary),
       errorBorder: _buildBorder(AppColors.error),
       focusedErrorBorder: _buildBorder(AppColors.error),
-      disabledBorder: _buildBorder(AppColors.textSecondary.withValues(alpha: 0.2)),
+      disabledBorder: _buildBorder(
+        AppColors.textSecondary.withValues(alpha: 0.2),
+      ),
       counterText: widget.showCounter ? null : '',
       isDense: widget.dense,
     );
@@ -528,7 +534,7 @@ class _AppTextFieldState extends State<AppTextField> {
 
   Widget? _buildPrefixIcon() {
     if (widget.prefixIcon == null) return null;
-    
+
     return GestureDetector(
       onTap: widget.onPrefixIconTap,
       child: Icon(
@@ -540,7 +546,8 @@ class _AppTextFieldState extends State<AppTextField> {
   }
 
   Widget? _buildSuffixIcon() {
-    if (widget.canToggleObscureText && widget.type == AppTextFieldType.password) {
+    if (widget.canToggleObscureText &&
+        widget.type == AppTextFieldType.password) {
       return GestureDetector(
         onTap: _toggleObscureText,
         child: Icon(
@@ -550,9 +557,9 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
       );
     }
-    
+
     if (widget.suffixIcon == null) return null;
-    
+
     return GestureDetector(
       onTap: widget.onSuffixIconTap,
       child: Icon(
@@ -565,10 +572,14 @@ class _AppTextFieldState extends State<AppTextField> {
 
   OutlineInputBorder _buildBorder(Color color) {
     return OutlineInputBorder(
-      borderRadius: widget.customBorderRadius ?? BorderRadius.circular(DesignTokens.radiusInput),
+      borderRadius:
+          widget.customBorderRadius ??
+          BorderRadius.circular(DesignTokens.radiusInput),
       borderSide: BorderSide(
         color: color,
-        width: _hasFocus ? DesignTokens.borderWidthInputFocused : DesignTokens.borderWidthInput,
+        width: _hasFocus
+            ? DesignTokens.borderWidthInputFocused
+            : DesignTokens.borderWidthInput,
       ),
     );
   }
@@ -577,12 +588,14 @@ class _AppTextFieldState extends State<AppTextField> {
     if (widget.customTextStyle != null) {
       return widget.customTextStyle!;
     }
-    
+
     final dimensions = _getDimensions();
     return TextStyle(
       fontSize: dimensions.fontSize,
       fontWeight: DesignTokens.fontWeightRegular,
-      color: widget.isDisabled ? AppColors.textSecondary : AppColors.textPrimary,
+      color: widget.isDisabled
+          ? AppColors.textSecondary
+          : AppColors.textPrimary,
     );
   }
 
@@ -602,7 +615,6 @@ class _AppTextFieldState extends State<AppTextField> {
         return TextInputType.url;
       case AppTextFieldType.search:
       case AppTextFieldType.text:
-      default:
         return TextInputType.text;
     }
   }
@@ -611,7 +623,7 @@ class _AppTextFieldState extends State<AppTextField> {
     if (widget.inputFormatters != null) {
       return widget.inputFormatters;
     }
-    
+
     switch (widget.type) {
       case AppTextFieldType.number:
         return [FilteringTextInputFormatter.digitsOnly];
