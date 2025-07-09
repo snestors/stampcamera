@@ -51,13 +51,13 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
                   Icon(Icons.security, size: 64, color: Colors.white),
-                  SizedBox(height: 16),
+                  //SizedBox(height: 16),
                   Image.asset('assets/splash/branding.png', height: 120),
-                  SizedBox(height: 8),
+                  SizedBox(height: 1),
                   Text(
                     'Aplicación de Inspección Vehicular',
                     style: TextStyle(fontSize: 16, color: Colors.white70),
@@ -78,8 +78,8 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
 
             Expanded(
               child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -95,55 +95,65 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
                         color: Color(0xFF003B5C),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 2),
                     const Text(
                       'Por favor, lee y acepta los términos antes de continuar.',
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 6),
 
                     Expanded(
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _PolicySummarySection(
-                              title: '📱 Uso Exclusivo Profesional',
-                              content:
-                                  'Esta aplicación es para trabajadores, inspectores y clientes autorizados de A&G Ajustadores únicamente.',
-                            ),
-                            _PolicySummarySection(
-                              title: '📸 Fotografías Permitidas',
-                              content:
-                                  '• Solo mercaderías de clientes de A&G\n• Evidencias de inspección vehicular\n• Incidentes por mala praxis de proveedores',
-                            ),
-                            _PolicySummarySection(
-                              title: '🚫 Estrictamente Prohibido',
-                              content:
-                                  '• Fotografías personales\n• Instalaciones de terceros (APM, DPW, etc.)\n• Mercaderías de no-clientes\n• Uso fuera del ámbito profesional',
-                            ),
-                            _PolicySummarySection(
-                              title: '⚠️ Penalizaciones',
-                              content:
-                                  'El mal uso resultará en penalizaciones y suspensión del acceso a la aplicación.',
-                            ),
-                            _PolicySummarySection(
-                              title: '🔒 Seguridad',
-                              content:
-                                  'Todas las fotografías se almacenan en servidores seguros de A&G Ajustadores.',
-                            ),
-                            _PolicySummarySection(
-                              title: '📞 Contacto',
-                              content:
-                                  'A&G Ajustadores y Peritos de Seguro\nwww.aygajustadores.com',
-                            ),
-                          ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: BoxBorder.all(
+                            color: Colors.grey[200]!,
+                            width: 2,
+                          ),
+                        ),
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+
+                            children: [
+                              _PolicySummarySection(
+                                title: '📱 Uso Exclusivo Profesional',
+                                content:
+                                    'Esta aplicación es para trabajadores, inspectores y clientes autorizados de A&G Ajustadores únicamente.',
+                              ),
+                              _PolicySummarySection(
+                                title: '📸 Fotografías Permitidas',
+                                content:
+                                    '• Solo mercaderías de clientes de A&G\n• Evidencias de inspección vehicular\n• Incidentes por mala praxis de proveedores',
+                              ),
+                              _PolicySummarySection(
+                                title: '🚫 Estrictamente Prohibido',
+                                content:
+                                    '• Fotografías personales\n• Instalaciones de terceros (APM, DPW, etc.)\n• Mercaderías de no-clientes\n• Uso fuera del ámbito profesional',
+                              ),
+                              _PolicySummarySection(
+                                title: '⚠️ Penalizaciones',
+                                content:
+                                    'El mal uso resultará en penalizaciones y suspensión del acceso a la aplicación.',
+                              ),
+                              _PolicySummarySection(
+                                title: '🔒 Seguridad',
+                                content:
+                                    'Todas las fotografías se almacenan en servidores seguros de A&G Ajustadores.',
+                              ),
+                              _PolicySummarySection(
+                                title: '📞 Contacto',
+                                content:
+                                    'A&G Ajustadores y Peritos de Seguro\nwww.aygajustadores.com',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Checkbox(
@@ -160,7 +170,7 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
                         const Expanded(
                           child: Text(
                             'He leído y acepto la Política de Privacidad y me comprometo a usar la aplicación exclusivamente para fines profesionales autorizados.',
-                            style: TextStyle(fontSize: 12),
+                            style: TextStyle(fontSize: 10),
                           ),
                         ),
                       ],
@@ -179,7 +189,7 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
                         ),
                       ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
 
                     SizedBox(
                       width: double.infinity,

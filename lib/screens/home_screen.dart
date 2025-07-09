@@ -351,8 +351,8 @@ class _UserInfo extends StatelessWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: const Color(0xFF00B4D8),
-            borderRadius: BorderRadius.circular(25),
+            color: const Color.fromARGB(227, 13, 86, 128),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Center(
             child: Text(

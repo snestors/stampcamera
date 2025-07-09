@@ -80,7 +80,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         timestampFontSize: FontSize.large,
         locationFontSize: FontSize.large, // Posiciones fijas
       );
-      await processImageWithWatermark(path, config: config, autoGPS: true);
+      await processImageWithWatermark(path, config: config);
 
       await _loadImages();
 

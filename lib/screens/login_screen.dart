@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stampcamera/models/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../providers/biometric_provider.dart';
@@ -24,10 +25,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   String? _lastUsername;
   String? _lastPassword;
+  String _appVersion = '1.0.0';
 
   @override
   void initState() {
     super.initState();
+    _loadVersion();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -49,6 +52,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         );
 
     _animationController.forward();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _appVersion = info.version;
+    });
   }
 
   @override
@@ -94,26 +104,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                Expanded(flex: 3, child: _buildHeader()),
-                Expanded(
-                  flex: 4,
-                  child: _buildLoginForm(
-                    errorMessage,
-                    isLoading,
-                    biometricState,
-                  ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+            final availableHeight = constraints.maxHeight - keyboardHeight;
+
+            return SingleChildScrollView(
+              child: Container(
+                constraints: BoxConstraints(minHeight: availableHeight),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Espaciado superior flexible
+                    //SizedBox(height: availableHeight * 0.1),
+
+                    // Header del logo
+                    _buildHeader(),
+
+                    //SizedBox(height: availableHeight * 0.02),
+
+                    // Formulario
+                    _buildLoginForm(errorMessage, isLoading, biometricState),
+                    const SizedBox(height: 6),
+                    // Footer
+                    _buildFooter(),
+
+                    // Espaciado final mínimo
+                    const SizedBox(height: 20),
+                  ],
                 ),
-                Expanded(flex: 1, child: _buildFooter()),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -125,20 +148,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       child: SlideTransition(
         position: _slideAnimation,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Logo con diseño mejorado
             Hero(
               tag: 'app_logo',
               child: Container(
-                height: 120,
-                width: 120,
+                height: 100,
+                width: 250,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF003B5C).withOpacity(0.2),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: const Color(0xFF003B5C).withValues(alpha: 0.15),
+                      blurRadius: 30,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -151,21 +174,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            //const SizedBox(height: 5),
+
+            // Título mejorado
             Text(
               'Bienvenido',
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF1E293B),
                 letterSpacing: -0.5,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'Ingresa tus credenciales para continuar',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 15,
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w400,
               ),
@@ -187,152 +212,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       child: SlideTransition(
         position: _slideAnimation,
         child: Container(
+          width: double.infinity,
           constraints: const BoxConstraints(maxWidth: 400),
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 20,
-                offset: const Offset(0, 10),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Campo Usuario
-                TextFormField(
+                _buildInputField(
                   controller: _usernameCtrl,
-                  style: const TextStyle(fontSize: 16),
-                  decoration: const InputDecoration(
-                    labelText: 'Usuario',
-                    hintText: 'Ej: nfarinas',
-                    prefixIcon: Icon(
-                      Icons.person_outline,
-                      color: Color(0xFF003B5C),
-                    ),
-                    filled: true,
-                    fillColor: Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide(
-                        color: Color(0xFF003B5C),
-                        width: 2,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide(color: Colors.red),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                  ),
+                  label: 'Usuario',
+                  hint: 'Ej: nfarinas',
+                  icon: Icons.person_outline,
                   validator: (val) => val?.isEmpty ?? true ? 'Requerido' : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Campo Contraseña
-                TextFormField(
+                _buildInputField(
                   controller: _passwordCtrl,
-                  obscureText: _obscurePassword,
-                  style: const TextStyle(fontSize: 16),
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    prefixIcon: const Icon(
-                      Icons.lock_outline,
-                      color: Color(0xFF003B5C),
-                    ),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.grey[600],
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide(color: Colors.grey),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide(
-                        color: Color(0xFF003B5C),
-                        width: 2,
-                      ),
-                    ),
-                    errorBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                      borderSide: BorderSide(color: Colors.red),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                  ),
+                  label: 'Contraseña',
+                  icon: Icons.lock_outline,
+                  isPassword: true,
                   validator: (val) => val?.isEmpty ?? true ? 'Requerido' : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Mensaje de error
                 if (errorMessage != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          color: Colors.red[700],
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            errorMessage,
-                            style: TextStyle(
-                              color: Colors.red[700],
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  _buildErrorMessage(errorMessage),
+                  const SizedBox(height: 20),
                 ],
 
                 // Botón Login
@@ -340,7 +262,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                 // Sección Biométrica
                 if (biometricState.isEnabled) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
                   // Divider
                   Row(
@@ -356,7 +278,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       Expanded(child: Divider(color: Colors.grey[300])),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
                   // Botón Biométrico
                   _buildBiometricButton(biometricState),
@@ -369,17 +291,101 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    bool isPassword = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword ? _obscurePassword : false,
+      style: const TextStyle(fontSize: 16),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, color: const Color(0xFF003B5C), size: 22),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey[600],
+                  size: 22,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: const Color(0xFFF8FAFC),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFF003B5C), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 18,
+        ),
+      ),
+      validator: validator,
+    );
+  }
+
+  Widget _buildErrorMessage(String errorMessage) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red[700], size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              errorMessage,
+              style: TextStyle(
+                color: Colors.red[700],
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLoginButton(bool isLoading) {
     return Container(
-      height: 50,
+      height: 54,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(
           colors: [Color(0xFF003B5C), Color(0xFF002A42)],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF003B5C).withOpacity(0.3),
+            color: const Color(0xFF003B5C).withValues(alpha: 0.25),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -388,24 +394,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           onTap: isLoading ? null : _submit,
           child: Container(
             alignment: Alignment.center,
             child: isLoading
                 ? const SizedBox(
-                    height: 20,
-                    width: 20,
+                    height: 22,
+                    width: 22,
                     child: CircularProgressIndicator(
                       color: Colors.white,
-                      strokeWidth: 2,
+                      strokeWidth: 2.5,
                     ),
                   )
                 : const Text(
                     'Ingresar',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 17,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.5,
                     ),
@@ -418,40 +424,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Widget _buildBiometricButton(BiometricState biometricState) {
     return Container(
-      height: 50,
+      height: 54,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[300]!),
         color: Colors.white,
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           onTap: biometricState.isLoading ? null : _biometricLogin,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (biometricState.isLoading)
                 const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
               else
                 Icon(
                   Icons.fingerprint,
                   color: const Color(0xFF003B5C),
-                  size: 22,
+                  size: 24,
                 ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Text(
                 biometricState.isLoading
                     ? 'Autenticando...'
                     : 'Usar ${biometricState.biometricType}',
-                style: TextStyle(
-                  color: const Color(0xFF003B5C),
-                  fontSize: 15,
+                style: const TextStyle(
+                  color: Color(0xFF003B5C),
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -463,12 +469,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Widget _buildFooter() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
-      child: Text(
-        'Versión 1.0.0',
-        style: TextStyle(color: Colors.grey[500], fontSize: 12),
-      ),
+    return Text(
+      'Versión $_appVersion',
+      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+      textAlign: TextAlign.center,
     );
   }
 
@@ -509,7 +513,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (!success && mounted) {
       final biometricState = ref.read(biometricProvider);
       if (biometricState.error != null) {
-        // ✅ Mensaje específico si la biometría fue deshabilitada
         final isCredentialError =
             biometricState.error!.contains('Credenciales incorrectas') ||
             biometricState.error!.contains('Error en login');
@@ -575,7 +578,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ),
         );
 
-        // ✅ Refrescar el provider para actualizar el estado del botón
         if (isCredentialError) {
           Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted) {
@@ -596,6 +598,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
             Icon(Icons.fingerprint, color: const Color(0xFF003B5C)),
@@ -672,7 +675,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF003B5C).withOpacity(0.1),
+                        color: const Color(0xFF003B5C).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -718,10 +721,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.05),
+                              color: Colors.green.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.green.withOpacity(0.2),
+                                color: Colors.green.withValues(alpha: 0.2),
                               ),
                             ),
                             child: Row(
