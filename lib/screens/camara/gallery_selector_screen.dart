@@ -97,7 +97,7 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
     }
   }
 
-  _onImageTap(File image, int index) {
+  void _onImageTap(File image, int index) {
     if (isSelecting) {
       _toggleSelection(image);
     } else {

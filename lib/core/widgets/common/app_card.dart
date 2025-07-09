@@ -89,7 +89,6 @@ class AppCard extends StatelessWidget {
   }) {
     return AppCard(
       key: key,
-      child: child,
       type: AppCardType.basic,
       size: size,
       padding: padding,
@@ -99,6 +98,7 @@ class AppCard extends StatelessWidget {
       subtitle: subtitle,
       leading: leading,
       trailing: trailing,
+      child: child,
     );
   }
 
@@ -117,7 +117,6 @@ class AppCard extends StatelessWidget {
   }) {
     return AppCard(
       key: key,
-      child: child,
       type: AppCardType.elevated,
       size: size,
       padding: padding,
@@ -128,6 +127,7 @@ class AppCard extends StatelessWidget {
       subtitle: subtitle,
       leading: leading,
       trailing: trailing,
+      child: child,
     );
   }
 
@@ -147,7 +147,6 @@ class AppCard extends StatelessWidget {
   }) {
     return AppCard(
       key: key,
-      child: child,
       type: AppCardType.outlined,
       size: size,
       padding: padding,
@@ -159,6 +158,7 @@ class AppCard extends StatelessWidget {
       subtitle: subtitle,
       leading: leading,
       trailing: trailing,
+      child: child,
     );
   }
 
@@ -177,7 +177,6 @@ class AppCard extends StatelessWidget {
   }) {
     return AppCard(
       key: key,
-      child: child,
       type: AppCardType.filled,
       size: size,
       padding: padding,
@@ -188,6 +187,7 @@ class AppCard extends StatelessWidget {
       subtitle: subtitle,
       leading: leading,
       trailing: trailing,
+      child: child,
     );
   }
 
@@ -388,7 +388,7 @@ class AppCard extends StatelessWidget {
     }
 
     return _CardColors(
-      backgroundColor: effectiveBackgroundColor!,
+      backgroundColor: effectiveBackgroundColor,
       borderColor: effectiveBorderColor,
       boxShadow: effectiveBoxShadow,
     );

@@ -29,7 +29,7 @@ class BotonMarcarSalida extends ConsumerWidget {
           : () async {
               final ok = await ref
                   .read(asistenciasDiariasProvider(fechaSeleccionada).notifier)
-                  .marcarSalida(ref);
+                  .marcarSalida(ref); // 🏁 Ya pasa ref para limpieza de providers
               if (!ok && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Error al marcar salida')),

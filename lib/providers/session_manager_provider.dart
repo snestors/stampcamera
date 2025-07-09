@@ -4,6 +4,10 @@ import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/providers/autos/registro_general_provider.dart';
+import 'package:stampcamera/providers/autos/inventario_provider.dart';
+import 'package:stampcamera/providers/autos/contenedor_provider.dart';
+// import 'package:stampcamera/providers/camera_provider.dart';       // Comentado hasta verificar
+// import 'package:stampcamera/providers/biometric_provider.dart';    // Comentado hasta verificar
 
 class SessionManager extends StateNotifier<String?> {
   SessionManager() : super(null);
@@ -31,9 +35,42 @@ class SessionManager extends StateNotifier<String?> {
     _clearAllUserRelatedProviders(ref);
   }
 
+  /// Limpiar providers al iniciar asistencia
+  void onStartAssistance(WidgetRef ref) {
+    // Limpiar solo providers relacionados con asistencia y trabajo diario
+    ref.invalidate(asistenciasDiariasProvider);
+    ref.invalidate(asistenciaFormOptionsProvider);
+    ref.invalidate(asistenciaStatusProvider);
+    
+    // Limpiar datos de trabajo del día anterior
+    ref.invalidate(registroGeneralProvider);
+    ref.invalidate(contenedorProvider);
+    // NOTA: queueStateProvider se mantiene entre inicios de asistencia
+    
+    // Mantener configuraciones y caché de opciones
+    // NO limpiar: *OptionsProvider, configuraciones de usuario, etc.
+  }
+
+  /// Limpiar providers al cerrar asistencia
+  void onEndAssistance(WidgetRef ref) {
+    // Limpiar todos los datos de trabajo
+    ref.invalidate(asistenciasDiariasProvider);
+    ref.invalidate(asistenciaStatusProvider);
+    ref.invalidate(registroGeneralProvider);
+    ref.invalidate(contenedorProvider);
+    // NOTA: queueStateProvider se mantiene entre cierres de asistencia
+    
+    // Limpiar datos temporales pero mantener configuraciones
+    // ref.invalidate(cameraProvider);        // Comentado hasta verificar si existe
+    
+    // Mantener: opciones, configuraciones, autenticación
+  }
+
   /// 🔥 CLAVE: Invalida TODOS los providers relacionados con datos de usuario
   void _clearAllUserRelatedProviders(WidgetRef ref) {
-    // Invalidar providers de asistencia
+    // ============================================================================
+    // PROVIDERS DE ASISTENCIA
+    // ============================================================================
     ref.invalidate(asistenciasDiariasProvider);
     ref.invalidate(asistenciaFormOptionsProvider);
     ref.invalidate(asistenciaStatusProvider);
@@ -43,17 +80,48 @@ class SessionManager extends StateNotifier<String?> {
     // ============================================================================
     ref.invalidate(registroGeneralProvider);
     ref.invalidate(registroVinOptionsProvider);
+    
     // ============================================================================
-    // PROVIDERS DE AUTOS - PEDETEO (TODOS LOS RELACIONADOS)
+    // PROVIDERS DE AUTOS - PEDETEO
     // ============================================================================
     ref.invalidate(pedeteoOptionsProvider);
     ref.invalidate(pedeteoStateProvider);
 
-    // Invalidar otros providers de datos de usuario
-    // ref.invalidate(perfilUsuarioProvider);
-    // ref.invalidate(configuracionUsuarioProvider);
-    // ref.invalidate(historialProvider);
-    // ... agregar todos los providers que contengan datos específicos del usuario
+    // ============================================================================
+    // PROVIDERS DE AUTOS - REGISTRO DETALLE
+    // ============================================================================
+    ref.invalidate(detalleRegistroProvider);
+    ref.invalidate(fotosOptionsProvider);
+    ref.invalidate(danosOptionsProvider);
+
+    // ============================================================================
+    // PROVIDERS DE AUTOS - INVENTARIO
+    // ============================================================================
+    ref.invalidate(inventarioBaseProvider);
+    ref.invalidate(inventarioDetalleProvider);
+    ref.invalidate(inventarioImageProvider);
+    ref.invalidate(inventarioFormProvider);
+    ref.invalidate(inventarioStatsProvider);
+
+    // ============================================================================
+    // PROVIDERS DE AUTOS - CONTENEDORES
+    // ============================================================================
+    ref.invalidate(contenedorProvider);
+    ref.invalidate(contenedorDetalleProvider);
+    ref.invalidate(contenedorOptionsProvider);
+
+    // ============================================================================
+    // PROVIDERS DE AUTOS - QUEUE STATE
+    // ============================================================================
+    // NOTA: queueStateProvider NO se invalida - mantiene estado entre sesiones
+    // ref.invalidate(queueStateProvider);
+
+    // ============================================================================
+    // PROVIDERS GENERALES CON DATOS DE USUARIO
+    // ============================================================================
+    // ref.invalidate(cameraProvider);        // Comentado hasta verificar si existe
+    // ref.invalidate(biometricProvider);     // Comentado hasta verificar si existe
+    // NOTA: NO limpiar themeProvider ni connectivityProvider (configuraciones globales)
 
     // Limpiar cualquier caché local
     _clearLocalCaches();

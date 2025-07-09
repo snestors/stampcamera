@@ -100,12 +100,12 @@ class _RegistroAsistenciaScreenState
                 label: const Text("Marcar entrada"),
               ),
               loading: () => null,
-              error: (_, __) => null,
+              error: (error, stackTrace) => null,
             );
           }
         },
         loading: () => null,
-        error: (_, __) => null,
+        error: (error, stackTrace) => null,
       ),
     );
   }

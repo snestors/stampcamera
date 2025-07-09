@@ -9,7 +9,7 @@ class VehicleHelpers {
   // ============================================================================
   // MARCAS DE VEHÍCULOS
   // ============================================================================
-  
+
   /// Marcas que son principalmente camiones/comerciales
   static const Set<String> truckBrands = {
     'HINO',
@@ -35,7 +35,7 @@ class VehicleHelpers {
     'PETERBILT',
     'FREIGHTLINER',
   };
-  
+
   /// Marcas de autos de lujo
   static const Set<String> luxuryBrands = {
     'BMW',
@@ -56,7 +56,7 @@ class VehicleHelpers {
     'ROLLS-ROYCE',
     'ASTON MARTIN',
   };
-  
+
   /// Marcas populares
   static const Set<String> popularBrands = {
     'TOYOTA',
@@ -79,15 +79,15 @@ class VehicleHelpers {
     'DODGE',
     'CHRYSLER',
   };
-  
+
   // ============================================================================
   // ICONOS DE VEHÍCULOS
   // ============================================================================
-  
+
   /// Obtener icono según marca de vehículo
   static IconData getVehicleIcon(String marca) {
     final upperMarca = marca.toUpperCase();
-    
+
     if (truckBrands.contains(upperMarca)) {
       return Icons.local_shipping; // Camión
     } else if (luxuryBrands.contains(upperMarca)) {
@@ -98,7 +98,7 @@ class VehicleHelpers {
       return Icons.directions_car; // Auto por defecto
     }
   }
-  
+
   /// Obtener icono específico por tipo de vehículo
   static IconData getVehicleTypeIcon(String tipo) {
     switch (tipo.toUpperCase()) {
@@ -132,11 +132,11 @@ class VehicleHelpers {
         return Icons.directions_car;
     }
   }
-  
+
   // ============================================================================
   // COLORES POR CONDICIÓN
   // ============================================================================
-  
+
   /// Obtener color según condición de inspección
   static Color getCondicionColor(String condicion) {
     switch (condicion.toUpperCase()) {
@@ -156,7 +156,7 @@ class VehicleHelpers {
         return AppColors.textSecondary;
     }
   }
-  
+
   /// Obtener color según estado de vehículo
   static Color getStatusColor(String status) {
     switch (status.toUpperCase()) {
@@ -179,11 +179,11 @@ class VehicleHelpers {
         return AppColors.textSecondary;
     }
   }
-  
+
   // ============================================================================
   // ICONOS POR CONDICIÓN
   // ============================================================================
-  
+
   /// Obtener icono según condición de inspección
   static IconData getCondicionIcon(String condicion) {
     switch (condicion.toUpperCase()) {
@@ -203,7 +203,7 @@ class VehicleHelpers {
         return Icons.location_on;
     }
   }
-  
+
   /// Obtener icono según estado de vehículo
   static IconData getStatusIcon(String status) {
     switch (status.toUpperCase()) {
@@ -226,11 +226,11 @@ class VehicleHelpers {
         return Icons.help_outline;
     }
   }
-  
+
   // ============================================================================
   // COLORES DE SEVERIDAD
   // ============================================================================
-  
+
   /// Obtener color según severidad de daño
   static Color getSeveridadColor(String severidad) {
     if (severidad.toUpperCase().contains('LEVE')) {
@@ -242,7 +242,7 @@ class VehicleHelpers {
     }
     return AppColors.textSecondary;
   }
-  
+
   /// Obtener icono según severidad de daño
   static IconData getSeveridadIcon(String severidad) {
     if (severidad.toUpperCase().contains('LEVE')) {
@@ -254,55 +254,55 @@ class VehicleHelpers {
     }
     return Icons.info_outline;
   }
-  
+
   // ============================================================================
   // HELPERS DE VALIDACIÓN
   // ============================================================================
-  
+
   /// Verificar si es una marca de camión
   static bool isTruckBrand(String marca) {
     return truckBrands.contains(marca.toUpperCase());
   }
-  
+
   /// Verificar si es una marca de lujo
   static bool isLuxuryBrand(String marca) {
     return luxuryBrands.contains(marca.toUpperCase());
   }
-  
+
   /// Verificar si es una marca popular
   static bool isPopularBrand(String marca) {
     return popularBrands.contains(marca.toUpperCase());
   }
-  
+
   /// Verificar si la condición requiere contenedor
   static bool requiresContainer(String condicion) {
     return condicion.toUpperCase() == 'ALMACEN';
   }
-  
+
   /// Verificar si la condición requiere bloque
   static bool requiresBlock(String condicion) {
     return condicion.toUpperCase() == 'PUERTO';
   }
-  
+
   /// Verificar si la condición permite fila y posición
   static bool allowsRowAndPosition(String condicion) {
     return condicion.toUpperCase() == 'PUERTO';
   }
-  
+
   /// Verificar si la condición es válida para puerto
   static bool isValidForPort(String condicion) {
     return ['PUERTO', 'RECEPCION', 'ARRIBO'].contains(condicion.toUpperCase());
   }
-  
+
   /// Verificar si la condición es válida para almacén
   static bool isValidForWarehouse(String condicion) {
     return ['ALMACEN', 'PDI', 'PRE-PDI'].contains(condicion.toUpperCase());
   }
-  
+
   // ============================================================================
   // HELPERS DE FORMATEO
   // ============================================================================
-  
+
   /// Formatear condición para display
   static String formatCondicion(String condicion) {
     switch (condicion.toUpperCase()) {
@@ -311,12 +311,18 @@ class VehicleHelpers {
       case 'PDI':
         return 'PDI';
       default:
-        return condicion.toLowerCase().split(' ').map((word) {
-          return word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : word;
-        }).join(' ');
+        return condicion
+            .toLowerCase()
+            .split(' ')
+            .map((word) {
+              return word.isNotEmpty
+                  ? word[0].toUpperCase() + word.substring(1)
+                  : word;
+            })
+            .join(' ');
     }
   }
-  
+
   /// Formatear severidad para display
   static String formatSeveridad(String severidad) {
     if (severidad.toUpperCase().contains('LEVE')) {
@@ -328,7 +334,7 @@ class VehicleHelpers {
     }
     return severidad;
   }
-  
+
   /// Formatear marca para display
   static String formatBrand(String marca) {
     // Casos especiales
@@ -356,68 +362,74 @@ class VehicleHelpers {
       case 'ASTON MARTIN':
         return 'Aston Martin';
       default:
-        return marca.toLowerCase().split(' ').map((word) {
-          return word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : word;
-        }).join(' ');
+        return marca
+            .toLowerCase()
+            .split(' ')
+            .map((word) {
+              return word.isNotEmpty
+                  ? word[0].toUpperCase() + word.substring(1)
+                  : word;
+            })
+            .join(' ');
     }
   }
-  
+
   // ============================================================================
   // HELPERS DE AGRUPACIÓN
   // ============================================================================
-  
+
   /// Agrupar vehículos por condición
   static Map<String, List<T>> groupByCondicion<T>(
     List<T> vehicles,
     String Function(T) getCondicion,
   ) {
     final Map<String, List<T>> groups = {};
-    
+
     for (final vehicle in vehicles) {
       final condicion = getCondicion(vehicle);
       groups[condicion] ??= [];
       groups[condicion]!.add(vehicle);
     }
-    
+
     return groups;
   }
-  
+
   /// Agrupar vehículos por marca
   static Map<String, List<T>> groupByBrand<T>(
     List<T> vehicles,
     String Function(T) getBrand,
   ) {
     final Map<String, List<T>> groups = {};
-    
+
     for (final vehicle in vehicles) {
       final brand = getBrand(vehicle);
       groups[brand] ??= [];
       groups[brand]!.add(vehicle);
     }
-    
+
     return groups;
   }
-  
+
   /// Agrupar vehículos por severidad
   static Map<String, List<T>> groupBySeverity<T>(
     List<T> damages,
     String Function(T) getSeverity,
   ) {
     final Map<String, List<T>> groups = {};
-    
+
     for (final damage in damages) {
       final severity = getSeverity(damage);
       groups[severity] ??= [];
       groups[severity]!.add(damage);
     }
-    
+
     return groups;
   }
-  
+
   // ============================================================================
   // HELPERS DE ORDENAMIENTO
   // ============================================================================
-  
+
   /// Ordenar condiciones por prioridad
   static List<String> sortConditionsByPriority(List<String> condiciones) {
     const priority = {
@@ -428,67 +440,63 @@ class VehicleHelpers {
       'PRE-PDI': 5,
       'PDI': 6,
     };
-    
+
     condiciones.sort((a, b) {
       final priorityA = priority[a.toUpperCase()] ?? 999;
       final priorityB = priority[b.toUpperCase()] ?? 999;
       return priorityA.compareTo(priorityB);
     });
-    
+
     return condiciones;
   }
-  
+
   /// Ordenar severidades por prioridad
   static List<String> sortSeveritiesByPriority(List<String> severidades) {
-    const priority = {
-      'GRAVE': 1,
-      'MEDIO': 2,
-      'LEVE': 3,
-    };
-    
+    const priority = {'GRAVE': 1, 'MEDIO': 2, 'LEVE': 3};
+
     severidades.sort((a, b) {
       final priorityA = priority[a.toUpperCase()] ?? 999;
       final priorityB = priority[b.toUpperCase()] ?? 999;
       return priorityA.compareTo(priorityB);
     });
-    
+
     return severidades;
   }
-  
+
   // ============================================================================
   // HELPERS DE CONTEO
   // ============================================================================
-  
+
   /// Contar vehículos por condición
   static Map<String, int> countByCondicion<T>(
     List<T> vehicles,
     String Function(T) getCondicion,
   ) {
     final Map<String, int> counts = {};
-    
+
     for (final vehicle in vehicles) {
       final condicion = getCondicion(vehicle);
       counts[condicion] = (counts[condicion] ?? 0) + 1;
     }
-    
+
     return counts;
   }
-  
+
   /// Contar daños por severidad
   static Map<String, int> countBySeverity<T>(
     List<T> damages,
     String Function(T) getSeverity,
   ) {
     final Map<String, int> counts = {};
-    
+
     for (final damage in damages) {
       final severity = getSeverity(damage);
       counts[severity] = (counts[severity] ?? 0) + 1;
     }
-    
+
     return counts;
   }
-  
+
   /// Obtener estadísticas de vehículos
   static Map<String, dynamic> getVehicleStats<T>(
     List<T> vehicles,

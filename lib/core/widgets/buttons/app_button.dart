@@ -46,10 +46,8 @@ class AppButton extends StatelessWidget {
   final Duration? animationDuration;
   final String? tooltip;
   final String? semanticsLabel;
-  final Key? key;
-
   const AppButton({
-    this.key,
+    super.key,
     required this.text,
     this.onPressed,
     this.type = AppButtonType.primary,
@@ -76,7 +74,7 @@ class AppButton extends StatelessWidget {
     this.animationDuration,
     this.tooltip,
     this.semanticsLabel,
-  }) : super(key: key);
+  });
 
   // Factory constructors para tipos específicos
   factory AppButton.primary({

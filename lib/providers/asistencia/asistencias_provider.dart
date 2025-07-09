@@ -48,9 +48,15 @@ class AsistenciasNotifier
     required int turnoId,
     int? naveId,
     String? comentario,
+    WidgetRef? wref,
   }) async {
     ref.read(asistenciaStatusProvider.notifier).state =
         AsistenciaStatus.entradaLoading;
+
+    // 🚀 Limpiar providers al iniciar asistencia
+    if (wref != null) {
+      ref.read(sessionManagerProvider.notifier).onStartAssistance(wref);
+    }
 
     try {
       final gps = await _getGps();
@@ -84,8 +90,10 @@ class AsistenciasNotifier
   Future<bool> marcarSalida([WidgetRef? wref]) async {
     ref.read(asistenciaStatusProvider.notifier).state =
         AsistenciaStatus.salidaLoading;
+    
+    // 🏁 Limpiar providers al terminar asistencia
     if (wref != null) {
-      ref.read(sessionManagerProvider.notifier).clearSession(wref);
+      ref.read(sessionManagerProvider.notifier).onEndAssistance(wref);
     }
     try {
       final gps = await _getGps();

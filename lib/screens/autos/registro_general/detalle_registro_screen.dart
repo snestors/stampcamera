@@ -69,7 +69,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
           color: AppColors.primary,
           child: detalleAsync.when(
             loading: () => _buildLoadingTabs(),
-            error: (_, __) => _buildErrorTabs(),
+            error: (error, stackTrace) => _buildErrorTabs(),
             data: (registro) => _buildTabs(registro),
           ),
         ),
@@ -77,7 +77,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTabs(registro) {
+  Widget _buildTabs(DetalleRegistroModel registro) {
     return TabBar(
       indicatorColor: Colors.white,
       indicatorWeight: 3,

@@ -129,6 +129,7 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
                           comentario: comentarioCtrl.text.trim().isEmpty
                               ? null
                               : comentarioCtrl.text.trim(),
+                          wref: ref, // 🚀 Pasar ref para limpieza de providers
                         );
 
                         if (ok && context.mounted) {

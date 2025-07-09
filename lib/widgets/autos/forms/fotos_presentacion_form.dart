@@ -545,7 +545,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       child: optionsAsync.when(
         data: (options) => _buildActionButtonsContent(options),
         loading: () => _buildDisabledButtons(),
-        error: (_, __) => _buildDisabledButtons(),
+        error: (error, stackTrace) => _buildDisabledButtons(),
       ),
     );
   }

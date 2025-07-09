@@ -48,7 +48,7 @@ class DetalleDanos extends ConsumerWidget {
   // ============================================================================
   // HEADER DE SECCIÓN CON BOTÓN AGREGAR (IGUAL QUE FOTOS)
   // ============================================================================
-  Widget _buildSectionHeader(context) {
+  Widget _buildSectionHeader(BuildContext context) {
     return Row(
       children: [
         Expanded(

@@ -84,7 +84,9 @@ class AppErrorState extends StatelessWidget {
     return AppErrorState(
       type: AppErrorType.network,
       title: title,
-      message: message ?? 'No se pudo conectar al servidor. Verifica tu conexión a internet.',
+      message:
+          message ??
+          'No se pudo conectar al servidor. Verifica tu conexión a internet.',
       onRetry: onRetry,
       retryText: retryText,
       compact: compact,
@@ -103,7 +105,8 @@ class AppErrorState extends StatelessWidget {
     return AppErrorState(
       type: AppErrorType.server,
       title: title,
-      message: message ?? 'Error del servidor. Intenta nuevamente en unos minutos.',
+      message:
+          message ?? 'Error del servidor. Intenta nuevamente en unos minutos.',
       onRetry: onRetry,
       retryText: retryText,
       compact: compact,
@@ -160,7 +163,8 @@ class AppErrorState extends StatelessWidget {
     return AppErrorState(
       type: AppErrorType.timeout,
       title: title,
-      message: message ?? 'La operación tardó demasiado tiempo. Intenta nuevamente.',
+      message:
+          message ?? 'La operación tardó demasiado tiempo. Intenta nuevamente.',
       onRetry: onRetry,
       retryText: retryText,
       compact: compact,
@@ -179,7 +183,9 @@ class AppErrorState extends StatelessWidget {
     return AppErrorState(
       type: AppErrorType.validation,
       title: title,
-      message: message ?? 'Hay errores en los datos ingresados. Verifica e intenta nuevamente.',
+      message:
+          message ??
+          'Hay errores en los datos ingresados. Verifica e intenta nuevamente.',
       onRetry: onRetry,
       retryText: retryText,
       compact: compact,
@@ -210,23 +216,22 @@ class AppErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     final errorConfig = _getErrorConfig();
     final spacing = compact ? DesignTokens.spaceM : DesignTokens.spaceL;
-    final effectivePadding = padding ?? (compact 
-        ? const EdgeInsets.all(DesignTokens.spaceL) 
-        : const EdgeInsets.all(DesignTokens.spaceXXL));
+    final effectivePadding =
+        padding ??
+        (compact
+            ? const EdgeInsets.all(DesignTokens.spaceL)
+            : const EdgeInsets.all(DesignTokens.spaceXXL));
 
     Widget errorWidget = Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (showIcon) ...[
-          _buildIcon(errorConfig),
-          SizedBox(height: spacing),
-        ],
-        if (title != null || errorConfig.title != null) ...[
+        if (showIcon) ...[_buildIcon(errorConfig), SizedBox(height: spacing)],
+        if (title != null || errorConfig.title.isNotEmpty) ...[
           _buildTitle(errorConfig),
           SizedBox(height: compact ? DesignTokens.spaceS : DesignTokens.spaceM),
         ],
-        if (message != null || errorConfig.message != null) ...[
+        if (message != null || errorConfig.message.isNotEmpty) ...[
           _buildMessage(errorConfig),
           if (showDetails && details != null) ...[
             SizedBox(height: DesignTokens.spaceS),
@@ -249,22 +254,17 @@ class AppErrorState extends StatelessWidget {
         padding: effectivePadding,
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: borderRadius ?? BorderRadius.circular(DesignTokens.radiusCard),
+          borderRadius:
+              borderRadius ?? BorderRadius.circular(DesignTokens.radiusCard),
         ),
         child: errorWidget,
       );
     } else {
-      errorWidget = Padding(
-        padding: effectivePadding,
-        child: errorWidget,
-      );
+      errorWidget = Padding(padding: effectivePadding, child: errorWidget);
     }
 
     if (semanticsLabel != null) {
-      errorWidget = Semantics(
-        label: semanticsLabel!,
-        child: errorWidget,
-      );
+      errorWidget = Semantics(label: semanticsLabel!, child: errorWidget);
     }
 
     return errorWidget;
@@ -273,31 +273,40 @@ class AppErrorState extends StatelessWidget {
   Widget _buildIcon(_ErrorConfig config) {
     return Icon(
       icon ?? config.icon,
-      size: iconSize ?? (compact ? DesignTokens.iconXXL : DesignTokens.iconHuge),
+      size:
+          iconSize ?? (compact ? DesignTokens.iconXXL : DesignTokens.iconHuge),
       color: iconColor ?? config.color,
     );
   }
 
   Widget _buildTitle(_ErrorConfig config) {
     return Text(
-      title ?? config.title!,
-      style: titleStyle ?? TextStyle(
-        fontSize: compact ? DesignTokens.fontSizeL : DesignTokens.fontSizeXL,
-        fontWeight: DesignTokens.fontWeightBold,
-        color: AppColors.textPrimary,
-      ),
+      title ?? config.title,
+      style:
+          titleStyle ??
+          TextStyle(
+            fontSize: compact
+                ? DesignTokens.fontSizeL
+                : DesignTokens.fontSizeXL,
+            fontWeight: DesignTokens.fontWeightBold,
+            color: AppColors.textPrimary,
+          ),
       textAlign: TextAlign.center,
     );
   }
 
   Widget _buildMessage(_ErrorConfig config) {
     return Text(
-      message ?? config.message!,
-      style: messageStyle ?? TextStyle(
-        fontSize: compact ? DesignTokens.fontSizeS : DesignTokens.fontSizeRegular,
-        color: AppColors.textSecondary,
-        height: DesignTokens.lineHeightRelaxed,
-      ),
+      message ?? config.message,
+      style:
+          messageStyle ??
+          TextStyle(
+            fontSize: compact
+                ? DesignTokens.fontSizeS
+                : DesignTokens.fontSizeRegular,
+            color: AppColors.textSecondary,
+            height: DesignTokens.lineHeightRelaxed,
+          ),
       textAlign: TextAlign.center,
     );
   }
@@ -316,11 +325,13 @@ class AppErrorState extends StatelessWidget {
           padding: const EdgeInsets.all(DesignTokens.spaceM),
           child: Text(
             details!,
-            style: detailsStyle ?? TextStyle(
-              fontSize: DesignTokens.fontSizeXS,
-              color: AppColors.textSecondary,
-              fontFamily: 'monospace',
-            ),
+            style:
+                detailsStyle ??
+                TextStyle(
+                  fontSize: DesignTokens.fontSizeXS,
+                  color: AppColors.textSecondary,
+                  fontFamily: 'monospace',
+                ),
           ),
         ),
       ],
@@ -396,7 +407,8 @@ class AppErrorState extends StatelessWidget {
           icon: Icons.cloud_off,
           color: AppColors.error,
           title: 'Error del servidor',
-          message: 'Estamos experimentando problemas técnicos. Intenta más tarde.',
+          message:
+              'Estamos experimentando problemas técnicos. Intenta más tarde.',
           retryText: 'Reintentar',
           retryIcon: Icons.refresh,
         );
@@ -464,7 +476,6 @@ class AppErrorState extends StatelessWidget {
           retryIcon: Icons.refresh,
         );
       case AppErrorType.unknown:
-      default:
         return _ErrorConfig(
           icon: Icons.error_outline,
           color: AppColors.error,
@@ -526,13 +537,15 @@ class AppInlineError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveColor = color ?? AppColors.error;
-    final effectiveBackgroundColor = backgroundColor ?? effectiveColor.withValues(alpha: 0.1);
+    final effectiveBackgroundColor =
+        backgroundColor ?? effectiveColor.withValues(alpha: 0.1);
 
     return Container(
       padding: padding ?? const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: effectiveBackgroundColor,
-        borderRadius: borderRadius ?? BorderRadius.circular(DesignTokens.radiusM),
+        borderRadius:
+            borderRadius ?? BorderRadius.circular(DesignTokens.radiusM),
         border: Border.all(
           color: effectiveColor.withValues(alpha: 0.3),
           width: DesignTokens.borderWidthThin,
@@ -598,17 +611,20 @@ class AppFormError extends StatelessWidget {
     return AnimatedContainer(
       duration: animationDuration,
       height: show ? null : 0,
-      child: show ? Padding(
-        padding: padding ?? const EdgeInsets.only(top: DesignTokens.spaceXS),
-        child: Text(
-          message,
-          style: TextStyle(
-            fontSize: DesignTokens.fontSizeXS,
-            color: AppColors.error,
-            fontWeight: DesignTokens.fontWeightMedium,
-          ),
-        ),
-      ) : null,
+      child: show
+          ? Padding(
+              padding:
+                  padding ?? const EdgeInsets.only(top: DesignTokens.spaceXS),
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontSize: DesignTokens.fontSizeXS,
+                  color: AppColors.error,
+                  fontWeight: DesignTokens.fontWeightMedium,
+                ),
+              ),
+            )
+          : null,
     );
   }
 }
@@ -620,39 +636,39 @@ class AppFormError extends StatelessWidget {
 mixin ErrorHandlerMixin {
   AppErrorType getErrorTypeFromException(dynamic error) {
     final errorString = error.toString().toLowerCase();
-    
-    if (errorString.contains('network') || 
-        errorString.contains('connection') || 
+
+    if (errorString.contains('network') ||
+        errorString.contains('connection') ||
         errorString.contains('socket')) {
       return AppErrorType.network;
     }
-    
+
     if (errorString.contains('timeout')) {
       return AppErrorType.timeout;
     }
-    
+
     if (errorString.contains('401') || errorString.contains('unauthorized')) {
       return AppErrorType.unauthorized;
     }
-    
+
     if (errorString.contains('403') || errorString.contains('forbidden')) {
       return AppErrorType.forbidden;
     }
-    
+
     if (errorString.contains('404') || errorString.contains('not found')) {
       return AppErrorType.notFound;
     }
-    
+
     if (errorString.contains('500') || errorString.contains('server')) {
       return AppErrorType.server;
     }
-    
+
     return AppErrorType.unknown;
   }
-  
+
   String getErrorMessage(dynamic error) {
     final errorType = getErrorTypeFromException(error);
-    
+
     switch (errorType) {
       case AppErrorType.network:
         return 'Problema de conexión. Verifica tu internet.';

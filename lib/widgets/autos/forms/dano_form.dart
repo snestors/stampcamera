@@ -975,7 +975,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         );
       } else {
         success = await notifier.createDanoWithImages(
-          registroVinId: _selectedRegistroVinId,
+          registroVinId: _selectedRegistroVinId!,
           tipoDano: _selectedTipoDano!,
           areaDano: _selectedAreaDano!,
           severidad: _selectedSeveridad!,

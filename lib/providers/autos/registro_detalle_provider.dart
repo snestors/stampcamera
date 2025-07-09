@@ -50,20 +50,13 @@ class DetalleRegistroNotifier
     // ✅ Disparar las cargas sin await - no bloquean
 
     // Cargar opciones de registro VIN
-    ref.read(registroVinOptionsProvider.future).catchError((error) {
-      debugPrint('⚠️ Error cargando registroVinOptions (silencioso): $error');
-      // No hacer nada, las opciones se cargarán cuando se necesiten
-    });
+    ref.read(registroVinOptionsProvider.future);
 
     // Cargar opciones de fotos
-    ref.read(fotosOptionsProvider.future).catchError((error) {
-      debugPrint('⚠️ Error cargando fotosOptions (silencioso): $error');
-    });
+    ref.read(fotosOptionsProvider.future);
 
     // Cargar opciones de daños
-    ref.read(danosOptionsProvider.future).catchError((error) {
-      debugPrint('⚠️ Error cargando danosOptions (silencioso): $error');
-    });
+    ref.read(danosOptionsProvider.future);
 
     debugPrint('🚀 Opciones iniciadas en background para VIN: $arg');
   }
@@ -533,7 +526,7 @@ class DetalleRegistroNotifier
 
   /// Crear daño con imágenes
   Future<bool> createDanoWithImages({
-    required registroVinId,
+    required int registroVinId,
     required int tipoDano,
     required int areaDano,
     required int severidad,

@@ -79,12 +79,10 @@ class AppTextField extends StatefulWidget {
   final ScrollController? scrollController;
   final EdgeInsets scrollPadding;
   final String? restorationId;
-  final bool scribbleEnabled;
+  final bool stylusHandwritingEnabled;
   final bool enableIMEPersonalizedLearning;
-  final Key? key;
-
   const AppTextField({
-    this.key,
+    super.key,
     this.label,
     this.hint,
     this.helperText,
@@ -143,9 +141,9 @@ class AppTextField extends StatefulWidget {
     this.scrollController,
     this.scrollPadding = const EdgeInsets.all(20.0),
     this.restorationId,
-    this.scribbleEnabled = true,
+    this.stylusHandwritingEnabled = true,
     this.enableIMEPersonalizedLearning = true,
-  }) : super(key: key);
+  });
 
   // Factory constructors para tipos específicos
   factory AppTextField.email({
@@ -424,7 +422,7 @@ class _AppTextFieldState extends State<AppTextField> {
       scrollController: widget.scrollController,
       scrollPadding: widget.scrollPadding,
       restorationId: widget.restorationId,
-      scribbleEnabled: widget.scribbleEnabled,
+      stylusHandwritingEnabled: widget.stylusHandwritingEnabled,
       enableIMEPersonalizedLearning: widget.enableIMEPersonalizedLearning,
     );
 
