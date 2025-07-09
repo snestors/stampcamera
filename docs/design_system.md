@@ -219,6 +219,75 @@ AppErrorState(
 )
 ```
 
+### AppCard
+
+Tarjeta estándar para contenedores de contenido.
+
+```dart
+// Tarjeta básica
+AppCard(
+  child: Column(
+    children: [
+      Text('Contenido'),
+    ],
+  ),
+)
+
+// Tarjeta elevada
+AppCard.elevated(
+  title: 'Título de la tarjeta',
+  subtitle: 'Subtítulo opcional',
+  leading: Icon(Icons.info),
+  trailing: Icon(Icons.arrow_forward),
+  child: Text('Contenido principal'),
+  onTap: () => _onCardTap(),
+)
+
+// Tarjeta con borde
+AppCard.outlined(
+  title: 'Tarjeta con borde',
+  borderColor: AppColors.primary,
+  child: Text('Contenido'),
+)
+
+// Tarjeta rellena
+AppCard.filled(
+  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+  child: Text('Contenido'),
+)
+```
+
+**Variantes disponibles:**
+- `basic` - Tarjeta simple sin elevación
+- `elevated` - Tarjeta con sombra (por defecto)
+- `outlined` - Tarjeta con borde
+- `filled` - Tarjeta con color de fondo
+
+**Tamaños disponibles:**
+- `small` - Padding 12px, margin 4px
+- `medium` - Padding 16px, margin 8px (por defecto)
+- `large` - Padding 20px, margin 12px
+
+**Estados:**
+- `isSelected` - Estado seleccionado
+- `isDisabled` - Estado deshabilitado
+- `onTap` - Interactividad opcional
+
+### AppInfoCard
+
+Tarjeta especializada para mostrar información.
+
+```dart
+AppInfoCard(
+  title: 'Título principal',
+  subtitle: 'Subtítulo',
+  description: 'Descripción detallada',
+  icon: Icons.info,
+  iconColor: AppColors.primary,
+  onTap: () => _showDetails(),
+)
+```
+
 ## 🛠️ Helpers
 
 ### FormValidators
@@ -476,22 +545,181 @@ if (DesignTokens.isMobile(context)) {
 }
 ```
 
+## 🔄 Actualizaciones Recientes
+
+### v1.1.0 - Julio 2025
+
+#### ✅ **Correcciones implementadas:**
+- **Métodos deprecados**: Todos los `withOpacity()` actualizados a `withValues(alpha: value)`
+- **BuildContext async**: Agregadas protecciones `context.mounted` en operaciones async
+- **Constantes**: `neutral_semantic` → `neutralSemantic` (lowerCamelCase)
+- **Login migrado**: `login_screen.dart` completamente migrado al sistema de diseño
+
+#### 🚀 **Pantallas migradas:**
+- ✅ `login_screen.dart` - Completamente migrado con todos los componentes del sistema
+
+#### 🛠️ **Componentes utilizados:**
+- `AppTextField` y `AppTextField.password`
+- `AppButton.primary` y `AppButton.secondary`
+- `AppInlineError` para mensajes de error
+- `AppColors.*` para toda la paleta de colores
+- `DesignTokens.*` para espaciado y tipografía
+
 ## 🎯 Próximos Pasos
 
-1. **Migrar pantallas restantes** al nuevo sistema
-2. **Crear más componentes** específicos (AppCard, AppModal, etc.)
-3. **Implementar modo oscuro** completo
-4. **Agregar más validadores** específicos del negocio
-5. **Crear herramientas de desarrollo** (Storybook, etc.)
+### 📋 **Migración de Pantallas (Prioridad Alta)**
+
+1. **Pantallas de Autos** (`/screens/autos/`)
+   - `autos_screen.dart` - Pantalla principal
+   - `inventario_screen.dart` - Lista de inventario
+   - `pedeteo_screen.dart` - Registro de vehículos
+   - `detalle_registro_screen.dart` - Detalles de registro
+
+2. **Pantallas de Contenedores** (`/screens/autos/contenedores/`)
+   - `contenedores_tab.dart` - Tab de contenedores
+   - `contenedor_form.dart` - Formulario de contenedor
+
+3. **Pantallas de Inventario** (`/screens/autos/inventario/`)
+   - `inventario_detalle_screen.dart` - Detalles de inventario
+   - `inventario_detalle_nave_screen.dart` - Detalles por nave
+
+4. **Pantallas Generales**
+   - `home_screen.dart` - Pantalla principal
+   - `splash_screen.dart` - Pantalla de carga
+   - `registro_asistencia_screen.dart` - Registro de asistencia
+
+### 🧩 **Componentes Faltantes (Prioridad Media)**
+
+1. ✅ **AppCard** - Para contenedores de contenido *(Implementado)*
+   ```dart
+   AppCard.elevated(
+     title: 'Título',
+     child: Column(...),
+     onTap: () {},
+   )
+   ```
+
+2. **AppModal** - Para diálogos y modales
+   ```dart
+   AppModal.alert(
+     title: 'Título',
+     content: 'Contenido',
+     actions: [...]
+   )
+   ```
+
+3. **AppDropdown** - Para selectores
+   ```dart
+   AppDropdown<String>(
+     items: items,
+     onChanged: (value) {},
+     label: 'Seleccionar',
+   )
+   ```
+
+4. **AppChip** - Para etiquetas y filtros
+   ```dart
+   AppChip(
+     label: 'Etiqueta',
+     onPressed: () {},
+     color: AppColors.primary,
+   )
+   ```
+
+### 🎨 **Mejoras del Sistema (Prioridad Baja)**
+
+1. **Modo oscuro completo** - Implementar tema oscuro
+2. **Más validadores** - Agregar validadores específicos del negocio
+3. **Animaciones** - Transiciones consistentes
+4. **Storybook** - Documentación interactiva de componentes
+
+## 📋 Instrucciones para Migrar Pantallas
+
+### 1. **Preparación**
+```dart
+// Agregar import del sistema de diseño
+import 'package:stampcamera/core/core.dart';
+```
+
+### 2. **Colores**
+```dart
+// ❌ Antes
+Container(color: Color(0xFF003B5C))
+
+// ✅ Después  
+Container(color: AppColors.primary)
+```
+
+### 3. **Componentes**
+```dart
+// ❌ Antes
+TextFormField(...)
+
+// ✅ Después
+AppTextField(
+  label: 'Campo',
+  validator: FormValidators.validateRequired,
+)
+```
+
+### 4. **Espaciado y Tipografía**
+```dart
+// ❌ Antes
+EdgeInsets.all(16.0)
+TextStyle(fontSize: 24)
+
+// ✅ Después
+EdgeInsets.all(DesignTokens.spaceL)
+TextStyle(fontSize: DesignTokens.fontSizeXL)
+```
+
+### 5. **Errores y Estados**
+```dart
+// ❌ Antes
+Text('Error', style: TextStyle(color: Colors.red))
+
+// ✅ Después
+AppInlineError(
+  message: 'Error',
+  dismissible: true,
+)
+```
+
+### 6. **Métodos Deprecados**
+```dart
+// ❌ Antes
+color.withOpacity(0.5)
+
+// ✅ Después
+color.withValues(alpha: 0.5)
+```
+
+### 7. **BuildContext en Async**
+```dart
+// ❌ Antes
+Future<void> method() async {
+  await something();
+  ScaffoldMessenger.of(context).showSnackBar(...);
+}
+
+// ✅ Después
+Future<void> method() async {
+  await something();
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(...);
+  }
+}
+```
 
 ## 📞 Soporte
 
 Para dudas o mejoras al sistema de diseño:
 - Revisar este documento
-- Consultar ejemplos en `login_screen_refactored.dart`
+- Consultar ejemplos en `login_screen.dart` (migrado)
 - Verificar implementaciones en `/core/widgets/`
+- Seguir las instrucciones de migración arriba
 
 ---
 
-**Versión del Sistema:** 1.0.0  
+**Versión del Sistema:** 1.1.0  
 **Última Actualización:** 09/07/2025

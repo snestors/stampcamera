@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_info_general.dart';
@@ -7,7 +8,6 @@ import 'package:stampcamera/widgets/autos/detalle_registros_vin.dart';
 import 'package:stampcamera/widgets/autos/detalle_fotos_presentacion.dart';
 import 'package:stampcamera/widgets/autos/detalle_danos.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
 
 class DetalleRegistroScreen extends ConsumerWidget {
   final String vin;
@@ -24,7 +24,9 @@ class DetalleRegistroScreen extends ConsumerWidget {
         backgroundColor: AppColors.backgroundLight,
         appBar: _buildAppBar(context, ref, detalleAsync),
         body: detalleAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
           error: (err, _) =>
               ConnectionErrorScreen(onRetry: () => _refreshData(context, ref)),
           data: (registro) => _buildTabContent(registro, ref),
@@ -50,7 +52,10 @@ class DetalleRegistroScreen extends ConsumerWidget {
       ),
       title: Text(
         vin,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: DesignTokens.fontSizeL,
+        ),
       ),
       actions: [
         IconButton(
@@ -78,10 +83,13 @@ class DetalleRegistroScreen extends ConsumerWidget {
       indicatorWeight: 3,
       labelColor: Colors.white,
       unselectedLabelColor: Colors.white70,
-      labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-      unselectedLabelStyle: const TextStyle(
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: DesignTokens.fontSizeXS * 0.7,
+      ),
+      unselectedLabelStyle: TextStyle(
         fontWeight: FontWeight.w400,
-        fontSize: 11,
+        fontSize: DesignTokens.fontSizeXS * 0.7,
       ),
       tabs: [
         const Tab(icon: Icon(Icons.info_outline, size: 16), text: 'General'),
@@ -133,20 +141,27 @@ class DetalleRegistroScreen extends ConsumerWidget {
             right: -8,
             top: -2,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-              decoration: BoxDecoration(
-                color: isWarning
-                    ? AppColors.error
-                    : AppColors.secondary,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white, width: 1),
+              padding: EdgeInsets.symmetric(
+                horizontal: DesignTokens.spaceXS,
+                vertical: DesignTokens.spaceXXS,
               ),
-              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              decoration: BoxDecoration(
+                color: isWarning ? AppColors.error : AppColors.secondary,
+                borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                border: Border.all(
+                  color: Colors.white,
+                  width: DesignTokens.borderWidthNormal,
+                ),
+              ),
+              constraints: BoxConstraints(
+                minWidth: DesignTokens.iconM,
+                minHeight: DesignTokens.iconM,
+              ),
               child: Text(
                 count.toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: DesignTokens.fontSizeXS * 0.5,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -216,7 +231,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
 
   Widget _buildScrollableTab({required Widget child, required WidgetRef ref}) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(DesignTokens.spaceS),
       physics: const AlwaysScrollableScrollPhysics(),
       child: child,
     );
@@ -230,16 +245,18 @@ class DetalleRegistroScreen extends ConsumerWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Icon(Icons.refresh, color: Colors.white, size: 18),
-            SizedBox(width: 8),
-            Text('Actualizando datos...'),
+            Icon(Icons.refresh, color: Colors.white, size: DesignTokens.iconM),
+            SizedBox(width: DesignTokens.spaceS),
+            const Text('Actualizando datos...'),
           ],
         ),
         backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+        ),
         duration: const Duration(seconds: 2),
       ),
     );

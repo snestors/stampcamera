@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
 import 'package:stampcamera/screens/autos/contenedores/contenedor_form.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
+import 'package:stampcamera/core/core.dart';
 
 class ContenedoresTab extends ConsumerStatefulWidget {
   const ContenedoresTab({super.key});
@@ -51,7 +51,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         children: [
           // Header con búsqueda
           Container(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
+            padding: const EdgeInsets.all(DesignTokens.spaceL),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -88,7 +88,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXL),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
         border: Border.all(
           color: AppColors.secondary.withValues(alpha: 0.2),
           width: 1,
@@ -104,7 +104,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
           prefixIcon: Icon(
             Icons.search,
             color: AppColors.secondary,
-            size: AppDimensions.iconL,
+            size: DesignTokens.iconL,
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -118,14 +118,14 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
               ? Container(
                   width: 20,
                   height: 20,
-                  margin: const EdgeInsets.all(AppDimensions.paddingM),
+                  margin: const EdgeInsets.all(DesignTokens.spaceM),
                   child: const CircularProgressIndicator(strokeWidth: 2),
                 )
               : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingL,
-            vertical: AppDimensions.paddingM,
+            horizontal: DesignTokens.spaceL,
+            vertical: DesignTokens.spaceM,
           ),
         ),
       ),
@@ -162,7 +162,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
       color: AppColors.secondary,
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        padding: const EdgeInsets.all(DesignTokens.spaceL),
         itemCount: contenedores.length + (notifier.isLoadingMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == contenedores.length) {
@@ -171,7 +171,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
 
           final contenedor = contenedores[index];
           return Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+            padding: const EdgeInsets.only(bottom: DesignTokens.spaceM),
             child: _buildContenedorCard(contenedor),
           );
         },
@@ -181,7 +181,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
 
   Widget _buildLoadMoreIndicator() {
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      padding: const EdgeInsets.all(DesignTokens.spaceL),
       alignment: Alignment.center,
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -194,7 +194,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
               color: AppColors.secondary,
             ),
           ),
-          SizedBox(width: AppDimensions.paddingM),
+          SizedBox(width: DesignTokens.spaceM),
           Text(
             'Cargando más contenedores...',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
@@ -213,18 +213,18 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingS),
+                padding: const EdgeInsets.all(DesignTokens.spaceS),
                 decoration: BoxDecoration(
                   color: AppColors.secondary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                 ),
                 child: Icon(
                   Icons.inventory_2,
                   color: AppColors.secondary,
-                  size: AppDimensions.iconL,
+                  size: DesignTokens.iconL,
                 ),
               ),
-              const SizedBox(width: AppDimensions.paddingM),
+              const SizedBox(width: DesignTokens.spaceM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,7 +281,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
             ],
           ),
 
-          const SizedBox(height: AppDimensions.paddingM),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // Información del contenedor
           if (contenedor.zonaInspeccion != null) ...[
@@ -291,7 +291,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
               value: contenedor.zonaInspeccion!.value,
               color: AppColors.info,
             ),
-            const SizedBox(height: AppDimensions.paddingS),
+            const SizedBox(height: DesignTokens.spaceS),
           ],
 
           // Precintos
@@ -310,7 +310,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                 ],
                 if (contenedor.precinto1 != null &&
                     contenedor.precinto2 != null)
-                  const SizedBox(width: AppDimensions.paddingM),
+                  const SizedBox(width: DesignTokens.spaceM),
                 if (contenedor.precinto2 != null) ...[
                   Expanded(
                     child: AppInfoRow(
@@ -323,7 +323,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                 ],
               ],
             ),
-            const SizedBox(height: AppDimensions.paddingS),
+            const SizedBox(height: DesignTokens.spaceS),
           ],
 
           // Fotos disponibles
@@ -335,7 +335,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                 contenedor.imagenThumbnailUrl,
                 contenedor.fotoContenedorUrl,
               ),
-              const SizedBox(width: AppDimensions.paddingS),
+              const SizedBox(width: DesignTokens.spaceS),
               _buildPhotoIndicator(
                 'Precinto 1',
                 contenedor.hasPrecinto1Photo,
@@ -343,7 +343,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                 contenedor.fotoPrecinto1Url,
               ),
               if (contenedor.hasPrecinto2Photo) ...[
-                const SizedBox(width: AppDimensions.paddingS),
+                const SizedBox(width: DesignTokens.spaceS),
                 _buildPhotoIndicator(
                   'Precinto 2',
                   contenedor.hasPrecinto2Photo,
@@ -352,7 +352,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                 ),
               ],
               if (contenedor.hasContenedorVacioPhoto) ...[
-                const SizedBox(width: AppDimensions.paddingS),
+                const SizedBox(width: DesignTokens.spaceS),
                 _buildPhotoIndicator(
                   'Vacío',
                   contenedor.hasContenedorVacioPhoto,
@@ -363,14 +363,14 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
             ],
           ),
 
-          const SizedBox(height: AppDimensions.paddingS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // Footer con fecha y usuario
           Row(
             children: [
               Icon(
                 Icons.access_time,
-                size: AppDimensions.iconS,
+                size: DesignTokens.iconS,
                 color: AppColors.textLight,
               ),
               const SizedBox(width: 4),
@@ -381,10 +381,10 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                   color: AppColors.textLight,
                 ),
               ),
-              const SizedBox(width: AppDimensions.paddingM),
+              const SizedBox(width: DesignTokens.spaceM),
               Icon(
                 Icons.person,
-                size: AppDimensions.iconS,
+                size: DesignTokens.iconS,
                 color: AppColors.textLight,
               ),
               const SizedBox(width: 4),
@@ -418,7 +418,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         height: 40,
         decoration: BoxDecoration(
           color: AppColors.textLight.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           border: Border.all(
             color: AppColors.textLight.withValues(alpha: 0.3),
             width: 1,
@@ -426,7 +426,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         ),
         child: Icon(
           Icons.camera_alt_outlined,
-          size: AppDimensions.iconL,
+          size: DesignTokens.iconL,
           color: AppColors.textLight,
         ),
       );
@@ -438,14 +438,14 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           border: Border.all(
             color: AppColors.success.withValues(alpha: 0.5),
             width: 2,
           ),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS - 1),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusS - 1),
           child: Image.network(
             thumbnailUrl,
             fit: BoxFit.cover,
@@ -475,7 +475,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                 color: AppColors.error.withValues(alpha: 0.1),
                 child: Icon(
                   Icons.error_outline,
-                  size: AppDimensions.iconL,
+                  size: DesignTokens.iconL,
                   color: AppColors.error,
                 ),
               );
@@ -502,12 +502,12 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
             children: [
               // Header del modal
               Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                padding: const EdgeInsets.all(DesignTokens.spaceL),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(AppDimensions.radiusXL),
-                    topRight: Radius.circular(AppDimensions.radiusXL),
+                    topLeft: Radius.circular(DesignTokens.radiusXL),
+                    topRight: Radius.circular(DesignTokens.radiusXL),
                   ),
                 ),
                 child: Row(
@@ -515,9 +515,9 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                     Icon(
                       Icons.camera_alt,
                       color: AppColors.secondary,
-                      size: AppDimensions.iconL,
+                      size: DesignTokens.iconL,
                     ),
-                    const SizedBox(width: AppDimensions.paddingS),
+                    const SizedBox(width: DesignTokens.spaceS),
                     Expanded(
                       child: Text(
                         'Foto: $title',
@@ -544,14 +544,14 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                   decoration: const BoxDecoration(
                     color: Colors.black,
                     borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(AppDimensions.radiusXL),
-                      bottomRight: Radius.circular(AppDimensions.radiusXL),
+                      bottomLeft: Radius.circular(DesignTokens.radiusXL),
+                      bottomRight: Radius.circular(DesignTokens.radiusXL),
                     ),
                   ),
                   child: ClipRRect(
                     borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(AppDimensions.radiusXL),
-                      bottomRight: Radius.circular(AppDimensions.radiusXL),
+                      bottomLeft: Radius.circular(DesignTokens.radiusXL),
+                      bottomRight: Radius.circular(DesignTokens.radiusXL),
                     ),
                     child: InteractiveViewer(
                       child: Image.network(
@@ -578,7 +578,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                                         : null,
                                   ),
                                   const SizedBox(
-                                    height: AppDimensions.paddingM,
+                                    height: DesignTokens.spaceM,
                                   ),
                                   const Text(
                                     'Cargando imagen...',
@@ -602,7 +602,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                                     size: 48,
                                   ),
                                   const SizedBox(
-                                    height: AppDimensions.paddingM,
+                                    height: DesignTokens.spaceM,
                                   ),
                                   const Text(
                                     'Error al cargar imagen',
@@ -631,7 +631,7 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(color: AppColors.secondary),
-          SizedBox(height: AppDimensions.paddingL),
+          SizedBox(height: DesignTokens.spaceL),
           Text(
             'Cargando contenedores...',
             style: TextStyle(color: AppColors.textSecondary),

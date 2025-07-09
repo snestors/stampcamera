@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/screens/autos/contenedores/contenedores_tab.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_screen.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
 import 'package:stampcamera/widgets/pedeteo/queue_badget.dart';
 import 'registro_general/registro_screen.dart';
-
-// Importa tus archivos de tema
 
 class AutosScreen extends StatefulWidget {
   const AutosScreen({super.key});
@@ -46,13 +44,16 @@ class _AutosScreenState extends State<AutosScreen> {
         elevation: 0,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        title: const Text(
+        title: Text(
           'Autos',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: DesignTokens.fontSizeL,
+          ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: EdgeInsets.only(right: DesignTokens.spaceL),
             child: QueueBadge(),
           ),
         ],
@@ -106,34 +107,34 @@ class _AutosScreenState extends State<AutosScreen> {
           unselectedItemColor: AppColors.textSecondary,
 
           // Estilo de labels
-          selectedLabelStyle: const TextStyle(
+          selectedLabelStyle: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 10,
+            fontSize: DesignTokens.fontSizeXS * 0.8,
           ),
-          unselectedLabelStyle: const TextStyle(
+          unselectedLabelStyle: TextStyle(
             fontWeight: FontWeight.w500,
-            fontSize: 9,
+            fontSize: DesignTokens.fontSizeXS * 0.75,
           ),
 
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.edit_note),
-              activeIcon: Icon(Icons.edit_note, size: 26),
+              icon: const Icon(Icons.edit_note),
+              activeIcon: Icon(Icons.edit_note, size: DesignTokens.iconL),
               label: 'REGISTRO',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.pending_actions_outlined),
-              activeIcon: Icon(Icons.pending_actions, size: 26),
+              icon: const Icon(Icons.pending_actions_outlined),
+              activeIcon: Icon(Icons.pending_actions, size: DesignTokens.iconL),
               label: 'PEDETEO',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.inventory_2_outlined),
-              activeIcon: Icon(Icons.inventory_2, size: 26),
+              icon: const Icon(Icons.inventory_2_outlined),
+              activeIcon: Icon(Icons.inventory_2, size: DesignTokens.iconL),
               label: 'CONTENEDORES',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.assessment_outlined),
-              activeIcon: Icon(Icons.assessment, size: 26),
+              icon: const Icon(Icons.assessment_outlined),
+              activeIcon: Icon(Icons.assessment, size: DesignTokens.iconL),
               label: 'INVENTARIOS',
             ),
           ],

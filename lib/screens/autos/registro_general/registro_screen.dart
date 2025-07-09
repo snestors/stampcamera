@@ -3,9 +3,10 @@
 // ============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/providers/autos/registro_general_provider.dart';
-import 'package:go_router/go_router.dart';
 import 'package:stampcamera/widgets/autos/card_detalle_registro_vin.dart';
 import 'package:stampcamera/widgets/vin_scanner_screen.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
@@ -103,13 +104,9 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
   ) {
     return registrosAsync.when(
       loading: () => const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Cargando registros...', style: TextStyle(color: Colors.grey)),
-          ],
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
 
@@ -137,13 +134,13 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.all(8),
+        padding: EdgeInsets.all(DesignTokens.spaceS),
         itemCount: registros.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < registros.length) {
             final registro = registros[index];
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
               child: GestureDetector(
                 onTap: () => _navigateToDetail(registro.vin),
                 child: DetalleRegistroCard(registro: registro),
@@ -152,22 +149,19 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
           }
 
           return Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
             child: Column(
               children: [
                 if (notifier.isLoadingMore) ...[
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Cargando más resultados...',
-                    style: TextStyle(color: Colors.grey),
+                  AppLoadingState.circular(
+                    message: 'Cargando más resultados...',
                   ),
                 ] else ...[
-                  TextButton.icon(
+                  AppButton.ghost(
+                    text: 'Cargar más',
+                    icon: Icons.expand_more,
                     onPressed: () => notifier.loadMore(),
-                    icon: const Icon(Icons.expand_more),
-                    label: const Text('Cargar más'),
                   ),
                 ],
               ],
@@ -207,19 +201,19 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
           ),
           const SizedBox(height: 24),
           if (isSearching) ...[
-            ElevatedButton.icon(
+            AppButton.secondary(
+              text: 'Limpiar búsqueda',
+              icon: Icons.clear,
               onPressed: () {
                 _searchController.clear();
                 notifier.clearSearch();
               },
-              icon: const Icon(Icons.clear),
-              label: const Text('Limpiar búsqueda'),
             ),
           ] else ...[
-            ElevatedButton.icon(
+            AppButton.primary(
+              text: 'Actualizar',
+              icon: Icons.refresh,
               onPressed: () => notifier.refresh(),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Actualizar'),
             ),
           ],
         ],

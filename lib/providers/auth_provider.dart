@@ -227,6 +227,19 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
+  void clearError() {
+    final currentState = state.value;
+    if (currentState != null && currentState.errorMessage != null) {
+      state = AsyncValue.data(
+        AuthState(
+          status: currentState.status,
+          user: currentState.user,
+          errorMessage: null,
+        ),
+      );
+    }
+  }
+
   Future<void> logout([WidgetRef? ref]) async {
     if (ref != null) {
       ref.read(sessionManagerProvider.notifier).clearSession(ref);

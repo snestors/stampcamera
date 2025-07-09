@@ -175,7 +175,7 @@ class AppLoadingState extends StatelessWidget {
 
     if (overlay) {
       loadingWidget = Container(
-        color: Colors.black.withOpacity(0.5),
+        color: Colors.black.withValues(alpha: 0.5),
         child: Center(
           child: Container(
             padding: dimensions.padding,
@@ -269,7 +269,7 @@ class AppLoadingState extends StatelessWidget {
     return _SkeletonLoadingIndicator(
       width: dimensions.width,
       height: dimensions.height,
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: borderRadius ?? BorderRadius.circular(DesignTokens.radiusS),
     );
   }
@@ -445,7 +445,7 @@ class _DotsLoadingIndicatorState extends State<_DotsLoadingIndicator>
                   width: widget.size,
                   height: widget.size,
                   decoration: BoxDecoration(
-                    color: widget.color.withOpacity(0.3 + (_animations[index].value * 0.7)),
+                    color: widget.color.withValues(alpha: 0.3 + (_animations[index].value * 0.7)),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -503,7 +503,7 @@ class _PulseLoadingIndicatorState extends State<_PulseLoadingIndicator>
           width: widget.size,
           height: widget.size,
           decoration: BoxDecoration(
-            color: widget.color.withOpacity(0.2 + (_animation.value * 0.6)),
+            color: widget.color.withValues(alpha: 0.2 + (_animation.value * 0.6)),
             shape: BoxShape.circle,
           ),
         );
@@ -592,9 +592,9 @@ class _ShimmerLoadingIndicatorState extends State<_ShimmerLoadingIndicator>
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
               colors: [
-                widget.color.withOpacity(0.1),
-                widget.color.withOpacity(0.3),
-                widget.color.withOpacity(0.1),
+                widget.color.withValues(alpha: 0.1),
+                widget.color.withValues(alpha: 0.3),
+                widget.color.withValues(alpha: 0.1),
               ],
               stops: [
                 (_animation.value - 0.3).clamp(0.0, 1.0),

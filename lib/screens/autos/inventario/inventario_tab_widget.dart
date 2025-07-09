@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/widgets/autos/forms/inventario_form.dart';
 
 class InventarioTabWidget extends ConsumerWidget {
@@ -27,41 +27,41 @@ class InventarioTabWidget extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(DesignTokens.spaceXXXL),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(DesignTokens.spaceXXL),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: AppColors.backgroundLight,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.inventory_2_outlined,
-                size: 64,
-                color: Colors.grey.shade400,
+                size: DesignTokens.iconGiant,
+                color: AppColors.textLight,
               ),
             ),
 
-            const SizedBox(height: 24),
+            SizedBox(height: DesignTokens.spaceXXL),
 
             Text(
               'No hay inventario registrado',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: DesignTokens.fontSizeL,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: AppColors.textPrimary,
               ),
             ),
 
-            const SizedBox(height: 8),
+            SizedBox(height: DesignTokens.spaceS),
 
             Text(
               'Esta unidad aún no tiene un inventario creado.\nPuedes crear uno ahora.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: DesignTokens.fontSizeS,
                 color: Colors.grey.shade600,
                 height: 1.5,
               ),
@@ -293,7 +293,7 @@ class InventarioTabWidget extends ConsumerWidget {
             child: Text(
               '$quantity',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.bold,
                 color: quantity > 0
                     ? Colors.green.shade700

@@ -259,7 +259,7 @@ class AppButton extends StatelessWidget {
             : null,
         boxShadow: customShadow ?? (elevation != null ? [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: elevation!,
             offset: Offset(0, elevation! / 2),
           )
@@ -277,8 +277,8 @@ class AppButton extends StatelessWidget {
                 }
               : null,
           borderRadius: borderRadius,
-          splashColor: colors.textColor.withOpacity(DesignTokens.opacityPressed),
-          highlightColor: colors.textColor.withOpacity(DesignTokens.opacityFocused),
+          splashColor: colors.textColor.withValues(alpha: DesignTokens.opacityPressed),
+          highlightColor: colors.textColor.withValues(alpha: DesignTokens.opacityFocused),
           child: AnimatedContainer(
             duration: animationDuration ?? DesignTokens.animationButton,
             curve: DesignTokens.curveEaseInOut,
@@ -335,14 +335,17 @@ class AppButton extends StatelessWidget {
     if (text.isNotEmpty) {
       children.add(
         Flexible(
-          child: Text(
-            text,
-            style: textStyle.copyWith(
-              color: customTextColor ?? colors.textColor,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              text,
+              style: textStyle.copyWith(
+                color: customTextColor ?? colors.textColor,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ),
       );
@@ -448,9 +451,9 @@ class AppButton extends StatelessWidget {
 
     if (isDisabled) {
       return _ButtonColors(
-        backgroundColor: backgroundColor.withOpacity(DesignTokens.opacityDisabled),
-        textColor: textColor.withOpacity(DesignTokens.opacityDisabled),
-        borderColor: borderColor.withOpacity(DesignTokens.opacityDisabled),
+        backgroundColor: backgroundColor.withValues(alpha: DesignTokens.opacityDisabled),
+        textColor: textColor.withValues(alpha: DesignTokens.opacityDisabled),
+        borderColor: borderColor.withValues(alpha: DesignTokens.opacityDisabled),
       );
     }
 

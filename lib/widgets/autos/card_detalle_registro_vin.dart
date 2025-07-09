@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 
 class DetalleRegistroCard extends StatelessWidget {
@@ -10,45 +11,33 @@ class DetalleRegistroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final r = registro;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      elevation: 4,
-      shadowColor: const Color(
-        0xFF003B5C,
-      ).withValues(alpha: 0.15), // Sombra corporativa
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: const Color(
-            0xFF003B5C,
-          ).withValues(alpha: 0.1), // Border corporativo
-          width: 1,
-        ),
+    return AppCard.elevated(
+      margin: EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceS,
+        vertical: DesignTokens.spaceXS,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ✅ Header con VIN y Serie + HERO
-            _buildHeader(r),
+      elevation: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ✅ Header con VIN y Serie + HERO
+          _buildHeader(r),
 
-            const SizedBox(height: 12),
+          SizedBox(height: DesignTokens.spaceM),
 
-            // ✅ Información del vehículo
-            _buildVehicleInfo(r),
+          // ✅ Información del vehículo
+          _buildVehicleInfo(r),
 
-            const SizedBox(height: 12),
+          SizedBox(height: DesignTokens.spaceM),
 
-            // ✅ Información de logística
-            _buildLogisticsInfo(r),
+          // ✅ Información de logística
+          _buildLogisticsInfo(r),
 
-            const SizedBox(height: 16),
+          SizedBox(height: DesignTokens.spaceL),
 
-            // ✅ Estados con badges
-            _buildStatusBadges(r),
-          ],
-        ),
+          // ✅ Estados con badges
+          _buildStatusBadges(r),
+        ],
       ),
     );
   }
@@ -57,6 +46,7 @@ class DetalleRegistroCard extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // VIN principal
           Expanded(
@@ -65,34 +55,32 @@ class DetalleRegistroCard extends StatelessWidget {
               children: [
                 Text(
                   r.vin,
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeL,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF003B5C), // Color corporativo para VIN
+                    color: AppColors.primary,
                   ),
                 ),
                 if (r.serie != null && r.serie!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                  SizedBox(height: DesignTokens.spaceXS),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spaceS,
+                      vertical: DesignTokens.spaceXS,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(
-                        0xFF00B4D8,
-                      ).withValues(alpha: 0.1), // Secundario corporativo
-                      borderRadius: BorderRadius.circular(12),
+                      color: AppColors.secondary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                       border: Border.all(
-                        color: const Color(0xFF00B4D8).withValues(alpha: 0.3),
-                        width: 1,
+                        color: AppColors.secondary.withValues(alpha: 0.3),
+                        width: DesignTokens.borderWidthNormal,
                       ),
                     ),
                     child: Text(
                       'Serie: ${r.serie}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF00B4D8), // Secundario corporativo
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeXS,
+                        color: AppColors.secondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -104,12 +92,10 @@ class DetalleRegistroCard extends StatelessWidget {
 
           // Icono indicativo (camión o auto según marca)
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: EdgeInsets.all(DesignTokens.spaceS),
             decoration: BoxDecoration(
-              color: const Color(
-                0xFF003B5C,
-              ).withValues(alpha: 0.1), // Fondo corporativo
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
             ),
             child: _buildBrandIcon(r.marca ?? 'N/A'),
           ),
@@ -129,34 +115,30 @@ class DetalleRegistroCard extends StatelessWidget {
     };
 
     if (truckBrands.contains(marca.toUpperCase())) {
-      return const Icon(
+      return Icon(
         Icons.local_shipping, // Camión
-        color: Color(0xFF003B5C),
-        size: 20,
+        color: AppColors.primary,
+        size: DesignTokens.iconXXL,
       );
     } else {
       // Default para autos
-      return const Icon(
+      return Icon(
         Icons.directions_car, // Auto
-        color: Color(0xFF003B5C),
-        size: 20,
+        color: AppColors.primary,
+        size: DesignTokens.iconXXL,
       );
     }
   }
 
   Widget _buildVehicleInfo(RegistroGeneral r) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFF003B5C,
-        ).withValues(alpha: 0.03), // Fondo corporativo muy sutil
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.primary.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         border: Border.all(
-          color: const Color(
-            0xFF003B5C,
-          ).withValues(alpha: 0.15), // Border corporativo
-          width: 1,
+          color: AppColors.primary.withValues(alpha: 0.15),
+          width: DesignTokens.borderWidthNormal,
         ),
       ),
       child: Column(
@@ -167,9 +149,9 @@ class DetalleRegistroCard extends StatelessWidget {
             Icons.branding_watermark,
             'Marca / Modelo',
             '${r.marca ?? 'N/A'} ${r.modelo ?? ''}',
-            const Color(0xFF003B5C), // Color corporativo primario
+            AppColors.primary,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: DesignTokens.spaceS),
 
           Row(
             children: [
@@ -179,10 +161,10 @@ class DetalleRegistroCard extends StatelessWidget {
                   Icons.palette,
                   'Color',
                   r.color ?? 'N/A',
-                  const Color(0xFF1A5B75), // Variación corporativa
+                  AppColors.accent,
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: DesignTokens.spaceL),
 
               // Versión
               Expanded(
@@ -190,7 +172,7 @@ class DetalleRegistroCard extends StatelessWidget {
                   Icons.info_outline,
                   'Versión',
                   r.version ?? 'N/A',
-                  const Color(0xFF00B4D8), // Secundario corporativo
+                  AppColors.secondary,
                 ),
               ),
             ],
@@ -202,15 +184,13 @@ class DetalleRegistroCard extends StatelessWidget {
 
   Widget _buildLogisticsInfo(RegistroGeneral r) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: const Color(
-          0xFF00B4D8,
-        ).withValues(alpha: 0.05), // Secundario corporativo
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.secondary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         border: Border.all(
-          color: const Color(0xFF00B4D8).withValues(alpha: 0.2),
-          width: 1,
+          color: AppColors.secondary.withValues(alpha: 0.2),
+          width: DesignTokens.borderWidthNormal,
         ),
       ),
       child: Row(
@@ -221,10 +201,10 @@ class DetalleRegistroCard extends StatelessWidget {
               Icons.local_shipping,
               'Nave',
               r.naveDescarga ?? 'N/A',
-              const Color(0xFF00B4D8), // Secundario corporativo
+              AppColors.secondary,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: DesignTokens.spaceL),
 
           // BL
           Expanded(
@@ -232,7 +212,7 @@ class DetalleRegistroCard extends StatelessWidget {
               Icons.receipt_long,
               'BL',
               r.bl ?? 'N/A',
-              const Color(0xFF003B5C), // Primario corporativo
+              AppColors.primary,
             ),
           ),
         ],
@@ -244,14 +224,14 @@ class DetalleRegistroCard extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.all(DesignTokens.spaceXS),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           ),
-          child: Icon(icon, size: 16, color: color),
+          child: Icon(icon, size: DesignTokens.iconS, color: color),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,20 +239,20 @@ class DetalleRegistroCard extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey[600],
+                  fontSize: DesignTokens.fontSizeXS * 0.8,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
                 value,
-                style: const TextStyle(
-                  fontSize: 13,
+                style: TextStyle(
+                  fontSize: DesignTokens.fontSizeS,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937), // Gris oscuro corporativo
+                  color: AppColors.textPrimary,
                 ),
                 maxLines: 1,
-                overflow: TextOverflow.clip,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -288,21 +268,17 @@ class DetalleRegistroCard extends StatelessWidget {
         Expanded(
           child: _buildStatusBadge(
             'Pedeteado',
-            r.pedeteado
-                ? const Color(0xFF059669) // Verde corporativo
-                : const Color(0xFFF59E0B), // Naranja corporativo
+            r.pedeteado ? AppColors.success : AppColors.warning,
             r.pedeteado ? Icons.check_circle : Icons.pending,
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: DesignTokens.spaceM),
 
         // Badge Daños
         Expanded(
           child: _buildStatusBadge(
             r.danos ? 'Con Daños' : 'Sin Daños',
-            r.danos
-                ? const Color(0xFFDC2626) // Rojo corporativo
-                : const Color(0xFF059669), // Verde corporativo
+            r.danos ? AppColors.error : AppColors.success,
             r.danos ? Icons.warning : Icons.check_circle,
           ),
         ),
@@ -312,22 +288,28 @@ class DetalleRegistroCard extends StatelessWidget {
 
   Widget _buildStatusBadge(String label, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceM,
+        vertical: DesignTokens.spaceS,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: DesignTokens.borderWidthNormal,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
+          Icon(icon, size: DesignTokens.iconS, color: color),
+          SizedBox(width: DesignTokens.spaceXS),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: DesignTokens.fontSizeXS,
               fontWeight: FontWeight.w600,
               color: color,
             ),

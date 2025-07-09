@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
+import 'package:stampcamera/core/core.dart';
 
 class InventarioFormWidget extends ConsumerStatefulWidget {
   final int informacionUnidadId;

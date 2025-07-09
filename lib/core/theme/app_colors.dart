@@ -214,7 +214,7 @@ class AppColors {
   static const Color negative = Color(0xFFDC2626);
   
   /// Neutro - Para valores neutros
-  static const Color neutral_semantic = Color(0xFF6B7280);
+  static const Color neutralSemantic = Color(0xFF6B7280);
   
   /// Nuevo - Para elementos nuevos
   static const Color newItem = Color(0xFF3B82F6);
@@ -231,7 +231,7 @@ class AppColors {
   
   /// Obtener color con opacidad personalizada
   static Color withOpacity(Color color, double opacity) {
-    return color.withOpacity(opacity);
+    return color.withValues(alpha: opacity);
   }
   
   /// Obtener color más claro

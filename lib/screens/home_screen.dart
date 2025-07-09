@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/widgets/connectivity_app_bar.dart';
 import 'package:stampcamera/widgets/biometric_setup_widget.dart';
@@ -21,7 +21,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC), // Gris muy claro corporativo
+      backgroundColor: AppColors.backgroundLight,
       appBar: ConnectivityAppBarWithDetails(
         title: const Text(
           'Aplicaciones',
@@ -66,21 +66,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildUserHeader(AsyncValue authState) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.all(DesignTokens.spaceL),
+      padding: EdgeInsets.all(DesignTokens.spaceXL),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF003B5C), // Color primario de tu empresa
-            const Color(0xFF002A42), // Variación más oscura del primario
-          ],
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF003B5C).withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -101,18 +98,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildApplicationsGrid(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: EdgeInsets.symmetric(horizontal: DesignTokens.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 16),
+            padding: EdgeInsets.only(
+              left: DesignTokens.spaceXS,
+              bottom: DesignTokens.spaceXS,
+            ),
             child: Text(
               'Aplicaciones Disponibles',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: DesignTokens.fontSizeL,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+                color: AppColors.textPrimary,
               ),
             ),
           ),
@@ -128,7 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 title: 'Cámara',
                 subtitle: 'Captura y gestiona fotos',
                 icon: Icons.camera_alt,
-                color: const Color(0xFF003B5C),
+                color: AppColors.primary,
                 onTap: () =>
                     context.push('/camera', extra: {'camera': cameras.first}),
               ),
@@ -136,21 +136,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 title: 'Asistencia',
                 subtitle: 'Registro de entrada y salida',
                 icon: Icons.access_time,
-                color: const Color(0xFF00B4D8),
+                color: AppColors.secondary,
                 onTap: () => context.pushNamed('asistencia'),
               ),
               _AppCard(
                 title: 'Autos',
                 subtitle: 'Gestión de vehículos',
                 icon: Icons.directions_car,
-                color: const Color(0xFF1A5B75),
+                color: AppColors.accent,
                 onTap: () => context.push('/autos'),
               ),
               _AppCard(
                 title: 'Próximamente',
                 subtitle: 'Nuevas funcionalidades',
                 icon: Icons.upcoming,
-                color: const Color(0xFF6B7280),
+                color: AppColors.textSecondary,
                 onTap: () => _showComingSoonDialog(context),
                 isDisabled: true,
               ),
@@ -163,17 +163,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildFooter() {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.all(DesignTokens.spaceS),
+      padding: EdgeInsets.all(DesignTokens.spaceL),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        border: Border.all(color: AppColors.neutral),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: Colors.blue[600], size: 20),
-          const SizedBox(width: 12),
+          Icon(
+            Icons.info_outline,
+            color: AppColors.info,
+            size: DesignTokens.iconM,
+          ),
+          SizedBox(width: DesignTokens.spaceM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,14 +185,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   'Centro de Aplicaciones',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   'Accede a todas las herramientas desde aquí',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeXS,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -202,23 +209,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        ),
         title: const Text('Cerrar Sesión'),
         content: const Text('¿Estás seguro de que quieres cerrar sesión?'),
         actions: [
-          TextButton(
+          AppButton.ghost(
+            text: 'Cancelar',
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          AppButton.error(
+            text: 'Cerrar Sesión',
             onPressed: () {
               Navigator.pop(context);
               ref.read(authProvider.notifier).logout(ref);
             },
-            child: const Text(
-              'Cerrar Sesión',
-              style: TextStyle(color: Colors.white),
-            ),
           ),
         ],
       ),
@@ -229,14 +235,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        ),
         title: const Text('Próximamente'),
         content: const Text(
           'Esta funcionalidad estará disponible en una próxima actualización.',
         ),
         actions: [
-          ElevatedButton(
+          AppButton.primary(
+            text: 'Entendido',
             onPressed: () => Navigator.pop(context),
-            child: const Text('Entendido'),
           ),
         ],
       ),
@@ -267,16 +276,18 @@ class _AppCard extends StatelessWidget {
     return Card(
       elevation: isDisabled ? 1 : 4,
       shadowColor: isDisabled
-          ? Colors.grey.withValues(alpha: 0.2)
+          ? AppColors.neutral.withValues(alpha: 0.2)
           : color.withValues(alpha: 0.3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
+      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
         onTap: isDisabled ? null : onTap,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(DesignTokens.spaceL),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
             gradient: isDisabled
                 ? null
                 : LinearGradient(
@@ -292,35 +303,39 @@ class _AppCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(DesignTokens.spaceL),
                 decoration: BoxDecoration(
                   color: isDisabled
-                      ? Colors.grey.withValues(alpha: 0.2)
+                      ? AppColors.neutral.withValues(alpha: 0.2)
                       : color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusL),
                 ),
                 child: Icon(
                   icon,
-                  size: 32,
-                  color: isDisabled ? Colors.grey : color,
+                  size: DesignTokens.iconXXXL,
+                  color: isDisabled ? AppColors.textLight : color,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: DesignTokens.spaceS),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: DesignTokens.fontSizeRegular,
                   fontWeight: FontWeight.bold,
-                  color: isDisabled ? Colors.grey : Colors.grey[800],
+                  color: isDisabled
+                      ? AppColors.textLight
+                      : AppColors.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: DesignTokens.spaceXS),
               Text(
                 subtitle,
                 style: TextStyle(
-                  fontSize: 12,
-                  color: isDisabled ? Colors.grey : Colors.grey[600],
+                  fontSize: DesignTokens.fontSizeXS,
+                  color: isDisabled
+                      ? AppColors.textLight
+                      : AppColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -351,21 +366,21 @@ class _UserInfo extends StatelessWidget {
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: const Color.fromARGB(227, 13, 86, 128),
-            borderRadius: BorderRadius.circular(10),
+            color: AppColors.surface.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
           ),
           child: Center(
             child: Text(
               userInitials,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: DesignTokens.fontSizeM,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        SizedBox(width: DesignTokens.spaceL),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,15 +389,15 @@ class _UserInfo extends StatelessWidget {
                 '¡Hola!',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: DesignTokens.fontSizeS,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               Text(
                 displayName,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
+                  fontSize: DesignTokens.fontSizeL,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -391,7 +406,7 @@ class _UserInfo extends StatelessWidget {
                   userEmail,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 12,
+                    fontSize: DesignTokens.fontSizeXS,
                   ),
                 ),
             ],
@@ -399,8 +414,8 @@ class _UserInfo extends StatelessWidget {
         ),
         Icon(
           Icons.waving_hand,
-          color: const Color.fromARGB(255, 221, 239, 32),
-          size: 24,
+          color: AppColors.warning,
+          size: DesignTokens.iconL,
         ),
       ],
     );
@@ -440,13 +455,16 @@ class _LoadingUserInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-        SizedBox(width: 16),
+        const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+        SizedBox(width: DesignTokens.spaceL),
         Text(
           'Cargando información...',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: DesignTokens.fontSizeRegular,
+          ),
         ),
       ],
     );
@@ -458,10 +476,10 @@ class _WelcomeMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Icon(Icons.home, color: Colors.white, size: 32),
-        SizedBox(width: 16),
+        Icon(Icons.home, color: Colors.white, size: DesignTokens.iconXL),
+        SizedBox(width: DesignTokens.spaceL),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,13 +488,16 @@ class _WelcomeMessage extends StatelessWidget {
                 '¡Bienvenido!',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 20,
+                  fontSize: DesignTokens.fontSizeL,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
                 'Accede a todas las herramientas disponibles',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: DesignTokens.fontSizeS,
+                ),
               ),
             ],
           ),

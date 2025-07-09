@@ -4,7 +4,7 @@ import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 import 'package:stampcamera/widgets/autos/forms/dano_form.dart'; // ✅ Import del formulario
-import 'package:stampcamera/theme/custom_colors.dart';
+import 'package:stampcamera/core/core.dart';
 
 class DetalleDanos extends ConsumerWidget {
   final List<Dano> danos;
@@ -30,14 +30,14 @@ class DetalleDanos extends ConsumerWidget {
         // ✅ Header de sección con botón agregar
         _buildSectionHeader(context),
 
-        const SizedBox(height: 16),
+        SizedBox(height: DesignTokens.spaceM),
 
         // ✅ Lista de daños
         ...danos.asMap().entries.map((entry) {
           final index = entry.key;
           final dano = entry.value;
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
             child: _buildDanoCard(context, ref, dano, index),
           );
         }),
@@ -51,64 +51,32 @@ class DetalleDanos extends ConsumerWidget {
   Widget _buildSectionHeader(context) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFDC2626).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(
-            Icons.warning_outlined,
-            size: 18,
-            color: Color(0xFFDC2626),
+        Expanded(
+          child: AppSectionHeader(
+            icon: Icons.warning_outlined,
+            title: 'Daños Reportados',
+            count: danos.length,
+            iconColor: AppColors.error,
           ),
         ),
-        const SizedBox(width: 10),
-        const Text(
-          'Daños Reportados',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        const Spacer(),
-
-        // ✅ Counter badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFDC2626).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            '${danos.length}',
-            style: const TextStyle(
-              color: Color(0xFFDC2626),
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 8),
-
+        SizedBox(width: DesignTokens.spaceXS),
+        
         // ✅ Botón agregar nuevo daño
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFDC2626),
-            borderRadius: BorderRadius.circular(8),
+            color: AppColors.error,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
               onTap: () => _showAgregarDanoForm(context),
-              child: const Padding(
-                padding: EdgeInsets.all(6),
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceXS),
                 child: Icon(
                   Icons.add_circle_outline,
-                  size: 18,
+                  size: DesignTokens.iconM,
                   color: Colors.white,
                 ),
               ),
@@ -157,7 +125,7 @@ class DetalleDanos extends ConsumerWidget {
             size: 48,
             color: Color(0xFF059669),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: DesignTokens.spaceM),
           const Text(
             'Sin Daños',
             style: TextStyle(
@@ -172,7 +140,7 @@ class DetalleDanos extends ConsumerWidget {
             style: TextStyle(fontSize: 12, color: Color(0xFF059669)),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: DesignTokens.spaceM),
 
           // ✅ Botón para agregar primer daño
           ElevatedButton.icon(

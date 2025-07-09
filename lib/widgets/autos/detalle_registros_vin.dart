@@ -4,7 +4,7 @@ import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
+import 'package:stampcamera/core/core.dart';
 
 class DetalleRegistrosVin extends ConsumerWidget {
   final List<RegistroVin> items;
@@ -30,14 +30,14 @@ class DetalleRegistrosVin extends ConsumerWidget {
         // ✅ Header de sección con botón agregar
         _buildSectionHeader(context),
 
-        const SizedBox(height: 16),
+        SizedBox(height: DesignTokens.spaceM),
 
         // ✅ Lista de registros
         ...items.asMap().entries.map((entry) {
           final index = entry.key;
           final registro = entry.value;
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
             child: _buildRegistroCard(context, ref, registro, index),
           );
         }),
@@ -51,58 +51,33 @@ class DetalleRegistrosVin extends ConsumerWidget {
   Widget _buildSectionHeader(BuildContext context) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.history, size: 18, color: AppColors.primary),
-        ),
-        const SizedBox(width: 10),
-        const Text(
-          'Historial de Inspecciones',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+        Expanded(
+          child: AppSectionHeader(
+            icon: Icons.history,
+            title: 'Historial de Inspecciones',
+            count: items.length,
           ),
         ),
-        const Spacer(),
-
-        // ✅ Counter badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            '${items.length}',
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
 
         // ✅ Botón agregar nuevo registro
         Container(
           decoration: BoxDecoration(
             color: AppColors.secondary,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
               onTap: () => _showAgregarRegistroForm(context),
-              child: const Padding(
-                padding: EdgeInsets.all(6),
-                child: Icon(Icons.add, size: 18, color: Colors.white),
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceXS),
+                child: Icon(
+                  Icons.add,
+                  size: DesignTokens.iconM,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -147,52 +122,14 @@ class DetalleRegistrosVin extends ConsumerWidget {
   // ESTADO VACÍO CON BOTÓN PARA AGREGAR PRIMER REGISTRO
   // ============================================================================
   Widget _buildEmptyState(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppColors.textSecondary.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.textSecondary.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.history_outlined,
-            size: 48,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Sin Historial',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'No hay registros de inspecciones para este vehículo',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-
-          // ✅ Botón para agregar primer registro
-          ElevatedButton.icon(
-            onPressed: () => _showAgregarRegistroForm(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-            icon: const Icon(Icons.add),
-            label: const Text('Agregar Primera Inspección'),
-          ),
-        ],
+    return AppEmptyState(
+      icon: Icons.history_outlined,
+      title: 'Sin Historial',
+      subtitle: 'No hay registros de inspecciones para este vehículo',
+      action: AppButton.primary(
+        text: 'Agregar Primera Inspección',
+        icon: Icons.add,
+        onPressed: () => _showAgregarRegistroForm(context),
       ),
     );
   }
@@ -206,39 +143,27 @@ class DetalleRegistrosVin extends ConsumerWidget {
     RegistroVin registro,
     int index,
   ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ✅ Header del registro con botones de acción
-            _buildRegistroHeader(context, ref, registro, index),
+    return AppCard(
+      type: AppCardType.outlined,
+      backgroundColor: AppColors.primary.withValues(alpha: 0.03),
+      borderColor: AppColors.primary.withValues(alpha: 0.1),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ✅ Header del registro con botones de acción
+          _buildRegistroHeader(context, ref, registro, index),
 
-            const SizedBox(height: 12),
+          SizedBox(height: DesignTokens.spaceS),
 
-            // ✅ Información del registro
-            _buildRegistroInfo(registro),
+          // ✅ Información del registro
+          _buildRegistroInfo(registro),
 
-            // ✅ Foto si existe
-            if (registro.fotoVinThumbnailUrl != null) ...[
-              const SizedBox(height: 12),
-              _buildFotoSection(registro),
-            ],
+          // ✅ Foto si existe
+          if (registro.fotoVinThumbnailUrl != null) ...[
+            SizedBox(height: DesignTokens.spaceS),
+            _buildFotoSection(registro),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -256,11 +181,11 @@ class DetalleRegistrosVin extends ConsumerWidget {
       children: [
         // ✅ Número de orden
         Container(
-          width: 28,
-          height: 28,
+          width: DesignTokens.iconL,
+          height: DesignTokens.iconL,
           decoration: BoxDecoration(
             color: VehicleHelpers.getCondicionColor(registro.condicion),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
           ),
           child: Center(
             child: Text(
@@ -268,13 +193,13 @@ class DetalleRegistrosVin extends ConsumerWidget {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: DesignTokens.fontSizeXS,
               ),
             ),
           ),
         ),
 
-        const SizedBox(width: 12),
+        SizedBox(width: DesignTokens.spaceS),
 
         // ✅ Condición y fecha
         Expanded(
@@ -284,26 +209,28 @@ class DetalleRegistrosVin extends ConsumerWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: EdgeInsets.all(DesignTokens.spaceXXS),
                     decoration: BoxDecoration(
                       color: VehicleHelpers.getCondicionColor(
                         registro.condicion,
                       ).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(
+                        DesignTokens.radiusXS,
+                      ),
                     ),
                     child: Icon(
                       VehicleHelpers.getCondicionIcon(registro.condicion),
-                      size: 14,
+                      size: DesignTokens.iconS,
                       color: VehicleHelpers.getCondicionColor(
                         registro.condicion,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: DesignTokens.spaceXS),
                   Text(
                     registro.condicion,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: DesignTokens.fontSizeS,
                       fontWeight: FontWeight.bold,
                       color: VehicleHelpers.getCondicionColor(
                         registro.condicion,
@@ -314,11 +241,11 @@ class DetalleRegistrosVin extends ConsumerWidget {
               ),
 
               if (registro.fecha != null) ...[
-                const SizedBox(height: 4),
+                SizedBox(height: DesignTokens.spaceXXS),
                 Text(
                   registro.fecha!,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: DesignTokens.fontSizeXS * 0.9,
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
@@ -349,37 +276,45 @@ class DetalleRegistrosVin extends ConsumerWidget {
         Container(
           decoration: BoxDecoration(
             color: Colors.orange.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
               onTap: () => _showEditarRegistroForm(context, registro),
-              child: const Padding(
-                padding: EdgeInsets.all(6),
-                child: Icon(Icons.edit, size: 16, color: Colors.orange),
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceXXS),
+                child: Icon(
+                  Icons.edit,
+                  size: DesignTokens.iconS,
+                  color: Colors.orange,
+                ),
               ),
             ),
           ),
         ),
 
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
 
         // ✅ Botón Delete
         Container(
           decoration: BoxDecoration(
             color: Colors.red.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
               onTap: () => _showDeleteConfirmation(context, ref, registro),
-              child: const Padding(
-                padding: EdgeInsets.all(6),
-                child: Icon(Icons.delete_outline, size: 16, color: Colors.red),
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceXXS),
+                child: Icon(
+                  Icons.delete_outline,
+                  size: DesignTokens.iconS,
+                  color: Colors.red,
+                ),
               ),
             ),
           ),
@@ -401,13 +336,22 @@ class DetalleRegistrosVin extends ConsumerWidget {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusL),
           ),
           title: const Row(
             children: [
-              Icon(Icons.warning_amber, color: Colors.orange, size: 24),
-              SizedBox(width: 8),
-              Text('Confirmar Eliminación'),
+              Icon(
+                Icons.warning_amber,
+                color: Colors.orange,
+                size: DesignTokens.iconL,
+              ),
+              SizedBox(width: DesignTokens.spaceXS),
+              Expanded(
+                child: Text(
+                  'Confirmar Eliminación',
+                  style: TextStyle(fontSize: DesignTokens.fontSizeRegular),
+                ),
+              ),
             ],
           ),
           content: Column(
@@ -417,12 +361,12 @@ class DetalleRegistrosVin extends ConsumerWidget {
               const Text(
                 '¿Estás seguro de que deseas eliminar este registro de inspección?',
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: DesignTokens.spaceS),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(DesignTokens.spaceS),
                 decoration: BoxDecoration(
                   color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,7 +512,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
             content: Row(
               children: [
                 const Icon(Icons.error, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
+                SizedBox(width: DesignTokens.spaceXS),
                 Expanded(child: Text('Error: $e')),
               ],
             ),
@@ -596,7 +540,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
 
         // ✅ NUEVO: Contenedor (solo para condición ALMACEN)
         if (registro.contenedor != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: DesignTokens.spaceXS),
           _buildInfoRow(
             Icons.inventory_2,
             'Contenedor',
@@ -607,7 +551,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
 
         // Bloque si existe (solo para condición PUERTO)
         if (registro.bloque != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: DesignTokens.spaceXS),
           _buildInfoRow(
             Icons.view_module,
             'Bloque',
@@ -618,13 +562,13 @@ class DetalleRegistrosVin extends ConsumerWidget {
 
         // ✅ NUEVO: Fila y Posición (solo para condición PUERTO)
         if (registro.fila != null || registro.posicion != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: DesignTokens.spaceXS),
           _buildFilaPosicionRow(registro),
         ],
 
         // Creado por
         if (registro.createBy != null) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: DesignTokens.spaceXS),
           _buildInfoRow(
             Icons.person,
             'Registrado por',
@@ -641,18 +585,18 @@ class DetalleRegistrosVin extends ConsumerWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.all(DesignTokens.spaceXXS),
           decoration: BoxDecoration(
             color: AppColors.secondary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           ),
           child: const Icon(
             Icons.grid_view,
-            size: 14,
+            size: DesignTokens.iconS,
             color: AppColors.secondary,
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,7 +604,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
               Text(
                 'Ubicación en Puerto',
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: DesignTokens.fontSizeXS * 0.8,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
@@ -671,7 +615,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
                     Text(
                       'Fila ${registro.fila}',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: DesignTokens.fontSizeXS,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
@@ -680,13 +624,16 @@ class DetalleRegistrosVin extends ConsumerWidget {
                   if (registro.fila != null && registro.posicion != null)
                     Text(
                       ' • ',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeXS,
+                        color: Colors.grey[400],
+                      ),
                     ),
                   if (registro.posicion != null) ...[
                     Text(
                       'Pos. ${registro.posicion}',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: DesignTokens.fontSizeXS,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
@@ -705,14 +652,14 @@ class DetalleRegistrosVin extends ConsumerWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.all(DesignTokens.spaceXXS),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           ),
-          child: Icon(icon, size: 14, color: color),
+          child: Icon(icon, size: DesignTokens.iconS, color: color),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -720,7 +667,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: DesignTokens.fontSizeXS * 0.8,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
@@ -728,7 +675,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: DesignTokens.fontSizeXS,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
@@ -747,18 +694,18 @@ class DetalleRegistrosVin extends ConsumerWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.all(DesignTokens.spaceXXS),
           decoration: BoxDecoration(
             color: AppColors.accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           ),
           child: const Icon(
             Icons.camera_alt,
-            size: 14,
+            size: DesignTokens.iconS,
             color: AppColors.accent,
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
         const Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -766,7 +713,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
               Text(
                 'Foto VIN',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: DesignTokens.fontSizeXS * 0.9,
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
@@ -775,11 +722,11 @@ class DetalleRegistrosVin extends ConsumerWidget {
           ),
         ),
         ClipRRect(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           child: NetworkImagePreview(
             thumbnailUrl: registro.fotoVinThumbnailUrl!,
             fullImageUrl: registro.fotoVinUrl!,
-            size: 40,
+            size: DesignTokens.iconXL,
           ),
         ),
       ],

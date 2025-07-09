@@ -493,7 +493,7 @@ class _AppTextFieldState extends State<AppTextField> {
         ? AppColors.error 
         : _hasFocus 
             ? AppColors.primary 
-            : widget.customBorderColor ?? AppColors.textSecondary.withOpacity(0.3);
+            : widget.customBorderColor ?? AppColors.textSecondary.withValues(alpha: 0.3);
 
     return InputDecoration(
       hintText: widget.hint,
@@ -520,7 +520,7 @@ class _AppTextFieldState extends State<AppTextField> {
       focusedBorder: _buildBorder(AppColors.primary),
       errorBorder: _buildBorder(AppColors.error),
       focusedErrorBorder: _buildBorder(AppColors.error),
-      disabledBorder: _buildBorder(AppColors.textSecondary.withOpacity(0.2)),
+      disabledBorder: _buildBorder(AppColors.textSecondary.withValues(alpha: 0.2)),
       counterText: widget.showCounter ? null : '',
       isDense: widget.dense,
     );

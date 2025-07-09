@@ -62,7 +62,7 @@ class ActionButtons extends ConsumerWidget {
 
     final state = ref.read(pedeteoStateProvider);
 
-    if (state.errorMessage != null) {
+    if (state.errorMessage != null && context.mounted) {
       messenger.showSnackBar(
         SnackBar(
           backgroundColor: const Color.fromARGB(
@@ -74,7 +74,7 @@ class ActionButtons extends ConsumerWidget {
           content: Text(state.errorMessage!),
         ),
       );
-    } else {
+    } else if (context.mounted) {
       messenger.showSnackBar(
         SnackBar(
           content: const Text(

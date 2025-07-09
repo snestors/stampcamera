@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
+import 'package:stampcamera/core/core.dart';
 
 class ContenedorForm extends ConsumerStatefulWidget {
   final ContenedorModel? contenedor; // null = crear, no null = editar
@@ -210,7 +210,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   title: 'Nave y Zona',
                   iconColor: AppColors.primary,
                 ),
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Nave de descarga
                 _buildDropdown<int>(
@@ -241,7 +241,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                       : null,
                 ),
 
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Zona de inspección
                 Row(
@@ -297,7 +297,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             ),
           ),
 
-          const SizedBox(height: AppDimensions.paddingL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // SECCIÓN 2: NÚMERO DE CONTENEDOR Y FOTO
           AppCard(
@@ -309,7 +309,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   title: 'Información del Contenedor',
                   iconColor: AppColors.secondary,
                 ),
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Número de contenedor
                 _buildTextField(
@@ -329,7 +329,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   },
                 ),
 
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Foto del contenedor CON opción de eliminar
                 _buildCameraCardWithRemove(
@@ -363,7 +363,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             ),
           ),
 
-          const SizedBox(height: AppDimensions.paddingL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // SECCIÓN 3: PRECINTOS Y FOTOS
           AppCard(
@@ -375,7 +375,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   title: 'Precintos',
                   iconColor: AppColors.warning,
                 ),
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Precinto 1 CON botón limpiar
                 Row(
@@ -402,7 +402,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   ],
                 ),
 
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Foto Precinto 1 CON opción de eliminar
                 _buildCameraCardWithRemove(
@@ -431,7 +431,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   primaryColor: AppColors.warning,
                 ),
 
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Precinto 2 CON botón limpiar
                 Row(
@@ -458,7 +458,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   ],
                 ),
 
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Foto Precinto 2 CON opción de eliminar
                 _buildCameraCardWithRemove(
@@ -490,7 +490,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             ),
           ),
 
-          const SizedBox(height: AppDimensions.paddingL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // SECCIÓN 4: CONTENEDOR VACÍO
           AppCard(
@@ -502,7 +502,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                   title: 'Contenedor Vacío',
                   iconColor: AppColors.info,
                 ),
-                const SizedBox(height: AppDimensions.paddingL),
+                const SizedBox(height: DesignTokens.spaceL),
 
                 // Foto Contenedor Vacío CON opción de eliminar
                 _buildCameraCardWithRemove(
@@ -534,7 +534,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             ),
           ),
 
-          const SizedBox(height: AppDimensions.paddingXXL),
+          SizedBox(height: DesignTokens.spaceXXL),
         ],
       ),
     );
@@ -636,7 +636,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: AppDimensions.paddingS),
+        const SizedBox(height: DesignTokens.spaceS),
         TextFormField(
           controller: controller,
           enabled: enabled,
@@ -644,23 +644,23 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
           decoration: InputDecoration(
             hintText: hint,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: BorderSide(
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: BorderSide(
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: BorderSide(
                 color: AppColors.textLight.withValues(alpha: 0.3),
               ),
@@ -670,8 +670,8 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                 ? Colors.white
                 : AppColors.textLight.withValues(alpha: 0.1),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingM,
+              horizontal: DesignTokens.spaceL,
+              vertical: DesignTokens.spaceM,
             ),
           ),
         ),
@@ -700,7 +700,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: AppDimensions.paddingS),
+        const SizedBox(height: DesignTokens.spaceS),
         DropdownButtonFormField<T>(
           value: value,
           items: items,
@@ -709,23 +709,23 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
           isExpanded: true,
           decoration: InputDecoration(
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: BorderSide(
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: BorderSide(
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               borderSide: BorderSide(
                 color: AppColors.textLight.withValues(alpha: 0.3),
               ),
@@ -735,8 +735,8 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
                 ? Colors.white
                 : AppColors.textLight.withValues(alpha: 0.1),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingL,
-              vertical: AppDimensions.paddingM,
+              horizontal: DesignTokens.spaceL,
+              vertical: DesignTokens.spaceM,
             ),
           ),
         ),
@@ -750,7 +750,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(color: AppColors.primary),
-          SizedBox(height: AppDimensions.paddingL),
+          SizedBox(height: DesignTokens.spaceL),
           Text('Cargando opciones...'),
         ],
       ),

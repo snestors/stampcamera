@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../providers/biometric_provider.dart';
@@ -17,7 +18,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  bool _obscurePassword = true;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -102,7 +102,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final isLoading = ref.watch(authProvider).isLoading;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -159,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF003B5C).withValues(alpha: 0.15),
+                      color: AppColors.primary.withValues(alpha: 0.15),
                       blurRadius: 30,
                       offset: const Offset(0, 8),
                     ),
@@ -180,9 +180,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             Text(
               'Bienvenido',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: DesignTokens.fontSizeXXL,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF1E293B),
+                color: AppColors.textPrimary,
                 letterSpacing: -0.5,
               ),
             ),
@@ -190,8 +190,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             Text(
               'Ingresa tus credenciales para continuar',
               style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey[600],
+                fontSize: DesignTokens.fontSizeS,
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w400,
               ),
               textAlign: TextAlign.center,
@@ -216,11 +216,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           constraints: const BoxConstraints(maxWidth: 400),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
+                color: AppColors.overlayDark.withValues(alpha: 0.06),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -232,33 +232,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Campo Usuario
-                _buildInputField(
+                AppTextField(
                   controller: _usernameCtrl,
                   label: 'Usuario',
                   hint: 'Ej: nfarinas',
-                  icon: Icons.person_outline,
-                  validator: (val) => val?.isEmpty ?? true ? 'Requerido' : null,
+                  prefixIcon: Icons.person_outline,
+                  validator: FormValidators.validateRequired,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: DesignTokens.spaceL),
 
                 // Campo Contraseña
-                _buildInputField(
+                AppTextField.password(
                   controller: _passwordCtrl,
                   label: 'Contraseña',
-                  icon: Icons.lock_outline,
-                  isPassword: true,
-                  validator: (val) => val?.isEmpty ?? true ? 'Requerido' : null,
+                  validator: FormValidators.validateRequired,
                 ),
                 const SizedBox(height: 20),
 
                 // Mensaje de error
                 if (errorMessage != null) ...[
-                  _buildErrorMessage(errorMessage),
-                  const SizedBox(height: 20),
+                  AppInlineError(
+                    message: errorMessage,
+                    onDismiss: () {
+                      ref.read(authProvider.notifier).clearError();
+                    },
+                    dismissible: true,
+                  ),
+                  SizedBox(height: DesignTokens.spaceL),
                 ],
 
                 // Botón Login
-                _buildLoginButton(isLoading),
+                AppButton.primary(
+                  text: 'Ingresar',
+                  onPressed: isLoading ? null : _submit,
+                  isLoading: isLoading,
+                  size: AppButtonSize.large,
+                ),
 
                 // Sección Biométrica
                 if (biometricState.isEnabled) ...[
@@ -267,21 +276,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   // Divider
                   Row(
                     children: [
-                      Expanded(child: Divider(color: Colors.grey[300])),
+                      Expanded(child: Divider(color: AppColors.neutral)),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceL),
                         child: Text(
                           'o',
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: AppColors.textSecondary),
                         ),
                       ),
-                      Expanded(child: Divider(color: Colors.grey[300])),
+                      Expanded(child: Divider(color: AppColors.neutral)),
                     ],
                   ),
                   const SizedBox(height: 16),
 
                   // Botón Biométrico
-                  _buildBiometricButton(biometricState),
+                  AppButton.secondary(
+                    text: biometricState.isLoading 
+                        ? 'Autenticando...' 
+                        : 'Acceso Biométrico',
+                    onPressed: biometricState.isLoading ? null : _biometricLogin,
+                    icon: Icons.fingerprint,
+                    isLoading: biometricState.isLoading,
+                    size: AppButtonSize.large,
+                  ),
                 ],
               ],
             ),
@@ -291,187 +308,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    String? hint,
-    bool isPassword = false,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: isPassword ? _obscurePassword : false,
-      style: const TextStyle(fontSize: 16),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon, color: const Color(0xFF003B5C), size: 22),
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.grey[600],
-                  size: 22,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: const Color(0xFFF8FAFC),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF003B5C), width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.red),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 18,
-        ),
-      ),
-      validator: validator,
-    );
-  }
+  // Método eliminado - usando AppTextField del sistema de diseño
 
-  Widget _buildErrorMessage(String errorMessage) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.25)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Colors.red[700], size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              errorMessage,
-              style: TextStyle(
-                color: Colors.red[700],
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Método eliminado - usando AppErrorState del sistema de diseño
 
-  Widget _buildLoginButton(bool isLoading) {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF003B5C), Color(0xFF002A42)],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF003B5C).withValues(alpha: 0.25),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: isLoading ? null : _submit,
-          child: Container(
-            alignment: Alignment.center,
-            child: isLoading
-                ? const SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                    ),
-                  )
-                : const Text(
-                    'Ingresar',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
+  // Método eliminado - usando AppButton del sistema de diseño
 
-  Widget _buildBiometricButton(BiometricState biometricState) {
-    return Container(
-      height: 54,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[300]!),
-        color: Colors.white,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: biometricState.isLoading ? null : _biometricLogin,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (biometricState.isLoading)
-                const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
-                )
-              else
-                Icon(
-                  Icons.fingerprint,
-                  color: const Color(0xFF003B5C),
-                  size: 24,
-                ),
-              const SizedBox(width: 12),
-              Text(
-                biometricState.isLoading
-                    ? 'Autenticando...'
-                    : 'Usar ${biometricState.biometricType}',
-                style: const TextStyle(
-                  color: Color(0xFF003B5C),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Método eliminado - usando AppButton del sistema de diseño
 
   Widget _buildFooter() {
     return Text(
       'Versión $_appVersion',
-      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+      style: TextStyle(
+        color: AppColors.textLight, 
+        fontSize: DesignTokens.fontSizeXS,
+      ),
       textAlign: TextAlign.center,
     );
   }
@@ -601,7 +452,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.fingerprint, color: const Color(0xFF003B5C)),
+            Icon(Icons.fingerprint, color: AppColors.primary),
             const SizedBox(width: 8),
             Text('Habilitar ${biometricState.biometricType}'),
           ],
@@ -615,7 +466,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             const SizedBox(height: 8),
             Text(
               'Te pediremos confirmar tus credenciales para configurarlo.',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: DesignTokens.fontSizeXS, 
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -635,6 +489,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 _showCredentialsDialog();
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.surface,
+            ),
             child: const Text('Continuar'),
           ),
         ],
@@ -675,12 +533,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.fingerprint,
-                        color: const Color(0xFF003B5C),
+                        color: AppColors.primary,
                         size: 24,
                       ),
                     ),
@@ -694,14 +552,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           Text(
                             'Para habilitar biometría',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -759,10 +617,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               hintText: 'Confirma tu usuario',
                               prefixIcon: Icon(
                                 Icons.person_outline,
-                                color: const Color(0xFF003B5C),
+                                color: AppColors.primary,
                               ),
                               filled: true,
-                              fillColor: const Color(0xFFF8FAFC),
+                              fillColor: AppColors.backgroundLight,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
@@ -770,19 +628,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: Colors.grey[300]!,
+                                  color: AppColors.neutral,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF003B5C),
+                                borderSide: BorderSide(
+                                  color: AppColors.primary,
                                   width: 2,
                                 ),
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.red),
+                                borderSide: BorderSide(color: AppColors.error),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -805,14 +663,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               hintText: 'Confirma tu contraseña',
                               prefixIcon: Icon(
                                 Icons.lock_outline,
-                                color: const Color(0xFF003B5C),
+                                color: AppColors.primary,
                               ),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   obscurePassword
                                       ? Icons.visibility_outlined
                                       : Icons.visibility_off_outlined,
-                                  color: Colors.grey[600],
+                                  color: AppColors.textSecondary,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -821,7 +679,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 },
                               ),
                               filled: true,
-                              fillColor: const Color(0xFFF8FAFC),
+                              fillColor: AppColors.backgroundLight,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide.none,
@@ -829,19 +687,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
-                                  color: Colors.grey[300]!,
+                                  color: AppColors.neutral,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF003B5C),
+                                borderSide: BorderSide(
+                                  color: AppColors.primary,
                                   width: 2,
                                 ),
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.red),
+                                borderSide: BorderSide(color: AppColors.error),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -907,8 +765,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF003B5C),
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.surface,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),

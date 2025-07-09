@@ -7,7 +7,7 @@ import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/forms/dialogs/contenedor_search_dialog.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
+import 'package:stampcamera/core/core.dart';
 
 class RegistroVinForm extends ConsumerStatefulWidget {
   final String vin;
@@ -888,102 +888,98 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    Future<void> _submitForm() async {
-      if (!_formKey.currentState!.validate()) return;
+    // ✅ Validación de contenedor requerido
+    if (_isContenedorRequired() && _selectedContenedor == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Seleccione un contenedor para la condición ALMACEN'),
+        ),
+      );
+      return;
+    }
 
-      // ✅ Validación de contenedor requerido
-      if (_isContenedorRequired() && _selectedContenedor == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Seleccione un contenedor para la condición ALMACEN'),
-          ),
+    // ✅ En modo crear, la foto es obligatoria
+    if (!isEditMode && _fotoVinPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La foto VIN es obligatoria')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final notifier = ref.read(detalleRegistroProvider(widget.vin).notifier);
+      bool success;
+
+      if (isEditMode) {
+        // ✅ MODO EDICIÓN
+        success = await notifier.updateRegistroVin(
+          registroVinId: widget.registroVin!.id,
+          condicion: _selectedCondicion,
+          zonaInspeccion: _selectedZonaInspeccion,
+          fotoVin: _fotoVinPath != null ? File(_fotoVinPath!) : null,
+          bloque: _selectedBloque,
+          fila: _selectedFila,
+          posicion: _selectedPosicion,
+          contenedorId: _selectedContenedor,
         );
-        return;
+      } else {
+        // ✅ MODO CREACIÓN
+        success = await notifier.createRegistroVin(
+          condicion: _selectedCondicion!,
+          zonaInspeccion: _selectedZonaInspeccion!,
+          fotoVin: File(_fotoVinPath!),
+          bloque: _selectedBloque,
+          fila: _selectedFila,
+          posicion: _selectedPosicion,
+          contenedorId: _selectedContenedor,
+        );
       }
 
-      // ✅ En modo crear, la foto es obligatoria
-      if (!isEditMode && _fotoVinPath == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('La foto VIN es obligatoria')),
-        );
-        return;
-      }
-
-      setState(() => _isLoading = true);
-
-      try {
-        final notifier = ref.read(detalleRegistroProvider(widget.vin).notifier);
-        bool success;
-
-        if (isEditMode) {
-          // ✅ MODO EDICIÓN
-          success = await notifier.updateRegistroVin(
-            registroVinId: widget.registroVin!.id,
-            condicion: _selectedCondicion,
-            zonaInspeccion: _selectedZonaInspeccion,
-            fotoVin: _fotoVinPath != null ? File(_fotoVinPath!) : null,
-            bloque: _selectedBloque,
-            fila: _selectedFila,
-            posicion: _selectedPosicion,
-            contenedorId: _selectedContenedor,
-          );
-        } else {
-          // ✅ MODO CREACIÓN
-          success = await notifier.createRegistroVin(
-            condicion: _selectedCondicion!,
-            zonaInspeccion: _selectedZonaInspeccion!,
-            fotoVin: File(_fotoVinPath!),
-            bloque: _selectedBloque,
-            fila: _selectedFila,
-            posicion: _selectedPosicion,
-            contenedorId: _selectedContenedor,
-          );
-        }
-
-        if (mounted) {
-          if (success) {
-            // ✅ ÉXITO: Cerrar form y mostrar mensaje de éxito
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  isEditMode
-                      ? '✅ Registro actualizado exitosamente'
-                      : '✅ Registro creado exitosamente',
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
-          } else {
-            // ✅ ERROR GENÉRICO: Mostrar error pero NO cerrar
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  isEditMode
-                      ? '❌ Error al actualizar registro'
-                      : '❌ Error al crear registro',
-                ),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        // ✅ ERROR ESPECÍFICO (como duplicado): Mostrar mensaje y CERRAR form
-        if (mounted) {
-          Navigator.pop(context); // ✅ CERRAR FORM
+      if (mounted) {
+        if (success) {
+          // ✅ ÉXITO: Cerrar form y mostrar mensaje de éxito
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ ${e.toString()}'),
+              content: Text(
+                isEditMode
+                    ? '✅ Registro actualizado exitosamente'
+                    : '✅ Registro creado exitosamente',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          // ✅ ERROR GENÉRICO: Mostrar error pero NO cerrar
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isEditMode
+                    ? '❌ Error al actualizar registro'
+                    : '❌ Error al crear registro',
+              ),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 4), // ✅ Mostrar más tiempo
             ),
           );
         }
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
+      }
+    } catch (e) {
+      // ✅ ERROR ESPECÍFICO (como duplicado): Mostrar mensaje y CERRAR form
+      if (mounted) {
+        Navigator.pop(context); // ✅ CERRAR FORM
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4), // ✅ Mostrar más tiempo
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }

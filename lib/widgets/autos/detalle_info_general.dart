@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:go_router/go_router.dart';
-import 'package:stampcamera/theme/custom_colors.dart';
 
 class DetalleInfoGeneral extends StatelessWidget {
   final DetalleRegistroModel r;
@@ -16,12 +16,12 @@ class DetalleInfoGeneral extends StatelessWidget {
         // ✅ Header principal con VIN y Serie
         _buildMainHeader(),
 
-        const SizedBox(height: 16),
+        SizedBox(height: DesignTokens.spaceXXS),
 
         // ✅ Información del vehículo
         _buildVehicleInfo(context),
 
-        const SizedBox(height: 16),
+        SizedBox(height: DesignTokens.spaceXXS),
 
         // ✅ Información de logística
         _buildLogisticsInfo(),
@@ -35,111 +35,99 @@ class DetalleInfoGeneral extends StatelessWidget {
   Widget _buildMainHeader() {
     return Material(
       type: MaterialType.transparency,
-      child: Card(
-        elevation: 4,
-        shadowColor: AppColors.primary.withValues(alpha: 0.15),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              // VIN principal
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'VIN',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
+      child: AppCard.outlined(
+        child: Row(
+          children: [
+            // VIN principal
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'VIN',
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeXS * 0.8,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      r.vin,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
+                  ),
+                  SizedBox(height: DesignTokens.spaceXS),
+                  Text(
+                    r.vin,
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeRegular,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
                     ),
+                  ),
 
-                    // Marca sin logo
-                    const SizedBox(height: 8),
+                  // Marca sin logo
+                  SizedBox(height: DesignTokens.spaceS),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spaceS,
+                      vertical: DesignTokens.spaceXS,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                      border: Border.all(
+                        color: AppColors.accent.withValues(alpha: 0.3),
+                        width: DesignTokens.borderWidthNormal,
+                      ),
+                    ),
+                    child: Text(
+                      r.informacionUnidad?.marca.marca ?? 'N/A',
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeXS,
+                        color: AppColors.accent,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+
+                  // Serie si existe
+                  if (r.serie != null && r.serie!.isNotEmpty) ...[
+                    SizedBox(height: DesignTokens.spaceS),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: DesignTokens.spaceS,
+                        vertical: DesignTokens.spaceXS,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.secondary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(
+                          DesignTokens.radiusM,
+                        ),
                         border: Border.all(
-                          color: AppColors.accent.withValues(alpha: 0.3),
-                          width: 1,
+                          color: AppColors.secondary.withValues(alpha: 0.3),
+                          width: DesignTokens.borderWidthNormal,
                         ),
                       ),
                       child: Text(
-                        r.informacionUnidad?.marca.marca ?? 'N/A',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.accent,
+                        'Serie: ${r.serie}',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeXS,
+                          color: AppColors.secondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-
-                    // Serie si existe
-                    if (r.serie != null && r.serie!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.secondary.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          'Serie: ${r.serie}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.secondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
+            ),
 
-              // Logo de la marca como ícono indicativo
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: _buildBrandLogo(
-                  r.informacionUnidad?.marca.marca ?? 'N/A',
-                ),
+            // Logo de la marca como ícono indicativo
+            Container(
+              padding: EdgeInsets.all(DesignTokens.spaceM),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               ),
-            ],
-          ),
+              child: _buildBrandLogo(r.informacionUnidad?.marca.marca ?? 'N/A'),
+            ),
+          ],
         ),
       ),
     );
@@ -149,74 +137,59 @@ class DetalleInfoGeneral extends StatelessWidget {
   // INFORMACIÓN DEL VEHÍCULO
   // ============================================================================
   Widget _buildVehicleInfo(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Título de sección
-            _buildSectionTitle(
-              icon: Icons.directions_car,
-              title: 'Información del Vehículo',
+    return AppCard.outlined(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Título de sección
+          _buildSectionTitle(
+            icon: Icons.directions_car,
+            title: 'Información del Vehículo',
+          ),
+
+          SizedBox(height: DesignTokens.spaceL),
+
+          // Modelo
+          _buildInfoRow(
+            Icons.directions_car,
+            'Modelo',
+            r.informacionUnidad?.modelo ?? 'N/A',
+            AppColors.primary,
+            isLarge: true,
+          ),
+
+          SizedBox(height: DesignTokens.spaceM),
+
+          // Versión
+          GestureDetector(
+            onTap: r.informacionUnidad?.id != null
+                ? () => _navigateToInventarioDetail(
+                    context,
+                    r.informacionUnidad!.id!,
+                  )
+                : null,
+            child: _buildInfoRow(
+              r.informacionUnidad?.inventario == true
+                  ? Icons.inventory_2
+                  : Icons.inventory_2_outlined,
+              'Versión / Inventario',
+              '${r.informacionUnidad?.version ?? 'N/A'} • ${r.informacionUnidad?.inventario == true ? 'Completado' : 'Pendiente'}',
+              r.informacionUnidad?.inventario == true
+                  ? AppColors.success
+                  : AppColors.error,
             ),
+          ),
 
-            const SizedBox(height: 16),
+          SizedBox(height: DesignTokens.spaceM),
 
-            // Modelo
-            _buildInfoRow(
-              Icons.directions_car,
-              'Modelo',
-              r.informacionUnidad?.modelo ?? 'N/A',
-              AppColors.primary,
-              isLarge: true,
-            ),
-
-            const SizedBox(height: 12),
-
-            // Versión
-            GestureDetector(
-              onTap: r.informacionUnidad?.id != null
-                  ? () => _navigateToInventarioDetail(
-                      context,
-                      r.informacionUnidad!.id!,
-                    )
-                  : null,
-              child: _buildInfoRow(
-                r.informacionUnidad?.inventario == true
-                    ? Icons.inventory_2
-                    : Icons.inventory_2_outlined,
-                'Versión / Inventario',
-                '${r.informacionUnidad?.version ?? 'N/A'} • ${r.informacionUnidad?.inventario == true ? 'Completado' : 'Pendiente'}',
-                r.informacionUnidad?.inventario == true
-                    ? AppColors.success
-                    : AppColors.error,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Color
-            _buildInfoRow(
-              Icons.palette,
-              'Color',
-              r.color ?? 'N/A',
-              AppColors.accent,
-            ),
-          ],
-        ),
+          // Color
+          _buildInfoRow(
+            Icons.palette,
+            'Color',
+            r.color ?? 'N/A',
+            AppColors.accent,
+          ),
+        ],
       ),
     );
   }
@@ -225,66 +198,51 @@ class DetalleInfoGeneral extends StatelessWidget {
   // INFORMACIÓN DE LOGÍSTICA
   // ============================================================================
   Widget _buildLogisticsInfo() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: AppColors.secondary.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.secondary.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Título de sección
-            _buildSectionTitle(
-              icon: Icons.local_shipping,
-              title: 'Información Nave',
-            ),
+    return AppCard.outlined(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Título de sección
+          _buildSectionTitle(
+            icon: Icons.local_shipping,
+            title: 'Información Nave',
+          ),
 
-            const SizedBox(height: 16),
+          SizedBox(height: DesignTokens.spaceL),
 
-            // Nave de descarga
-            _buildInfoRow(
-              Icons.local_shipping,
-              'Nave de Descarga',
-              r.naveDescarga ?? 'N/A',
-              AppColors.secondary,
-            ),
+          // Nave de descarga
+          _buildInfoRow(
+            Icons.local_shipping,
+            'Nave de Descarga',
+            r.naveDescarga ?? 'N/A',
+            AppColors.secondary,
+          ),
 
-            const SizedBox(height: 12),
+          SizedBox(height: DesignTokens.spaceM),
 
-            // BL y Factura
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInfoRow(
-                    Icons.receipt_long,
-                    'BL',
-                    r.bl ?? 'N/A',
-                    AppColors.primary,
-                  ),
+          // BL y Factura
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoRow(
+                  Icons.receipt_long,
+                  'BL',
+                  r.bl ?? 'N/A',
+                  AppColors.primary,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildInfoRow(
-                    Icons.description,
-                    'Factura',
-                    r.factura ?? 'N/A',
-                    AppColors.primary,
-                  ),
+              ),
+              SizedBox(width: DesignTokens.spaceL),
+              Expanded(
+                child: _buildInfoRow(
+                  Icons.description,
+                  'Factura',
+                  r.factura ?? 'N/A',
+                  AppColors.primary,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -296,18 +254,18 @@ class DetalleInfoGeneral extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(6),
+          padding: EdgeInsets.all(DesignTokens.spaceXS),
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           ),
-          child: Icon(icon, size: 18, color: AppColors.primary),
+          child: Icon(icon, size: DesignTokens.iconM, color: AppColors.primary),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: DesignTokens.spaceS),
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeRegular,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
@@ -326,14 +284,14 @@ class DetalleInfoGeneral extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(6),
+          padding: EdgeInsets.all(DesignTokens.spaceXS),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           ),
-          child: Icon(icon, size: 16, color: color),
+          child: Icon(icon, size: DesignTokens.iconS, color: color),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: DesignTokens.spaceM),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,16 +299,18 @@ class DetalleInfoGeneral extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[600],
+                  fontSize: DesignTokens.fontSizeM * 0.7,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: DesignTokens.spaceXXS),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: isLarge ? 16 : 14,
+                  fontSize: isLarge
+                      ? DesignTokens.fontSizeRegular
+                      : DesignTokens.fontSizeS,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
@@ -370,7 +330,7 @@ class DetalleInfoGeneral extends StatelessWidget {
   Widget _buildBrandLogo(String marca) {
     return Icon(
       VehicleHelpers.getVehicleIcon(marca),
-      size: 28,
+      size: DesignTokens.iconXXL,
       color: AppColors.primary,
     );
   }

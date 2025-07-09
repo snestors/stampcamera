@@ -526,7 +526,7 @@ class AppInlineError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveColor = color ?? AppColors.error;
-    final effectiveBackgroundColor = backgroundColor ?? effectiveColor.withOpacity(0.1);
+    final effectiveBackgroundColor = backgroundColor ?? effectiveColor.withValues(alpha: 0.1);
 
     return Container(
       padding: padding ?? const EdgeInsets.all(DesignTokens.spaceM),
@@ -534,7 +534,7 @@ class AppInlineError extends StatelessWidget {
         color: effectiveBackgroundColor,
         borderRadius: borderRadius ?? BorderRadius.circular(DesignTokens.radiusM),
         border: Border.all(
-          color: effectiveColor.withOpacity(0.3),
+          color: effectiveColor.withValues(alpha: 0.3),
           width: DesignTokens.borderWidthThin,
         ),
       ),

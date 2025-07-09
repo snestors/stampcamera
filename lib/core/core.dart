@@ -18,6 +18,8 @@ export 'widgets/buttons/app_button.dart';
 export 'widgets/forms/app_text_field.dart';
 export 'widgets/common/app_loading_state.dart';
 export 'widgets/common/app_error_state.dart';
+export 'widgets/common/app_card.dart';
+export 'widgets/common/app_empty_state.dart';
+export 'widgets/common/app_info_row.dart';
+export 'widgets/common/app_section_header.dart';
 
-// Re-exportar custom_colors.dart para compatibilidad
-export '../../theme/custom_colors.dart';
