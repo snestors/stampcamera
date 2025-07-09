@@ -286,15 +286,17 @@ class DetalleRegistrosVin extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: VehicleHelpers
-                          .getCondicionColor(registro.condicion)
-                          .withValues(alpha: 0.1),
+                      color: VehicleHelpers.getCondicionColor(
+                        registro.condicion,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
                       VehicleHelpers.getCondicionIcon(registro.condicion),
                       size: 14,
-                      color: VehicleHelpers.getCondicionColor(registro.condicion),
+                      color: VehicleHelpers.getCondicionColor(
+                        registro.condicion,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -303,7 +305,9 @@ class DetalleRegistrosVin extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: VehicleHelpers.getCondicionColor(registro.condicion),
+                      color: VehicleHelpers.getCondicionColor(
+                        registro.condicion,
+                      ),
                     ),
                   ),
                 ],
@@ -385,7 +389,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
   }
 
   // ============================================================================
-  // CONFIRMACIÓN DE ELIMINACIÓN
+  // CONFIRMACIÓN DE ELIMINACIÓN - ACTUALIZADA CON CONTENEDOR
   // ============================================================================
   void _showDeleteConfirmation(
     BuildContext context,
@@ -431,6 +435,19 @@ class DetalleRegistrosVin extends ConsumerWidget {
                       Text('Fecha: ${registro.fecha}'),
                     if (registro.zonaInspeccion != null)
                       Text('Zona: ${registro.zonaInspeccion!.value}'),
+
+                    // ✅ NUEVO: Mostrar contenedor en confirmación
+                    if (registro.contenedor != null)
+                      Text('Contenedor: ${registro.contenedor!.value}'),
+
+                    // ✅ NUEVO: Mostrar bloque si existe
+                    if (registro.bloque != null)
+                      Text('Bloque: ${registro.bloque!.value}'),
+
+                    // ✅ NUEVO: Mostrar fila y posición si existen
+                    if (registro.fila != null || registro.posicion != null) ...[
+                      Text(_buildUbicacionText(registro)),
+                    ],
                   ],
                 ),
               ),
@@ -464,6 +481,21 @@ class DetalleRegistrosVin extends ConsumerWidget {
         );
       },
     );
+  }
+
+  // ✅ NUEVO: Helper para construir texto de ubicación
+  String _buildUbicacionText(RegistroVin registro) {
+    final ubicacionParts = <String>[];
+
+    if (registro.fila != null) {
+      ubicacionParts.add('Fila ${registro.fila}');
+    }
+
+    if (registro.posicion != null) {
+      ubicacionParts.add('Posición ${registro.posicion}');
+    }
+
+    return 'Ubicación: ${ubicacionParts.join(' - ')}';
   }
 
   Future<void> _deleteRegistro(
@@ -548,7 +580,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
   }
 
   // ============================================================================
-  // INFORMACIÓN DEL REGISTRO
+  // INFORMACIÓN DEL REGISTRO - ACTUALIZADA CON CONTENEDOR
   // ============================================================================
   Widget _buildRegistroInfo(RegistroVin registro) {
     return Column(
@@ -562,7 +594,18 @@ class DetalleRegistrosVin extends ConsumerWidget {
             AppColors.secondary,
           ),
 
-        // Bloque si existe
+        // ✅ NUEVO: Contenedor (solo para condición ALMACEN)
+        if (registro.contenedor != null) ...[
+          const SizedBox(height: 8),
+          _buildInfoRow(
+            Icons.inventory_2,
+            'Contenedor',
+            registro.contenedor!.value,
+            AppColors.accent,
+          ),
+        ],
+
+        // Bloque si existe (solo para condición PUERTO)
         if (registro.bloque != null) ...[
           const SizedBox(height: 8),
           _buildInfoRow(
@@ -571,6 +614,12 @@ class DetalleRegistrosVin extends ConsumerWidget {
             registro.bloque!.value,
             AppColors.accent,
           ),
+        ],
+
+        // ✅ NUEVO: Fila y Posición (solo para condición PUERTO)
+        if (registro.fila != null || registro.posicion != null) ...[
+          const SizedBox(height: 8),
+          _buildFilaPosicionRow(registro),
         ],
 
         // Creado por
@@ -583,6 +632,71 @@ class DetalleRegistrosVin extends ConsumerWidget {
             AppColors.textSecondary,
           ),
         ],
+      ],
+    );
+  }
+
+  // ✅ NUEVO: Método para mostrar Fila y Posición en la misma fila
+  Widget _buildFilaPosicionRow(RegistroVin registro) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppColors.secondary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Icon(
+            Icons.grid_view,
+            size: 14,
+            color: AppColors.secondary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ubicación en Puerto',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Row(
+                children: [
+                  if (registro.fila != null) ...[
+                    Text(
+                      'Fila ${registro.fila}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                  if (registro.fila != null && registro.posicion != null)
+                    Text(
+                      ' • ',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                    ),
+                  if (registro.posicion != null) ...[
+                    Text(
+                      'Pos. ${registro.posicion}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -671,5 +785,4 @@ class DetalleRegistrosVin extends ConsumerWidget {
       ],
     );
   }
-
 }

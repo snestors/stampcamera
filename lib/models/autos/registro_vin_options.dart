@@ -104,16 +104,30 @@ class FieldPermission {
   }
 }
 
+// ✅ ACTUALIZADA: ContenedorDisponible con información de nave
 class ContenedorDisponible {
   final int id;
   final String nContenedor;
+  final String? naveDescarga; // ✅ AGREGAR campo de nave
+  final int? naveDescargaId; // ✅ AGREGAR ID de nave
 
-  const ContenedorDisponible({required this.id, required this.nContenedor});
+  const ContenedorDisponible({
+    required this.id,
+    required this.nContenedor,
+    this.naveDescarga, // ✅ NUEVO
+    this.naveDescargaId, // ✅ NUEVO
+  });
 
   factory ContenedorDisponible.fromJson(Map<String, dynamic> json) {
     return ContenedorDisponible(
       id: json['id'],
       nContenedor: json['n_contenedor'],
+      naveDescarga: json['nave_descarga'], // ✅ NUEVO
+      naveDescargaId: json['nave_descarga_id'], // ✅ NUEVO
     );
   }
+
+  // ✅ NUEVO: Getter para mostrar información completa
+  String get displayText =>
+      naveDescarga != null ? '$nContenedor - $naveDescarga' : nContenedor;
 }

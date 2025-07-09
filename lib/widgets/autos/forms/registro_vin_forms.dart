@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
+import 'package:stampcamera/widgets/autos/forms/dialogs/contenedor_search_dialog.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
 import 'package:stampcamera/theme/custom_colors.dart';
 
@@ -32,6 +33,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   int? _selectedFila;
   int? _selectedPosicion;
   int? _selectedContenedor;
+  String? _selectedContenedorText; // ✅ NUEVA: Para guardar el texto descriptivo
   String? _fotoVinPath;
   bool _isLoading = false;
 
@@ -40,6 +42,9 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   String get formTitle => isEditMode ? 'Editar Inspección' : 'Nueva Inspección';
   String get submitButtonText => isEditMode ? 'Actualizar' : 'Guardar';
   Color get primaryColor => isEditMode ? Colors.orange : AppColors.secondary;
+
+  // ✅ Control de initial_values
+  bool _hasAppliedInitialValues = false;
 
   @override
   void initState() {
@@ -59,50 +64,17 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
       _selectedBloque = registro.bloque?.id;
       _selectedFila = registro.fila;
       _selectedPosicion = registro.posicion;
-      _selectedContenedor = registro.contenedor?.id;
+
+      // ✅ NUEVO: Inicializar contenedor si existe
+      if (registro.contenedor != null) {
+        _selectedContenedor = registro.contenedor!.id;
+        _selectedContenedorText = registro.contenedor!.value;
+      }
     }
     // Nota: Para modo crear, los initial_values se manejan en initState después de cargar options
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final optionsAsync = ref.watch(registroVinOptionsProvider);
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: optionsAsync.when(
-          data: (options) {
-            // ✅ Aplicar initial_values solo en modo crear y solo una vez
-            if (!isEditMode && !_hasAppliedInitialValues) {
-              _applyInitialValues(options);
-            }
-            return _buildForm(options);
-          },
-          loading: () => _buildLoadingState(),
-          error: (error, stack) => _buildErrorState(error),
-        ),
-      ),
-    );
-  }
-
-  // ✅ Agregar esta variable de estado para controlar si ya se aplicaron los valores iniciales:
-  bool _hasAppliedInitialValues = false;
-
-  // ✅ Agregar este método para aplicar initial_values:
+  /// Aplicar valores iniciales del backend
   void _applyInitialValues(RegistroVinOptions options) {
     if (_hasAppliedInitialValues) return;
 
@@ -144,7 +116,46 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
     });
   }
 
-  Widget _buildForm(RegistroVinOptions options) {
+  @override
+  Widget build(BuildContext context) {
+    final optionsAsync = ref.watch(registroVinOptionsProvider);
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: optionsAsync.when(
+          data: (options) {
+            // ✅ Obtener detalle del VIN para contexto
+            final detalleAsync = ref.watch(detalleRegistroProvider(widget.vin));
+            final detalle = detalleAsync.valueOrNull;
+
+            // ✅ Aplicar initial_values solo en modo crear y solo una vez
+            if (!isEditMode && !_hasAppliedInitialValues) {
+              _applyInitialValues(options);
+            }
+            return _buildForm(options, detalle);
+          },
+          loading: () => _buildLoadingState(),
+          error: (error, stack) => _buildErrorState(error),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm(RegistroVinOptions options, DetalleRegistroModel? detalle) {
     return Column(
       children: [
         // Header fijo
@@ -165,7 +176,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Campos del formulario con opciones dinámicas
-                    _buildFormFields(options),
+                    _buildFormFields(options, detalle),
 
                     const SizedBox(height: 16),
 
@@ -267,12 +278,13 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
     );
   }
 
-  // Y actualizar _buildFormFields para incluir el contenedor placeholder:
-
-  Widget _buildFormFields(RegistroVinOptions options) {
+  Widget _buildFormFields(
+    RegistroVinOptions options,
+    DetalleRegistroModel? detalle,
+  ) {
     return Column(
       children: [
-        // ✅ Condición con opciones dinámicas
+        // ✅ Condición usando CondicionOption
         DropdownButtonFormField<String>(
           value: _selectedCondicion,
           decoration: InputDecoration(
@@ -298,6 +310,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                     }
                     if (value?.toUpperCase() != 'ALMACEN') {
                       _selectedContenedor = null;
+                      _selectedContenedorText = null;
                     }
                   });
                 }
@@ -309,7 +322,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
 
         const SizedBox(height: 16),
 
-        // ✅ Zona de Inspección (siempre visible)
+        // ✅ Zona de Inspección usando ZonaInspeccionOption
         DropdownButtonFormField<int>(
           value: _selectedZonaInspeccion,
           isExpanded: true,
@@ -364,7 +377,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
 
           const SizedBox(height: 16),
 
-          // Bloque (solo para PUERTO)
+          // ✅ Bloque usando BloqueOption
           if (options.bloques.isNotEmpty) ...[
             DropdownButtonFormField<int>(
               value: _selectedBloque,
@@ -471,7 +484,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           ),
         ],
 
-        // ✅ CAMPOS ESPECÍFICOS PARA ALMACEN (PLACEHOLDER)
+        // ✅ CAMPOS ESPECÍFICOS PARA ALMACEN
         if (_selectedCondicion?.toUpperCase() == 'ALMACEN') ...[
           const SizedBox(height: 16),
 
@@ -506,55 +519,8 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
 
           const SizedBox(height: 16),
 
-          // ✅ CONTENEDOR PLACEHOLDER
-          DropdownButtonFormField<int>(
-            value: _selectedContenedor,
-            decoration: const InputDecoration(
-              labelText: 'Contenedor',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.inventory, color: AppColors.accent),
-              suffixIcon: Icon(Icons.construction, color: Colors.orange),
-            ),
-            items: const [
-              DropdownMenuItem<int>(
-                value: null,
-                child: Text('-- En desarrollo --'),
-              ),
-            ],
-            onChanged: null, // ✅ Deshabilitado temporalmente
-            validator: null, // ✅ Sin validación por ahora
-          ),
-
-          const SizedBox(height: 8),
-
-          // ✅ Mensaje de placeholder
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: Colors.orange.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.orange, size: 16),
-                SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    'Funcionalidad de contenedores en desarrollo',
-                    style: TextStyle(
-                      color: Colors.orange,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // ✅ CAMPO DE BÚSQUEDA DE CONTENEDORES
+          _buildContenedorField(options, detalle),
         ],
 
         // ✅ Mensaje informativo si no hay campos específicos
@@ -599,6 +565,252 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
       ],
     );
   }
+
+  // ============================================================================
+  // MÉTODOS DE CONTENEDORES CON BÚSQUEDA
+  // ============================================================================
+
+  /// Construir campo de contenedor con búsqueda
+  Widget _buildContenedorField(
+    RegistroVinOptions options,
+    DetalleRegistroModel? detalle,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ✅ Campo de búsqueda de contenedores
+        _buildContenedorSearchField(),
+
+        // ✅ Información del contenedor seleccionado (si existe)
+        if (_selectedContenedor != null) _buildSelectedContenedorDisplay(),
+      ],
+    );
+  }
+
+  /// Campo de búsqueda/selección de contenedores
+  Widget _buildContenedorSearchField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ✅ Mostrar contenedor actual en modo edición
+        if (isEditMode &&
+            widget.registroVin?.contenedor != null &&
+            _selectedContenedor == null) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.accent.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.inventory_2,
+                      color: AppColors.accent,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Contenedor actual:',
+                      style: TextStyle(
+                        color: AppColors.accent,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.registroVin!.contenedor!.value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showContenedorSearchDialog(),
+                        icon: const Icon(Icons.search, size: 16),
+                        label: const Text('Cambiar contenedor'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.accent,
+                          side: const BorderSide(color: AppColors.accent),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _selectedContenedor = null;
+                          _selectedContenedorText = null;
+                        });
+                      },
+                      icon: const Icon(Icons.clear, size: 16),
+                      label: const Text('Quitar'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          // ✅ Campo para crear/seleccionar contenedor
+          InkWell(
+            onTap: () => _showContenedorSearchDialog(),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.inventory_2, color: AppColors.accent),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedContenedor != null
+                              ? 'Contenedor seleccionado'
+                              : 'Seleccionar contenedor${_isContenedorRequired() ? ' *' : ''}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _selectedContenedor != null
+                                ? Colors.black87
+                                : Colors.grey[600],
+                          ),
+                        ),
+                        if (_selectedContenedor != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            _getSelectedContenedorText(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Toca para buscar y seleccionar un contenedor',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _selectedContenedor != null ? Icons.edit : Icons.search,
+                    color: AppColors.accent,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
+        // ✅ Mensaje de validación si es requerido
+        if (_isContenedorRequired() && _selectedContenedor == null) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Seleccione un contenedor',
+            style: TextStyle(color: Colors.red[700], fontSize: 12),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Mostrar dialog de búsqueda de contenedores
+  void _showContenedorSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => ContenedorSearchDialog(
+        onContenedorSelected: (contenedorId, contenedorText) {
+          setState(() {
+            _selectedContenedor = contenedorId;
+            _selectedContenedorText =
+                contenedorText; // Nueva variable para guardar el texto
+          });
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  /// Obtener texto del contenedor seleccionado
+  String _getSelectedContenedorText() {
+    if (isEditMode &&
+        widget.registroVin?.contenedor != null &&
+        _selectedContenedor == null) {
+      return widget.registroVin!.contenedor!.value;
+    }
+    return _selectedContenedorText ?? 'Contenedor ID: $_selectedContenedor';
+  }
+
+  /// Display del contenedor seleccionado (información adicional)
+  Widget _buildSelectedContenedorDisplay() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: AppColors.accent.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: AppColors.accent, size: 16),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '✓ Contenedor configurado',
+              style: const TextStyle(
+                color: AppColors.accent,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Determinar si el contenedor es requerido
+  bool _isContenedorRequired() {
+    // Por ejemplo: requerido solo para condición ALMACEN
+    return _selectedCondicion?.toUpperCase() == 'ALMACEN';
+  }
+
+  // ============================================================================
+  // RESTO DE MÉTODOS (SIN CAMBIOS)
+  // ============================================================================
 
   Widget _buildFotoSection() {
     return ReusableCameraCard(
@@ -676,88 +888,102 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // ✅ En modo crear, la foto es obligatoria
-    if (!isEditMode && _fotoVinPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La foto VIN es obligatoria')),
-      );
-      return;
-    }
+    Future<void> _submitForm() async {
+      if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      final notifier = ref.read(detalleRegistroProvider(widget.vin).notifier);
-      bool success;
-
-      if (isEditMode) {
-        // ✅ MODO EDICIÓN
-        success = await notifier.updateRegistroVin(
-          registroVinId: widget.registroVin!.id,
-          condicion: _selectedCondicion,
-          zonaInspeccion: _selectedZonaInspeccion,
-          fotoVin: _fotoVinPath != null ? File(_fotoVinPath!) : null,
-          bloque: _selectedBloque,
-          fila: _selectedFila,
-          posicion: _selectedPosicion,
-          contenedorId: _selectedContenedor,
+      // ✅ Validación de contenedor requerido
+      if (_isContenedorRequired() && _selectedContenedor == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Seleccione un contenedor para la condición ALMACEN'),
+          ),
         );
-      } else {
-        // ✅ MODO CREACIÓN
-        success = await notifier.createRegistroVin(
-          condicion: _selectedCondicion!,
-          zonaInspeccion: _selectedZonaInspeccion!,
-          fotoVin: File(_fotoVinPath!),
-          bloque: _selectedBloque,
-          fila: _selectedFila,
-          posicion: _selectedPosicion,
-          contenedorId: _selectedContenedor,
-        );
+        return;
       }
 
-      if (mounted) {
-        if (success) {
-          // ✅ ÉXITO: Cerrar form y mostrar mensaje de éxito
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                isEditMode
-                    ? '✅ Registro actualizado exitosamente'
-                    : '✅ Registro creado exitosamente',
-              ),
-              backgroundColor: Colors.green,
-            ),
+      // ✅ En modo crear, la foto es obligatoria
+      if (!isEditMode && _fotoVinPath == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('La foto VIN es obligatoria')),
+        );
+        return;
+      }
+
+      setState(() => _isLoading = true);
+
+      try {
+        final notifier = ref.read(detalleRegistroProvider(widget.vin).notifier);
+        bool success;
+
+        if (isEditMode) {
+          // ✅ MODO EDICIÓN
+          success = await notifier.updateRegistroVin(
+            registroVinId: widget.registroVin!.id,
+            condicion: _selectedCondicion,
+            zonaInspeccion: _selectedZonaInspeccion,
+            fotoVin: _fotoVinPath != null ? File(_fotoVinPath!) : null,
+            bloque: _selectedBloque,
+            fila: _selectedFila,
+            posicion: _selectedPosicion,
+            contenedorId: _selectedContenedor,
           );
         } else {
-          // ✅ ERROR GENÉRICO: Mostrar error pero NO cerrar
+          // ✅ MODO CREACIÓN
+          success = await notifier.createRegistroVin(
+            condicion: _selectedCondicion!,
+            zonaInspeccion: _selectedZonaInspeccion!,
+            fotoVin: File(_fotoVinPath!),
+            bloque: _selectedBloque,
+            fila: _selectedFila,
+            posicion: _selectedPosicion,
+            contenedorId: _selectedContenedor,
+          );
+        }
+
+        if (mounted) {
+          if (success) {
+            // ✅ ÉXITO: Cerrar form y mostrar mensaje de éxito
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  isEditMode
+                      ? '✅ Registro actualizado exitosamente'
+                      : '✅ Registro creado exitosamente',
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else {
+            // ✅ ERROR GENÉRICO: Mostrar error pero NO cerrar
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  isEditMode
+                      ? '❌ Error al actualizar registro'
+                      : '❌ Error al crear registro',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        // ✅ ERROR ESPECÍFICO (como duplicado): Mostrar mensaje y CERRAR form
+        if (mounted) {
+          Navigator.pop(context); // ✅ CERRAR FORM
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                isEditMode
-                    ? '❌ Error al actualizar registro'
-                    : '❌ Error al crear registro',
-              ),
+              content: Text('❌ ${e.toString()}'),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4), // ✅ Mostrar más tiempo
             ),
           );
         }
-      }
-    } catch (e) {
-      // ✅ ERROR ESPECÍFICO (como duplicado): Mostrar mensaje y CERRAR form
-      if (mounted) {
-        Navigator.pop(context); // ✅ CERRAR FORM
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4), // ✅ Mostrar más tiempo
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
