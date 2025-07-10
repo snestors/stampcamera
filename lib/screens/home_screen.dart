@@ -314,7 +314,7 @@ class _AppCard extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  size: DesignTokens.iconXXXL,
+                  size: DesignTokens.iconXXXL * 1.4,
                   color: isDisabled ? AppColors.textLight : color,
                 ),
               ),

@@ -49,7 +49,7 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioNave>> {
   @override
   Future<List<InventarioNave>> build() async {
     _service = ref.read(inventarioBaseServiceProvider);
-    ref.keepAlive();
+    ref.keepAlive(); // Restaurar keepAlive para evitar rebuilds innecesarios
     return await loadInitial();
   }
 
@@ -236,6 +236,7 @@ class InventarioDetalleNotifier
   @override
   Future<InventarioBaseResponse> build(int informacionUnidadId) async {
     final service = ref.read(inventarioBaseServiceProvider);
+    // Siempre traer datos frescos del servidor
     return await service.getByInformacionUnidad(informacionUnidadId);
   }
 

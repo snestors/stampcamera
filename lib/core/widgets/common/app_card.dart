@@ -120,6 +120,12 @@ class AppCard extends StatelessWidget {
       type: AppCardType.elevated,
       size: size,
       padding: padding,
+      backgroundColor: Color.fromARGB(
+        255,
+        250,
+        251,
+        253,
+      ), // Default white background
       margin: margin,
       elevation: elevation,
       onTap: onTap,
@@ -182,6 +188,35 @@ class AppCard extends StatelessWidget {
       padding: padding,
       margin: margin,
       backgroundColor: backgroundColor,
+      onTap: onTap,
+      title: title,
+      subtitle: subtitle,
+      leading: leading,
+      trailing: trailing,
+      child: child,
+    );
+  }
+
+  factory AppCard.soft({
+    Key? key,
+    required Widget child,
+    AppCardSize size = AppCardSize.medium,
+    EdgeInsets? padding,
+    EdgeInsets? margin,
+    VoidCallback? onTap,
+    String? title,
+    String? subtitle,
+    Widget? leading,
+    Widget? trailing,
+  }) {
+    return AppCard(
+      key: key,
+      type: AppCardType.elevated,
+      size: size,
+      padding: padding,
+      margin: margin,
+      backgroundColor: AppColors.primary.withValues(alpha: 0.02),
+      elevation: 0.5,
       onTap: onTap,
       title: title,
       subtitle: subtitle,

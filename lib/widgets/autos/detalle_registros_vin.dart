@@ -37,7 +37,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
           final index = entry.key;
           final registro = entry.value;
           return Padding(
-            padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+            padding: EdgeInsets.only(bottom: DesignTokens.spaceM),
             child: _buildRegistroCard(context, ref, registro, index),
           );
         }),
@@ -72,10 +72,10 @@ class DetalleRegistrosVin extends ConsumerWidget {
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
               onTap: () => _showAgregarRegistroForm(context),
               child: Padding(
-                padding: EdgeInsets.all(DesignTokens.spaceXS),
+                padding: EdgeInsets.all(DesignTokens.spaceS),
                 child: Icon(
                   Icons.add,
-                  size: DesignTokens.iconM,
+                  size: DesignTokens.iconXL,
                   color: Colors.white,
                 ),
               ),
@@ -143,10 +143,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
     RegistroVin registro,
     int index,
   ) {
-    return AppCard(
-      type: AppCardType.outlined,
-      backgroundColor: AppColors.primary.withValues(alpha: 0.03),
-      borderColor: AppColors.primary.withValues(alpha: 0.1),
+    return AppCard.elevated(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -155,14 +152,32 @@ class DetalleRegistrosVin extends ConsumerWidget {
 
           SizedBox(height: DesignTokens.spaceS),
 
-          // ✅ Información del registro
-          _buildRegistroInfo(registro),
-
-          // ✅ Foto si existe
-          if (registro.fotoVinThumbnailUrl != null) ...[
-            SizedBox(height: DesignTokens.spaceS),
-            _buildFotoSection(registro),
-          ],
+          // ✅ Información del registro y foto en row
+          if (registro.fotoVinThumbnailUrl != null)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Foto (lado izquierdo)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                  child: NetworkImagePreview(
+                    thumbnailUrl: registro.fotoVinThumbnailUrl!,
+                    fullImageUrl: registro.fotoVinUrl!,
+                    size: 120,
+                  ),
+                ),
+                
+                SizedBox(width: DesignTokens.spaceM),
+                
+                // Información (lado derecho)
+                Expanded(
+                  child: _buildRegistroInfo(registro),
+                ),
+              ],
+            )
+          else
+            // Si no hay foto, mostrar solo la información
+            _buildRegistroInfo(registro),
         ],
       ),
     );
@@ -287,7 +302,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
                 padding: EdgeInsets.all(DesignTokens.spaceXXS),
                 child: Icon(
                   Icons.edit,
-                  size: DesignTokens.iconS,
+                  size: DesignTokens.iconXXL,
                   color: Colors.orange,
                 ),
               ),
@@ -312,7 +327,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
                 padding: EdgeInsets.all(DesignTokens.spaceXXS),
                 child: Icon(
                   Icons.delete_outline,
-                  size: DesignTokens.iconS,
+                  size: DesignTokens.iconXXL,
                   color: Colors.red,
                 ),
               ),
@@ -687,49 +702,4 @@ class DetalleRegistrosVin extends ConsumerWidget {
     );
   }
 
-  // ============================================================================
-  // SECCIÓN DE FOTO
-  // ============================================================================
-  Widget _buildFotoSection(RegistroVin registro) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.all(DesignTokens.spaceXXS),
-          decoration: BoxDecoration(
-            color: AppColors.accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
-          ),
-          child: const Icon(
-            Icons.camera_alt,
-            size: DesignTokens.iconS,
-            color: AppColors.accent,
-          ),
-        ),
-        SizedBox(width: DesignTokens.spaceXS),
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Foto VIN',
-                style: TextStyle(
-                  fontSize: DesignTokens.fontSizeXS * 0.9,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
-          child: NetworkImagePreview(
-            thumbnailUrl: registro.fotoVinThumbnailUrl!,
-            fullImageUrl: registro.fotoVinUrl!,
-            size: DesignTokens.iconXL,
-          ),
-        ),
-      ],
-    );
-  }
 }

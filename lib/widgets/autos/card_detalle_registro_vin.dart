@@ -267,7 +267,7 @@ class DetalleRegistroCard extends StatelessWidget {
         // Badge Pedeteado
         Expanded(
           child: _buildStatusBadge(
-            'Pedeteado',
+            r.pedeteado ? 'Pedeteado' : 'No Pedeteado',
             r.pedeteado ? AppColors.success : AppColors.warning,
             r.pedeteado ? Icons.check_circle : Icons.pending,
           ),

@@ -10,19 +10,17 @@ Aplicación Flutter para gestión de vehículos con cámara de sellos. Se está 
 - **detalle_info_general.dart** - Información general del vehículo migrada
 - **detalle_registros_vin.dart** - Historial de registros VIN migrado
 - **detalle_fotos_presentacion.dart** - Galería de fotos migrada
+- **detalle_danos.dart** - Migración completa a design system ✅
 - **Limpieza de duplicados** - Eliminado custom_colors.dart duplicado
 - **AppCard component** - Componente central creado y funcionando
 - **AppEmptyState** - Componente para estados vacíos
 - **AppSectionHeader** - Headers de sección estandarizados
 
 ### 🔄 En Progreso
-- **detalle_danos.dart** - Migración parcial (header migrado, cards pendientes)
+- Ninguna
 
 ### 📋 Pendientes
-- Completar migración de detalle_danos.dart
-- Reemplazar hardcoded colors con AppColors
-- Migrar empty state a AppEmptyState
-- Migrar damage cards a AppCard
+- Ninguna (migración del design system pausada)
 
 ## Arquitectura del Design System
 
@@ -39,6 +37,7 @@ lib/
 │           ├── app_card.dart         # Componente Card principal
 │           ├── app_empty_state.dart  # Estados vacíos
 │           ├── app_section_header.dart # Headers de sección
+│           ├── app_search_select.dart  # ✅ Select con búsqueda
 │           └── app_button.dart       # Botones estandarizados
 └── widgets/
     └── autos/
@@ -46,7 +45,9 @@ lib/
         ├── detalle_info_general.dart         # ✅ Migrado
         ├── detalle_registros_vin.dart        # ✅ Migrado
         ├── detalle_fotos_presentacion.dart   # ✅ Migrado
-        └── detalle_danos.dart                # 🔄 En progreso
+        ├── detalle_danos.dart                # ✅ Migrado
+        └── forms/
+            └── dano_form.dart                # ✅ AppSearchSelect implementado
 ```
 
 ### Componentes Principales
@@ -96,6 +97,30 @@ AppColors.warning      // Naranja advertencia
 AppColors.error        // Rojo error
 AppColors.textPrimary  // Negro texto principal
 AppColors.textSecondary // Gris texto secundario
+AppColors.surface      // Fondo de campos
+AppColors.neutral      // Bordes neutros
+```
+
+#### AppSearchSelect
+```dart
+// Select con búsqueda como en la web
+AppSearchSelect<int>(
+  label: 'Tipo de Daño',
+  hint: 'Seleccionar tipo de daño...',
+  value: _selectedValue,
+  isRequired: true,
+  prefixIcon: const Icon(Icons.search),
+  options: items.map<AppSearchSelectOption<int>>((item) {
+    return AppSearchSelectOption<int>(
+      value: item['value'],
+      label: item['label'],
+      subtitle: item['subtitle'], // Opcional
+      leading: Widget(),          // Opcional
+    );
+  }).toList(),
+  onChanged: (value) => setState(() => _selectedValue = value),
+  validator: (value) => value == null ? 'Requerido' : null,
+)
 ```
 
 ## Problemas Resueltos
@@ -173,6 +198,62 @@ git push origin main
 
 ## ✅ Funcionalidades Completadas (Sesión Actual)
 
+### **🔍 Sistema AppSearchSelect con Búsqueda**
+Implementado sistema completo de select con búsqueda como en la web:
+
+#### **AppSearchSelect - Componente Principal:**
+- **Input funcional** - Campo de texto real donde se puede escribir para buscar
+- **Búsqueda en tiempo real** - Filtra opciones mientras escribes  
+- **Overlay inteligente** - Se abre al hacer focus, se cierra al tocar afuera
+- **Fuente pequeña** - `DesignTokens.fontSizeS` para UI compacta
+- **Offset customizable** - Posicionado a 60px del input
+- **Crash protection** - Verificaciones de `mounted` en todos los métodos
+
+#### **Implementado en Formulario de Daños:**
+- ✅ **Tipo de Daño** - Con búsqueda y icono de problema  
+- ✅ **Área de Daño** - Con búsqueda y icono de ubicación
+
+#### **Dropdowns Normales Estandarizados:**
+Aplicado mismo estilo visual a todos los dropdowns restantes:
+- ✅ **Condición** - Bordes redondeados, fuente pequeña, colores design system
+- ✅ **Severidad** - Mantuvo círculos de colores + nuevo estilo
+- ✅ **Responsabilidad** - Estilo consistente y fuente pequeña  
+- ✅ **Documento de Referencia** - Mantuvo iconos complejos + nuevo estilo
+
+#### **Características Técnicas:**
+```dart
+// AppSearchSelect
+AppSearchSelect<int>(
+  label: 'Tipo de Daño',
+  hint: 'Seleccionar tipo de daño...',
+  value: _selectedTipoDano,
+  isRequired: true,
+  prefixIcon: const Icon(Icons.report_problem),
+  options: tiposDano.map<AppSearchSelectOption<int>>((tipo) {
+    return AppSearchSelectOption<int>(
+      value: tipo['value'],
+      label: tipo['label'],
+    );
+  }).toList(),
+  onChanged: (value) => setState(() => _selectedTipoDano = value),
+)
+
+// Dropdown Estandarizado  
+DropdownButtonFormField<int>(
+  style: TextStyle(
+    fontSize: DesignTokens.fontSizeS,
+    color: AppColors.textPrimary,
+  ),
+  decoration: InputDecoration(
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+    ),
+    fillColor: AppColors.surface,
+    filled: true,
+  ),
+)
+```
+
 ### **🧹 Sistema de Limpieza de Providers**
 Implementado sistema completo de gestión de estado entre sesiones:
 
@@ -217,6 +298,7 @@ Eliminados TODOS los warnings y errores de compilación:
 
 #### **Errores de Compilación:**
 - ✅ `argument_type_not_assignable` - dano_form.dart (int? → int con operador !)
+- ✅ `_AssertionError lifecycle.defunct` - AppSearchSelect crash al cerrar formulario
 
 ### **📦 Actualización de Dependencias**
 Actualizadas dependencias críticas:
@@ -255,22 +337,55 @@ cd "C:\Users\Nestor\Desktop\Flutter\stampcamera"
 claude-code .
 ```
 
+## 🚨 **ISSUES CRÍTICOS PENDIENTES**
+
+### **⚠️ Error Backend - Eliminación de Registros**
+**Error 500**: No se puede eliminar `RegistroVinModel` por foreign keys protegidas
+- **Causa**: `RegistroVinImagenesModel.registro_vin` impide eliminación
+- **Solución Backend**: Implementar eliminación en cascada o validación previa
+- **Registro**: VIN `LJ11RFCE9T1900765` con daños que tienen fotos
+
+### **🎯 Tareas Backend Pendientes**
+1. **Revisar modelo Django**: `RegistroVinImagenesModel` foreign key constraints
+2. **Implementar cascada**: `on_delete=models.CASCADE` en relaciones
+3. **Validación previa**: Verificar dependencias antes de eliminar
+4. **Testing**: Probar eliminación con y sin dependencias
+
 ## 🏠 **CONTINUAR DESDE CASA**
 
-### **📍 Estado Actual - LISTO PARA TESTING**
-El proyecto está **100% limpio y funcional**:
+### **📍 Estado Actual - FUNCIONAL CON ISSUES**
+El proyecto está **funcional** con mejoras implementadas:
 - ✅ `flutter analyze` - **0 issues**
 - ✅ Sistema de limpieza de providers completamente implementado  
 - ✅ Todas las dependencias críticas actualizadas
 - ✅ Código sin warnings ni errores
+- ✅ **Fix dropdown asistencia** - Agregados equals/hashCode a ZonaTrabajo/Nave
+- ✅ **Fix limpieza pedeteo** - Agregados todos los providers de pedeteo al SessionManager
+- ✅ **Mejoras UI Design System** - Iconos más grandes, imágenes más grandes, AppCard.soft() con fondo suave
 
 ### **🎯 Próximos Pasos Prioritarios (En Casa)**
 
-#### **1. 🧪 Testing del Sistema de Providers - CRÍTICO**
+#### **1. 🧪 Testing del Sistema AppSearchSelect - CRÍTICO**
 ```bash
 # Probar que la app ejecuta sin errores
 flutter run
 
+# Testing manual prioritario:
+1. **AppSearchSelect** - Verificar nueva funcionalidad
+   - Abrir formulario de daños → usar Tipo de Daño y Área de Daño
+   - Escribir para buscar → verificar filtrado en tiempo real
+   - Seleccionar opciones → verificar que se actualiza correctamente
+   - Tocar afuera → verificar que se cierra el overlay
+   - Cerrar formulario → verificar que no hay crashes
+
+2. **Dropdowns Estandarizados** - Verificar estilos consistentes
+   - Probar Condición, Severidad, Responsabilidad, Documento
+   - Verificar que todos tienen el mismo estilo visual
+   - Confirmar fuentes pequeñas y bordes redondeados
+```
+
+#### **2. 🧪 Testing del Sistema de Providers - CRÍTICO**
+```bash
 # Testing manual prioritario:
 1. **Login/Logout** - Verificar que clearSession() funciona
    - Hacer login → trabajar un rato → logout
@@ -286,12 +401,12 @@ flutter run
    - Confirmar que B no ve datos de A
 ```
 
-#### **2. 🧭 Testing Navegación go_router 16.0.0**
+#### **3. 🧭 Testing Navegación go_router 16.0.0**
 - Probar todas las rutas principales de la app
 - Verificar navegación entre pantallas funciona
 - Buscar posibles breaking changes
 
-#### **3. 📱 Testing Funcionalidades Críticas**
+#### **4. 📱 Testing Funcionalidades Críticas**
 - **Cámara** - Tomar fotos, galería
 - **GPS** - Ubicación en asistencia
 - **Permisos** - Verificar que se piden correctamente
@@ -302,17 +417,20 @@ cd "C:\Users\Nestor\Desktop\Flutter\stampcamera"
 claude-code .
 ```
 
-**Decir a Claude:** "Revisa CLAUDE.md. El proyecto está 100% limpio (0 issues en flutter analyze). Necesito hacer testing del sistema de limpieza de providers y verificar que go_router 16.0.0 no tenga breaking changes. ¿Por dónde empezamos?"
+**Decir a Claude:** "Revisa CLAUDE.md. He implementado AppSearchSelect con búsqueda como en la web y estandarizado todos los dropdowns. Necesito hacer testing del nuevo sistema de búsqueda y verificar que todo funciona correctamente. ¿Por dónde empezamos?"
 
 ### **📝 Si Encuentras Problemas**
-1. **Error de providers** → Revisar SessionManager en `lib/providers/session_manager_provider.dart`
-2. **Error de navegación** → Verificar rutas en go_router 16.0.0
-3. **Error de dependencias** → Ejecutar `flutter pub get`
+1. **Error AppSearchSelect** → Revisar `lib/core/widgets/common/app_search_select.dart`
+2. **Crash al cerrar formulario** → Verificar checks de `mounted` en overlay methods
+3. **Error de providers** → Revisar SessionManager en `lib/providers/session_manager_provider.dart`
+4. **Error de navegación** → Verificar rutas en go_router 16.0.0
+5. **Error de dependencias** → Ejecutar `flutter pub get`
 
 ### **✅ Lo que NO necesitas hacer**
 - ❌ Corregir warnings (ya están todos eliminados)
 - ❌ Actualizar dependencias (ya están actualizadas)  
 - ❌ Implementar sistema de providers (ya está completo)
+- ❌ Crear AppSearchSelect (ya está implementado y funcionando)
 
 ## Notas Técnicas
 
@@ -346,4 +464,4 @@ DetalleRegistroModel {
 ---
 
 *Archivo generado automáticamente por Claude Code*
-*Última actualización: 2025-07-09 - ✅ PROYECTO 100% LIMPIO Y LISTO PARA TESTING*
+*Última actualización: 2025-07-10 - ✅ APPSEARCHSELECT IMPLEMENTADO Y DROPDOWNS ESTANDARIZADOS*

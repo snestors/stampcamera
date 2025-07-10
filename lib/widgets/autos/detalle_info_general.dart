@@ -16,12 +16,12 @@ class DetalleInfoGeneral extends StatelessWidget {
         // ✅ Header principal con VIN y Serie
         _buildMainHeader(),
 
-        SizedBox(height: DesignTokens.spaceXXS),
+        SizedBox(height: DesignTokens.spaceM),
 
         // ✅ Información del vehículo
         _buildVehicleInfo(context),
 
-        SizedBox(height: DesignTokens.spaceXXS),
+        SizedBox(height: DesignTokens.spaceM),
 
         // ✅ Información de logística
         _buildLogisticsInfo(),

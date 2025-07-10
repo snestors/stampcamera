@@ -93,7 +93,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
       ),
       tabs: [
         const Tab(
-          icon: Icon(Icons.info_outline, size: DesignTokens.iconXL),
+          icon: Icon(Icons.info_outline, size: DesignTokens.iconXXL),
           text: 'General',
         ),
         Tab(
@@ -134,7 +134,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: DesignTokens.iconXL, color: Colors.white),
+            Icon(icon, size: DesignTokens.iconXXL, color: Colors.white),
             const SizedBox(height: 2),
             Text(text),
           ],
@@ -234,7 +234,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
 
   Widget _buildScrollableTab({required Widget child, required WidgetRef ref}) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: EdgeInsets.all(DesignTokens.spaceL),
       physics: const AlwaysScrollableScrollPhysics(),
       child: child,
     );

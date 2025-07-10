@@ -37,7 +37,7 @@ class DetalleDanos extends ConsumerWidget {
           final index = entry.key;
           final dano = entry.value;
           return Padding(
-            padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+            padding: EdgeInsets.only(bottom: DesignTokens.spaceM),
             child: _buildDanoCard(context, ref, dano, index),
           );
         }),
@@ -73,10 +73,10 @@ class DetalleDanos extends ConsumerWidget {
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
               onTap: () => _showAgregarDanoForm(context),
               child: Padding(
-                padding: EdgeInsets.all(DesignTokens.spaceXS),
+                padding: EdgeInsets.all(DesignTokens.spaceS),
                 child: Icon(
                   Icons.add_circle_outline,
-                  size: DesignTokens.iconM,
+                  size: DesignTokens.iconXL,
                   color: Colors.white,
                 ),
               ),
@@ -108,55 +108,27 @@ class DetalleDanos extends ConsumerWidget {
   // ESTADO VACÍO CON BOTÓN PARA AGREGAR PRIMER DAÑO (IGUAL QUE FOTOS)
   // ============================================================================
   Widget _buildEmptyState(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: const Color(0xFF059669).withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF059669).withValues(alpha: 0.1),
-          width: 1,
+    return AppEmptyState(
+      icon: Icons.check_circle_outline,
+      title: 'Sin Daños',
+      subtitle: 'Este vehículo no tiene daños reportados',
+      color: AppColors.success,
+      action: ElevatedButton.icon(
+        onPressed: () => _showAgregarDanoForm(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.error,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(
+            horizontal: DesignTokens.spaceL,
+            vertical: DesignTokens.spaceS,
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.check_circle_outline,
-            size: 48,
-            color: Color(0xFF059669),
-          ),
-          SizedBox(height: DesignTokens.spaceM),
-          const Text(
-            'Sin Daños',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF059669),
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Este vehículo no tiene daños reportados',
-            style: TextStyle(fontSize: 12, color: Color(0xFF059669)),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: DesignTokens.spaceM),
-
-          // ✅ Botón para agregar primer daño
-          ElevatedButton.icon(
-            onPressed: () => _showAgregarDanoForm(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            ),
-            icon: const Icon(Icons.add_circle_outline),
-            label: const Text('Reportar Primer Daño'),
-          ),
-        ],
+        icon: const Icon(Icons.add_circle_outline),
+        label: const Text('Reportar Primer Daño'),
       ),
     );
   }
+
 
   // ============================================================================
   // CARD DE DAÑO INDIVIDUAL CON BOTONES DE ACCIÓN
@@ -169,45 +141,30 @@ class DetalleDanos extends ConsumerWidget {
   ) {
     final condicionTexto = _getCondicionTexto(dano);
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: const Color(0xFF003B5C).withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF003B5C).withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ✅ Header del daño CON BOTONES DE ACCIÓN
-            _buildDanoHeader(context, ref, dano, index, condicionTexto),
+    return AppCard.elevated(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ✅ Header del daño CON BOTONES DE ACCIÓN
+          _buildDanoHeader(context, ref, dano, index, condicionTexto),
 
-            const SizedBox(height: 12),
+          const SizedBox(height: 12),
 
-            // ✅ Información principal del daño
-            _buildDanoInfo(dano),
+          // ✅ Información principal del daño
+          _buildDanoInfo(dano),
 
-            // ✅ Información adicional
-            if (_hasAdditionalInfo(dano)) ...[
-              const SizedBox(height: 12),
-              _buildAdditionalInfo(context, dano),
-            ],
-
-            // ✅ Fotos del daño
-            if (dano.imagenes.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _buildImagenesSection(dano.imagenes),
-            ],
+          // ✅ Información adicional
+          if (_hasAdditionalInfo(dano)) ...[
+            SizedBox(height: DesignTokens.spaceS),
+            _buildAdditionalInfo(context, dano),
           ],
-        ),
+
+          // ✅ Fotos del daño
+          if (dano.imagenes.isNotEmpty) ...[
+            SizedBox(height: DesignTokens.spaceS),
+            _buildImagenesSection(dano.imagenes),
+          ],
+        ],
       ),
     );
   }
@@ -244,7 +201,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
         ),
 
-        const SizedBox(width: 12),
+        SizedBox(width: DesignTokens.spaceS),
 
         // ✅ Condición y badges
         Expanded(
@@ -268,7 +225,7 @@ class DetalleDanos extends ConsumerWidget {
                       color: VehicleHelpers.getCondicionColor(condicionTexto),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: DesignTokens.spaceXS),
                   Text(
                     condicionTexto,
                     style: TextStyle(
@@ -280,7 +237,7 @@ class DetalleDanos extends ConsumerWidget {
                 ],
               ),
 
-              const SizedBox(height: 6),
+              SizedBox(height: DesignTokens.spaceXS),
 
               // Badges de estado
               Wrap(
@@ -302,7 +259,7 @@ class DetalleDanos extends ConsumerWidget {
                   if (dano.verificadoBool)
                     _buildStatusBadge(
                       'VERIFICADO',
-                      const Color(0xFF059669),
+                      AppColors.success,
                       Icons.verified,
                     ),
                 ],
@@ -327,7 +284,7 @@ class DetalleDanos extends ConsumerWidget {
         // ✅ Botón Edit
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF059669).withValues(alpha: 0.1),
+            color: AppColors.success.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Material(
@@ -339,15 +296,15 @@ class DetalleDanos extends ConsumerWidget {
                 padding: EdgeInsets.all(6),
                 child: Icon(
                   Icons.edit_outlined,
-                  size: 16,
-                  color: Color(0xFF059669),
+                  size: DesignTokens.iconXXL,
+                  color: AppColors.success,
                 ),
               ),
             ),
           ),
         ),
 
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
 
         // ✅ Botón Delete
         Container(
@@ -362,7 +319,7 @@ class DetalleDanos extends ConsumerWidget {
               onTap: () => _confirmDelete(context, ref, dano),
               child: const Padding(
                 padding: EdgeInsets.all(6),
-                child: Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                child: Icon(Icons.delete_outline, size: DesignTokens.iconXXL, color: Colors.red),
               ),
             ),
           ),
@@ -444,27 +401,27 @@ class DetalleDanos extends ConsumerWidget {
           Icons.build_circle,
           'Tipo de Daño',
           dano.tipoDano.esp,
-          const Color(0xFFDC2626),
+          AppColors.error,
         ),
 
-        const SizedBox(height: 8),
+        SizedBox(height: DesignTokens.spaceXS),
 
         // Área del daño
         _buildInfoRow(
           Icons.place,
           'Área Afectada',
           dano.areaDano.esp,
-          const Color(0xFF00B4D8),
+          AppColors.accent,
         ),
 
         // Zonas si existen
         if (dano.zonas.isNotEmpty) ...[
-          const SizedBox(height: 8),
+          SizedBox(height: DesignTokens.spaceXS),
           _buildInfoRow(
             Icons.location_on,
             'Zonas',
             dano.zonas.map((z) => z.zona).join(', '),
-            const Color(0xFF8B5CF6),
+            AppColors.secondary,
           ),
         ],
       ],
@@ -475,10 +432,10 @@ class DetalleDanos extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF6B7280).withValues(alpha: 0.05),
+        color: AppColors.textSecondary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF6B7280).withValues(alpha: 0.1),
+          color: AppColors.textSecondary.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -490,18 +447,18 @@ class DetalleDanos extends ConsumerWidget {
               Icons.description,
               'Descripción',
               dano.descripcion!,
-              const Color(0xFF6B7280),
+              AppColors.textSecondary,
             ),
 
           // Responsabilidad
           if (dano.responsabilidad?.esp != null) ...[
             if (dano.descripcion != null && dano.descripcion!.isNotEmpty)
-              const SizedBox(height: 8),
+              SizedBox(height: DesignTokens.spaceXS),
             _buildInfoRow(
               Icons.assignment_ind,
               'Responsabilidad',
               dano.responsabilidad!.esp,
-              const Color(0xFF059669),
+              AppColors.success,
             ),
           ],
 
@@ -509,28 +466,28 @@ class DetalleDanos extends ConsumerWidget {
           if (dano.nDocumento != null) ...[
             if ((dano.descripcion != null && dano.descripcion!.isNotEmpty) ||
                 dano.responsabilidad?.esp != null)
-              const SizedBox(height: 8),
+              SizedBox(height: DesignTokens.spaceXS),
             _buildDocumentoRow(context, dano.nDocumento!),
           ],
 
           // Fecha y usuario
           if (dano.createAt != null) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: DesignTokens.spaceXS),
             _buildInfoRow(
               Icons.access_time,
               'Fecha de Registro',
               dano.createAt!,
-              const Color(0xFF6B7280),
+              AppColors.textSecondary,
             ),
           ],
 
           if (dano.createBy != null) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: DesignTokens.spaceXS),
             _buildInfoRow(
               Icons.person,
               'Registrado por',
               dano.createBy!,
-              const Color(0xFF6B7280),
+              AppColors.textSecondary,
             ),
           ],
         ],
@@ -540,12 +497,12 @@ class DetalleDanos extends ConsumerWidget {
 
   Widget _buildImagenesSection(List<DanoImagen> imagenes) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(DesignTokens.spaceS),
       decoration: BoxDecoration(
-        color: const Color(0xFF059669).withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.success.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusS),
         border: Border.all(
-          color: const Color(0xFF059669).withValues(alpha: 0.2),
+          color: AppColors.success.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -557,28 +514,28 @@ class DetalleDanos extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF059669).withValues(alpha: 0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Icon(
                   Icons.photo_library,
                   size: 14,
-                  color: Color(0xFF059669),
+                  color: AppColors.success,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: DesignTokens.spaceXS),
               Text(
                 'Fotos del Daño (${imagenes.length})',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF059669),
+                  color: AppColors.success,
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 8),
+          SizedBox(height: DesignTokens.spaceXS),
 
           Wrap(
             spacing: 8,
@@ -590,7 +547,7 @@ class DetalleDanos extends ConsumerWidget {
                       child: NetworkImagePreview(
                         thumbnailUrl: img.imagenThumbnailUrl!,
                         fullImageUrl: img.imagenUrl!,
-                        size: 60,
+                        size: 80,
                       ),
                     )
                   : const SizedBox.shrink();
@@ -612,7 +569,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
           child: Icon(icon, size: 14, color: color),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -620,7 +577,7 @@ class DetalleDanos extends ConsumerWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
@@ -628,7 +585,7 @@ class DetalleDanos extends ConsumerWidget {
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1F2937),
                 ),
@@ -694,7 +651,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
           child: const Icon(Icons.article, size: 14, color: Color(0xFF00B4D8)),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: DesignTokens.spaceXS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -811,7 +768,7 @@ class DetalleDanos extends ConsumerWidget {
                   child: Row(
                     children: [
                       const Icon(Icons.article, color: Colors.white, size: 20),
-                      const SizedBox(width: 8),
+                      SizedBox(width: DesignTokens.spaceXS),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

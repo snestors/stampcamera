@@ -24,31 +24,11 @@ class InventarioDetalleNaveScreen extends ConsumerStatefulWidget {
 class _InventarioDetalleNaveScreenState
     extends ConsumerState<InventarioDetalleNaveScreen> {
   final Map<String, bool> _expandedAgentes = {};
-  final ScrollController _scrollController = ScrollController();
-  bool _isHeaderVisible = true;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    // Ocultar header cuando scroll > 50 pixels
-    final shouldShowHeader = _scrollController.offset <= 50;
-
-    if (shouldShowHeader != _isHeaderVisible) {
-      setState(() {
-        _isHeaderVisible = shouldShowHeader;
-      });
-    }
+    // Remover invalidación automática - solo manual cuando sea necesario
   }
 
   @override
@@ -60,6 +40,13 @@ class _InventarioDetalleNaveScreenState
         title: const Text('Detalle de Inventarios'),
         backgroundColor: const Color(0xFF003B5C),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(inventariosByNaveProvider(widget.naveId)),
+            tooltip: 'Actualizar datos',
+          ),
+        ],
       ),
       body: naveProvider.when(
         loading: () => const Center(
@@ -74,7 +61,7 @@ class _InventarioDetalleNaveScreenState
         ),
         error: (error, stackTrace) => ConnectionErrorScreen(
           error: error,
-          onRetry: () => ref.refresh(inventariosByNaveProvider(widget.naveId)),
+          onRetry: () => ref.invalidate(inventariosByNaveProvider(widget.naveId)),
         ),
         data: (naves) {
           if (naves.isEmpty) {
@@ -110,158 +97,126 @@ class _InventarioDetalleNaveScreenState
       modelosPorAgenteYMarca[agente]![marca]!.add(modelo);
     }
 
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
-        // Header animado que se oculta con scroll
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 1800),
-          curve: Curves.easeInOut,
-          height: _isHeaderVisible ? null : 0,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 1800),
-            opacity: _isHeaderVisible ? 1.0 : 0.0,
-            child: _buildNaveHeader(nave),
-          ),
-        ),
-
-        // Lista de agentes, marcas y modelos con ScrollController
-        Expanded(
-          child: ListView(
-            controller: _scrollController,
-            padding: const EdgeInsets.all(16),
-            children: modelosPorAgenteYMarca.entries.map((agenteEntry) {
-              final agente = agenteEntry.key;
-              final marcas = agenteEntry.value;
-              return _buildAgenteSection(agente, marcas);
-            }).toList(),
-          ),
-        ),
+        // Header simplificado incluido en el scroll
+        _buildNaveHeader(nave),
+        
+        const SizedBox(height: 16),
+        
+        // Lista de agentes, marcas y modelos
+        ...modelosPorAgenteYMarca.entries.map((agenteEntry) {
+          final agente = agenteEntry.key;
+          final marcas = agenteEntry.value;
+          return _buildAgenteSection(agente, marcas);
+        }),
       ],
     );
   }
 
   Widget _buildNaveHeader(InventarioNave nave) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF003B5C),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                nave.isSIC ? Icons.inventory : Icons.directions_boat,
-                color: Colors.white,
-                size: 28,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  nave.naveDescargaNombre,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF003B5C),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Título compacto
+            Row(
+              children: [
+                Icon(
+                  nave.isSIC ? Icons.inventory : Icons.directions_boat,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nave.naveDescargaNombre,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (nave.naveDescargaPuerto.isNotEmpty)
+                        Text(
+                          'Puerto: ${nave.naveDescargaPuerto}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 12,
+                          ),
+                        ),
+                      if (nave.naveDescargaFechaAtraque.isNotEmpty)
+                        Text(
+                          'Atraque: ${nave.naveDescargaFechaAtraque}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildHeaderInfo('Puerto', nave.naveDescargaPuerto),
-              const SizedBox(width: 20),
-              _buildHeaderInfo('Rubro', nave.naveDescargaRubro),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildHeaderInfo('Fecha Atraque', nave.naveDescargaFechaAtraque),
-          const SizedBox(height: 16),
-
-          // Totales
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              ],
             ),
-            child: Row(
+            
+            const SizedBox(height: 12),
+            
+            // Totales compactos
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildTotalCounter(
-                  'Total Unidades',
+                _buildCompactCounter(
+                  'Total',
                   nave.totalUnidades.toString(),
                   Icons.inventory_2,
                 ),
                 if (nave.isFPR)
-                  _buildTotalCounter(
-                    'Descargadas',
+                  _buildCompactCounter(
+                    'Puerto',
                     nave.totalDescargadoPuerto.toString(),
                     Icons.anchor,
                   ),
                 if (nave.isSIC)
-                  _buildTotalCounter(
-                    'Descargadas',
+                  _buildCompactCounter(
+                    'Almacén',
                     nave.totalDescargadoAlmacen.toString(),
                     Icons.warehouse,
                   ),
-                _buildTotalCounter(
-                  'Recepcionadas',
+                _buildCompactCounter(
+                  'Recep.',
                   nave.totalDescargadoRecepcion.toString(),
                   Icons.login,
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeaderInfo(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
-            fontSize: 12,
-          ),
-        ),
-        Text(
-          value.isNotEmpty ? value : 'N/A',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTotalCounter(String label, String count, IconData icon) {
+  Widget _buildCompactCounter(String label, String count, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.white, size: 20),
+        Icon(icon, color: Colors.white, size: 16),
         const SizedBox(height: 4),
         Text(
           count,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
         ),

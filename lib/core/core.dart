@@ -22,4 +22,5 @@ export 'widgets/common/app_card.dart';
 export 'widgets/common/app_empty_state.dart';
 export 'widgets/common/app_info_row.dart';
 export 'widgets/common/app_section_header.dart';
+export 'widgets/common/app_search_select.dart';
 

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
+import 'package:stampcamera/core/core.dart';
 
 class DanoForm extends ConsumerStatefulWidget {
   final String vin;
@@ -284,14 +285,44 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     return DropdownButtonFormField<int>(
       isExpanded: true,
       value: _selectedRegistroVinId,
+      style: TextStyle(
+        fontSize: DesignTokens.fontSizeS,
+        color: AppColors.textPrimary,
+      ),
       decoration: InputDecoration(
         labelText: 'Condición *',
-        border: const OutlineInputBorder(),
-        prefixIcon: const Icon(Icons.timeline),
+        hintStyle: TextStyle(
+          fontSize: DesignTokens.fontSizeS,
+          color: AppColors.textSecondary,
+        ),
         helperText: 'Selecciona el registro VIN al que pertenece el daño',
+        prefixIcon: const Icon(Icons.timeline),
         suffixIcon: !isCondicionEditable
             ? const Icon(Icons.lock, size: 16, color: Colors.grey)
             : null,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+          borderSide: BorderSide(
+            color: AppColors.neutral,
+            width: DesignTokens.borderWidthNormal,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+          borderSide: BorderSide(
+            color: AppColors.primary,
+            width: DesignTokens.borderWidthNormal,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+          borderSide: BorderSide(
+            color: AppColors.error,
+            width: DesignTokens.borderWidthNormal,
+          ),
+        ),
+        fillColor: isCondicionEditable ? AppColors.surface : AppColors.backgroundLight,
+        filled: true,
       ),
       items: condicionesFiltradas.isNotEmpty
           ? condicionesFiltradas.map<DropdownMenuItem<int>>((condicion) {
@@ -307,8 +338,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                     const SizedBox(width: 12),
                     Text(
                       condicion.value,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeS,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -322,9 +353,12 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           : null,
       validator: (value) => value == null ? 'Seleccione una condición' : null,
       disabledHint: condicionesFiltradas.isEmpty
-          ? const Text(
+          ? Text(
               'Sin condiciones disponibles',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: DesignTokens.fontSizeS,
+              ),
               overflow: TextOverflow.ellipsis,
             )
           : null,
@@ -391,18 +425,16 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         ),
         const SizedBox(height: 12),
 
-        DropdownButtonFormField<int>(
-          isExpanded: true,
+        AppSearchSelect<int>(
+          label: 'Tipo de Daño',
+          hint: 'Seleccionar tipo de daño...',
           value: _selectedTipoDano,
-          decoration: const InputDecoration(
-            labelText: 'Tipo de Daño *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.report_problem, color: Color(0xFFDC2626)),
-          ),
-          items: tiposDano.map<DropdownMenuItem<int>>((tipo) {
-            return DropdownMenuItem(
+          isRequired: true,
+          prefixIcon: const Icon(Icons.report_problem, color: Color(0xFFDC2626)),
+          options: tiposDano.map<AppSearchSelectOption<int>>((tipo) {
+            return AppSearchSelectOption<int>(
               value: tipo['value'],
-              child: Text(tipo['label'], style: const TextStyle(fontSize: 13)),
+              label: tipo['label'],
             );
           }).toList(),
           onChanged: (value) => setState(() => _selectedTipoDano = value),
@@ -412,18 +444,16 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        DropdownButtonFormField<int>(
-          isExpanded: true,
+        AppSearchSelect<int>(
+          label: 'Área de Daño',
+          hint: 'Seleccionar área de daño...',
           value: _selectedAreaDano,
-          decoration: const InputDecoration(
-            labelText: 'Área de Daño *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.location_on, color: Color(0xFF059669)),
-          ),
-          items: areasDano.map<DropdownMenuItem<int>>((area) {
-            return DropdownMenuItem(
+          isRequired: true,
+          prefixIcon: const Icon(Icons.location_on, color: Color(0xFF059669)),
+          options: areasDano.map<AppSearchSelectOption<int>>((area) {
+            return AppSearchSelectOption<int>(
               value: area['value'],
-              child: Text(area['label'], style: const TextStyle(fontSize: 13)),
+              label: area['label'],
             );
           }).toList(),
           onChanged: (value) => setState(() => _selectedAreaDano = value),
@@ -435,10 +465,40 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         DropdownButtonFormField<int>(
           value: _selectedSeveridad,
-          decoration: const InputDecoration(
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
             labelText: 'Severidad *',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.priority_high, color: Color(0xFFF59E0B)),
+            hintStyle: TextStyle(
+              fontSize: DesignTokens.fontSizeS,
+              color: AppColors.textSecondary,
+            ),
+            prefixIcon: const Icon(Icons.priority_high, color: Color(0xFFF59E0B)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              borderSide: BorderSide(
+                color: AppColors.neutral,
+                width: DesignTokens.borderWidthNormal,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              borderSide: BorderSide(
+                color: AppColors.primary,
+                width: DesignTokens.borderWidthNormal,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              borderSide: BorderSide(
+                color: AppColors.error,
+                width: DesignTokens.borderWidthNormal,
+              ),
+            ),
+            fillColor: AppColors.surface,
+            filled: true,
           ),
           items: severidades.map<DropdownMenuItem<int>>((severidad) {
             return DropdownMenuItem(
@@ -456,7 +516,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                   const SizedBox(width: 8),
                   Text(
                     severidad['label'],
-                    style: const TextStyle(fontSize: 13),
+                    style: TextStyle(fontSize: DesignTokens.fontSizeS),
                   ),
                 ],
               ),
@@ -506,19 +566,51 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         DropdownButtonFormField<int>(
           value: _selectedResponsabilidad,
-          decoration: const InputDecoration(
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
             labelText: 'Responsabilidad',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.business),
+            hintStyle: TextStyle(
+              fontSize: DesignTokens.fontSizeS,
+              color: AppColors.textSecondary,
+            ),
+            prefixIcon: const Icon(Icons.business),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              borderSide: BorderSide(
+                color: AppColors.neutral,
+                width: DesignTokens.borderWidthNormal,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              borderSide: BorderSide(
+                color: AppColors.primary,
+                width: DesignTokens.borderWidthNormal,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              borderSide: BorderSide(
+                color: AppColors.error,
+                width: DesignTokens.borderWidthNormal,
+              ),
+            ),
+            fillColor: AppColors.surface,
+            filled: true,
           ),
           items: responsabilidades.map<DropdownMenuItem<int>>((resp) {
             return DropdownMenuItem(
               value: resp['value'],
-              child: Text(resp['label']),
+              child: Text(
+                resp['label'],
+                style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              ),
             );
           }).toList(),
-          onChanged: (value) =>
-              setState(() => _selectedResponsabilidad = value),
+          onChanged: (value) => setState(() => _selectedResponsabilidad = value),
         ),
 
         const SizedBox(height: 12),
@@ -554,18 +646,51 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
     return DropdownButtonFormField<int>(
       value: _selectedFotoPresentacion,
-      decoration: const InputDecoration(
+      style: TextStyle(
+        fontSize: DesignTokens.fontSizeS,
+        color: AppColors.textPrimary,
+      ),
+      decoration: InputDecoration(
         labelText: 'Documento de Referencia',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
+        hintStyle: TextStyle(
+          fontSize: DesignTokens.fontSizeS,
+          color: AppColors.textSecondary,
+        ),
         helperText: 'Asocia una foto/documento existente al daño (opcional)',
+        prefixIcon: const Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+          borderSide: BorderSide(
+            color: AppColors.neutral,
+            width: DesignTokens.borderWidthNormal,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+          borderSide: BorderSide(
+            color: AppColors.primary,
+            width: DesignTokens.borderWidthNormal,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+          borderSide: BorderSide(
+            color: AppColors.error,
+            width: DesignTokens.borderWidthNormal,
+          ),
+        ),
+        fillColor: AppColors.surface,
+        filled: true,
       ),
       items: [
-        const DropdownMenuItem<int>(
+        DropdownMenuItem<int>(
           value: null,
           child: Text(
             'Sin documento asociado',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: DesignTokens.fontSizeS,
+            ),
           ),
         ),
         ...fotosDisponibles.map<DropdownMenuItem<int>>((foto) {
@@ -593,8 +718,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                     children: [
                       Text(
                         _getFotoTipoLabel(foto.tipo),
-                        style: const TextStyle(
-                          fontSize: 13,
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeS,
                           fontWeight: FontWeight.w500,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -602,8 +727,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                       const SizedBox(width: 8),
                       Text(
                         '- ${foto.nDocumento!}',
-                        style: const TextStyle(
-                          fontSize: 15,
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeS,
                           fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,

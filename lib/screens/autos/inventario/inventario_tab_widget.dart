@@ -346,8 +346,9 @@ class InventarioTabWidget extends ConsumerWidget {
         informacionUnidadId: informacionUnidadId,
         inventario: inventario, // null = crear, no null = editar
         onSaved: () {
-          // Refrescar la data del inventario
+          // Refrescar la data del inventario - siempre fresco
           ref.invalidate(inventarioDetalleProvider(informacionUnidadId));
+          ref.invalidate(inventarioBaseProvider);
         },
       ),
     );

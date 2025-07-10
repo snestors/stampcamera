@@ -45,6 +45,15 @@ class SessionManager extends StateNotifier<String?> {
     // Limpiar datos de trabajo del día anterior
     ref.invalidate(registroGeneralProvider);
     ref.invalidate(contenedorProvider);
+    
+    // Limpiar pedeteo del día anterior
+    ref.invalidate(pedeteoStateProvider);
+    ref.invalidate(pedeteoOptionsProvider);
+    ref.invalidate(pedeteoSearchQueryProvider);
+    ref.invalidate(pedeteoSelectedVinProvider);
+    ref.invalidate(pedeteoShowFormProvider);
+    ref.invalidate(pedeteoSearchResultsProvider);
+    
     // NOTA: queueStateProvider se mantiene entre inicios de asistencia
     
     // Mantener configuraciones y caché de opciones

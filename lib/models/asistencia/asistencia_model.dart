@@ -33,6 +33,15 @@ class ZonaTrabajo {
 
   factory ZonaTrabajo.fromJson(Map<String, dynamic> json) =>
       ZonaTrabajo(id: json['id'], value: json['value']);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ZonaTrabajo && other.id == id && other.value == value;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ value.hashCode;
 }
 
 class Nave {
@@ -43,6 +52,15 @@ class Nave {
 
   factory Nave.fromJson(Map<String, dynamic> json) =>
       Nave(id: json['id'], value: json['value']);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Nave && other.id == id && other.value == value;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ value.hashCode;
 }
 
 class Asistencia {

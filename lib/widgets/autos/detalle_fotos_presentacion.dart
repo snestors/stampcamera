@@ -65,10 +65,10 @@ class DetalleFotosPresentacion extends ConsumerWidget {
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
               onTap: () => _showAgregarFotoForm(context),
               child: Padding(
-                padding: EdgeInsets.all(DesignTokens.spaceXS),
+                padding: EdgeInsets.all(DesignTokens.spaceS),
                 child: Icon(
                   Icons.add_a_photo,
-                  size: DesignTokens.iconM,
+                  size: DesignTokens.iconXL,
                   color: Colors.white,
                 ),
               ),
@@ -119,7 +119,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
     return items
         .map(
           (foto) => Padding(
-            padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+            padding: EdgeInsets.only(bottom: DesignTokens.spaceM),
             child: _buildFotoCard(context, ref, foto),
           ),
         )
@@ -134,10 +134,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
     WidgetRef ref,
     FotoPresentacion foto,
   ) {
-    return AppCard(
-      type: AppCardType.outlined,
-      backgroundColor: AppColors.primary.withValues(alpha: 0.03),
-      borderColor: AppColors.primary.withValues(alpha: 0.1),
+    return AppCard.elevated(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -235,7 +232,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
                   child: NetworkImagePreview(
                     thumbnailUrl: foto.imagenThumbnailUrl!,
                     fullImageUrl: foto.imagenUrl!,
-                    size: DesignTokens.iconXXL,
+                    size: 120,
                   ),
                 ),
             ],
@@ -273,7 +270,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
                 padding: EdgeInsets.all(DesignTokens.spaceXXS),
                 child: Icon(
                   Icons.delete_outline,
-                  size: DesignTokens.iconS,
+                  size: DesignTokens.iconXXL,
                   color: Colors.red,
                 ),
               ),

@@ -34,7 +34,7 @@ class AppSectionHeader extends StatelessWidget {
           ),
           child: Icon(
             icon, 
-            size: DesignTokens.iconM, 
+            size: DesignTokens.iconL, 
             color: color,
           ),
         ),
@@ -43,7 +43,7 @@ class AppSectionHeader extends StatelessWidget {
           child: Text(
             title,
             style: TextStyle(
-              fontSize: DesignTokens.fontSizeRegular,
+              fontSize: DesignTokens.fontSizeM,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
