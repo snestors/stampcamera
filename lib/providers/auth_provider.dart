@@ -88,7 +88,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(String username, String password, {bool isBiometricLogin = false}) async {
     print('🔐 AuthProvider: Iniciando login para: $username');
 
     if (username.trim().isEmpty || password.trim().isEmpty) {
@@ -126,8 +126,17 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       print('❌ AuthProvider: Error en login: $e');
 
       final errorMessage = _handleGenericError(e);
+      
+      // Si es login biométrico y el error es 401, tratar como sesión expirada
+      // En lugar de "credenciales incorrectas"
+      final finalErrorMessage = isBiometricLogin && 
+          (errorMessage.contains('Usuario o contraseña incorrectos') || 
+           errorMessage.contains('Datos de login inválidos'))
+          ? 'Sesión expirada. Vuelve a autenticarte.'
+          : errorMessage;
+      
       state = AsyncValue.data(
-        AuthState(status: AuthStatus.loggedOut, errorMessage: errorMessage),
+        AuthState(status: AuthStatus.loggedOut, errorMessage: finalErrorMessage),
       );
     }
   }

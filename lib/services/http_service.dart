@@ -223,7 +223,11 @@ class HttpService {
   }
 
   Future<void> _handleAuthFailure() async {
-    await storage.deleteAll();
+    // ⚠️ NO usar deleteAll() - solo borrar claves de auth para preservar biometría
+    await storage.delete(key: 'access');
+    await storage.delete(key: 'refresh'); 
+    await storage.delete(key: 'user_data');
+    print('🗑️ HttpService: Solo limpiando datos de auth (preservando biometría)');
     _authNotifier?.logout();
   }
 
@@ -462,6 +466,10 @@ class HttpService {
       }
     }
 
-    await storage.deleteAll();
+    // ⚠️ NO usar deleteAll() - solo borrar claves de auth para preservar biometría
+    await storage.delete(key: 'access');
+    await storage.delete(key: 'refresh'); 
+    await storage.delete(key: 'user_data');
+    print('🗑️ HttpService: Logout - Solo limpiando datos de auth (preservando biometría)');
   }
 }

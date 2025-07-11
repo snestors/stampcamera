@@ -181,30 +181,26 @@ class BiometricNotifier extends StateNotifier<BiometricState> {
           );
 
           try {
-            // Intentar login con credenciales guardadas
+            // Intentar login con credenciales guardadas (marcado como biométrico)
             await _ref
                 .read(authProvider.notifier)
-                .login(credentials['username']!, credentials['password']!);
+                .login(credentials['username']!, credentials['password']!, isBiometricLogin: true);
 
             // Verificar si el login fue exitoso
             final authState = _ref.read(authProvider);
             if (authState.hasError ||
                 authState.value?.status == AuthStatus.loggedOut ||
                 authState.value?.errorMessage != null) {
-              print('❌ BiometricProvider: Login falló, limpiando biometría...');
-
-              // ✅ LIMPIAR biometría si las credenciales son incorrectas
-              await _clearBiometricCredentials();
-              await _setBiometricEnabledInStorage(false);
-
+              
+              final errorMessage = authState.value?.errorMessage ?? 'Error en login';
+              
+              // ⚠️ NO limpiar biometría automáticamente
+              // Mantener biometría para limpieza manual desde configuración
+              print('⚠️ BiometricProvider: Error en login, manteniendo biometría: $errorMessage');
+              
               state = state.copyWith(
-                isEnabled: false,
                 isLoading: false,
-                error: 'Credenciales incorrectas. Biometría deshabilitada.',
-              );
-
-              print(
-                '🗑️ BiometricProvider: Biometría limpiada por credenciales incorrectas',
+                error: errorMessage,
               );
               return false;
             }
@@ -215,18 +211,15 @@ class BiometricNotifier extends StateNotifier<BiometricState> {
           } catch (loginError) {
             print('❌ BiometricProvider: Error en login: $loginError');
 
-            // ✅ LIMPIAR biometría si hay error en el login
-            await _clearBiometricCredentials();
-            await _setBiometricEnabledInStorage(false);
-
+            final errorString = loginError.toString();
+            
+            // ⚠️ NO limpiar biometría automáticamente por NINGÚN error
+            // Solo permitir limpieza manual desde configuración
+            print('⚠️ BiometricProvider: Error en login, manteniendo biometría: $errorString');
+            
             state = state.copyWith(
-              isEnabled: false,
               isLoading: false,
-              error: 'Error en login. Biometría deshabilitada.',
-            );
-
-            print(
-              '🗑️ BiometricProvider: Biometría limpiada por error en login',
+              error: 'Error en login. Si persiste, limpia manualmente la biometría desde configuración.',
             );
             return false;
           }
@@ -248,19 +241,13 @@ class BiometricNotifier extends StateNotifier<BiometricState> {
     } catch (e) {
       print('❌ BiometricProvider: Error en authenticateAndLogin: $e');
 
-      // ✅ LIMPIAR biometría si hay error general
-      try {
-        await _clearBiometricCredentials();
-        await _setBiometricEnabledInStorage(false);
-        print('🗑️ BiometricProvider: Biometría limpiada por error general');
-      } catch (clearError) {
-        print('❌ Error limpiando biometría: $clearError');
-      }
+      // ⚠️ NO limpiar biometría automáticamente por error general
+      // Solo permitir limpieza manual desde configuración
+      print('⚠️ BiometricProvider: Error general, manteniendo biometría: $e');
 
       state = state.copyWith(
-        isEnabled: false,
         isLoading: false,
-        error: 'Error en la autenticación biométrica',
+        error: 'Error en la autenticación biométrica. Limpia manualmente desde configuración si es necesario.',
       );
       return false;
     }

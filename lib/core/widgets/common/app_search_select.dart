@@ -79,7 +79,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
 
   void _onFocusChange() {
     if (!mounted) return;
-    
+
     if (_focusNode.hasFocus && !_isOpen) {
       _showOverlay();
     } else if (!_focusNode.hasFocus && _isOpen) {
@@ -111,7 +111,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
       _overlayEntry!.remove();
       _overlayEntry = null;
     }
-    
+
     _searchController.dispose();
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
@@ -225,18 +225,20 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
 
   void _onSearchChanged(String query) {
     if (!mounted) return;
-    
+
     _filterOptions(query);
 
     if (!_isOpen) {
       _showOverlay();
+    } else {
+      // Reconstruir overlay para ajustar posición con teclado
+      _overlayEntry?.markNeedsBuild();
     }
   }
 
-
   void _showOverlay() {
     if (!mounted || _isOpen) return;
-    
+
     // No limpiar el controller aquí, mantener el texto actual
     _filteredOptions = widget.options;
 
@@ -264,140 +266,173 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
   OverlayEntry _createOverlayEntry() {
     final renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
+    final position = renderBox.localToGlobal(Offset.zero);
 
     return OverlayEntry(
-      builder: (context) => GestureDetector(
-        onTap: () => _removeOverlay(), // Cerrar al tocar fuera
-        behavior: HitTestBehavior.translucent,
-        child: Stack(
-          children: [
-            // Área completa para detectar taps fuera
-            Positioned.fill(
-              child: Container(color: Colors.transparent),
-            ),
-            // El dropdown real
-            Positioned(
-              width: size.width,
-              child: CompositedTransformFollower(
-                link: _layerLink,
-                showWhenUnlinked: false,
-                offset: Offset(0, 60),
-                child: GestureDetector(
-                  onTap: () {}, // Prevenir que se cierre cuando se toca el dropdown
-                  child: Material(
-                    elevation: 4,
-                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                    child: Container(
-                      constraints: BoxConstraints(maxHeight: 300),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                        border: Border.all(
-                          color: AppColors.neutral,
-                          width: DesignTokens.borderWidthNormal,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Options List (sin search field interno)
-                          Flexible(
-                            child: _filteredOptions.isEmpty
-                                ? Padding(
-                                    padding: EdgeInsets.all(DesignTokens.spaceL),
-                                    child: Text(
-                                      'No se encontraron resultados',
-                                      style: TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: DesignTokens.fontSizeS,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    shrinkWrap: true,
-                                    itemCount: _filteredOptions.length,
-                                    itemBuilder: (context, index) {
-                                      final option = _filteredOptions[index];
-                                      final isSelected = option.value == widget.value;
+      builder: (context) {
+        // Obtener altura del teclado
+        final mediaQuery = MediaQuery.of(context);
+        final keyboardHeight = mediaQuery.viewInsets.bottom;
+        final screenHeight = mediaQuery.size.height;
 
-                                      return InkWell(
-                                        onTap: () => _selectOption(option),
-                                        child: Container(
-                                          padding: EdgeInsets.all(DesignTokens.spaceM),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? AppColors.primary.withValues(
-                                                    alpha: 0.1,
-                                                  )
-                                                : null,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              if (option.leading != null) ...[
-                                                option.leading!,
-                                                SizedBox(width: DesignTokens.spaceS),
-                                              ],
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      option.label,
-                                                      style: TextStyle(
-                                                        fontSize:
-                                                            DesignTokens.fontSizeS,
-                                                        fontWeight: isSelected
-                                                            ? FontWeight.w600
-                                                            : FontWeight.w500,
-                                                        color: isSelected
-                                                            ? AppColors.primary
-                                                            : AppColors.textPrimary,
-                                                      ),
-                                                    ),
-                                                    if (option.subtitle != null)
+        // Calcular posición del dropdown considerando el teclado
+        final dropdownTop = position.dy + size.height + 8;
+        final dropdownMaxHeight =
+            screenHeight - dropdownTop - keyboardHeight - 20;
+        final shouldShowAbove = dropdownMaxHeight < 150 && position.dy > 200;
+
+        final dropdownHeight = (dropdownMaxHeight > 150)
+            ? 300.0
+            : dropdownMaxHeight.clamp(150.0, 300.0);
+        final finalOffset = shouldShowAbove
+            ? Offset(0, -dropdownHeight - 8)
+            : Offset(0, size.height + 8);
+
+        return GestureDetector(
+          onTap: () => _removeOverlay(), // Cerrar al tocar fuera
+          behavior: HitTestBehavior.translucent,
+          child: Stack(
+            children: [
+              // Área completa para detectar taps fuera
+              Positioned.fill(child: Container(color: Colors.transparent)),
+              // El dropdown real
+              Positioned(
+                width: size.width,
+                child: CompositedTransformFollower(
+                  link: _layerLink,
+                  showWhenUnlinked: false,
+                  offset: finalOffset,
+                  child: GestureDetector(
+                    onTap:
+                        () {}, // Prevenir que se cierre cuando se toca el dropdown
+                    child: Material(
+                      elevation: 4,
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                      child: Container(
+                        constraints: BoxConstraints(maxHeight: dropdownHeight),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(
+                            DesignTokens.radiusM,
+                          ),
+                          border: Border.all(
+                            color: AppColors.neutral,
+                            width: DesignTokens.borderWidthNormal,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Options List (sin search field interno)
+                            Flexible(
+                              child: _filteredOptions.isEmpty
+                                  ? Padding(
+                                      padding: EdgeInsets.all(
+                                        DesignTokens.spaceL,
+                                      ),
+                                      child: Text(
+                                        'No se encontraron resultados',
+                                        style: TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: DesignTokens.fontSizeS,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    )
+                                  : ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: _filteredOptions.length,
+                                      itemBuilder: (context, index) {
+                                        final option = _filteredOptions[index];
+                                        final isSelected =
+                                            option.value == widget.value;
+
+                                        return InkWell(
+                                          onTap: () => _selectOption(option),
+                                          child: Container(
+                                            padding: EdgeInsets.all(
+                                              DesignTokens.spaceM,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? AppColors.primary
+                                                        .withValues(alpha: 0.1)
+                                                  : null,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                if (option.leading != null) ...[
+                                                  option.leading!,
+                                                  SizedBox(
+                                                    width: DesignTokens.spaceS,
+                                                  ),
+                                                ],
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
                                                       Text(
-                                                        option.subtitle!,
+                                                        option.label,
                                                         style: TextStyle(
-                                                          fontSize:
-                                                              DesignTokens.fontSizeXS,
-                                                          color:
-                                                              AppColors.textSecondary,
+                                                          fontSize: DesignTokens
+                                                              .fontSizeS,
+                                                          fontWeight: isSelected
+                                                              ? FontWeight.w600
+                                                              : FontWeight.w500,
+                                                          color: isSelected
+                                                              ? AppColors
+                                                                    .primary
+                                                              : AppColors
+                                                                    .textPrimary,
                                                         ),
                                                       ),
-                                                  ],
+                                                      if (option.subtitle !=
+                                                          null)
+                                                        Text(
+                                                          option.subtitle!,
+                                                          style: TextStyle(
+                                                            fontSize:
+                                                                DesignTokens
+                                                                    .fontSizeXS,
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
-                                              if (isSelected)
-                                                Icon(
-                                                  Icons.check,
-                                                  color: AppColors.primary,
-                                                  size: DesignTokens.iconM,
-                                                ),
-                                            ],
+                                                if (isSelected)
+                                                  Icon(
+                                                    Icons.check,
+                                                    color: AppColors.primary,
+                                                    size: DesignTokens.iconM,
+                                                  ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                          ),
-                        ],
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   void _filterOptions(String query) {
     if (!mounted) return;
-    
+
     setState(() {
       if (query.isEmpty) {
         _filteredOptions = widget.options;
@@ -418,7 +453,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
 
   void _selectOption(AppSearchSelectOption<T> option) {
     if (!mounted) return;
-    
+
     _searchController.text = option.label;
     widget.onChanged?.call(option.value);
     _removeOverlay();
