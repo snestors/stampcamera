@@ -351,86 +351,173 @@ claude-code .
 3. **Validación previa**: Verificar dependencias antes de eliminar
 4. **Testing**: Probar eliminación con y sin dependencias
 
-## 🏠 **CONTINUAR DESDE CASA**
+## 🏠 **CONTINUAR DESDE CASA - SESIÓN ACTUAL COMPLETADA**
 
-### **📍 Estado Actual - FUNCIONAL CON ISSUES**
-El proyecto está **funcional** con mejoras implementadas:
+### **✅ Completado Hoy (2025-07-11)**
+- ✅ **Fix CRÍTICO biometría** - Solucionado problema de limpieza automática 
+- ✅ **HttpService corregido** - Reemplazado `storage.deleteAll()` por borrados específicos
+- ✅ **BiometricProvider actualizado** - Deshabilitada limpieza automática completamente
+- ✅ **Botón manual limpieza biométrica** - Agregado en diálogo de logout con UI mejorada
+- ✅ **UI optimizada** - Corregidos overflows y layout de botones
+
+#### **🎯 Problema Principal Resuelto:**
+El issue era que `lib/services/http_service.dart` llamaba `storage.deleteAll()` en:
+- `_handleAuthFailure()` (línea 226) - Al fallar autenticación
+- `logout()` (línea 469) - Al cerrar sesión
+
+**Esto borraba TODAS las claves incluyendo biometría**. Ahora solo borra:
+- `access` (token)
+- `refresh` (refresh token)  
+- `user_data` (datos usuario)
+
+### **📍 Estado Actual - FUNCIONAL Y ESTABLE**
+El proyecto está **completamente funcional** con todas las mejoras implementadas:
 - ✅ `flutter analyze` - **0 issues**
 - ✅ Sistema de limpieza de providers completamente implementado  
 - ✅ Todas las dependencias críticas actualizadas
 - ✅ Código sin warnings ni errores
-- ✅ **Fix dropdown asistencia** - Agregados equals/hashCode a ZonaTrabajo/Nave
-- ✅ **Fix limpieza pedeteo** - Agregados todos los providers de pedeteo al SessionManager
-- ✅ **Mejoras UI Design System** - Iconos más grandes, imágenes más grandes, AppCard.soft() con fondo suave
+- ✅ **AppSearchSelect** - Componente con búsqueda como en la web
+- ✅ **Dropdowns estandarizados** - Estilo visual consistente
+- ✅ **Biometría funcional** - Sin limpieza automática, solo manual
 
-### **🎯 Próximos Pasos Prioritarios (En Casa)**
+## 📋 **PRÓXIMAS TAREAS PRIORITARIAS - PRÓXIMA SESIÓN**
 
-#### **1. 🧪 Testing del Sistema AppSearchSelect - CRÍTICO**
-```bash
-# Probar que la app ejecuta sin errores
-flutter run
+### **🏗️ 1. REORGANIZACIÓN DEL PROYECTO - CRÍTICO**
+El proyecto tiene mucho desorden de archivos que necesita reorganización:
 
-# Testing manual prioritario:
-1. **AppSearchSelect** - Verificar nueva funcionalidad
-   - Abrir formulario de daños → usar Tipo de Daño y Área de Daño
-   - Escribir para buscar → verificar filtrado en tiempo real
-   - Seleccionar opciones → verificar que se actualiza correctamente
-   - Tocar afuera → verificar que se cierra el overlay
-   - Cerrar formulario → verificar que no hay crashes
-
-2. **Dropdowns Estandarizados** - Verificar estilos consistentes
-   - Probar Condición, Severidad, Responsabilidad, Documento
-   - Verificar que todos tienen el mismo estilo visual
-   - Confirmar fuentes pequeñas y bordes redondeados
+#### **🗂️ Estructura Actual Problemática:**
+```
+lib/
+├── screens/           # Mezcladas pantallas de diferentes módulos
+├── widgets/           # Widgets sin organización por feature
+├── providers/         # Providers sin agrupación lógica
+├── services/          # Servicios esparcidos
+├── models/            # Modelos sin organización
+└── utils/             # Utilidades mezcladas
 ```
 
-#### **2. 🧪 Testing del Sistema de Providers - CRÍTICO**
-```bash
-# Testing manual prioritario:
-1. **Login/Logout** - Verificar que clearSession() funciona
-   - Hacer login → trabajar un rato → logout
-   - Verificar que no quedan datos del usuario anterior
-   
-2. **Inicio/Fin de Asistencia** - Verificar hooks funcionan  
-   - Marcar entrada → verificar onStartAssistance()
-   - Marcar salida → verificar onEndAssistance()
-   - Confirmar que se limpian solo los datos apropiados
-
-3. **Cambio de Usuario** - Verificar limpieza entre usuarios
-   - Login Usuario A → trabajar → logout → login Usuario B
-   - Confirmar que B no ve datos de A
+#### **🎯 Estructura Objetivo:**
+```
+lib/
+├── features/
+│   ├── auth/
+│   │   ├── screens/
+│   │   ├── widgets/
+│   │   ├── providers/
+│   │   └── models/
+│   ├── asistencia/
+│   │   ├── screens/
+│   │   ├── widgets/
+│   │   ├── providers/
+│   │   └── models/
+│   ├── autos/
+│   │   ├── screens/
+│   │   ├── widgets/
+│   │   ├── providers/
+│   │   └── models/
+│   └── camera/
+├── core/              # Design system, servicios globales
+├── shared/            # Widgets, utils, servicios compartidos
+└── config/            # Configuraciones, rutas, constantes
 ```
 
-#### **3. 🧭 Testing Navegación go_router 16.0.0**
-- Probar todas las rutas principales de la app
-- Verificar navegación entre pantallas funciona
-- Buscar posibles breaking changes
+### **🔄 2. PANTALLAS DINÁMICAS SEGÚN ASISTENCIA Y USUARIO**
+Implementar sistema de pantallas que se adapten según:
 
-#### **4. 📱 Testing Funcionalidades Críticas**
-- **Cámara** - Tomar fotos, galería
-- **GPS** - Ubicación en asistencia
-- **Permisos** - Verificar que se piden correctamente
+#### **📱 Estados de Asistencia:**
+- **Sin Asistencia** - Solo mostrar botón "Marcar Entrada"
+- **Asistencia Activa** - Mostrar todas las aplicaciones disponibles
+- **Asistencia Pausada** - Mostrar opciones limitadas
+- **Fin de Turno** - Solo mostrar "Marcar Salida"
 
-### **🚀 Comando para Empezar en Casa**
+#### **👤 Roles de Usuario:**
+- **Inspector** - Acceso completo a autos, cámara, inventario
+- **Supervisor** - Acceso a reportes, gestión de inspectores
+- **Administrador** - Acceso total al sistema
+- **Visitante** - Solo visualización limitada
+
+#### **🎯 Check-Auth Mejorado:**
+Expandir endpoint `api/v1/check-auth/` para incluir:
+- Estado actual de asistencia del usuario
+- Permisos específicos por rol
+- Configuraciones dinámicas de UI
+- Restricciones por ubicación/horario
+
+### **🔧 3. SISTEMA DE ASISTENCIA MEJORADO**
+Mejorar el sistema actual de asistencia:
+
+#### **Frontend (Flutter):**
+- **Geolocalización obligatoria** para marcar entrada/salida
+- **Validación de horarios** según configuración del usuario
+- **Estados intermedios** (pausa, almuerzo, break)
+- **Notificaciones automáticas** para recordatorios
+- **Sincronización offline** de marcajes
+
+#### **Backend (Django):**
+- **Validaciones de ubicación** con geofencing
+- **Control de horarios** flexible por usuario/rol
+- **Reportes automáticos** de asistencia
+- **Notificaciones push** para supervisores
+- **API mejorada** con más datos contextuales
+
+### **🚀 4. FLUJO DE TRABAJO INTEGRADO**
+Crear flujo completo que integre:
+
+#### **Login → Check-Auth → Asistencia → UI Dinámica:**
+```
+1. Usuario hace login
+2. check-auth devuelve: usuario + asistencia + permisos
+3. UI se configura según estado de asistencia
+4. Pantallas se adaptan según rol y permisos
+5. Asistencia controla acceso a funcionalidades
+```
+
+### **📋 Plan de Implementación Sugerido:**
+
+#### **Sesión 1: Reorganización de Archivos**
+- Crear estructura de features
+- Mover archivos a ubicaciones correctas
+- Actualizar imports y referencias
+- Testing que todo compile
+
+#### **Sesión 2: Backend - Check-Auth Mejorado**
+- Expandir modelo de asistencia
+- Mejorar endpoint check-auth
+- Agregar validaciones de ubicación
+- Testing de API
+
+#### **Sesión 3: Frontend - UI Dinámica**
+- Implementar provider de estado de asistencia
+- Crear widgets condicionales según estado
+- Adaptar home_screen y navegación
+- Testing de flujos
+
+#### **Sesión 4: Integración y Testing**
+- Testing completo del flujo integrado
+- Corrección de bugs
+- Optimizaciones de rendimiento
+- Documentación
+
+### **🎯 Comando para Próxima Sesión**
 ```bash
 cd "C:\Users\Nestor\Desktop\Flutter\stampcamera"
 claude-code .
 ```
 
-**Decir a Claude:** "Revisa CLAUDE.md. He implementado AppSearchSelect con búsqueda como en la web y estandarizado todos los dropdowns. Necesito hacer testing del nuevo sistema de búsqueda y verificar que todo funciona correctamente. ¿Por dónde empezamos?"
+**Decir a Claude:** "Revisa CLAUDE.md. Necesito reorganizar el proyecto y implementar pantallas dinámicas según asistencia y usuario. Empecemos por la reorganización de archivos en features. ¿Por dónde comenzamos?"
 
-### **📝 Si Encuentras Problemas**
-1. **Error AppSearchSelect** → Revisar `lib/core/widgets/common/app_search_select.dart`
-2. **Crash al cerrar formulario** → Verificar checks de `mounted` en overlay methods
-3. **Error de providers** → Revisar SessionManager en `lib/providers/session_manager_provider.dart`
-4. **Error de navegación** → Verificar rutas en go_router 16.0.0
-5. **Error de dependencias** → Ejecutar `flutter pub get`
+### **📝 Notas Importantes:**
+1. **Backup antes de reorganizar** - Es una refactorización grande
+2. **Testing continuo** - Verificar que cada paso compile correctamente
+3. **Trabajo Backend + Frontend** - Requerirá cambios en ambos lados
+4. **Documentar cambios** - Mantener CLAUDE.md actualizado
 
 ### **✅ Lo que NO necesitas hacer**
 - ❌ Corregir warnings (ya están todos eliminados)
 - ❌ Actualizar dependencias (ya están actualizadas)  
 - ❌ Implementar sistema de providers (ya está completo)
 - ❌ Crear AppSearchSelect (ya está implementado y funcionando)
+- ❌ Fix biometría (ya está completamente solucionado)
 
 ## Notas Técnicas
 
@@ -464,4 +551,4 @@ DetalleRegistroModel {
 ---
 
 *Archivo generado automáticamente por Claude Code*
-*Última actualización: 2025-07-10 - ✅ APPSEARCHSELECT IMPLEMENTADO Y DROPDOWNS ESTANDARIZADOS*
+*Última actualización: 2025-07-11 - ✅ BIOMETRÍA COMPLETAMENTE FUNCIONAL - PRÓXIMO: REORGANIZACIÓN POR FEATURES*
