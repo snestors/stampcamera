@@ -12,7 +12,36 @@ class FormFieldsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final options = ref.read(pedeteoOptionsProvider).value!;
+    // ✅ Patrón .when() robusto - Maneja todos los estados
+    return ref.watch(pedeteoOptionsProvider).when(
+      data: (options) => _buildFormCard(context, ref, options),
+      loading: () => const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ),
+      error: (error, _) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Column(
+              children: [
+                const Icon(Icons.error, color: Colors.red),
+                const SizedBox(height: 8),
+                Text('Error al cargar opciones: $error'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 📋 Construye el formulario cuando los datos están disponibles
+  Widget _buildFormCard(BuildContext context, WidgetRef ref, options) {
     final fieldPermissions = options.fieldPermissions;
     final initialValues = options.initialValues;
 

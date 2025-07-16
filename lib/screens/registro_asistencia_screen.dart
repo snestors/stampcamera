@@ -85,6 +85,12 @@ class _RegistroAsistenciaScreenState
 
           final asistenciaDelDia = asistencias.first;
           final hayActiva = asistenciaDelDia.asistenciaActiva;
+          final status = ref.watch(asistenciaStatusProvider);
+
+          // 🚨 Si está marcando salida, ocultar FAB para evitar doble toque
+          if (status == AsistenciaStatus.salidaLoading) {
+            return null;
+          }
 
           if (hayActiva) {
             return BotonMarcarSalida(fechaSeleccionada: fechaSeleccionada);

@@ -37,42 +37,14 @@ class SessionManager extends StateNotifier<String?> {
 
   /// Limpiar providers al iniciar asistencia
   void onStartAssistance(WidgetRef ref) {
-    // Limpiar solo providers relacionados con asistencia y trabajo diario
-    ref.invalidate(asistenciasDiariasProvider);
-    ref.invalidate(asistenciaFormOptionsProvider);
-    ref.invalidate(asistenciaStatusProvider);
-    
-    // Limpiar datos de trabajo del día anterior
-    ref.invalidate(registroGeneralProvider);
-    ref.invalidate(contenedorProvider);
-    
-    // Limpiar pedeteo del día anterior
-    ref.invalidate(pedeteoStateProvider);
-    ref.invalidate(pedeteoOptionsProvider);
-    ref.invalidate(pedeteoSearchQueryProvider);
-    ref.invalidate(pedeteoSelectedVinProvider);
-    ref.invalidate(pedeteoShowFormProvider);
-    ref.invalidate(pedeteoSearchResultsProvider);
-    
-    // NOTA: queueStateProvider se mantiene entre inicios de asistencia
-    
-    // Mantener configuraciones y caché de opciones
-    // NO limpiar: *OptionsProvider, configuraciones de usuario, etc.
+    // 🧹 REGLA SIMPLE: Limpiar TODO para cargar datos frescos
+    _clearAllUserRelatedProviders(ref);
   }
 
-  /// Limpiar providers al cerrar asistencia
+  /// Limpiar providers al cerrar asistencia  
   void onEndAssistance(WidgetRef ref) {
-    // Limpiar todos los datos de trabajo
-    ref.invalidate(asistenciasDiariasProvider);
-    ref.invalidate(asistenciaStatusProvider);
-    ref.invalidate(registroGeneralProvider);
-    ref.invalidate(contenedorProvider);
-    // NOTA: queueStateProvider se mantiene entre cierres de asistencia
-    
-    // Limpiar datos temporales pero mantener configuraciones
-    // ref.invalidate(cameraProvider);        // Comentado hasta verificar si existe
-    
-    // Mantener: opciones, configuraciones, autenticación
+    // 🧹 REGLA SIMPLE: Limpiar TODO al finalizar turno
+    _clearAllUserRelatedProviders(ref);
   }
 
   /// 🔥 CLAVE: Invalida TODOS los providers relacionados con datos de usuario
@@ -91,10 +63,14 @@ class SessionManager extends StateNotifier<String?> {
     ref.invalidate(registroVinOptionsProvider);
     
     // ============================================================================
-    // PROVIDERS DE AUTOS - PEDETEO
+    // PROVIDERS DE AUTOS - PEDETEO (TODOS)
     // ============================================================================
     ref.invalidate(pedeteoOptionsProvider);
     ref.invalidate(pedeteoStateProvider);
+    ref.invalidate(pedeteoSearchQueryProvider);
+    ref.invalidate(pedeteoSelectedVinProvider);
+    ref.invalidate(pedeteoShowFormProvider);
+    ref.invalidate(pedeteoSearchResultsProvider);
 
     // ============================================================================
     // PROVIDERS DE AUTOS - REGISTRO DETALLE

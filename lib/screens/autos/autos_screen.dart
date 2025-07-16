@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/core.dart';
+import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/screens/autos/contenedores/contenedores_tab.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_screen.dart';
 import 'package:stampcamera/widgets/pedeteo/queue_badget.dart';
 import 'registro_general/registro_screen.dart';
 
-class AutosScreen extends StatefulWidget {
+class AutosScreen extends ConsumerStatefulWidget {
   const AutosScreen({super.key});
 
   @override
-  State<AutosScreen> createState() => _AutosScreenState();
+  ConsumerState<AutosScreen> createState() => _AutosScreenState();
 }
 
-class _AutosScreenState extends State<AutosScreen> {
+class _AutosScreenState extends ConsumerState<AutosScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
@@ -52,6 +54,13 @@ class _AutosScreenState extends State<AutosScreen> {
           ),
         ),
         actions: [
+          // Botón de refresh solo en pestaña de Pedeteo (índice 1)
+          if (_currentIndex == 1)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => ref.invalidate(pedeteoOptionsProvider),
+              tooltip: 'Actualizar opciones',
+            ),
           Padding(
             padding: EdgeInsets.only(right: DesignTokens.spaceL),
             child: QueueBadge(),
@@ -59,30 +68,15 @@ class _AutosScreenState extends State<AutosScreen> {
         ],
       ),
 
-      // Fondo corporativo
-      backgroundColor: AppColors.backgroundLight,
-
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.primary.withValues(alpha: 0.02),
-              AppColors.backgroundLight,
-            ],
-          ),
-        ),
-        child: PageView(
-          controller: _pageController,
-          onPageChanged: _onPageChanged,
-          children: const [
-            RegistroScreen(),
-            PedeteoScreen(),
-            ContenedoresTab(),
-            InventarioScreen(),
-          ],
-        ),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        children: const [
+          RegistroScreen(),
+          PedeteoScreen(),
+          ContenedoresTab(),
+          InventarioScreen(),
+        ],
       ),
 
       // BottomNavigationBar corporativo

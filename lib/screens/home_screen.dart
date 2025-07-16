@@ -966,7 +966,7 @@ class _UserInfo extends StatelessWidget {
                 displayName,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: DesignTokens.fontSizeL,
+                  fontSize: DesignTokens.fontSizeM,
                   fontWeight: FontWeight.bold,
                 ),
               ),

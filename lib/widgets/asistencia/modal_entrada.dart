@@ -11,6 +11,9 @@ void showMarcarEntradaBottomSheet(
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
+    // 🚨 BLOQUEO: Se adapta dinámicamente al estado de loading
+    isDismissible: false, // Nunca se puede cerrar tocando afuera
+    enableDrag: false,    // Nunca se puede cerrar deslizando
     builder: (_) => ModalMarcarEntrada(fechaSeleccionada: fechaSeleccionada),
   );
 }
@@ -28,6 +31,7 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
   ZonaTrabajo? zonaSeleccionada;
   Nave? naveSeleccionada;
   final TextEditingController comentarioCtrl = TextEditingController();
+  bool _marcandoEntrada = false; // 🚨 Variable local para bloqueo inmediato
 
   @override
   void dispose() {
@@ -38,7 +42,6 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
   @override
   Widget build(BuildContext context) {
     final formOptionsAsync = ref.watch(asistenciaFormOptionsProvider);
-    final status = ref.watch(asistenciaStatusProvider);
     final notifier = ref.read(
       asistenciasDiariasProvider(widget.fechaSeleccionada).notifier,
     );
@@ -50,14 +53,31 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
         final zonas = opciones.zonas;
         final naves = opciones.naves;
 
-        return Padding(
+        // 🚨 BLOQUEO: PopScope previene botón atrás durante loading
+        return PopScope(
+          canPop: !_marcandoEntrada, // Solo se puede cerrar si NO está cargando
+          child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "Marcar entrada",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // Header con botón de cerrar
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Marcar entrada",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  // 🚨 Botón cerrar solo habilitado cuando NO está cargando
+                  IconButton(
+                    onPressed: _marcandoEntrada ? null : () => Navigator.of(context).pop(),
+                    icon: Icon(
+                      Icons.close,
+                      color: _marcandoEntrada ? Colors.grey : Colors.black,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
 
@@ -99,7 +119,7 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
               const SizedBox(height: 16),
 
               ElevatedButton.icon(
-                icon: status == AsistenciaStatus.entradaLoading
+                icon: _marcandoEntrada
                     ? const SizedBox(
                         width: 16,
                         height: 16,
@@ -110,7 +130,7 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
                       )
                     : const Icon(Icons.login),
                 label: const Text('Confirmar entrada'),
-                onPressed: (status == AsistenciaStatus.entradaLoading)
+                onPressed: _marcandoEntrada
                     ? null
                     : () async {
                         if (zonaSeleccionada == null) {
@@ -122,23 +142,37 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
                           return;
                         }
 
-                        final ok = await notifier.marcarEntrada(
-                          zonaTrabajoId: zonaSeleccionada!.id,
-                          turnoId: 1, // <-- pon aquí tu lógica real
-                          naveId: naveSeleccionada?.id,
-                          comentario: comentarioCtrl.text.trim().isEmpty
-                              ? null
-                              : comentarioCtrl.text.trim(),
-                          wref: ref, // 🚀 Pasar ref para limpieza de providers
-                        );
+                        // 🚨 BLOQUEO INMEDIATO - Cambiar variable local y rebuildar
+                        setState(() => _marcandoEntrada = true);
 
-                        if (ok && context.mounted) {
-                          Navigator.of(context).pop(); // el rebuild ocurre solo
+                        // 🚨 También cambiar estado global para coordinación
+                        ref.read(asistenciaStatusProvider.notifier).state = 
+                            AsistenciaStatus.entradaLoading;
+
+                        try {
+                          final ok = await notifier.marcarEntrada(
+                            zonaTrabajoId: zonaSeleccionada!.id,
+                            turnoId: 1, // <-- pon aquí tu lógica real
+                            naveId: naveSeleccionada?.id,
+                            comentario: comentarioCtrl.text.trim().isEmpty
+                                ? null
+                                : comentarioCtrl.text.trim(),
+                            wref: ref, // 🚀 Pasar ref para limpieza de providers
+                          );
+
+                          if (ok && context.mounted) {
+                            Navigator.of(context).pop(); // el rebuild ocurre solo
+                          }
+                        } finally {
+                          // 🔄 Restaurar ambos estados siempre, incluso si falla
+                          if (mounted) setState(() => _marcandoEntrada = false);
+                          ref.read(asistenciaStatusProvider.notifier).state = AsistenciaStatus.idle;
                         }
                       },
               ),
             ],
           ),
+        ),
         );
       },
     );

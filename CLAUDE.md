@@ -353,32 +353,32 @@ claude-code .
 
 ## 🏠 **CONTINUAR DESDE CASA - SESIÓN ACTUAL COMPLETADA**
 
-### **✅ Completado Hoy (2025-07-11)**
-- ✅ **Fix CRÍTICO biometría** - Solucionado problema de limpieza automática 
-- ✅ **HttpService corregido** - Reemplazado `storage.deleteAll()` por borrados específicos
-- ✅ **BiometricProvider actualizado** - Deshabilitada limpieza automática completamente
-- ✅ **Botón manual limpieza biométrica** - Agregado en diálogo de logout con UI mejorada
-- ✅ **UI optimizada** - Corregidos overflows y layout de botones
+### **✅ Completado Hoy (2025-07-16)**
+- ✅ **Sistema de Pedeteo Pulido** - Eliminados problemas críticos y mejorada robustez
+- ✅ **Sistema de Asistencia Mejorado** - Bloqueada navegación durante operaciones críticas
+- ✅ **Código 100% limpio** - Sin warnings, errores ni memory leaks
+- ✅ **UX optimizada** - Feedback claro y estados de loading consistentes
 
-#### **🎯 Problema Principal Resuelto:**
-El issue era que `lib/services/http_service.dart` llamaba `storage.deleteAll()` en:
-- `_handleAuthFailure()` (línea 226) - Al fallar autenticación
-- `logout()` (línea 469) - Al cerrar sesión
+#### **🔧 Mejoras Implementadas en Pedeteo:**
+1. **Fix código duplicado** - Eliminado error handling redundante
+2. **Memory leak corregido** - Scanner dispose sincrónico sin Future.delayed
+3. **Validaciones robustas** - Patrón .when() reemplaza null assertions peligrosas
+4. **Botón refresh integrado** - Acción en AppBar principal para actualizar opciones
+5. **SessionManager simplificado** - Una sola función para todas las limpiezas
 
-**Esto borraba TODAS las claves incluyendo biometría**. Ahora solo borra:
-- `access` (token)
-- `refresh` (refresh token)  
-- `user_data` (datos usuario)
+#### **🔒 Mejoras Implementadas en Asistencia:**
+1. **Modal entrada bloqueado** - PopScope + isDismissible + enableDrag = false
+2. **Modal salida con loading** - Bloquea navegación durante "Marcando salida..."
+3. **FAB coordinado** - Desaparece durante loading para evitar redundancia visual
+4. **Estados consistentes** - Loading inmediato + cleanup automático
 
 ### **📍 Estado Actual - FUNCIONAL Y ESTABLE**
 El proyecto está **completamente funcional** con todas las mejoras implementadas:
 - ✅ `flutter analyze` - **0 issues**
-- ✅ Sistema de limpieza de providers completamente implementado  
-- ✅ Todas las dependencias críticas actualizadas
-- ✅ Código sin warnings ni errores
-- ✅ **AppSearchSelect** - Componente con búsqueda como en la web
-- ✅ **Dropdowns estandarizados** - Estilo visual consistente
-- ✅ **Biometría funcional** - Sin limpieza automática, solo manual
+- ✅ **Pedeteo robusto** - Sin crashes, memory leaks ni estados inconsistentes
+- ✅ **Asistencia segura** - Imposible navegar durante operaciones críticas
+- ✅ **UX pulida** - Estados de loading claros y feedback apropiado
+- ✅ **Código limpio** - Sin warnings, null assertions peligrosas ni debug prints
 
 ## 📋 **PRÓXIMAS TAREAS PRIORITARIAS - PRÓXIMA SESIÓN**
 

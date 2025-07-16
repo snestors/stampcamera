@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 import 'package:stampcamera/providers/session_manager_provider.dart';
+import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/services/http_service.dart';
 import 'package:stampcamera/utils/gps_utils.dart';
 
@@ -50,8 +51,7 @@ class AsistenciasNotifier
     String? comentario,
     WidgetRef? wref,
   }) async {
-    ref.read(asistenciaStatusProvider.notifier).state =
-        AsistenciaStatus.entradaLoading;
+    // Estado ya se pone en loading desde el UI para bloqueo inmediato
 
     // 🚀 Limpiar providers al iniciar asistencia
     if (wref != null) {
@@ -88,8 +88,7 @@ class AsistenciasNotifier
   // SALIDA
   // ------------------------------------------------------------------
   Future<bool> marcarSalida([WidgetRef? wref]) async {
-    ref.read(asistenciaStatusProvider.notifier).state =
-        AsistenciaStatus.salidaLoading;
+    // Estado ya se pone en loading desde el UI para bloqueo inmediato
     
     // 🏁 Limpiar providers al terminar asistencia
     if (wref != null) {
@@ -104,6 +103,9 @@ class AsistenciasNotifier
 
       // 🔥 disparo un refetch obligatorio
       ref.invalidateSelf();
+
+      // 🚨 SEGURIDAD: Limpiar VINs disponibles inmediatamente al marcar salida
+      ref.invalidate(pedeteoSearchResultsProvider);
 
       return true;
     } catch (e, st) {
