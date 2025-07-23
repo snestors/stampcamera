@@ -504,7 +504,7 @@ cd "C:\Users\Nestor\Desktop\Flutter\stampcamera"
 claude-code .
 ```
 
-**Decir a Claude:** "Revisa CLAUDE.md. Necesito reorganizar el proyecto y implementar pantallas dinámicas según asistencia y usuario. Empecemos por la reorganización de archivos en features. ¿Por dónde comenzamos?"
+**Decir a Claude:** "Revisa CLAUDE.md. El sistema de pedeteo y asistencia ya están pulidos. Ahora necesito reorganizar el proyecto en features y implementar pantallas dinámicas según estado de asistencia. ¿Por dónde comenzamos?"
 
 ### **📝 Notas Importantes:**
 1. **Backup antes de reorganizar** - Es una refactorización grande
@@ -551,4 +551,4 @@ DetalleRegistroModel {
 ---
 
 *Archivo generado automáticamente por Claude Code*
-*Última actualización: 2025-07-11 - ✅ BIOMETRÍA COMPLETAMENTE FUNCIONAL - PRÓXIMO: REORGANIZACIÓN POR FEATURES*
+*Última actualización: 2025-07-16 - ✅ PEDETEO Y ASISTENCIA PULIDOS - PRÓXIMO: REORGANIZACIÓN POR FEATURES*
