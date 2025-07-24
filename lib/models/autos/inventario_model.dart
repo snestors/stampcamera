@@ -156,6 +156,7 @@ class InventarioModelo {
   final int descargadoAlmacen;
   final int descargadoRecepcion;
   final String agente;
+  final String cliente;
   final List<InventarioVersion> versiones;
 
   const InventarioModelo({
@@ -166,6 +167,7 @@ class InventarioModelo {
     required this.descargadoAlmacen,
     required this.descargadoRecepcion,
     required this.agente,
+    required this.cliente,
     required this.versiones,
   });
 
@@ -178,6 +180,7 @@ class InventarioModelo {
       descargadoAlmacen: json['descargado_almacen'] ?? 0,
       descargadoRecepcion: json['descargado_recepcion'] ?? 0,
       agente: json['agente'] ?? '',
+      cliente: json['cliente'] ?? '',
       versiones:
           (json['versiones'] as List?)
               ?.map((x) => InventarioVersion.fromJson(x))
@@ -195,6 +198,7 @@ class InventarioModelo {
       'descargado_almacen': descargadoAlmacen,
       'descargado_recepcion': descargadoRecepcion,
       'agente': agente,
+      'cliente': cliente,
       'versiones': versiones.map((x) => x.toJson()).toList(),
     };
   }

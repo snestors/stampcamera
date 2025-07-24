@@ -574,6 +574,7 @@ class _InventarioDetalleNaveScreenState
     List<InventarioModelo> modelos,
   ) async {
     final agente = modelos.isNotEmpty ? modelos.first.agente : 'Sin Agente';
+    final cliente = modelos.isNotEmpty ? modelos.first.cliente : 'Sin Cliente';
 
     try {
       // Mostrar loading
@@ -602,7 +603,7 @@ class _InventarioDetalleNaveScreenState
           child: Material(
             child: RepaintBoundary(
               key: globalKey,
-              child: _buildShareableWidget(marca, agente, modelos),
+              child: _buildShareableWidget(marca, cliente, agente, modelos),
             ),
           ),
         ),
@@ -640,7 +641,7 @@ class _InventarioDetalleNaveScreenState
         // Compartir
         await SharePlus.instance.share(
           ShareParams(
-            text: 'Reporte de Unidades: $marca - $agente',
+            text: 'Reporte de Unidades: $marca - $cliente',
             files: [XFile(file.path)],
           ),
         );
@@ -673,6 +674,7 @@ class _InventarioDetalleNaveScreenState
 
   Widget _buildShareableWidget(
     String marca,
+    String cliente,
     String agente,
     List<InventarioModelo> modelos,
   ) {
@@ -716,9 +718,9 @@ class _InventarioDetalleNaveScreenState
             ),
             child: Column(
               children: [
-                const Text(
-                  'ASTARA PERU S.A.C.',
-                  style: TextStyle(
+                Text(
+                  cliente.toUpperCase(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
