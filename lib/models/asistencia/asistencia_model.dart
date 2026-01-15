@@ -19,9 +19,9 @@ class Turno {
   factory Turno.fromJson(Map<String, dynamic> json) => Turno(
     id: json['id'],
     nombre: json['nombre'],
-    horaInicio: json['hora_inicio'],
-    horaFin: json['hora_fin'],
-    horasDescanso: json['horas_descanso'],
+    horaInicio: json['hora_inicio'] ?? '08:00:00',
+    horaFin: json['hora_fin'] ?? '17:30:00',
+    horasDescanso: json['horas_descanso'] ?? '01:00:00',
   );
 }
 
@@ -73,9 +73,9 @@ class Asistencia {
   final bool activo;
   final String? comentarioUsuario;
   final String? comentarioAdmin;
-  final ZonaTrabajo zonaTrabajo;
+  final ZonaTrabajo? zonaTrabajo;
   final Nave? nave;
-  final Turno turno;
+  final String horasTrabajadasDisplay;
 
   Asistencia({
     required this.id,
@@ -87,9 +87,9 @@ class Asistencia {
     required this.activo,
     this.comentarioUsuario,
     this.comentarioAdmin,
-    required this.zonaTrabajo,
+    this.zonaTrabajo,
     this.nave,
-    required this.turno,
+    required this.horasTrabajadasDisplay,
   });
 
   factory Asistencia.fromJson(Map<String, dynamic> json) {
@@ -97,64 +97,41 @@ class Asistencia {
 
     return Asistencia(
       id: json['id'],
-      usuario: json['usuario'],
+      usuario: json['usuario'] ?? '',
       fechaHoraEntrada: formato.parse(json['fecha_hora_entrada']),
-      ubicacionEntradaGps: json['ubicacion_entrada_gps'],
+      ubicacionEntradaGps: json['ubicacion_entrada_gps'] ?? '',
       fechaHoraSalida: json['fecha_hora_salida'] != null
           ? formato.parse(json['fecha_hora_salida'])
           : null,
       ubicacionSalidaGps: json['ubicacion_salida_gps'],
-      activo: json['activo'],
+      activo: json['activo'] ?? false,
       comentarioUsuario: json['comentario_usuario'],
       comentarioAdmin: json['comentario_admin'],
-      zonaTrabajo: ZonaTrabajo.fromJson(json['zona_trabajo']),
+      zonaTrabajo: json['zona_trabajo'] != null
+          ? ZonaTrabajo.fromJson(json['zona_trabajo'])
+          : null,
       nave: json['nave'] != null ? Nave.fromJson(json['nave']) : null,
-      turno: Turno.fromJson(json['turno']),
+      horasTrabajadasDisplay: json['horas_trabajadas_display'] ?? '0h 0m',
     );
   }
 }
 
-class AsistenciaDiaria {
-  final int id;
-  final String usuario;
-  final String fecha;
-  final String horasTrabajadas;
-  final String horasExtras;
-  final String horasDebe;
-  final Turno? turno;
-  final String estado;
-  final String? motivoInasistencia;
-  final List<Asistencia> asistencias;
-  final bool asistenciaActiva;
+/// Respuesta del endpoint /activa/
+class AsistenciaActivaResponse {
+  final bool tieneAsistenciaActiva;
+  final Asistencia? asistencia;
 
-  AsistenciaDiaria({
-    required this.id,
-    required this.usuario,
-    required this.fecha,
-    required this.horasTrabajadas,
-    required this.horasExtras,
-    required this.horasDebe,
-    this.turno,
-    required this.estado,
-    this.motivoInasistencia,
-    required this.asistencias,
-    required this.asistenciaActiva,
+  AsistenciaActivaResponse({
+    required this.tieneAsistenciaActiva,
+    this.asistencia,
   });
 
-  factory AsistenciaDiaria.fromJson(Map<String, dynamic> json) =>
-      AsistenciaDiaria(
-        id: json['id'],
-        usuario: json['usuario'],
-        fecha: json['fecha'],
-        horasTrabajadas: json['horas_trabajadas'],
-        horasExtras: json['horas_extras'],
-        horasDebe: json['horas_debe'],
-        turno: json['turno'] != null ? Turno.fromJson(json['turno']) : null,
-        estado: json['estado'],
-        motivoInasistencia: json['motivo_inasistencia'],
-        asistencias: (json['asistencias'] as List)
-            .map((e) => Asistencia.fromJson(e))
-            .toList(),
-        asistenciaActiva: json['asistencia_activa'],
-      );
+  factory AsistenciaActivaResponse.fromJson(Map<String, dynamic> json) {
+    return AsistenciaActivaResponse(
+      tieneAsistenciaActiva: json['tiene_asistencia_activa'] ?? false,
+      asistencia: json['asistencia'] != null
+          ? Asistencia.fromJson(json['asistencia'])
+          : null,
+    );
+  }
 }

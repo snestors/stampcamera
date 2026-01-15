@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 
 class ResumenAsistenciaWidget extends StatelessWidget {
-  final AsistenciaDiaria asistenciaDiaria;
-  const ResumenAsistenciaWidget({super.key, required this.asistenciaDiaria});
+  final Asistencia asistencia;
+  const ResumenAsistenciaWidget({super.key, required this.asistencia});
 
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF003B5C);
     const accent = Color(0xFF00B4D8);
 
-    final ultima = asistenciaDiaria.asistencias.firstOrNull;
-    final hayActiva = ultima?.activo == true;
+    final hayActiva = asistencia.activo;
 
     return Material(
       color: Colors.transparent,
@@ -19,7 +18,7 @@ class ResumenAsistenciaWidget extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         splashColor: accent.withValues(alpha: 0.16),
-        onTap: () {}, // opcional
+        onTap: () {},
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
@@ -73,7 +72,7 @@ class ResumenAsistenciaWidget extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      asistenciaDiaria.horasTrabajadas,
+                      asistencia.horasTrabajadasDisplay,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.green[700],
@@ -92,8 +91,8 @@ class ResumenAsistenciaWidget extends StatelessWidget {
                     Expanded(
                       child: Text(
                         hayActiva
-                            ? "En ${ultima?.zonaTrabajo.value ?? 'zona desconocida'}"
-                            : "Sin asistencia activa",
+                            ? "En ${asistencia.zonaTrabajo?.value ?? 'zona desconocida'}"
+                            : "Asistencia cerrada",
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,

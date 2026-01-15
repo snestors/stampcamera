@@ -360,7 +360,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         // Campo Condición/Registro VIN
         DropdownButtonFormField<int>(
           isExpanded: true,
-          value: _selectedRegistroVinId,
+          initialValue: _selectedRegistroVinId,
           decoration: InputDecoration(
             labelText: 'Condición *',
             border: const OutlineInputBorder(),
@@ -415,7 +415,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
 
         // Campo Tipo de Foto
         DropdownButtonFormField<String>(
-          value: _selectedTipo,
+          initialValue: _selectedTipo,
           decoration: const InputDecoration(
             labelText: 'Tipo de Foto *',
             border: OutlineInputBorder(),

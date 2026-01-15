@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:camera/camera.dart';
-
+import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 
@@ -140,26 +140,15 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
             setState(() => _currentState = ProcessingState.processingImage);
           }
 
-          // 🚀 PROCESAMIENTO OPTIMIZADO
+          // 🚀 PROCESAMIENTO OPTIMIZADO usando preset de scanner
           final processingStart = DateTime.now();
           debugPrint(
             '🎨 [PROCESAMIENTO] Iniciando procesamiento optimizado...',
           );
-          final config = WatermarkConfig(
-            showLogo: true,
-            showTimestamp: true,
-            showLocation: true,
-            logoPosition: WatermarkPosition.topRight,
-            timestampPosition: WatermarkPosition.bottomRight,
-            locationPosition:
-                WatermarkPosition.bottomRight, // GPS abajo izquierda
-            compressionQuality: 95,
-            timestampFontSize: FontSize.medium,
-          );
 
           final processedImagePath = await processImageWithWatermark(
             image.path,
-            config: config,
+            config: WatermarkPresets.scanner,
             autoGPS: false,
           );
 

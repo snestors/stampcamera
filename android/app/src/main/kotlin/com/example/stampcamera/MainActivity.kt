@@ -1,28 +1,31 @@
 package com.nestorfar.stampcamera
 
-import android.content.Intent
-import android.net.Uri
-import android.os.Bundle
+import android.media.MediaScannerConnection
+import android.os.Build
+import android.util.Log
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import java.io.File
 
 class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "scan_file_channel"
+    private val TAG = "StampCamera"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
-            call, result ->
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             if (call.method == "scanFile") {
                 val path = call.argument<String>("path")
                 if (path != null) {
-                    val file = File(path)
-                    val uri = Uri.fromFile(file)
-                    val scanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri)
-                    applicationContext.sendBroadcast(scanIntent)
+                    // Usar MediaScannerConnection (funciona en todas las versiones de Android)
+                    MediaScannerConnection.scanFile(
+                        applicationContext,
+                        arrayOf(path),
+                        arrayOf("image/jpeg")
+                    ) { scannedPath, uri ->
+                        Log.d(TAG, "Archivo escaneado: $scannedPath -> $uri")
+                    }
                     result.success(null)
                 } else {
                     result.error("INVALID_PATH", "Path is null", null)

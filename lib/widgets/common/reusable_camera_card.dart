@@ -45,11 +45,11 @@
 /// )
 library;
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-
+import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 
 /// Enum personalizado para resoluciones de cámara
@@ -476,34 +476,17 @@ class ReusableCameraCard extends StatelessWidget {
 
           String processedPath;
           if (quiereMarcar) {
-            // Configuración con marcas (sin GPS)
-            final config = WatermarkConfig(
-              showLogo: true,
-              showTimestamp: true,
-              showLocation: false,
-              logoPosition: WatermarkPosition.topRight,
-              timestampPosition: WatermarkPosition.bottomRight,
-              compressionQuality: 95,
-              timestampFontSize: FontSize.large,
-            );
-
+            // Usar preset de galería con marcas
             processedPath = await processImageWithWatermark(
               image.path,
-              config: config,
+              config: WatermarkPresets.gallery,
               autoGPS: false,
             );
           } else {
-            // Solo compresión
-            final config = WatermarkConfig(
-              showLogo: false,
-              showTimestamp: false,
-              showLocation: false,
-              compressionQuality: 95,
-            );
-
+            // Usar preset sin marcas (solo compresión)
             processedPath = await processImageWithWatermark(
               image.path,
-              config: config,
+              config: WatermarkPresets.none,
               autoGPS: false,
             );
           }
@@ -659,26 +642,10 @@ class _CameraModalState extends State<_CameraModal> {
 
       final image = await _cameraController!.takePicture();
 
-      // Determinar el tamaño de fuente según la resolución
-      final FontSize fontSize =
-          widget.cameraResolution == CameraResolution.veryHigh
-          ? FontSize.large
-          : FontSize.medium;
-
-      final config = WatermarkConfig(
-        showLogo: true,
-        showTimestamp: true,
-        showLocation: true,
-        logoPosition: WatermarkPosition.topRight,
-        timestampPosition: WatermarkPosition.bottomRight,
-        locationPosition: WatermarkPosition.bottomLeft,
-        compressionQuality: 95,
-        timestampFontSize: fontSize,
-      );
-
+      // Usar preset de cámara con GPS
       final processedImagePath = await processImageWithWatermark(
         image.path,
-        config: config,
+        config: WatermarkPresets.withGps,
         autoGPS: false,
       );
 

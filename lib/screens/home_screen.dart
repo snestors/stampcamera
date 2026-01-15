@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/biometric_provider.dart';
-import 'package:stampcamera/widgets/connectivity_app_bar.dart';
 import 'package:stampcamera/widgets/biometric_setup_widget.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
@@ -23,7 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: ConnectivityAppBarWithDetails(
+      appBar: AppBar(
         title: const Text(
           'Aplicaciones',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -113,6 +112,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildApplicationsGrid(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: DesignTokens.spaceL),
       child: Column(
@@ -132,48 +133,165 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.9,
-            children: [
-              _AppCard(
-                title: 'Cámara',
-                subtitle: 'Captura y gestiona fotos',
-                icon: Icons.camera_alt,
-                color: AppColors.primary,
-                onTap: () =>
-                    context.push('/camera', extra: {'camera': cameras.first}),
-              ),
-              _AppCard(
-                title: 'Asistencia',
-                subtitle: 'Registro de entrada y salida',
-                icon: Icons.access_time,
-                color: AppColors.secondary,
-                onTap: () => context.pushNamed('asistencia'),
-              ),
-              _AppCard(
-                title: 'Autos',
-                subtitle: 'Gestión de vehículos',
-                icon: Icons.directions_car,
-                color: AppColors.accent,
-                onTap: () => context.push('/autos'),
-              ),
-              _AppCard(
-                title: 'Próximamente',
-                subtitle: 'Nuevas funcionalidades',
-                icon: Icons.upcoming,
-                color: AppColors.textSecondary,
-                onTap: () => _showComingSoonDialog(context),
-                isDisabled: true,
-              ),
-            ],
+          authState.when(
+            data: (auth) {
+              if (!auth.isLoggedIn || auth.user == null) {
+                return _buildDefaultGrid(context);
+              }
+              return _buildModulesGrid(context, auth.user!);
+            },
+            loading: () => _buildDefaultGrid(context),
+            error: (e, st) => _buildDefaultGrid(context),
           ),
         ],
       ),
+    );
+  }
+
+  /// Grid de módulos basado en permisos del usuario
+  Widget _buildModulesGrid(BuildContext context, dynamic user) {
+    final modules = user.availableModules;
+    final cards = <Widget>[];
+
+    for (final module in modules) {
+      cards.add(_buildModuleCard(context, module));
+    }
+
+    // Agregar card de "Próximamente" si hay espacio
+    if (cards.length % 2 != 0 || cards.length < 4) {
+      cards.add(_AppCard(
+        title: 'Próximamente',
+        subtitle: 'Nuevas funcionalidades',
+        icon: Icons.upcoming,
+        color: AppColors.textSecondary,
+        onTap: () => _showComingSoonDialog(context),
+        isDisabled: true,
+      ));
+    }
+
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 0.9,
+      children: cards,
+    );
+  }
+
+  /// Construye una card para un módulo específico
+  Widget _buildModuleCard(BuildContext context, dynamic module) {
+    final moduleConfig = _getModuleConfig(module.id);
+
+    return _AppCard(
+      title: module.name,
+      subtitle: moduleConfig.subtitle,
+      icon: moduleConfig.icon,
+      color: moduleConfig.color,
+      onTap: () => _navigateToModule(context, module.id),
+      isDisabled: !module.isEnabled,
+    );
+  }
+
+  /// Configuración visual de cada módulo
+  _ModuleConfig _getModuleConfig(String moduleId) {
+    switch (moduleId) {
+      case 'camera':
+        return _ModuleConfig(
+          icon: Icons.camera_alt,
+          color: AppColors.primary,
+          subtitle: 'Captura y gestiona fotos',
+        );
+      case 'asistencia':
+        return _ModuleConfig(
+          icon: Icons.access_time,
+          color: AppColors.secondary,
+          subtitle: 'Registro de entrada y salida',
+        );
+      case 'autos':
+        return _ModuleConfig(
+          icon: Icons.directions_car,
+          color: AppColors.accent,
+          subtitle: 'Gestión de vehículos',
+        );
+      case 'granos':
+        return _ModuleConfig(
+          icon: Icons.agriculture,
+          color: AppColors.warning,
+          subtitle: 'Gestión de granos',
+        );
+      default:
+        return _ModuleConfig(
+          icon: Icons.apps,
+          color: AppColors.textSecondary,
+          subtitle: 'Módulo disponible',
+        );
+    }
+  }
+
+  /// Navega al módulo seleccionado
+  void _navigateToModule(BuildContext context, String moduleId) {
+    switch (moduleId) {
+      case 'camera':
+        context.push('/camera', extra: {'camera': cameras.first});
+        break;
+      case 'asistencia':
+        context.pushNamed('asistencia');
+        break;
+      case 'autos':
+        context.push('/autos');
+        break;
+      case 'granos':
+        // Módulo en desarrollo
+        _showComingSoonDialog(context);
+        break;
+      default:
+        _showComingSoonDialog(context);
+    }
+  }
+
+  /// Grid por defecto (sin autenticación o error)
+  Widget _buildDefaultGrid(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 0.9,
+      children: [
+        _AppCard(
+          title: 'Cámara',
+          subtitle: 'Captura y gestiona fotos',
+          icon: Icons.camera_alt,
+          color: AppColors.primary,
+          onTap: () =>
+              context.push('/camera', extra: {'camera': cameras.first}),
+        ),
+        _AppCard(
+          title: 'Asistencia',
+          subtitle: 'Registro de entrada y salida',
+          icon: Icons.access_time,
+          color: AppColors.secondary,
+          onTap: () => context.pushNamed('asistencia'),
+        ),
+        _AppCard(
+          title: 'Autos',
+          subtitle: 'Gestión de vehículos',
+          icon: Icons.directions_car,
+          color: AppColors.accent,
+          onTap: () => context.push('/autos'),
+        ),
+        _AppCard(
+          title: 'Próximamente',
+          subtitle: 'Nuevas funcionalidades',
+          icon: Icons.upcoming,
+          color: AppColors.textSecondary,
+          onTap: () => _showComingSoonDialog(context),
+          isDisabled: true,
+        ),
+      ],
     );
   }
 
@@ -440,96 +558,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(authProvider.notifier).logout(ref);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      '✅ Biometría eliminada y sesión cerrada',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            backgroundColor: Colors.green[600],
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        AppSnackBar.success(context, 'Biometría eliminada y sesión cerrada');
       }
     } catch (e) {
       // Si falla la limpieza de biometría, igual hacer logout
       ref.read(authProvider.notifier).logout(ref);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      '⚠️ Sesión cerrada (error limpiando biometría)',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            backgroundColor: Colors.orange[600],
-            duration: const Duration(seconds: 4),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        AppSnackBar.warning(context, 'Sesión cerrada (error limpiando biometría)');
       }
     }
   }
 
   void _showComingSoonDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        title: const Text('Próximamente'),
-        content: const Text(
-          'Esta funcionalidad estará disponible en una próxima actualización.',
-        ),
-        actions: [
-          AppButton.primary(
-            text: 'Entendido',
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
+    AppDialog.info(
+      context,
+      title: 'Próximamente',
+      message: 'Esta funcionalidad estará disponible en una próxima actualización.',
+      buttonText: 'Entendido',
     );
   }
 
@@ -752,71 +798,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       await ref.read(biometricProvider.notifier).clearAll();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      '✅ Datos biométricos eliminados correctamente',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            backgroundColor: Colors.green[600],
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        AppSnackBar.success(context, 'Datos biométricos eliminados correctamente');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '❌ Error al eliminar datos: $e',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            backgroundColor: Colors.red[600],
-            duration: const Duration(seconds: 4),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        AppSnackBar.error(context, 'Error al eliminar datos: $e');
       }
     }
   }
@@ -1074,4 +1060,17 @@ class _WelcomeMessage extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Configuración visual de un módulo
+class _ModuleConfig {
+  final IconData icon;
+  final Color color;
+  final String subtitle;
+
+  const _ModuleConfig({
+    required this.icon,
+    required this.color,
+    required this.subtitle,
+  });
 }

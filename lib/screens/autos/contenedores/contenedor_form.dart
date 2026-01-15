@@ -698,7 +698,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
         ),
         const SizedBox(height: DesignTokens.spaceS),
         DropdownButtonFormField<T>(
-          value: value,
+          initialValue: value,
           items: items,
           onChanged: onChanged,
           validator: validator,

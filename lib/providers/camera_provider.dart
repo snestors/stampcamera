@@ -1,33 +1,39 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/image_processor.dart';
-import 'dart:async'; // para usar unawaited()
+import 'package:stampcamera/config/camera/camera_config.dart';
+import 'package:stampcamera/utils/image_processor.dart';
 
 class CameraState {
   final bool isReady;
-  final bool isProcessing;
   final FlashMode flashMode;
   final List<File> imagenes;
+  final int processingCount; // Cuántas fotos se están procesando
+  final String? lastCapturedPath; // Para animación de foto bajando
 
   CameraState({
     this.isReady = false,
-    this.isProcessing = false,
     this.flashMode = FlashMode.off,
     this.imagenes = const [],
+    this.processingCount = 0,
+    this.lastCapturedPath,
   });
+
+  bool get isProcessing => processingCount > 0;
 
   CameraState copyWith({
     bool? isReady,
-    bool? isProcessing,
     FlashMode? flashMode,
     List<File>? imagenes,
+    int? processingCount,
+    String? lastCapturedPath,
   }) {
     return CameraState(
       isReady: isReady ?? this.isReady,
-      isProcessing: isProcessing ?? this.isProcessing,
       flashMode: flashMode ?? this.flashMode,
       imagenes: imagenes ?? this.imagenes,
+      processingCount: processingCount ?? this.processingCount,
+      lastCapturedPath: lastCapturedPath ?? this.lastCapturedPath,
     );
   }
 }
@@ -38,22 +44,34 @@ class CameraNotifier extends StateNotifier<CameraState> {
   }
 
   final CameraDescription _camera;
-  late CameraController controller;
+  CameraController? _controller;
+  bool _isCapturing = false; // Previene capturas simultáneas
+
+  CameraController get controller => _controller!;
 
   Future<void> _init() async {
-    controller = CameraController(
-      _camera,
-      ResolutionPreset.veryHigh,
+    try {
+      _controller = CameraController(
+        _camera,
+        ResolutionPreset.veryHigh,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
 
-      imageFormatGroup: ImageFormatGroup.jpeg,
-    );
-    await controller.initialize();
-    await _loadImages();
-    state = state.copyWith(isReady: true);
+      await _controller!.initialize();
+
+      // Precargar el procesador de imágenes (carga logo en caché)
+      await ImageProcessor().initialize();
+
+      await _loadImages();
+      state = state.copyWith(isReady: true);
+    } catch (e) {
+      print('❌ Error inicializando cámara: $e');
+    }
   }
 
   Future<void> _loadImages() async {
-    final dir = Directory('/storage/emulated/0/DCIM/MiEmpresa');
+    final dir = Directory('/storage/emulated/0/DCIM/StampCamera');
     if (!await dir.exists()) return;
 
     final files = dir.listSync()
@@ -69,43 +87,45 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
   Future<void> _processInBackground(String path) async {
     try {
-      final config = WatermarkConfig(
-        showLogo: true,
-        showTimestamp: true,
-        showLocation: false,
-        logoPosition: WatermarkPosition.topRight,
-        timestampPosition: WatermarkPosition.bottomRight,
-
-        compressionQuality: 88,
-        timestampFontSize: FontSize.large,
-        locationFontSize: FontSize.large, // Posiciones fijas
-      );
-      await processImageWithWatermark(path, config: config);
+      // Usar configuración centralizada desde WatermarkPresets
+      final processedPath = await processImageWithWatermark(path, config: WatermarkPresets.camera);
 
       await _loadImages();
 
-      // 🔁 Fuerza notificación de cambio (aunque no cambie nada)
-      state = state.copyWith();
+      // Decrementar contador y actualizar última foto
+      state = state.copyWith(
+        processingCount: (state.processingCount - 1).clamp(0, 100),
+        lastCapturedPath: processedPath,
+      );
     } catch (e) {
       // ignore: avoid_print
       print('❌ Error al procesar en segundo plano: $e');
+      state = state.copyWith(
+        processingCount: (state.processingCount - 1).clamp(0, 100),
+      );
     }
   }
 
   Future<void> takePicture() async {
-    if (state.isProcessing) return;
-    state = state.copyWith(isProcessing: true);
+    // Prevenir capturas simultáneas (evita crashes)
+    if (_isCapturing || _controller == null || !_controller!.value.isInitialized) {
+      return;
+    }
+
+    _isCapturing = true;
 
     try {
-      final picture = await controller.takePicture();
+      final picture = await _controller!.takePicture();
 
-      // ✅ SOLUCIÓN: Usar unawaited de dart:async
-      unawaited(_processInBackground(picture.path));
+      // Incrementar contador de procesamiento
+      state = state.copyWith(processingCount: state.processingCount + 1);
+
+      // Procesar en background SIN esperar (permite tomar más fotos)
+      _processInBackground(picture.path);
     } catch (e) {
-      // ignore: avoid_print
       print('❌ Error al tomar foto: $e');
     } finally {
-      state = state.copyWith(isProcessing: false);
+      _isCapturing = false;
     }
   }
 
@@ -134,11 +154,17 @@ class CameraNotifier extends StateNotifier<CameraState> {
   }
 
   Future<void> toggleFlash() async {
-    final newMode = state.flashMode == FlashMode.off
-        ? FlashMode.torch
-        : FlashMode.off;
-    await controller.setFlashMode(newMode);
-    state = state.copyWith(flashMode: newMode);
+    if (_controller == null || !_controller!.value.isInitialized) return;
+
+    try {
+      final newMode = state.flashMode == FlashMode.off
+          ? FlashMode.torch
+          : FlashMode.off;
+      await _controller!.setFlashMode(newMode);
+      state = state.copyWith(flashMode: newMode);
+    } catch (e) {
+      print('❌ Error al cambiar flash: $e');
+    }
   }
 
   void updateImages(List<File> newList) {
@@ -147,7 +173,8 @@ class CameraNotifier extends StateNotifier<CameraState> {
 
   @override
   void dispose() {
-    controller.dispose();
+    _controller?.dispose();
+    _controller = null;
     super.dispose();
   }
 }

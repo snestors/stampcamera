@@ -79,8 +79,9 @@ class _FullscreenImageState extends State<_FullscreenImage> {
     } else if (_tapDownDetails != null) {
       final position = _tapDownDetails!.localPosition;
       _controller.value = Matrix4.identity()
-        ..translate(-position.dx * 2, -position.dy * 2)
-        ..scale(3.0);
+        ..setTranslationRaw(-position.dx * 2, -position.dy * 2, 0.0)
+        // ignore: deprecated_member_use
+        ..scale(3.0, 3.0, 1.0);
     }
   }
 

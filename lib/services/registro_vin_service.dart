@@ -8,6 +8,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
 
+/// Excepción especial para registros duplicados - NO es un error real
+class DuplicateRecordException implements Exception {
+  final String vin;
+  DuplicateRecordException(this.vin);
+
+  @override
+  String toString() => 'DuplicateRecordException: VIN $vin ya existe';
+}
+
 class RegistroVinService {
   final _http = HttpService();
 
@@ -80,6 +89,14 @@ class RegistroVinService {
     } on DioException catch (e) {
       if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
+
+        // Verificar si es error de duplicado - tratar como éxito
+        if (_isDuplicateError(errorData)) {
+          print('⚠️ VIN $vin ya existe - tratando como éxito');
+          // Lanzar excepción especial para indicar duplicado (no es un error real)
+          throw DuplicateRecordException(vin);
+        }
+
         if (errorData is Map<String, dynamic> &&
             errorData.containsKey('non_field_errors')) {
           final nonFieldErrors = errorData['non_field_errors'];
@@ -104,8 +121,26 @@ class RegistroVinService {
 
       throw Exception('Error del servidor (${e.response?.statusCode})');
     } catch (e) {
+      // Re-lanzar DuplicateRecordException sin modificar
+      if (e is DuplicateRecordException) rethrow;
       throw Exception('Error al crear registro: $e');
     }
+  }
+
+  /// Detecta si el error indica un registro duplicado
+  bool _isDuplicateError(dynamic errorData) {
+    if (errorData == null) return false;
+
+    final errorString = errorData.toString().toLowerCase();
+
+    // Detectar errores comunes de duplicado
+    return errorString.contains('duplicado') ||
+           errorString.contains('duplicate') ||
+           errorString.contains('ya existe') ||
+           errorString.contains('already exists') ||
+           errorString.contains('unique constraint') ||
+           errorString.contains('ya registrado') ||
+           errorString.contains('already registered');
   }
 
   String? _extractFirstFieldError(Map<String, dynamic> errorData) {
@@ -277,6 +312,11 @@ extension OfflineCapability on RegistroVinService {
         registro['status'] = 'completed';
         registro['completed_at'] = DateTime.now().toIso8601String();
         print('✅ ${registro['vin']} completado');
+      } on DuplicateRecordException {
+        // Duplicado = ya existe en el servidor = éxito
+        registro['status'] = 'completed';
+        registro['completed_at'] = DateTime.now().toIso8601String();
+        print('✅ ${registro['vin']} completado (ya existía en servidor)');
       } catch (e) {
         // Incrementar retry count
         registro['retry_count'] = (registro['retry_count'] ?? 0) + 1;
@@ -362,6 +402,12 @@ extension OfflineCapability on RegistroVinService {
       registros[recordIndex]['status'] = 'completed';
       registros[recordIndex]['completed_at'] = DateTime.now().toIso8601String();
       registros[recordIndex]['error'] = null;
+    } on DuplicateRecordException {
+      // Duplicado = ya existe en el servidor = éxito
+      registros[recordIndex]['status'] = 'completed';
+      registros[recordIndex]['completed_at'] = DateTime.now().toIso8601String();
+      registros[recordIndex]['error'] = null;
+      print('✅ ${registro['vin']} completado (ya existía en servidor)');
     } catch (e) {
       // Si falla, incrementar retry count y actualizar error
       registros[recordIndex]['retry_count'] =

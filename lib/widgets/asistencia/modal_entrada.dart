@@ -1,37 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 
-void showMarcarEntradaBottomSheet(
-  BuildContext context,
-  WidgetRef ref,
-  DateTime fechaSeleccionada,
-) {
+void showMarcarEntradaBottomSheet(BuildContext context, WidgetRef ref) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    builder: (_) => ModalMarcarEntrada(fechaSeleccionada: fechaSeleccionada),
+    backgroundColor: Colors.transparent,
+    builder: (_) => const ModalMarcarEntrada(),
   );
 }
 
 class ModalMarcarEntrada extends ConsumerStatefulWidget {
-  final DateTime fechaSeleccionada;
-
-  const ModalMarcarEntrada({super.key, required this.fechaSeleccionada});
+  const ModalMarcarEntrada({super.key});
 
   @override
   ConsumerState<ModalMarcarEntrada> createState() => _ModalMarcarEntradaState();
 }
 
-class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
+class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
+    with SingleTickerProviderStateMixin {
   ZonaTrabajo? zonaSeleccionada;
   Nave? naveSeleccionada;
   final TextEditingController comentarioCtrl = TextEditingController();
+  late AnimationController _animController;
+  late Animation<double> _scaleAnim;
+  bool _isSubmitting = false; // Previene doble tap
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnim = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
+    );
+    _animController.forward();
+  }
 
   @override
   void dispose() {
     comentarioCtrl.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
@@ -39,108 +53,503 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada> {
   Widget build(BuildContext context) {
     final formOptionsAsync = ref.watch(asistenciaFormOptionsProvider);
     final status = ref.watch(asistenciaStatusProvider);
-    final notifier = ref.read(
-      asistenciasDiariasProvider(widget.fechaSeleccionada).notifier,
-    );
+    // Usar estado local O estado del provider para máxima protección
+    final isLoading = _isSubmitting || status == AsistenciaStatus.entradaLoading;
 
-    return formOptionsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text("Error: $e")),
-      data: (opciones) {
-        final zonas = opciones.zonas;
-        final naves = opciones.naves;
-
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Marcar entrada",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<ZonaTrabajo>(
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Zona de trabajo'),
-                value: zonaSeleccionada,
-                items: zonas.map((zona) {
-                  return DropdownMenuItem(value: zona, child: Text(zona.value));
-                }).toList(),
-                onChanged: (value) => setState(() => zonaSeleccionada = value),
-              ),
-
-              const SizedBox(height: 12),
-
-              DropdownButtonFormField<Nave>(
-                isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Nave (opcional)'),
-                value: naveSeleccionada,
-                items: [
-                  ...naves.map(
-                    (nave) =>
-                        DropdownMenuItem(value: nave, child: Text(nave.value)),
-                  ),
-                ],
-                onChanged: (value) => setState(() => naveSeleccionada = value),
-              ),
-
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: comentarioCtrl,
-                decoration: const InputDecoration(
-                  labelText: "Comentario (opcional)",
-                ),
-                maxLines: 2,
-              ),
-
-              const SizedBox(height: 16),
-
-              ElevatedButton.icon(
-                icon: status == AsistenciaStatus.entradaLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.login),
-                label: const Text('Confirmar entrada'),
-                onPressed: (status == AsistenciaStatus.entradaLoading)
-                    ? null
-                    : () async {
-                        if (zonaSeleccionada == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Selecciona una zona de trabajo'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        final ok = await notifier.marcarEntrada(
-                          zonaTrabajoId: zonaSeleccionada!.id,
-                          turnoId: 1, // <-- pon aquí tu lógica real
-                          naveId: naveSeleccionada?.id,
-                          comentario: comentarioCtrl.text.trim().isEmpty
-                              ? null
-                              : comentarioCtrl.text.trim(),
-                          wref: ref, // 🚀 Pasar ref para limpieza de providers
-                        );
-
-                        if (ok && context.mounted) {
-                          Navigator.of(context).pop(); // el rebuild ocurre solo
-                        }
-                      },
-              ),
-            ],
+    return AnimatedBuilder(
+      animation: _scaleAnim,
+      builder: (context, child) => Transform.scale(
+        scale: _scaleAnim.value,
+        child: child,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: formOptionsAsync.when(
+          loading: () => const SizedBox(
+            height: 200,
+            child: Center(child: CircularProgressIndicator()),
           ),
-        );
-      },
+          error: (e, _) => _buildErrorState(e.toString()),
+          data: (opciones) => _buildForm(opciones, isLoading),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+          const SizedBox(height: 16),
+          Text(
+            'Error al cargar opciones',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[800],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error,
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: () => ref.invalidate(asistenciaFormOptionsProvider),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForm(FormularioAsistenciaOptions opciones, bool isLoading) {
+    final zonas = opciones.zonas;
+    final naves = opciones.naves;
+
+    return Stack(
+      children: [
+        // Contenido del formulario
+        SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Header con icono
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF003B5C),
+                        const Color(0xFF003B5C).withValues(alpha: 0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.login_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Marcar Entrada',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Registra el inicio de tu jornada',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Zona de trabajo (requerido)
+                _buildDropdownField<ZonaTrabajo>(
+                  label: 'Zona de trabajo',
+                  hint: 'Selecciona tu zona',
+                  value: zonaSeleccionada,
+                  items: zonas,
+                  isRequired: true,
+                  enabled: !isLoading,
+                  icon: Icons.location_on,
+                  itemBuilder: (zona) => Text(zona.value),
+                  onChanged: (value) =>
+                      setState(() => zonaSeleccionada = value),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Nave (opcional)
+                _buildDropdownField<Nave>(
+                  label: 'Nave / Embarque',
+                  hint: 'Selecciona una nave (opcional)',
+                  value: naveSeleccionada,
+                  items: naves,
+                  isRequired: false,
+                  enabled: !isLoading,
+                  icon: Icons.directions_boat,
+                  itemBuilder: (nave) => Text(nave.value),
+                  onChanged: (value) =>
+                      setState(() => naveSeleccionada = value),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Comentario
+                TextFormField(
+                  controller: comentarioCtrl,
+                  enabled: !isLoading,
+                  decoration: InputDecoration(
+                    labelText: 'Comentario (opcional)',
+                    hintText: 'Agrega un comentario...',
+                    prefixIcon: const Icon(Icons.comment_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFF003B5C),
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: isLoading ? Colors.grey[100] : Colors.grey[50],
+                  ),
+                  maxLines: 2,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Botón de confirmar
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00B4D8),
+                      foregroundColor: Colors.white,
+                      elevation: isLoading ? 0 : 2,
+                      shadowColor: const Color(0xFF00B4D8).withValues(alpha: 0.4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: isLoading ? null : _handleSubmit,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: isLoading
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Obteniendo ubicación...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.check_circle, size: 22),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Confirmar Entrada',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Botón cancelar
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: Text(
+                    'Cancelar',
+                    style: TextStyle(
+                      color: isLoading ? Colors.grey[400] : Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Loading overlay
+        if (isLoading)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.7),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: Color(0xFF003B5C),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Registrando entrada...',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF003B5C),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Obteniendo ubicación GPS',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField<T>({
+    required String label,
+    required String hint,
+    required T? value,
+    required List<T> items,
+    required bool isRequired,
+    required bool enabled,
+    required IconData icon,
+    required Widget Function(T) itemBuilder,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: const Color(0xFF003B5C)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF003B5C),
+              ),
+            ),
+            if (isRequired)
+              const Text(
+                ' *',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<T>(
+          isExpanded: true,
+          initialValue: value,
+          hint: Text(hint, style: TextStyle(color: Colors.grey[500])),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF003B5C),
+                width: 2,
+              ),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+            filled: true,
+            fillColor: enabled ? Colors.grey[50] : Colors.grey[100],
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          items: items.map((item) {
+            return DropdownMenuItem<T>(
+              value: item,
+              child: itemBuilder(item),
+            );
+          }).toList(),
+          onChanged: enabled ? onChanged : null,
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleSubmit() async {
+    // Prevenir doble tap
+    if (_isSubmitting) return;
+
+    // Validación
+    if (zonaSeleccionada == null) {
+      HapticFeedback.heavyImpact();
+      _showErrorSnackbar('Selecciona una zona de trabajo');
+      return;
+    }
+
+    // Activar loading inmediatamente
+    setState(() => _isSubmitting = true);
+    HapticFeedback.mediumImpact();
+
+    try {
+      final notifier = ref.read(asistenciaActivaProvider.notifier);
+      final ok = await notifier.marcarEntrada(
+        zonaTrabajoId: zonaSeleccionada!.id,
+        naveId: naveSeleccionada?.id,
+        comentario:
+            comentarioCtrl.text.trim().isEmpty ? null : comentarioCtrl.text.trim(),
+        wref: ref,
+      );
+
+      if (!mounted) return;
+
+      if (ok) {
+        HapticFeedback.lightImpact();
+        Navigator.of(context).pop();
+        _showSuccessSnackbar('Entrada registrada correctamente');
+      } else {
+        HapticFeedback.heavyImpact();
+        _showErrorSnackbar('Error al registrar entrada');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.green[600],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.red[600],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
     );
   }
 }

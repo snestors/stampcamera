@@ -38,7 +38,7 @@ class SessionManager extends StateNotifier<String?> {
   /// Limpiar providers al iniciar asistencia
   void onStartAssistance(WidgetRef ref) {
     // Limpiar solo providers relacionados con asistencia y trabajo diario
-    ref.invalidate(asistenciasDiariasProvider);
+    ref.invalidate(asistenciaActivaProvider);
     ref.invalidate(asistenciaFormOptionsProvider);
     ref.invalidate(asistenciaStatusProvider);
     
@@ -63,7 +63,7 @@ class SessionManager extends StateNotifier<String?> {
   /// Limpiar providers al cerrar asistencia
   void onEndAssistance(WidgetRef ref) {
     // Limpiar todos los datos de trabajo
-    ref.invalidate(asistenciasDiariasProvider);
+    ref.invalidate(asistenciaActivaProvider);
     ref.invalidate(asistenciaStatusProvider);
     ref.invalidate(registroGeneralProvider);
     ref.invalidate(contenedorProvider);
@@ -80,7 +80,7 @@ class SessionManager extends StateNotifier<String?> {
     // ============================================================================
     // PROVIDERS DE ASISTENCIA
     // ============================================================================
-    ref.invalidate(asistenciasDiariasProvider);
+    ref.invalidate(asistenciaActivaProvider);
     ref.invalidate(asistenciaFormOptionsProvider);
     ref.invalidate(asistenciaStatusProvider);
 

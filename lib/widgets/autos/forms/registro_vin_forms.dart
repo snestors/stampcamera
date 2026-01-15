@@ -286,7 +286,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
       children: [
         // ✅ Condición usando CondicionOption
         DropdownButtonFormField<String>(
-          value: _selectedCondicion,
+          initialValue: _selectedCondicion,
           decoration: InputDecoration(
             labelText:
                 'Condición${_isFieldRequired(options, 'condicion') ? ' *' : ''}',
@@ -324,7 +324,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
 
         // ✅ Zona de Inspección usando ZonaInspeccionOption
         DropdownButtonFormField<int>(
-          value: _selectedZonaInspeccion,
+          initialValue: _selectedZonaInspeccion,
           isExpanded: true,
           decoration: InputDecoration(
             labelText:
@@ -380,7 +380,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           // ✅ Bloque usando BloqueOption
           if (options.bloques.isNotEmpty) ...[
             DropdownButtonFormField<int>(
-              value: _selectedBloque,
+              initialValue: _selectedBloque,
               decoration: InputDecoration(
                 labelText:
                     'Bloque${_isFieldRequired(options, 'bloque') ? ' *' : ''}',

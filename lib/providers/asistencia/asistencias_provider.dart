@@ -11,33 +11,30 @@ final asistenciaStatusProvider = StateProvider<AsistenciaStatus>(
   (_) => AsistenciaStatus.idle,
 );
 
-final asistenciasDiariasProvider =
-    AsyncNotifierProvider.family<
-      AsistenciasNotifier,
-      List<AsistenciaDiaria>,
-      DateTime
-    >(() => AsistenciasNotifier());
+/// Provider para obtener la asistencia activa del usuario
+final asistenciaActivaProvider =
+    AsyncNotifierProvider<AsistenciaActivaNotifier, AsistenciaActivaResponse>(
+  () => AsistenciaActivaNotifier(),
+);
 
-class AsistenciasNotifier
-    extends FamilyAsyncNotifier<List<AsistenciaDiaria>, DateTime> {
+class AsistenciaActivaNotifier extends AsyncNotifier<AsistenciaActivaResponse> {
   final _http = HttpService();
 
-  // Mantener vivo
   @override
-  FutureOr<List<AsistenciaDiaria>> build(DateTime fecha) async {
+  FutureOr<AsistenciaActivaResponse> build() async {
     ref.keepAlive();
-    return _fetchAsistencias(fecha);
+    return _fetchAsistenciaActiva();
   }
 
-  Future<List<AsistenciaDiaria>> _fetchAsistencias(DateTime fecha) async {
-    final f = fecha.toIso8601String().split('T').first;
-    final res = await _http.dio.get(
-      '/api/v1/asistencias/asistencias-diarias/',
-      queryParameters: {'fecha': f},
-    );
-    return (res.data['results'] as List)
-        .map((e) => AsistenciaDiaria.fromJson(e))
-        .toList();
+  Future<AsistenciaActivaResponse> _fetchAsistenciaActiva() async {
+    final res = await _http.dio.get('/api/v1/asistencias/activa/');
+    return AsistenciaActivaResponse.fromJson(res.data);
+  }
+
+  /// Refresca el estado de asistencia activa
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _fetchAsistenciaActiva());
   }
 
   // ------------------------------------------------------------------
@@ -45,7 +42,6 @@ class AsistenciasNotifier
   // ------------------------------------------------------------------
   Future<bool> marcarEntrada({
     required int zonaTrabajoId,
-    required int turnoId,
     int? naveId,
     String? comentario,
     WidgetRef? wref,
@@ -53,7 +49,7 @@ class AsistenciasNotifier
     ref.read(asistenciaStatusProvider.notifier).state =
         AsistenciaStatus.entradaLoading;
 
-    // 🚀 Limpiar providers al iniciar asistencia
+    // Limpiar providers al iniciar asistencia
     if (wref != null) {
       ref.read(sessionManagerProvider.notifier).onStartAssistance(wref);
     }
@@ -61,23 +57,21 @@ class AsistenciasNotifier
     try {
       final gps = await _getGps();
       await _http.dio.post(
-        '/api/v1/asistencias/asistencias-diarias/entrada/',
+        '/api/v1/asistencias/entrada/',
         data: {
           'zona_trabajo_id': zonaTrabajoId,
-          'turno_id': turnoId,
           'ubicacion_entrada_gps': gps,
           if (naveId != null) 'nave_id': naveId,
           if (comentario != null) 'comentario_usuario': comentario,
         },
       );
 
-      // 🔥 disparo un refetch obligatorio
+      // Refrescar estado
       ref.invalidateSelf();
       return true;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      ref.read(asistenciaStatusProvider.notifier).state =
-          AsistenciaStatus.error;
+      ref.read(asistenciaStatusProvider.notifier).state = AsistenciaStatus.error;
       return false;
     } finally {
       ref.read(asistenciaStatusProvider.notifier).state = AsistenciaStatus.idle;
@@ -90,38 +84,58 @@ class AsistenciasNotifier
   Future<bool> marcarSalida([WidgetRef? wref]) async {
     ref.read(asistenciaStatusProvider.notifier).state =
         AsistenciaStatus.salidaLoading;
-    
-    // 🏁 Limpiar providers al terminar asistencia
+
+    // Limpiar providers al terminar asistencia
     if (wref != null) {
       ref.read(sessionManagerProvider.notifier).onEndAssistance(wref);
     }
+
     try {
       final gps = await _getGps();
       await _http.dio.post(
-        '/api/v1/asistencias/asistencias-diarias/salida/',
+        '/api/v1/asistencias/salida/',
         data: {'gps': gps},
       );
 
-      // 🔥 disparo un refetch obligatorio
+      // Refrescar estado
       ref.invalidateSelf();
-
       return true;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      ref.read(asistenciaStatusProvider.notifier).state =
-          AsistenciaStatus.error;
+      ref.read(asistenciaStatusProvider.notifier).state = AsistenciaStatus.error;
       return false;
     } finally {
       ref.read(asistenciaStatusProvider.notifier).state = AsistenciaStatus.idle;
     }
   }
 
-  // util
   Future<String> _getGps() async {
     final p = await obtenerGpsSeguro();
     return '${p.latitude},${p.longitude}';
   }
 }
+
+/// Provider para historial de asistencias (paginado)
+final asistenciaHistorialProvider =
+    FutureProvider.family<List<Asistencia>, ({String? fechaInicio, String? fechaFin})>(
+  (ref, params) async {
+    final queryParams = <String, dynamic>{};
+    if (params.fechaInicio != null) {
+      queryParams['fecha_inicio'] = params.fechaInicio;
+    }
+    if (params.fechaFin != null) {
+      queryParams['fecha_fin'] = params.fechaFin;
+    }
+
+    final res = await HttpService().dio.get(
+      '/api/v1/asistencias/historial/',
+      queryParameters: queryParams,
+    );
+
+    final results = res.data['results'] as List? ?? res.data as List;
+    return results.map((e) => Asistencia.fromJson(e)).toList();
+  },
+);
 
 // ---------------------------------------------------------------------
 // Opciones para el formulario de entrada
@@ -129,20 +143,24 @@ class AsistenciasNotifier
 class FormularioAsistenciaOptions {
   final List<ZonaTrabajo> zonas;
   final List<Nave> naves;
-  FormularioAsistenciaOptions({required this.zonas, required this.naves});
+
+  FormularioAsistenciaOptions({
+    required this.zonas,
+    required this.naves,
+  });
 }
 
 final asistenciaFormOptionsProvider =
     FutureProvider<FormularioAsistenciaOptions>((ref) async {
-      final res = await HttpService().dio.get(
-        '/api/v1/asistencias/asistencias-diarias/formulario-options/',
-      );
-      return FormularioAsistenciaOptions(
-        zonas: (res.data['zonas'] as List)
-            .map((e) => ZonaTrabajo.fromJson(e))
-            .toList(),
-        naves: (res.data['naves'] as List)
-            .map((e) => Nave.fromJson(e))
-            .toList(),
-      );
-    });
+  final res = await HttpService().dio.get(
+    '/api/v1/asistencias/formulario-options/',
+  );
+  return FormularioAsistenciaOptions(
+    zonas: (res.data['zonas'] as List)
+        .map((e) => ZonaTrabajo.fromJson(e))
+        .toList(),
+    naves: (res.data['naves'] as List)
+        .map((e) => Nave.fromJson(e))
+        .toList(),
+  );
+});

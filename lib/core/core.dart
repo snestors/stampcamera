@@ -24,3 +24,10 @@ export 'widgets/common/app_info_row.dart';
 export 'widgets/common/app_section_header.dart';
 export 'widgets/common/app_search_select.dart';
 
+// Feedback widgets (diálogos, snackbars)
+export 'widgets/feedback/app_dialog.dart';
+export 'widgets/feedback/app_snackbar.dart';
+
+// App Bars
+export 'widgets/app_bars/app_corporate_bar.dart';
+

@@ -1,7 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
-import 'package:stampcamera/widgets/asistencia/dia_selector_widget.dart';
 import 'package:stampcamera/widgets/asistencia/marcar_salida.dart';
 import 'package:stampcamera/widgets/asistencia/resumen_asistencia_widget.dart';
 import 'package:stampcamera/widgets/asistencia/lista_asistencias_widget.dart';
@@ -17,96 +18,430 @@ class RegistroAsistenciaScreen extends ConsumerStatefulWidget {
 }
 
 class _RegistroAsistenciaScreenState
-    extends ConsumerState<RegistroAsistenciaScreen> {
-  DateTime fechaSeleccionada = DateTime.now();
+    extends ConsumerState<RegistroAsistenciaScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  Timer? _timer;
+  Duration _elapsedTime = Duration.zero;
+  DateTime? _entryTime;
 
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer(DateTime entryTime) {
+    _entryTime = entryTime;
+    _updateElapsedTime();
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _updateElapsedTime();
+    });
+  }
+
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void _updateElapsedTime() {
+    if (_entryTime != null && mounted) {
+      setState(() {
+        _elapsedTime = DateTime.now().difference(_entryTime!);
+      });
+    }
+  }
+
+  String _formatDuration(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60);
+    final seconds = d.inSeconds.remainder(60);
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _handleRefresh() async {
+    HapticFeedback.mediumImpact();
+    ref.invalidate(asistenciaActivaProvider);
+    await ref.read(asistenciaActivaProvider.future);
   }
 
   @override
   Widget build(BuildContext context) {
-    final asistenciasAsync = ref.watch(
-      asistenciasDiariasProvider(fechaSeleccionada),
-    );
+    final asistenciaAsync = ref.watch(asistenciaActivaProvider);
     final formOptionsAsync = ref.watch(asistenciaFormOptionsProvider);
+    final status = ref.watch(asistenciaStatusProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Registro de asistencia")),
-      body: Column(
-        children: [
-          DiaSelectorWidget(
-            fechaSeleccionada: fechaSeleccionada,
-            onSeleccionar: (nuevaFecha) {
-              if (!_isSameDay(nuevaFecha, fechaSeleccionada)) {
-                setState(() => fechaSeleccionada = nuevaFecha);
-              }
-            },
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: const Text('Registro de Asistencia'),
+        backgroundColor: const Color(0xFF003B5C),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => _handleRefresh(),
+            tooltip: 'Actualizar',
           ),
-          Expanded(
-            child: asistenciasAsync.when(
-              data: (asistencias) {
-                if (asistencias.isEmpty) {
-                  return const Center(
-                    child: Text("No hay asistencia registrada para este día."),
-                  );
-                }
+        ],
+      ),
+      body: asistenciaAsync.when(
+        data: (response) {
+          if (!response.tieneAsistenciaActiva || response.asistencia == null) {
+            _stopTimer();
+            return _buildEmptyState(context);
+          }
 
-                final asistenciaDelDia = asistencias.first;
+          final asistencia = response.asistencia!;
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ResumenAsistenciaWidget(
-                        asistenciaDiaria: asistenciaDelDia,
-                      ),
-                      ListaAsistenciasWidget(
-                        asistencias: asistenciaDelDia.asistencias,
+          // Iniciar timer si no está corriendo
+          if (_timer == null || !_timer!.isActive) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _startTimer(asistencia.fechaHoraEntrada);
+            });
+          }
+
+          return RefreshIndicator(
+            onRefresh: _handleRefresh,
+            color: const Color(0xFF003B5C),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 100),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Timer en vivo
+                  _buildLiveTimer(asistencia.fechaHoraEntrada),
+
+                  // Resumen
+                  ResumenAsistenciaWidget(asistencia: asistencia),
+
+                  // Lista de registros
+                  ListaAsistenciasWidget(asistencias: [asistencia]),
+                ],
+              ),
+            ),
+          );
+        },
+        loading: () => _buildLoadingState(),
+        error: (e, _) => ConnectionErrorScreen(
+          onRetry: () => ref.invalidate(asistenciaActivaProvider),
+        ),
+      ),
+      floatingActionButton: _buildFAB(asistenciaAsync, formOptionsAsync, status),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  Widget _buildLiveTimer(DateTime entryTime) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF003B5C), Color(0xFF00587A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF003B5C).withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) => Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Colors.greenAccent.withValues(
+                      alpha: 0.5 + (_pulseController.value * 0.5),
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.greenAccent.withValues(
+                          alpha: _pulseController.value * 0.5,
+                        ),
+                        blurRadius: 8,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => ConnectionErrorScreen(
-                onRetry: () {
-                  ref.invalidate(asistenciasDiariasProvider(fechaSeleccionada));
-                },
+                ),
               ),
+              const SizedBox(width: 10),
+              Text(
+                'JORNADA ACTIVA',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withValues(alpha: 0.9),
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _formatDuration(_elapsedTime),
+            style: const TextStyle(
+              fontSize: 48,
+              fontWeight: FontWeight.w300,
+              color: Colors.white,
+              fontFamily: 'monospace',
+              letterSpacing: 4,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Tiempo trabajado',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.login_rounded,
+                  size: 16,
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Entrada: ${_formatTime(entryTime)}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
-      floatingActionButton: asistenciasAsync.when(
-        data: (asistencias) {
-          if (asistencias.isEmpty) return null;
+    );
+  }
 
-          final asistenciaDelDia = asistencias.first;
-          final hayActiva = asistenciaDelDia.asistenciaActiva;
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
 
-          if (hayActiva) {
-            return BotonMarcarSalida(fechaSeleccionada: fechaSeleccionada);
-          } else {
-            return formOptionsAsync.when(
-              data: (_) => FloatingActionButton.extended(
-                onPressed: () => showMarcarEntradaBottomSheet(
-                  context,
-                  ref,
-                  fechaSeleccionada,
-                ),
-                icon: const Icon(Icons.login),
-                label: const Text("Marcar entrada"),
+  Widget _buildEmptyState(BuildContext context) {
+    return RefreshIndicator(
+      onRefresh: _handleRefresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Icono animado
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.elasticOut,
+                    builder: (context, value, child) => Transform.scale(
+                      scale: value,
+                      child: child,
+                    ),
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.access_time_rounded,
+                        size: 60,
+                        color: Color(0xFF003B5C),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Sin asistencia activa',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF003B5C),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Marca tu entrada para comenzar\ntu jornada laboral',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  // Indicador visual
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.arrow_downward_rounded,
+                        color: Colors.grey[400],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Presiona el botón abajo',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_downward_rounded,
+                        color: Colors.grey[400],
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              loading: () => null,
-              error: (error, stackTrace) => null,
-            );
-          }
-        },
-        loading: () => null,
-        error: (error, stackTrace) => null,
+            ),
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: Color(0xFF003B5C),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Cargando asistencia...',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget? _buildFAB(
+    AsyncValue asistenciaAsync,
+    AsyncValue formOptionsAsync,
+    AsistenciaStatus status,
+  ) {
+    return asistenciaAsync.when(
+      data: (response) {
+        if (response.tieneAsistenciaActiva) {
+          return const BotonMarcarSalida();
+        }
+
+        // Botón de entrada
+        final isLoading = status == AsistenciaStatus.entradaLoading;
+
+        return formOptionsAsync.when(
+          data: (_) => FloatingActionButton.extended(
+            heroTag: 'btn_entrada',
+            onPressed: isLoading
+                ? null
+                : () {
+                    HapticFeedback.mediumImpact();
+                    showMarcarEntradaBottomSheet(context, ref);
+                  },
+            backgroundColor:
+                isLoading ? Colors.grey[400] : const Color(0xFF00B4D8),
+            elevation: isLoading ? 0 : 4,
+            icon: isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.login_rounded),
+            label: Text(
+              isLoading ? 'Cargando...' : 'Marcar Entrada',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
+          ),
+          loading: () => FloatingActionButton.extended(
+            heroTag: 'btn_entrada_loading',
+            onPressed: null,
+            backgroundColor: Colors.grey[300],
+            icon: const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            label: const Text('Cargando...'),
+          ),
+          error: (e, st) => FloatingActionButton.extended(
+            heroTag: 'btn_entrada_error',
+            onPressed: () => ref.invalidate(asistenciaFormOptionsProvider),
+            backgroundColor: Colors.orange[400],
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reintentar'),
+          ),
+        );
+      },
+      loading: () => null,
+      error: (e, st) => null,
     );
   }
 }

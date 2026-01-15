@@ -13,6 +13,7 @@ import 'package:geocoding/geocoding.dart';
 // ENUMS Y CONFIGURACIÓN
 // ===================================
 enum FontSize {
+  auto, // Calcula automáticamente según resolución
   small, // arial14
   medium, // arial24
   large, // arial48
@@ -50,14 +51,14 @@ class WatermarkConfig {
     this.showLogo = true,
     this.showTimestamp = true,
     this.showLocation = false,
-    this.logoSizeRatio = 0.25,
+    this.logoSizeRatio = 0.0, // 0.0 = auto-calculate based on resolution
     this.logoPosition = WatermarkPosition.topRight,
     this.timestampPosition = WatermarkPosition.bottomRight,
     this.locationPosition = WatermarkPosition.bottomRight,
     this.compressionQuality = 90,
     this.locationText,
-    this.timestampFontSize = FontSize.large,
-    this.locationFontSize = FontSize.large,
+    this.timestampFontSize = FontSize.auto, // Auto-calculate based on resolution
+    this.locationFontSize = FontSize.auto, // Auto-calculate based on resolution
   });
 
   // Método para crear una copia con GPS
@@ -108,10 +109,25 @@ class WatermarkConfig {
 }
 
 // ===================================
-// SERVICIO DE UBICACIÓN GPS
+// SERVICIO DE UBICACIÓN GPS CON CACHE
 // ===================================
 class LocationService {
-  static Future<String?> getCurrentLocationString() async {
+  // Cache de ubicación para evitar bloqueos
+  static String? _cachedLocation;
+  static DateTime? _cacheTimestamp;
+  static const Duration _cacheValidDuration = Duration(minutes: 5);
+
+  /// Timeout reducido para GPS (antes era 60s, ahora 10s)
+  static const Duration _gpsTimeout = Duration(seconds: 10);
+
+  /// Obtiene la ubicación usando cache si está disponible y es reciente
+  static Future<String?> getCurrentLocationString({bool useCache = true}) async {
+    // Verificar cache primero
+    if (useCache && _isCacheValid()) {
+      debugPrint('📍 Usando ubicación cacheada: $_cachedLocation');
+      return _cachedLocation;
+    }
+
     try {
       // Verificar permisos
       LocationPermission permission = await Geolocator.checkPermission();
@@ -119,40 +135,41 @@ class LocationService {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           debugPrint('⚠️ Permisos de ubicación denegados');
-          return null;
+          return _cachedLocation; // Retornar cache aunque esté expirado
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
         debugPrint('⚠️ Permisos de ubicación denegados permanentemente');
-        return null;
+        return _cachedLocation;
       }
 
       // Verificar si el GPS está habilitado
       bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
       if (!isLocationEnabled) {
         debugPrint('⚠️ Servicio de ubicación deshabilitado');
-        return null;
+        return _cachedLocation;
       }
 
-      debugPrint('📍 Obteniendo ubicación GPS...');
+      debugPrint('📍 Obteniendo ubicación GPS (timeout: ${_gpsTimeout.inSeconds}s)...');
 
-      // Obtener posición actual con timeout
+      // Obtener posición actual con timeout REDUCIDO (10 segundos)
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: AndroidSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 60),
+          timeLimit: _gpsTimeout,
         ),
       );
 
       debugPrint('✅ GPS obtenido: ${position.latitude}, ${position.longitude}');
 
       // Intentar obtener dirección legible
+      String? locationString;
       try {
         List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
           position.longitude,
-        );
+        ).timeout(const Duration(seconds: 5)); // Timeout para geocoding
 
         if (placemarks.isNotEmpty) {
           final place = placemarks.first;
@@ -176,64 +193,102 @@ class LocationService {
             address += place.isoCountryCode!;
           }
 
-          // Si no hay dirección, usar coordenadas
-          if (address.isEmpty) {
-            address =
-                '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+          if (address.isNotEmpty) {
+            locationString = address;
+            debugPrint('🏠 Dirección obtenida: $address');
           }
-
-          debugPrint('🏠 Dirección obtenida: $address');
-          return address;
         }
       } catch (e) {
         debugPrint('⚠️ Error obteniendo dirección: $e');
       }
 
       // Fallback: usar coordenadas
-      final coords =
+      locationString ??=
           '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
-      debugPrint('📐 Usando coordenadas: $coords');
-      return coords;
+      debugPrint('📐 Ubicación final: $locationString');
+
+      // Actualizar cache
+      _updateCache(locationString);
+
+      return locationString;
     } catch (e) {
       debugPrint('❌ Error obteniendo ubicación: $e');
-      return null;
+      // Retornar cache aunque esté expirado en caso de error
+      return _cachedLocation;
     }
   }
 
-  // Método para obtener solo coordenadas (más rápido)
-  static Future<String?> getCurrentCoordinates() async {
+  /// Método para obtener solo coordenadas (más rápido)
+  static Future<String?> getCurrentCoordinates({bool useCache = true}) async {
+    // Verificar cache primero
+    if (useCache && _isCacheValid()) {
+      debugPrint('📍 Usando coordenadas cacheadas');
+      return _cachedLocation;
+    }
+
     try {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return null;
+        if (permission == LocationPermission.denied) return _cachedLocation;
       }
 
-      if (permission == LocationPermission.deniedForever) return null;
+      if (permission == LocationPermission.deniedForever) return _cachedLocation;
 
       bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!isLocationEnabled) return null;
+      if (!isLocationEnabled) return _cachedLocation;
 
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: AndroidSettings(
           accuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 60),
+          timeLimit: _gpsTimeout, // Usar timeout reducido
         ),
       );
 
-      return '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+      final coords = '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+      _updateCache(coords);
+      return coords;
     } catch (e) {
       debugPrint('❌ Error obteniendo coordenadas: $e');
-      return null;
+      return _cachedLocation;
     }
   }
 
-  // Verificar si los permisos están disponibles sin pedirlos
+  /// Precarga la ubicación en background (llamar al abrir cámara)
+  static Future<void> preloadLocation() async {
+    debugPrint('🔄 Precargando ubicación en background...');
+    await getCurrentLocationString(useCache: false);
+  }
+
+  /// Verificar si los permisos están disponibles sin pedirlos
   static Future<bool> hasLocationPermission() async {
     LocationPermission permission = await Geolocator.checkPermission();
     return permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always;
   }
+
+  /// Verificar si el cache es válido
+  static bool _isCacheValid() {
+    if (_cachedLocation == null || _cacheTimestamp == null) return false;
+    return DateTime.now().difference(_cacheTimestamp!) < _cacheValidDuration;
+  }
+
+  /// Actualizar el cache
+  static void _updateCache(String location) {
+    _cachedLocation = location;
+    _cacheTimestamp = DateTime.now();
+    debugPrint('💾 Cache de ubicación actualizado');
+  }
+
+  /// Limpiar cache (útil para forzar nueva ubicación)
+  static void clearCache() {
+    _cachedLocation = null;
+    _cacheTimestamp = null;
+    debugPrint('🗑️ Cache de ubicación limpiado');
+  }
+
+  /// Obtener ubicación cacheada sin intentar obtener nueva
+  static String? getCachedLocation() => _cachedLocation;
 }
 
 // ===================================
@@ -302,8 +357,39 @@ class ImageProcessorCache {
 // UTILIDAD PARA FUENTES BITMAP
 // ===================================
 class FontHelper {
+  /// Calcula el tamaño de fuente óptimo según la resolución de la imagen
+  /// - < 1920px: medium (24px) - imágenes pequeñas/720p
+  /// - 1920-3840px: large (48px) - Full HD / 2K
+  /// - > 3840px: large (48px) - 4K+
+  static FontSize calculateOptimalSize(int imageWidth, int imageHeight) {
+    final maxDimension = imageWidth > imageHeight ? imageWidth : imageHeight;
+
+    if (maxDimension < 1920) {
+      return FontSize.medium; // Antes era small, ahora medium
+    } else {
+      return FontSize.large; // Antes era medium, ahora large
+    }
+  }
+
+  /// Calcula el ratio del logo según la resolución
+  /// - < 1920px: 25% del ancho (antes 20%)
+  /// - 1920-3840px: 20% del ancho (antes 15%)
+  /// - > 3840px: 15% del ancho (antes 12%)
+  static double calculateLogoRatio(int imageWidth) {
+    if (imageWidth < 1920) {
+      return 0.25; // Aumentado de 0.20
+    } else if (imageWidth < 3840) {
+      return 0.20; // Aumentado de 0.15
+    } else {
+      return 0.15; // Aumentado de 0.12
+    }
+  }
+
   static img.BitmapFont getFontForSize(FontSize fontSize) {
     switch (fontSize) {
+      case FontSize.auto:
+        // Default a medium si no se especifica resolución
+        return img.arial24;
       case FontSize.small:
         return img.arial14;
       case FontSize.medium:
@@ -315,6 +401,8 @@ class FontHelper {
 
   static double getCharacterWidth(FontSize fontSize) {
     switch (fontSize) {
+      case FontSize.auto:
+        return 18.0; // Default a medium
       case FontSize.small:
         return 12.0; // arial14
       case FontSize.medium:
@@ -326,6 +414,8 @@ class FontHelper {
 
   static double getLineHeight(FontSize fontSize) {
     switch (fontSize) {
+      case FontSize.auto:
+        return 36.0; // Default a medium
       case FontSize.small:
         return 24.0; // arial14
       case FontSize.medium:
@@ -427,21 +517,21 @@ class ImageProcessor {
       Directory saveDirectory;
 
       if (Platform.isAndroid) {
-        // Android: DCIM/MiEmpresa
-        saveDirectory = Directory('/storage/emulated/0/DCIM/MiEmpresa');
+        // Android: DCIM/StampCamera (visible en galería)
+        saveDirectory = Directory('/storage/emulated/0/DCIM/StampCamera');
       } else {
         // iOS: Documents
         final appDir = await getApplicationDocumentsDirectory();
-        saveDirectory = Directory(path.join(appDir.path, 'MiEmpresa'));
+        saveDirectory = Directory(path.join(appDir.path, 'StampCamera'));
       }
 
       if (!await saveDirectory.exists()) {
         await saveDirectory.create(recursive: true);
       }
 
-      // Generar nombre único
+      // Generar nombre único con prefijo IMG
       final now = DateTime.now();
-      final filename = 'doc_${now.millisecondsSinceEpoch}.jpg';
+      final filename = 'IMG_${now.millisecondsSinceEpoch}.jpg';
       final filePath = path.join(saveDirectory.path, filename);
 
       // Escribir archivo
@@ -528,25 +618,60 @@ img.Image _applyWatermark(
   String timestamp,
   WatermarkConfig config,
 ) {
-  final processed = img.Image.from(image);
+  // OPTIMIZACIÓN: Trabajar directamente sobre la imagen original
+  // (no necesitamos la copia, ahorra ~500ms en imágenes 4K)
   debugPrint("🎨 Aplicando marca de agua...");
+  debugPrint("📐 Resolución: ${image.width}x${image.height}");
+
+  // Calcular tamaños dinámicos si están en modo auto
+  final resolvedConfig = _resolveAutoSizes(config, image.width, image.height);
 
   // Aplicar logo si está configurado
-  if (config.showLogo && logoBytes != null) {
-    _addLogo(processed, logoBytes, config);
+  if (resolvedConfig.showLogo && logoBytes != null) {
+    _addLogo(image, logoBytes, resolvedConfig);
   }
 
   // Aplicar timestamp si está configurado
-  if (config.showTimestamp) {
-    _addTimestamp(processed, timestamp, config);
+  if (resolvedConfig.showTimestamp) {
+    _addTimestamp(image, timestamp, resolvedConfig);
   }
 
   // Aplicar ubicación si está configurada
-  if (config.showLocation && config.locationText != null) {
-    _addLocation(processed, config.locationText!, config);
+  if (resolvedConfig.showLocation && resolvedConfig.locationText != null) {
+    _addLocation(image, resolvedConfig.locationText!, resolvedConfig);
   }
 
-  return processed;
+  return image;
+}
+
+/// Resuelve los valores "auto" a valores concretos basados en la resolución
+WatermarkConfig _resolveAutoSizes(WatermarkConfig config, int width, int height) {
+  // Calcular tamaño de fuente óptimo si está en auto
+  FontSize resolvedTimestampSize = config.timestampFontSize;
+  FontSize resolvedLocationSize = config.locationFontSize;
+
+  if (config.timestampFontSize == FontSize.auto) {
+    resolvedTimestampSize = FontHelper.calculateOptimalSize(width, height);
+    debugPrint('📏 Timestamp font auto → ${resolvedTimestampSize.name}');
+  }
+
+  if (config.locationFontSize == FontSize.auto) {
+    resolvedLocationSize = FontHelper.calculateOptimalSize(width, height);
+    debugPrint('📏 Location font auto → ${resolvedLocationSize.name}');
+  }
+
+  // Calcular ratio del logo si es 0.0 (auto)
+  double resolvedLogoRatio = config.logoSizeRatio;
+  if (config.logoSizeRatio <= 0.0) {
+    resolvedLogoRatio = FontHelper.calculateLogoRatio(width);
+    debugPrint('📏 Logo ratio auto → ${(resolvedLogoRatio * 100).toStringAsFixed(0)}%');
+  }
+
+  return config.copyWith(
+    timestampFontSize: resolvedTimestampSize,
+    locationFontSize: resolvedLocationSize,
+    logoSizeRatio: resolvedLogoRatio,
+  );
 }
 
 void _addLogo(img.Image image, Uint8List logoBytes, WatermarkConfig config) {
@@ -586,6 +711,8 @@ int _calculateTextWidth(String text, FontSize fontSize) {
   // Para fuentes monoespaciadas, podemos usar un cálculo más preciso
   // basado en el tamaño real de los caracteres
   switch (fontSize) {
+    case FontSize.auto:
+      return (text.length * 14).round(); // Default a medium
     case FontSize.small:
       return (text.length * 8).round(); // arial14 es más estrecha
     case FontSize.medium:
@@ -640,7 +767,7 @@ void _addTimestamp(img.Image image, String timestamp, WatermarkConfig config) {
     }
   }
 
-  // Dibujar con sombra
+  // Dibujar con sombra simple (offset de 2px para legibilidad)
   _drawTextWithShadow(
     image,
     timestamp,
@@ -649,7 +776,7 @@ void _addTimestamp(img.Image image, String timestamp, WatermarkConfig config) {
     position.dy.round(),
     img.ColorRgb8(255, 255, 255),
     img.ColorRgb8(0, 0, 0),
-    shadowRadius: 3,
+    shadowOffset: 2,
   );
 }
 
@@ -705,7 +832,7 @@ void _addLocation(
     position = Offset(timestampPosition.dx, position.dy);
   }
 
-  // Dibujar con sombra
+  // Dibujar con sombra simple (offset de 2px para legibilidad)
   _drawTextWithShadow(
     image,
     text,
@@ -714,7 +841,7 @@ void _addLocation(
     position.dy.round(),
     img.ColorRgb8(255, 255, 255),
     img.ColorRgb8(0, 0, 0),
-    shadowRadius: 2,
+    shadowOffset: 2,
   );
 }
 
@@ -780,23 +907,19 @@ void _drawTextWithShadow(
   int y,
   img.Color textColor,
   img.Color shadowColor, {
-  int shadowRadius = 2,
+  int shadowOffset = 1,
 }) {
-  // Dibujar sombra
-  for (int dx = -shadowRadius; dx <= shadowRadius; dx++) {
-    for (int dy = -shadowRadius; dy <= shadowRadius; dy++) {
-      if (dx != 0 || dy != 0) {
-        img.drawString(
-          image,
-          text,
-          font: font,
-          x: x + dx,
-          y: y + dy,
-          color: shadowColor,
-        );
-      }
-    }
-  }
+  // Sombra simple: solo 1 dibujo con offset (MUCHO más rápido)
+  // Antes: dibujaba 48+ veces con radius=3
+  // Ahora: solo 1 vez con offset
+  img.drawString(
+    image,
+    text,
+    font: font,
+    x: x + shadowOffset,
+    y: y + shadowOffset,
+    color: shadowColor,
+  );
 
   // Dibujar texto principal
   img.drawString(image, text, font: font, x: x, y: y, color: textColor);

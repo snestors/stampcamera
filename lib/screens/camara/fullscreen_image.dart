@@ -40,8 +40,9 @@ class _FullscreenImageState extends ConsumerState<FullscreenImage> {
     } else if (_doubleTapDetails != null) {
       final position = _doubleTapDetails!.localPosition;
       _transformationController.value = Matrix4.identity()
-        ..translate(-position.dx * 2, -position.dy * 2)
-        ..scale(3.0);
+        ..setTranslationRaw(-position.dx * 2, -position.dy * 2, 0.0)
+        // ignore: deprecated_member_use
+        ..scale(3.0, 3.0, 1.0);
     }
   }
 

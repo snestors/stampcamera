@@ -56,20 +56,11 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
         ),
       ) {
     _loadInitialState();
-    _startPeriodicUpdate();
+    // NOTA: Timer eliminado - BackgroundQueueService ya llama refreshState()
+    // después de procesar la cola, evitando timers duplicados
   }
 
   final RegistroVinService _service = RegistroVinService();
-
-  // ✅ OPTIMIZACIÓN: Reducir frecuencia de 10s a 30s
-  void _startPeriodicUpdate() {
-    Future.delayed(const Duration(seconds: 30), () {
-      if (mounted) {
-        refreshState();
-        _startPeriodicUpdate();
-      }
-    });
-  }
 
   Future<void> _loadInitialState() async {
     try {

@@ -284,7 +284,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
     return DropdownButtonFormField<int>(
       isExpanded: true,
-      value: _selectedRegistroVinId,
+      initialValue: _selectedRegistroVinId,
       style: TextStyle(
         fontSize: DesignTokens.fontSizeS,
         color: AppColors.textPrimary,
@@ -464,7 +464,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         const SizedBox(height: 12),
 
         DropdownButtonFormField<int>(
-          value: _selectedSeveridad,
+          initialValue: _selectedSeveridad,
           style: TextStyle(
             fontSize: DesignTokens.fontSizeS,
             color: AppColors.textPrimary,
@@ -565,7 +565,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         const SizedBox(height: 12),
 
         DropdownButtonFormField<int>(
-          value: _selectedResponsabilidad,
+          initialValue: _selectedResponsabilidad,
           style: TextStyle(
             fontSize: DesignTokens.fontSizeS,
             color: AppColors.textPrimary,
@@ -633,7 +633,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           subtitle: const Text('El daño es significativo para la inspección'),
           value: _relevante,
           onChanged: (value) => setState(() => _relevante = value),
-          activeColor: const Color(0xFFDC2626),
+          activeTrackColor: const Color(0xFFDC2626),
         ),
       ],
     );
@@ -645,7 +645,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         .toList();
 
     return DropdownButtonFormField<int>(
-      value: _selectedFotoPresentacion,
+      initialValue: _selectedFotoPresentacion,
       style: TextStyle(
         fontSize: DesignTokens.fontSizeS,
         color: AppColors.textPrimary,

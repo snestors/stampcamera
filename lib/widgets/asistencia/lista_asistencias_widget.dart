@@ -171,18 +171,19 @@ class _AsistenciaCard extends StatelessWidget {
                     const SizedBox(height: 10),
 
                     // Zona de trabajo
-                    Row(
-                      children: [
-                        _ChipIcon(icon: Icons.place, color: Colors.blueGrey),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            asistencia.zonaTrabajo.value,
-                            style: const TextStyle(fontSize: 13),
+                    if (asistencia.zonaTrabajo != null)
+                      Row(
+                        children: [
+                          _ChipIcon(icon: Icons.place, color: Colors.blueGrey),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              asistencia.zonaTrabajo!.value,
+                              style: const TextStyle(fontSize: 13),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
 
                     // Nave (opcional)
                     if (asistencia.nave != null) ...[
