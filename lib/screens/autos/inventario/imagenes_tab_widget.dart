@@ -1,6 +1,7 @@
 // screens/autos/inventario/imagenes_tab_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/screens/autos/inventario/simple_add_image_modal.dart';
@@ -318,25 +319,13 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
     BuildContext context,
     InventarioImagen imagen,
   ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar imagen'),
-        content: const Text(
-          '¿Estás seguro de que quieres eliminar esta imagen? Esta acción no se puede deshacer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Eliminar imagen',
+      message: '¿Estás seguro de que quieres eliminar esta imagen? Esta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
 
     if (confirmed == true && context.mounted) {
@@ -349,19 +338,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
     InventarioImagen imagen,
   ) async {
     // Mostrar loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Eliminando imagen...'),
-          ],
-        ),
-      ),
-    );
+    AppDialog.loading(context, message: 'Eliminando imagen...');
 
     try {
       final notifier = ref.read(
@@ -371,28 +348,17 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
       await notifier.deleteImage(imagen.id);
 
       if (context.mounted) {
-        Navigator.pop(context); // Cerrar loading
+        AppDialog.closeLoading(context);
 
         // Actualizar automáticamente la lista
         ref.invalidate(inventarioDetalleProvider(widget.informacionUnidadId));
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Imagen eliminada exitosamente'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppSnackBar.success(context, 'Imagen eliminada exitosamente');
       }
     } catch (e) {
       if (context.mounted) {
-        Navigator.pop(context); // Cerrar loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error al eliminar imagen: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppDialog.closeLoading(context);
+        AppSnackBar.error(context, 'Error al eliminar imagen: $e');
       }
     }
   }
@@ -421,22 +387,11 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
       ref.invalidate(inventarioDetalleProvider(widget.informacionUnidadId));
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Descripción actualizada'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        AppSnackBar.success(context, 'Descripción actualizada');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error al actualizar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.error(context, 'Error al actualizar: $e');
       }
     }
   }

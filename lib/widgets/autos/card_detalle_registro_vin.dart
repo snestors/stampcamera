@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
+import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 
-class DetalleRegistroCard extends StatelessWidget {
+class DetalleRegistroCard extends ConsumerWidget {
   final RegistroGeneral registro;
 
-  const DetalleRegistroCard({super.key, required this.registro});
+  const DetalleRegistroCard({
+    super.key,
+    required this.registro,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final r = registro;
+
+    // 🎯 TIEMPO REAL: Combinar estado del servidor + sesión local
+    final pedeteadosLocal = ref.watch(pedeteadosEnSesionProvider);
+    final isPedeteado = r.pedeteado || pedeteadosLocal.contains(r.vin);
 
     return AppCard.elevated(
       margin: EdgeInsets.symmetric(
@@ -20,23 +29,13 @@ class DetalleRegistroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ✅ Header con VIN y Serie + HERO
           _buildHeader(r),
-
           SizedBox(height: DesignTokens.spaceM),
-
-          // ✅ Información del vehículo
           _buildVehicleInfo(r),
-
           SizedBox(height: DesignTokens.spaceM),
-
-          // ✅ Información de logística
           _buildLogisticsInfo(r),
-
           SizedBox(height: DesignTokens.spaceL),
-
-          // ✅ Estados con badges
-          _buildStatusBadges(r),
+          _buildStatusBadges(r, isPedeteado),
         ],
       ),
     );
@@ -261,15 +260,15 @@ class DetalleRegistroCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadges(RegistroGeneral r) {
+  Widget _buildStatusBadges(RegistroGeneral r, bool isPedeteado) {
     return Row(
       children: [
-        // Badge Pedeteado
+        // Badge Pedeteado (usa estado en tiempo real)
         Expanded(
           child: _buildStatusBadge(
-            r.pedeteado ? 'Pedeteado' : 'No Pedeteado',
-            r.pedeteado ? AppColors.success : AppColors.warning,
-            r.pedeteado ? Icons.check_circle : Icons.pending,
+            isPedeteado ? 'Pedeteado' : 'No Pedeteado',
+            isPedeteado ? AppColors.success : AppColors.warning,
+            isPedeteado ? Icons.check_circle : Icons.pending,
           ),
         ),
         SizedBox(width: DesignTokens.spaceM),

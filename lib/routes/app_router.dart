@@ -11,8 +11,10 @@ import 'package:stampcamera/screens/camara/fullscreen_image.dart';
 import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
+import 'package:stampcamera/screens/device_registration_screen.dart';
 
 import '../providers/auth_provider.dart';
+import '../providers/device_provider.dart';
 import '../models/auth_state.dart';
 import '../utils/go_router_refresh_stream.dart';
 import '../screens/splash_screen.dart';
@@ -22,9 +24,10 @@ import '../screens/home_screen.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: GoRouterRefreshStream(
+    refreshListenable: GoRouterRefreshStream.multi([
       ref.watch(authProvider.notifier).stream,
-    ),
+      ref.watch(deviceProvider.notifier).stream,
+    ]),
     routes: [
       GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
       GoRoute(
@@ -32,6 +35,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PrivacyAcceptanceScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/device-registration',
+        builder: (context, state) => const DeviceRegistrationScreen(),
+      ),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/asistencia',
@@ -99,7 +106,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) async {
-      // 🔥 VERIFICAR POLÍTICA PRIMERO
+      // 🔥 1. VERIFICAR POLÍTICA PRIMERO
       final prefs = await SharedPreferences.getInstance();
       final privacyAccepted = prefs.getBool('privacy_policy_accepted') ?? false;
 
@@ -108,8 +115,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return '/privacy';
       }
 
-      // Si ya aceptó la política, continuar con lógica de auth
+      // Si ya aceptó la política, continuar con verificaciones
       if (privacyAccepted) {
+        // 🔐 2. VERIFICAR DISPOSITIVO DE CONFIANZA
+        final deviceState = ref.read(deviceProvider);
+
+        // Si está verificando el dispositivo, mostrar splash
+        if (deviceState.status == DeviceRegistrationStatus.checking) {
+          if (state.fullPath != '/') return '/';
+          return null;
+        }
+
+        // Si el dispositivo no está registrado, ir a registro
+        if (deviceState.status == DeviceRegistrationStatus.notRegistered ||
+            deviceState.status == DeviceRegistrationStatus.awaitingCode ||
+            deviceState.status == DeviceRegistrationStatus.awaitingToken) {
+          if (state.fullPath != '/device-registration') {
+            return '/device-registration';
+          }
+          return null;
+        }
+
+        // 🔑 3. VERIFICAR AUTENTICACIÓN
         final authState = ref.read(authProvider);
 
         if (authState is AsyncLoading) return '/';
@@ -118,15 +145,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         final auth = authState.value;
 
         if (auth == null || auth.status == AuthStatus.loggedOut) {
-          // Si está en privacy y no está logueado, ir a login
-          if (state.fullPath == '/privacy') return '/login';
-          return '/login';
+          // Si no está logueado, ir a login
+          if (state.fullPath == '/privacy' ||
+              state.fullPath == '/device-registration' ||
+              state.fullPath == '/') {
+            return '/login';
+          }
+          if (state.fullPath != '/login') return '/login';
+          return null;
         }
 
         if (auth.status == AuthStatus.loggedIn) {
           if (state.fullPath == '/login' ||
               state.fullPath == '/' ||
-              state.fullPath == '/privacy') {
+              state.fullPath == '/privacy' ||
+              state.fullPath == '/device-registration') {
             return '/home';
           }
         }

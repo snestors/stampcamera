@@ -1,8 +1,9 @@
-// widgets/pedeteo/scanner_widget.dart (con estados detallados)
+// widgets/pedeteo/scanner_widget.dart - OPTIMIZADO: Una sola cámara
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:camera/camera.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/utils/image_processor.dart';
@@ -10,10 +11,7 @@ import 'package:stampcamera/utils/image_processor.dart';
 // 🎯 Enum para estados del proceso
 enum ProcessingState {
   idle,
-  detectingVin,
   vinDetected,
-  takingPhoto,
-  photoTaken,
   processingImage,
   completed,
 }
@@ -28,9 +26,7 @@ class PedeteoScannerWidget extends ConsumerStatefulWidget {
 
 class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
   MobileScannerController? _scannerController;
-  CameraController? _cameraController; // 📸 Cámara en paralelo
   bool _isStarted = false;
-  bool _cameraReady = false;
 
   // 🎯 Estado del proceso
   ProcessingState _currentState = ProcessingState.idle;
@@ -39,7 +35,6 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
   void initState() {
     super.initState();
     _initScanner();
-    _initParallelCamera(); // 🚀 Inicializar cámara en paralelo
   }
 
   void _initScanner() {
@@ -48,9 +43,11 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
         detectionSpeed: DetectionSpeed.noDuplicates,
         facing: CameraFacing.back,
         torchEnabled: false,
+        // 🚀 Habilitar captura de imagen para obtener foto del scan
+        returnImage: true,
       );
 
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           setState(() => _isStarted = true);
         }
@@ -60,141 +57,97 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
     }
   }
 
-  /// 📸 Inicializa cámara en segundo plano (con estado)
-  Future<void> _initParallelCamera() async {
-    try {
-      final cameras = await availableCameras();
-      if (cameras.isNotEmpty) {
-        _cameraController = CameraController(
-          cameras.first,
-          ResolutionPreset.medium,
-          imageFormatGroup: ImageFormatGroup.jpeg,
-        );
-
-        // 🎯 Actualizar estado mientras se inicializa
-        setState(() => _currentState = ProcessingState.detectingVin);
-
-        await _cameraController!.initialize();
-
-        if (mounted) {
-          setState(() {
-            _cameraReady = true;
-            _currentState = ProcessingState.idle; // Listo para detectar
-          });
-          debugPrint('📸 Cámara paralela lista para captura');
-        }
-      }
-    } catch (e) {
-      debugPrint('❌ Error inicializando cámara paralela: $e');
-      if (mounted) {
-        setState(() => _currentState = ProcessingState.idle);
-      }
-    }
-  }
-
-  /// 🎯 Detecta código y toma foto automáticamente con estados
+  /// 🎯 Detecta código y usa imagen del scan (UNA SOLA CÁMARA)
   void _onBarcodeDetected(BarcodeCapture capture) async {
     final startTime = DateTime.now();
-    debugPrint(
-      '🕐 [INICIO] Detección de código iniciada: ${startTime.millisecondsSinceEpoch}',
-    );
+    debugPrint('🕐 [INICIO] Detección VIN iniciada');
 
-    final barcode = capture.barcodes.first.rawValue;
+    final barcode = capture.barcodes.firstOrNull?.rawValue;
+    final captureImage = capture.image;
 
     if (barcode != null &&
         barcode.isNotEmpty &&
         _currentState == ProcessingState.idle &&
-        _cameraReady &&
         mounted) {
       // 🎯 ESTADO 1: VIN Detectado
       setState(() => _currentState = ProcessingState.vinDetected);
-      await Future.delayed(
-        const Duration(milliseconds: 300),
-      ); // Breve pausa visual
 
       try {
-        if (_cameraController?.value.isInitialized == true && mounted) {
-          // 🎯 ESTADO 2: Tomando Foto
-          setState(() => _currentState = ProcessingState.takingPhoto);
+        String imagePath;
 
-          debugPrint('📸 Tomando foto automática...');
-          final photoStart = DateTime.now();
+        // 🚀 Usar imagen del scan si está disponible
+        if (captureImage != null) {
+          debugPrint('📸 Usando imagen del scan (una sola cámara)');
 
-          final image = await _cameraController!.takePicture();
+          // Guardar imagen temporalmente
+          final tempDir = await getTemporaryDirectory();
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          imagePath = '${tempDir.path}/scan_$timestamp.jpg';
 
-          final photoDuration = DateTime.now()
-              .difference(photoStart)
-              .inMilliseconds;
-          debugPrint('📸 [FOTO] Captura completada en: ${photoDuration}ms');
+          final file = File(imagePath);
+          await file.writeAsBytes(captureImage);
 
-          // 🎯 ESTADO 3: Foto Tomada
+          debugPrint('📸 Imagen guardada: $imagePath');
+        } else {
+          // Fallback: si no hay imagen, solo usar el VIN
+          debugPrint('⚠️ Sin imagen del scan, continuando solo con VIN');
+
           if (mounted) {
-            setState(() => _currentState = ProcessingState.photoTaken);
-            await Future.delayed(
-              const Duration(milliseconds: 200),
-            ); // Breve confirmación
-          }
-
-          // 🎯 ESTADO 4: Procesando Imagen
-          if (mounted) {
-            setState(() => _currentState = ProcessingState.processingImage);
-          }
-
-          // 🚀 PROCESAMIENTO OPTIMIZADO usando preset de scanner
-          final processingStart = DateTime.now();
-          debugPrint(
-            '🎨 [PROCESAMIENTO] Iniciando procesamiento optimizado...',
-          );
-
-          final processedImagePath = await processImageWithWatermark(
-            image.path,
-            config: WatermarkPresets.scanner,
-            autoGPS: false,
-          );
-
-          final processingDuration = DateTime.now()
-              .difference(processingStart)
-              .inMilliseconds;
-          debugPrint(
-            '🎨 [PROCESAMIENTO] Imagen procesada en: ${processingDuration}ms',
-          );
-
-          // 🎯 ESTADO 5: Completado
-          if (mounted) {
-            setState(() => _currentState = ProcessingState.completed);
-
-            ref
-                .read(pedeteoStateProvider.notifier)
-                .setCapturedImage(processedImagePath);
             ref.read(pedeteoStateProvider.notifier).onBarcodeScanned(barcode);
+            setState(() => _currentState = ProcessingState.idle);
+          }
+          return;
+        }
 
-            // Delay reducido
-            await Future.delayed(const Duration(milliseconds: 300));
+        // 🎯 ESTADO 2: Procesando Imagen
+        if (mounted) {
+          setState(() => _currentState = ProcessingState.processingImage);
+        }
 
-            if (mounted) {
-              Navigator.of(context).pop();
-            }
+        // 🚀 PROCESAMIENTO OPTIMIZADO
+        final processingStart = DateTime.now();
+
+        final processedImagePath = await processImageWithWatermark(
+          imagePath,
+          config: WatermarkPresets.scanner,
+          autoGPS: false,
+        );
+
+        final processingDuration = DateTime.now()
+            .difference(processingStart)
+            .inMilliseconds;
+        debugPrint('🎨 Imagen procesada en: ${processingDuration}ms');
+
+        // 🎯 ESTADO 3: Completado
+        if (mounted) {
+          setState(() => _currentState = ProcessingState.completed);
+
+          ref.read(pedeteoStateProvider.notifier).setCapturedImage(processedImagePath);
+          ref.read(pedeteoStateProvider.notifier).onBarcodeScanned(barcode);
+
+          await Future.delayed(const Duration(milliseconds: 200));
+
+          if (mounted) {
+            Navigator.of(context).pop();
           }
         }
       } catch (e) {
-        debugPrint('❌ [ERROR] Error en detección/captura: $e');
+        debugPrint('❌ Error en detección: $e');
 
         if (mounted) {
           setState(() => _currentState = ProcessingState.idle);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ Error: $e'),
+              content: Text('Error: $e'),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 2),
             ),
           );
         }
       } finally {
-        final endTime = DateTime.now();
-        final totalDuration = endTime.difference(startTime).inMilliseconds;
-        debugPrint('🏁 [OPTIMIZADO] Proceso completo en: ${totalDuration}ms');
-        debugPrint('═══════════════════════════════════════════════════════');
+        final totalDuration = DateTime.now().difference(startTime).inMilliseconds;
+        debugPrint('🏁 Proceso completo en: ${totalDuration}ms (una cámara)');
       }
     }
   }
@@ -203,21 +156,13 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
   String _getStateMessage() {
     switch (_currentState) {
       case ProcessingState.idle:
-        return _cameraReady
-            ? 'Centra el VIN en el recuadro'
-            : 'Preparando cámara...';
-      case ProcessingState.detectingVin:
-        return 'Preparando detector...';
+        return 'Centra el VIN en el recuadro';
       case ProcessingState.vinDetected:
-        return '✅ VIN detectado!';
-      case ProcessingState.takingPhoto:
-        return '📸 Tomando foto...';
-      case ProcessingState.photoTaken:
-        return '📸 Foto tomada!';
+        return 'VIN detectado!';
       case ProcessingState.processingImage:
-        return '🔄 Procesando imagen...';
+        return 'Procesando imagen...';
       case ProcessingState.completed:
-        return '✅ Proceso completado!';
+        return 'Completado!';
     }
   }
 
@@ -225,14 +170,8 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
   Color _getStateColor() {
     switch (_currentState) {
       case ProcessingState.idle:
-        return _cameraReady ? Colors.blue : Colors.orange;
-      case ProcessingState.detectingVin:
-        return Colors.orange;
-      case ProcessingState.vinDetected:
-        return Colors.green;
-      case ProcessingState.takingPhoto:
         return Colors.blue;
-      case ProcessingState.photoTaken:
+      case ProcessingState.vinDetected:
         return Colors.green;
       case ProcessingState.processingImage:
         return Colors.purple;
@@ -254,18 +193,9 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
 
   @override
   void dispose() {
-    // 🛡️ Orden correcto de dispose para evitar errores
-    debugPrint('🧹 Limpiando scanner y cámara...');
-
-    // Primero detener scanner
+    debugPrint('🧹 Limpiando scanner...');
     _scannerController?.dispose();
     _scannerController = null;
-
-    // Pequeña pausa antes de dispose de cámara
-    // 🛡️ Dispose sincrónico - SIN Future.delayed para evitar memory leak
-    _cameraController?.dispose();
-    _cameraController = null;
-
     super.dispose();
   }
 
@@ -296,9 +226,7 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
                       children: [
                         Icon(
                           _currentState == ProcessingState.idle
-                              ? (_cameraReady
-                                    ? Icons.camera_alt
-                                    : Icons.hourglass_empty)
+                              ? Icons.camera_alt
                               : Icons.sync,
                           size: 12,
                           color: _getStateColor(),
@@ -435,7 +363,7 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
           ),
         ),
 
-        // Footer actualizado con estados
+        // Footer con estado
         Container(
           padding: const EdgeInsets.all(16),
           color: Colors.grey[100],
@@ -446,9 +374,7 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
                 children: [
                   Icon(
                     _currentState == ProcessingState.idle
-                        ? (_cameraReady
-                              ? Icons.camera_alt
-                              : Icons.hourglass_empty)
+                        ? Icons.camera_alt
                         : Icons.sync,
                     size: 16,
                     color: _getStateColor(),
@@ -466,8 +392,8 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
               const SizedBox(height: 4),
               Text(
                 _isProcessing
-                    ? 'Procesando automáticamente...'
-                    : '📸 La foto se toma automáticamente al detectar el VIN',
+                    ? 'Procesando...'
+                    : 'Foto automatica al detectar VIN',
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],

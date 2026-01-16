@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
@@ -578,19 +579,7 @@ class _InventarioDetalleNaveScreenState
 
     try {
       // Mostrar loading
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Row(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 16),
-              Text('Generando imagen...'),
-            ],
-          ),
-        ),
-      );
+      AppDialog.loading(context, message: 'Generando imagen...');
 
       // Crear widget temporal en Overlay para renderizar
       late OverlayEntry overlayEntry;
@@ -636,7 +625,7 @@ class _InventarioDetalleNaveScreenState
         await file.writeAsBytes(pngBytes);
 
         // Cerrar loading
-        if (mounted) Navigator.pop(context);
+        if (mounted) AppDialog.closeLoading(context);
 
         // Compartir
         await SharePlus.instance.share(
@@ -648,26 +637,16 @@ class _InventarioDetalleNaveScreenState
 
         // Mostrar éxito
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Reporte generado y compartido'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          AppSnackBar.success(context, 'Reporte generado y compartido');
         }
       }
     } catch (e) {
       // Cerrar loading si hay error
-      if (mounted) Navigator.pop(context);
+      if (mounted) AppDialog.closeLoading(context);
 
       // Mostrar error
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error al generar reporte: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.error(context, 'Error al generar reporte: $e');
       }
     }
   }

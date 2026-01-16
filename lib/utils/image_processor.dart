@@ -358,30 +358,32 @@ class ImageProcessorCache {
 // ===================================
 class FontHelper {
   /// Calcula el tamaño de fuente óptimo según la resolución de la imagen
-  /// - < 1920px: medium (24px) - imágenes pequeñas/720p
-  /// - 1920-3840px: large (48px) - Full HD / 2K
-  /// - > 3840px: large (48px) - 4K+
+  /// CORREGIDO: Usar fuentes más pequeñas para que no se vean gigantes
+  /// - < 1920px: small (14px) - imágenes pequeñas/720p
+  /// - 1920-3840px: medium (24px) - Full HD / 2K
+  /// - > 3840px: medium (24px) - 4K+ (NO usar large, se ve enorme)
   static FontSize calculateOptimalSize(int imageWidth, int imageHeight) {
     final maxDimension = imageWidth > imageHeight ? imageWidth : imageHeight;
 
     if (maxDimension < 1920) {
-      return FontSize.medium; // Antes era small, ahora medium
+      return FontSize.small; // 14px para imágenes pequeñas
     } else {
-      return FontSize.large; // Antes era medium, ahora large
+      return FontSize.medium; // 24px para HD, 2K y 4K (NO large)
     }
   }
 
   /// Calcula el ratio del logo según la resolución
-  /// - < 1920px: 25% del ancho (antes 20%)
-  /// - 1920-3840px: 20% del ancho (antes 15%)
-  /// - > 3840px: 15% del ancho (antes 12%)
+  /// CORREGIDO: Logos más pequeños para que no dominen la imagen
+  /// - < 1920px: 15% del ancho
+  /// - 1920-3840px: 12% del ancho
+  /// - > 3840px: 10% del ancho
   static double calculateLogoRatio(int imageWidth) {
     if (imageWidth < 1920) {
-      return 0.25; // Aumentado de 0.20
+      return 0.15; // 15% para imágenes pequeñas
     } else if (imageWidth < 3840) {
-      return 0.20; // Aumentado de 0.15
+      return 0.12; // 12% para Full HD / 2K
     } else {
-      return 0.15; // Aumentado de 0.12
+      return 0.10; // 10% para 4K+
     }
   }
 
@@ -722,6 +724,28 @@ int _calculateTextWidth(String text, FontSize fontSize) {
   }
 }
 
+/// Trunca el texto si excede el porcentaje máximo del ancho de imagen
+/// Por defecto limita al 40% del ancho
+String _truncateTextIfNeeded(String text, FontSize fontSize, int imageWidth, {double maxWidthRatio = 0.4}) {
+  final maxWidth = (imageWidth * maxWidthRatio).round();
+  final textWidth = _calculateTextWidth(text, fontSize);
+
+  if (textWidth <= maxWidth) {
+    return text; // No necesita truncar
+  }
+
+  // Calcular cuántos caracteres caben
+  final charWidth = _calculateTextWidth('A', fontSize);
+  final maxChars = (maxWidth / charWidth).floor() - 3; // -3 para "..."
+
+  if (maxChars <= 0) {
+    return text; // No truncar si es muy pequeño
+  }
+
+  debugPrint('⚠️ Texto truncado de ${text.length} a $maxChars caracteres');
+  return '${text.substring(0, maxChars)}...';
+}
+
 void _addTimestamp(img.Image image, String timestamp, WatermarkConfig config) {
   // Usar fuente bitmap
   final font = FontHelper.getFontForSize(config.timestampFontSize);
@@ -786,8 +810,12 @@ void _addLocation(
   WatermarkConfig config,
 ) {
   // Nota: Los emojis pueden no renderizarse correctamente con las fuentes bitmap
-  // Considera usar "GPS: " en lugar de "📍 "
-  final text = locationText;
+  // Truncar texto si excede 40% del ancho de imagen
+  final text = _truncateTextIfNeeded(
+    locationText,
+    config.locationFontSize,
+    image.width,
+  );
 
   // Usar fuente bitmap
   final font = FontHelper.getFontForSize(config.locationFontSize);

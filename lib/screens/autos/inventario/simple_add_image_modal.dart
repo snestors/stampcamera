@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 
 class SimpleAddImageModal extends ConsumerStatefulWidget {
@@ -158,31 +159,13 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error al seleccionar imágenes: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.error(context, 'Error al seleccionar imágenes: $e');
       }
     }
   }
 
   Future<void> _processMultipleImages(List<XFile> images) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text('Subiendo ${images.length} imágenes...'),
-          ],
-        ),
-      ),
-    );
+    AppDialog.loading(context, message: 'Subiendo ${images.length} imágenes...');
 
     try {
       final imagePaths = images.map((image) => image.path).toList();
@@ -202,27 +185,15 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
       );
 
       if (mounted) {
-        Navigator.pop(context); // Cerrar loading
+        AppDialog.closeLoading(context);
         Navigator.pop(context); // Cerrar modal principal
         widget.onImageAdded?.call();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ ${images.length} imágenes agregadas exitosamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        AppSnackBar.success(context, '${images.length} imágenes agregadas exitosamente');
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pop(context); // Cerrar loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '❌ Error: ${e.toString().replaceFirst('Exception: ', '')}',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppDialog.closeLoading(context);
+        AppSnackBar.error(context, 'Error: ${e.toString().replaceFirst('Exception: ', '')}');
       }
     }
   }

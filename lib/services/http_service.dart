@@ -32,9 +32,14 @@ class HttpService {
   static final HttpService _instance = HttpService._internal();
   factory HttpService() => _instance;
   AuthNotifier? _authNotifier;
+  Function? _onDeviceInvalidated;
 
   void setAuthNotifier(AuthNotifier notifier) {
     _authNotifier = notifier;
+  }
+
+  void setOnDeviceInvalidated(Function callback) {
+    _onDeviceInvalidated = callback;
   }
 
   late Dio dio;
@@ -69,16 +74,30 @@ class HttpService {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Agregar token de autenticación
           final token = await storage.read(key: 'access');
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+
+          // Agregar device_id para equipos de confianza
+          final deviceId = await storage.read(key: 'device_id');
+          if (deviceId != null) {
+            options.headers['X-Device-ID'] = deviceId;
+          }
+
           return handler.next(options);
         },
         onError: (error, handler) async {
           // Verificar si es error de conectividad
           if (_isNetworkError(error)) {
             return handler.reject(error); // Propagar error de red sin retry
+          }
+
+          // Verificar si es error de dispositivo no autorizado
+          if (_isDeviceUnauthorizedError(error)) {
+            await _handleDeviceUnauthorized();
+            return handler.reject(error);
           }
 
           // Solo manejar errores 401 y no del endpoint de refresh
@@ -149,6 +168,44 @@ class HttpService {
         errorString.contains('socket') ||
         errorString.contains('connection failed') ||
         errorString.contains('no address associated with hostname');
+  }
+
+  /// Verificar si es error de dispositivo no autorizado
+  bool _isDeviceUnauthorizedError(DioException error) {
+    if (error.response?.statusCode == 401) {
+      final data = error.response?.data;
+      if (data is Map) {
+        final detail = data['detail']?.toString().toLowerCase() ?? '';
+        final error = data['error']?.toString().toLowerCase() ?? '';
+        return detail.contains('dispositivo no autorizado') ||
+            error.contains('dispositivo no autorizado') ||
+            detail.contains('device') ||
+            error.contains('device');
+      }
+    }
+    return false;
+  }
+
+  /// Manejar dispositivo no autorizado - limpiar todo y forzar re-registro
+  Future<void> _handleDeviceUnauthorized() async {
+    print('🚫 HttpService: Dispositivo no autorizado - limpiando registro');
+
+    // Limpiar tokens de auth
+    await storage.delete(key: 'access');
+    await storage.delete(key: 'refresh');
+    await storage.delete(key: 'user_data');
+
+    // Limpiar datos del dispositivo
+    await storage.delete(key: 'device_id');
+    await storage.delete(key: 'device_type');
+    await storage.delete(key: 'device_name');
+    await storage.delete(key: 'device_username');
+
+    // Notificar al device provider para que resetee su estado
+    _onDeviceInvalidated?.call();
+
+    // Notificar al auth provider
+    _authNotifier?.logout();
   }
 
   /// Refresh thread-safe con cola de requests

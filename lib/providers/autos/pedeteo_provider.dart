@@ -1,11 +1,25 @@
-// lib/providers/autos/pedeteo_provider.dart - SOLO CAMBIOS EN QUEUE
-// ✅ MANTENER TODA TU LÓGICA EXISTENTE, SOLO OPTIMIZAR QUEUE
-
+// lib/providers/autos/pedeteo_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/providers/autos/queue_state_provider.dart';
 import 'package:stampcamera/services/registro_vin_service.dart';
+
+// ============================================================================
+// 🎯 TRACKING DE PEDETEOS EN TIEMPO REAL
+// ============================================================================
+
+/// Set de VINs pedeteados en esta sesión (actualización instantánea)
+final pedeteadosEnSesionProvider = StateProvider<Set<String>>((ref) => {});
+
+/// Contador de pedeteos del día (para mostrar progreso)
+final pedeteosHoyCountProvider = StateProvider<int>((ref) => 0);
+
+/// Verifica si un VIN está pedeteado (combina servidor + sesión local)
+bool isVinPedeteado(WidgetRef ref, String vin, bool serverPedeteado) {
+  final pedeteadosLocal = ref.watch(pedeteadosEnSesionProvider);
+  return serverPedeteado || pedeteadosLocal.contains(vin);
+}
 
 // ============================================================================
 // SERVICIO PROVIDER - MANTENER IGUAL
@@ -332,17 +346,26 @@ class PedeteoStateNotifier extends StateNotifier<PedeteoState> {
       );
 
       if (success) {
-        // ✅ OPTIMIZACIÓN: Solo refrescar el provider unificado
+        // ✅ ACTUALIZAR INDICADORES EN TIEMPO REAL
+        final vin = state.selectedVin!.vin;
+
+        // Agregar VIN al set de pedeteados de esta sesión
+        final currentSet = ref.read(pedeteadosEnSesionProvider);
+        ref.read(pedeteadosEnSesionProvider.notifier).state = {...currentSet, vin};
+
+        // Incrementar contador del día
+        ref.read(pedeteosHoyCountProvider.notifier).state++;
+
+        // Refrescar cola
         ref.read(queueStateProvider.notifier).refreshState();
 
         state = state.copyWith(
           isLoading: false,
-          successMessage:
-              'Registro guardado exitosamente. Se enviará automáticamente.',
+          successMessage: '✅ Registro guardado exitosamente',
         );
 
-        // Auto-limpiar formulario después de 1.5 segundos
-        Future.delayed(const Duration(milliseconds: 1500), () {
+        // Auto-limpiar formulario después de 1 segundo
+        Future.delayed(const Duration(milliseconds: 1000), () {
           if (mounted) resetForm();
         });
       } else {
