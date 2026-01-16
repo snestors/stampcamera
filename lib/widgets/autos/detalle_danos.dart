@@ -341,30 +341,19 @@ class DetalleDanos extends ConsumerWidget {
     );
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref, Dano dano) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Daño'),
-        content: Text(
-          '¿Estás seguro de eliminar el daño de ${dano.areaDano.esp}?\n\nEsta acción también eliminará todas las fotos asociadas.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteDano(context, ref, dano);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+  void _confirmDelete(BuildContext context, WidgetRef ref, Dano dano) async {
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Eliminar Daño',
+      message: '¿Estás seguro de eliminar el daño de ${dano.areaDano.esp}?\n\nEsta acción también eliminará todas las fotos asociadas.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
+
+    if (confirmed == true && context.mounted) {
+      _deleteDano(context, ref, dano);
+    }
   }
 
   Future<void> _deleteDano(
@@ -378,13 +367,9 @@ class DetalleDanos extends ConsumerWidget {
 
     if (context.mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Daño eliminado exitosamente')),
-        );
+        AppSnackBar.success(context, 'Daño eliminado exitosamente');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Error al eliminar daño')),
-        );
+        AppSnackBar.error(context, 'Error al eliminar daño');
       }
     }
   }

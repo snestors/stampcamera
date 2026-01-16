@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 
 class BotonMarcarSalida extends ConsumerWidget {
@@ -307,9 +308,9 @@ class _ConfirmSalidaDialogState extends ConsumerState<_ConfirmSalidaDialog>
             Text(message),
           ],
         ),
-        backgroundColor: Colors.green[600],
+        backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusM)),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -325,9 +326,9 @@ class _ConfirmSalidaDialogState extends ConsumerState<_ConfirmSalidaDialog>
             Text(message),
           ],
         ),
-        backgroundColor: Colors.red[600],
+        backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusM)),
         margin: const EdgeInsets.all(16),
       ),
     );

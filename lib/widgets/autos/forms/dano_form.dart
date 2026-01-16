@@ -901,63 +901,31 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
   void _agregarNuevaFoto() => setState(() => _imagenesPaths.add(null));
 
-  void _eliminarImagen(int index) {
+  void _eliminarImagen(int index) async {
     final imagePath = _imagenesPaths[index];
     final isNetworkImage = imagePath?.startsWith('http') ?? false;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Foto'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('¿Estás seguro de eliminar la Foto ${index + 1}?'),
-            if (isNetworkImage) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.warning, color: Colors.orange, size: 16),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Esta imagen se eliminará permanentemente del servidor.',
-                        style: TextStyle(fontSize: 12, color: Colors.orange),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _imagenesPaths.removeAt(index);
-                if (_imagenesPaths.isEmpty && !isEditMode) {
-                  _imagenesPaths.add(null);
-                }
-              });
-              Navigator.pop(context);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+    final message = isNetworkImage
+        ? '¿Estás seguro de eliminar la Foto ${index + 1}?\n\nEsta imagen se eliminará permanentemente del servidor.'
+        : '¿Estás seguro de eliminar la Foto ${index + 1}?';
+
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Eliminar Foto',
+      message: message,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
+
+    if (confirmed == true) {
+      setState(() {
+        _imagenesPaths.removeAt(index);
+        if (_imagenesPaths.isEmpty && !isEditMode) {
+          _imagenesPaths.add(null);
+        }
+      });
+    }
   }
 
   // ============================================================================
@@ -1236,15 +1204,11 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   void _showSuccess(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppSnackBar.success(context, message);
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppSnackBar.error(context, message);
   }
 
   // ============================================================================

@@ -1,6 +1,7 @@
 // lib/widgets/pedeteo/queue_side_widget.dart - CAMBIOS MÍNIMOS
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/queue_state_provider.dart';
 
 class QueueSideWidget extends ConsumerWidget {
@@ -212,15 +213,11 @@ class QueueContent extends ConsumerWidget {
       await ref.read(queueStateProvider.notifier).processQueue();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cola procesada exitosamente')),
-        );
+        AppSnackBar.success(context, 'Cola procesada exitosamente');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        AppSnackBar.error(context, 'Error: $e');
       }
     }
   }
@@ -231,71 +228,39 @@ class QueueContent extends ConsumerWidget {
       await ref.read(queueStateProvider.notifier).clearCompleted();
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registros completados eliminados')),
-        );
+        AppSnackBar.success(context, 'Registros completados eliminados');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        AppSnackBar.error(context, 'Error: $e');
       }
     }
   }
 
   void _clearFailedRecords(WidgetRef ref, BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: Colors.red[600]),
-            const SizedBox(width: 8),
-            const Text('Eliminar Registros'),
-          ],
-        ),
-        content: const Text(
-          '¿Estás seguro de que deseas eliminar todos los registros que fallaron?\n\nEsta acción no se puede deshacer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-
-              try {
-                // ✅ OPTIMIZACIÓN: Usar el provider unificado
-                await ref.read(queueStateProvider.notifier).clearFailed();
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Registros con error eliminados'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Eliminar Registros',
+      message: '¿Estás seguro de que deseas eliminar todos los registros que fallaron?\n\nEsta acción no se puede deshacer.',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
+
+    if (confirmed == true) {
+      try {
+        // ✅ OPTIMIZACIÓN: Usar el provider unificado
+        await ref.read(queueStateProvider.notifier).clearFailed();
+
+        if (context.mounted) {
+          AppSnackBar.success(context, 'Registros con error eliminados');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          AppSnackBar.error(context, 'Error: $e');
+        }
+      }
+    }
   }
 
   void _retryRecord(
@@ -308,15 +273,11 @@ class QueueContent extends ConsumerWidget {
       await ref.read(queueStateProvider.notifier).retryRecord(record['id']);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reintentando envío de ${record['vin']}')),
-        );
+        AppSnackBar.info(context, 'Reintentando envío de ${record['vin']}');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        AppSnackBar.error(context, 'Error: $e');
       }
     }
   }
@@ -326,50 +287,31 @@ class QueueContent extends ConsumerWidget {
     WidgetRef ref,
     BuildContext context,
   ) async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Registro'),
-        content: Text('¿Eliminar el registro del VIN ${record['vin']}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-
-              try {
-                // ✅ OPTIMIZACIÓN: Usar el provider unificado
-                await ref
-                    .read(queueStateProvider.notifier)
-                    .deleteRecord(record['id']);
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Registro ${record['vin']} eliminado'),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Eliminar Registro',
+      message: '¿Eliminar el registro del VIN ${record['vin']}?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
+
+    if (confirmed == true) {
+      try {
+        // ✅ OPTIMIZACIÓN: Usar el provider unificado
+        await ref
+            .read(queueStateProvider.notifier)
+            .deleteRecord(record['id']);
+
+        if (context.mounted) {
+          AppSnackBar.success(context, 'Registro ${record['vin']} eliminado');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          AppSnackBar.error(context, 'Error: $e');
+        }
+      }
+    }
   }
 }
 

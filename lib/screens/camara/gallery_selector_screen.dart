@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stampcamera/core/core.dart';
 import '../../providers/camera_provider.dart';
 
 class GallerySelectorScreen extends ConsumerStatefulWidget {
@@ -47,11 +48,7 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
 
   Future<void> _shareSelected() async {
     if (selected.length > 15) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Solo se pueden compartir hasta 15 imágenes.'),
-        ),
-      );
+      AppSnackBar.warning(context, 'Solo se pueden compartir hasta 15 imágenes.');
       return;
     }
 
@@ -70,24 +67,13 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
   Future<void> _deleteSelected() async {
     if (selected.isEmpty) return;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('¿Eliminar imágenes?'),
-        content: Text(
-          'Se eliminarán ${selected.length} imágenes seleccionadas. ¿Deseas continuar?',
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () => Navigator.pop(context, false),
-          ),
-          TextButton(
-            child: const Text('Eliminar'),
-            onPressed: () => Navigator.pop(context, true),
-          ),
-        ],
-      ),
+    final confirm = await AppDialog.confirm(
+      context,
+      title: '¿Eliminar imágenes?',
+      message: 'Se eliminarán ${selected.length} imágenes seleccionadas. ¿Deseas continuar?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
 
     if (confirm == true) {

@@ -705,54 +705,28 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     );
   }
 
-  void _confirmDelete(ContenedorModel contenedor) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Confirmar eliminación'),
-        content: Text(
-          '¿Estás seguro de eliminar el contenedor ${contenedor.nContenedor}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () async {
-              // ✅ SOLUCIÓN: Usar el contexto local del dialog y guardar referencia
-              final navigator = Navigator.of(dialogContext);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-              navigator.pop();
-
-              final success = await ref
-                  .read(contenedorProvider.notifier)
-                  .deleteContenedor(contenedor.id);
-
-              // ✅ PROTECCIÓN: Verificar que el widget siga montado
-              if (!mounted) return;
-
-              scaffoldMessenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    success
-                        ? 'Contenedor eliminado correctamente'
-                        : 'Error al eliminar contenedor',
-                  ),
-                  backgroundColor: success
-                      ? AppColors.success
-                      : AppColors.error,
-                ),
-              );
-            },
-            child: const Text(
-              'Eliminar',
-              style: TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
+  Future<void> _confirmDelete(ContenedorModel contenedor) async {
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Confirmar eliminación',
+      message: '¿Estás seguro de eliminar el contenedor ${contenedor.nContenedor}?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await ref
+        .read(contenedorProvider.notifier)
+        .deleteContenedor(contenedor.id);
+
+    if (!mounted) return;
+
+    if (success) {
+      AppSnackBar.success(context, 'Contenedor eliminado correctamente');
+    } else {
+      AppSnackBar.error(context, 'Error al eliminar contenedor');
+    }
   }
 }

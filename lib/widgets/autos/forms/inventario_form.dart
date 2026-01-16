@@ -145,26 +145,14 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Plantilla de inventario cargada'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        AppSnackBar.success(context, 'Plantilla de inventario cargada');
       }
     } catch (e) {
       // En caso de error, inicializar con valores por defecto
       _initializeDefaultValues();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠️ No se pudo cargar la plantilla: ${e.toString()}'),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        AppSnackBar.warning(context, 'No se pudo cargar la plantilla: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -580,26 +568,15 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
       // Preparar datos del formulario
       final inventarioData = Map<String, dynamic>.from(_inventarioValues);
       inventarioData['OTROS'] = _otrosController.text.trim();
-      print(isEditMode);
       if (isEditMode) {
         await notifier.updateInventario(inventarioData);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Inventario actualizado exitosamente'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          AppSnackBar.success(context, 'Inventario actualizado exitosamente');
         }
       } else {
         await notifier.createInventario(inventarioData);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Inventario creado exitosamente'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          AppSnackBar.success(context, 'Inventario creado exitosamente');
         }
       }
 
@@ -608,12 +585,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.error(context, 'Error: ${e.toString()}');
       }
     } finally {
       if (mounted) {

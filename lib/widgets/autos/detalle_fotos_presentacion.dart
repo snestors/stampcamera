@@ -289,30 +289,19 @@ class DetalleFotosPresentacion extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     FotoPresentacion foto,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Foto'),
-        content: Text(
-          '¿Estás seguro de eliminar la foto de ${_getTipoLabel(foto.tipo)}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteFoto(context, ref, foto);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+  ) async {
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Eliminar Foto',
+      message: '¿Estás seguro de eliminar la foto de ${_getTipoLabel(foto.tipo)}?',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
+
+    if (confirmed == true && context.mounted) {
+      _deleteFoto(context, ref, foto);
+    }
   }
 
   Future<void> _deleteFoto(
@@ -326,13 +315,9 @@ class DetalleFotosPresentacion extends ConsumerWidget {
 
     if (context.mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Foto eliminada exitosamente')),
-        );
+        AppSnackBar.success(context, 'Foto eliminada exitosamente');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Error al eliminar foto')),
-        );
+        AppSnackBar.error(context, 'Error al eliminar foto');
       }
     }
   }

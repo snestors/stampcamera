@@ -8,12 +8,14 @@ class ModuleAccess {
   final String name;
   final String icon;
   final bool isEnabled;
+  final bool requiresAsistencia;
 
   const ModuleAccess({
     required this.id,
     required this.name,
     required this.icon,
     this.isEnabled = true,
+    this.requiresAsistencia = false,
   });
 
   factory ModuleAccess.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class ModuleAccess {
       name: json['name'] ?? '',
       icon: json['icon'] ?? 'apps',
       isEnabled: json['is_enabled'] ?? true,
+      requiresAsistencia: json['requires_asistencia'] ?? false,
     );
   }
 
@@ -30,10 +33,11 @@ class ModuleAccess {
     'name': name,
     'icon': icon,
     'is_enabled': isEnabled,
+    'requires_asistencia': requiresAsistencia,
   };
 
   @override
-  String toString() => 'ModuleAccess(id: $id, name: $name)';
+  String toString() => 'ModuleAccess(id: $id, name: $name, requiresAsistencia: $requiresAsistencia)';
 }
 
 /// Modelo principal del usuario

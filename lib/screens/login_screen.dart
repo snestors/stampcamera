@@ -107,37 +107,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _clearDeviceRegistration() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.warning),
-            const SizedBox(width: 12),
-            const Text('Desvincular equipo'),
-          ],
-        ),
-        content: const Text(
-          'Se eliminará el registro de este dispositivo y deberás volver a registrarlo para usarlo.\n\n¿Deseas continuar?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Desvincular'),
-          ),
-        ],
-      ),
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Desvincular equipo',
+      message: 'Se eliminará el registro de este dispositivo y deberás volver a registrarlo para usarlo.\n\n¿Deseas continuar?',
+      confirmText: 'Desvincular',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
 
     if (confirmed == true) {

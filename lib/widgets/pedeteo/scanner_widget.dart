@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:stampcamera/config/camera/camera_config.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 
@@ -136,14 +137,7 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
 
         if (mounted) {
           setState(() => _currentState = ProcessingState.idle);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          AppSnackBar.error(context, 'Error: $e');
         }
       } finally {
         final totalDuration = DateTime.now().difference(startTime).inMilliseconds;

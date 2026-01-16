@@ -151,6 +151,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Grid de módulos basado en permisos del usuario
   Widget _buildModulesGrid(BuildContext context, dynamic user) {
     final modules = user.availableModules;
+
+    // Si el usuario no tiene módulos disponibles (clientes externos)
+    if (modules.isEmpty) {
+      return _buildNoAccessMessage();
+    }
+
     final cards = <Widget>[];
 
     for (final module in modules) {
@@ -177,6 +183,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 0.9,
       children: cards,
+    );
+  }
+
+  /// Mensaje cuando el usuario no tiene acceso a la app móvil
+  Widget _buildNoAccessMessage() {
+    return Container(
+      padding: EdgeInsets.all(DesignTokens.spaceXL),
+      margin: EdgeInsets.symmetric(vertical: DesignTokens.spaceL),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.web,
+            size: 64,
+            color: AppColors.warning,
+          ),
+          SizedBox(height: DesignTokens.spaceM),
+          Text(
+            'Acceso Solo Web',
+            style: TextStyle(
+              fontSize: DesignTokens.fontSizeL,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: DesignTokens.spaceS),
+          Text(
+            'Tu cuenta está configurada para acceso web únicamente. '
+            'Para usar la aplicación móvil, contacta al administrador.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: DesignTokens.fontSizeM,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

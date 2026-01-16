@@ -463,26 +463,7 @@ class DetalleRegistrosVin extends ConsumerWidget {
     RegistroVin registro,
   ) async {
     // Mostrar loading
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(width: 12),
-            Text('Eliminando registro...'),
-          ],
-        ),
-        backgroundColor: Colors.orange,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    AppSnackBar.info(context, 'Eliminando registro...');
 
     try {
       final notifier = ref.read(detalleRegistroProvider(vin).notifier);
@@ -492,48 +473,15 @@ class DetalleRegistrosVin extends ConsumerWidget {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text('Registro eliminado exitosamente'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
+          AppSnackBar.success(context, 'Registro eliminado exitosamente');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text('Error al eliminar registro'),
-                ],
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
+          AppSnackBar.error(context, 'Error al eliminar registro');
         }
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white, size: 20),
-                SizedBox(width: DesignTokens.spaceXS),
-                Expanded(child: Text('Error: $e')),
-              ],
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.error(context, 'Error: $e');
       }
     }
   }

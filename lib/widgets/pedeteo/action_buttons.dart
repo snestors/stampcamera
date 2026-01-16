@@ -3,7 +3,7 @@
 // =====================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 
 class ActionButtons extends ConsumerWidget {
@@ -56,45 +56,14 @@ class ActionButtons extends ConsumerWidget {
   }
 
   Future<void> _saveAndContinue(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-
     await ref.read(pedeteoStateProvider.notifier).saveRegistroOfflineFirst();
 
     final state = ref.read(pedeteoStateProvider);
 
     if (state.errorMessage != null && context.mounted) {
-      messenger.showSnackBar(
-        SnackBar(
-          backgroundColor: const Color.fromARGB(
-            255,
-            150,
-            5,
-            5,
-          ), // Verde corporativo
-          content: Text(state.errorMessage!),
-        ),
-      );
+      AppSnackBar.error(context, state.errorMessage!);
     } else if (context.mounted) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Registro guardado exitosamente',
-            style: TextStyle(
-              fontSize: 12, // Más pequeño
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          backgroundColor: const Color(0xFF059669), // Verde corporativo
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ), // Más compacto
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.success(context, 'Registro guardado exitosamente');
     }
   }
 }

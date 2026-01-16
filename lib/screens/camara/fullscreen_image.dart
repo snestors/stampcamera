@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stampcamera/core/core.dart';
 import '../../providers/camera_provider.dart';
 
 class FullscreenImage extends ConsumerStatefulWidget {
@@ -47,24 +48,13 @@ class _FullscreenImageState extends ConsumerState<FullscreenImage> {
   }
 
   Future<void> _confirmDelete() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('¿Borrar imagen?'),
-        content: const Text(
-          '¿Estás seguro de que deseas eliminar esta imagen?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Borrar'),
-          ),
-        ],
-      ),
+    final confirm = await AppDialog.confirm(
+      context,
+      title: '¿Borrar imagen?',
+      message: '¿Estás seguro de que deseas eliminar esta imagen?',
+      confirmText: 'Borrar',
+      cancelText: 'Cancelar',
+      isDanger: true,
     );
 
     if (confirm != true) return;

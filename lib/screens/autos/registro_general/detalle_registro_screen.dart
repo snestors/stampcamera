@@ -245,23 +245,6 @@ class DetalleRegistroScreen extends ConsumerWidget {
   // ============================================================================
   void _refreshData(BuildContext context, WidgetRef ref) {
     ref.read(detalleRegistroProvider(vin).notifier).refresh();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.refresh, color: Colors.white, size: DesignTokens.iconM),
-            SizedBox(width: DesignTokens.spaceS),
-            const Text('Actualizando datos...'),
-          ],
-        ),
-        backgroundColor: AppColors.primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-        ),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    AppSnackBar.info(context, 'Actualizando datos...');
   }
 }

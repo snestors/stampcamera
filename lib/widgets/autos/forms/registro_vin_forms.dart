@@ -890,19 +890,13 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
 
     // ✅ Validación de contenedor requerido
     if (_isContenedorRequired() && _selectedContenedor == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Seleccione un contenedor para la condición ALMACEN'),
-        ),
-      );
+      AppSnackBar.warning(context, 'Seleccione un contenedor para la condición ALMACEN');
       return;
     }
 
     // ✅ En modo crear, la foto es obligatoria
     if (!isEditMode && _fotoVinPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('La foto VIN es obligatoria')),
-      );
+      AppSnackBar.warning(context, 'La foto VIN es obligatoria');
       return;
     }
 
@@ -941,27 +935,19 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
         if (success) {
           // ✅ ÉXITO: Cerrar form y mostrar mensaje de éxito
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                isEditMode
-                    ? '✅ Registro actualizado exitosamente'
-                    : '✅ Registro creado exitosamente',
-              ),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackBar.success(
+            context,
+            isEditMode
+                ? 'Registro actualizado exitosamente'
+                : 'Registro creado exitosamente',
           );
         } else {
           // ✅ ERROR GENÉRICO: Mostrar error pero NO cerrar
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                isEditMode
-                    ? '❌ Error al actualizar registro'
-                    : '❌ Error al crear registro',
-              ),
-              backgroundColor: Colors.red,
-            ),
+          AppSnackBar.error(
+            context,
+            isEditMode
+                ? 'Error al actualizar registro'
+                : 'Error al crear registro',
           );
         }
       }
@@ -969,13 +955,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
       // ✅ ERROR ESPECÍFICO (como duplicado): Mostrar mensaje y CERRAR form
       if (mounted) {
         Navigator.pop(context); // ✅ CERRAR FORM
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ ${e.toString()}'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4), // ✅ Mostrar más tiempo
-          ),
-        );
+        AppSnackBar.error(context, e.toString());
       }
     } finally {
       if (mounted) {

@@ -953,17 +953,13 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: AppColors.error),
-      );
+      AppSnackBar.error(context, message);
     }
   }
 
   void _showSuccess(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: AppColors.success),
-      );
+      AppSnackBar.success(context, message);
     }
   }
 }

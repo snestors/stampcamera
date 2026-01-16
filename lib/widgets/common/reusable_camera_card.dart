@@ -50,6 +50,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:stampcamera/config/camera/camera_config.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 
 /// Enum personalizado para resoluciones de cámara
@@ -503,9 +504,7 @@ class ReusableCameraCard extends StatelessWidget {
         if (Navigator.canPop(context)) {
           Navigator.of(context).pop();
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar imagen: $e')),
-        );
+        AppSnackBar.error(context, 'Error al seleccionar imagen: $e');
       }
     }
   }
@@ -658,9 +657,7 @@ class _CameraModalState extends State<_CameraModal> {
     } catch (e) {
       setState(() => _isProcessing = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        AppSnackBar.error(context, 'Error: $e');
       }
     }
   }

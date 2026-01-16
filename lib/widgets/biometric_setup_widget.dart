@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../providers/biometric_provider.dart';
@@ -48,31 +49,15 @@ class _BiometricSetupWidgetState extends ConsumerState<BiometricSetupWidget> {
   }
 
   void _showBiometricSnackBar(BiometricState biometricState) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.fingerprint, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Configura tu ${biometricState.biometricType.toLowerCase()} para acceso rápido',
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF003B5C),
-        duration: const Duration(seconds: 6),
-        action: SnackBarAction(
-          label: 'Configurar',
-          textColor: Colors.white,
-          onPressed: () => _showCredentialsDialog(biometricState),
-        ),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    AppSnackBar.info(
+      context,
+      'Configura tu ${biometricState.biometricType.toLowerCase()} para acceso rápido',
+      action: SnackBarAction(
+        label: 'Configurar',
+        textColor: Colors.white,
+        onPressed: () => _showCredentialsDialog(biometricState),
       ),
+      duration: const Duration(seconds: 6),
     );
   }
 
@@ -369,61 +354,15 @@ class _BiometricSetupWidgetState extends ConsumerState<BiometricSetupWidget> {
           .setupBiometric(username, password);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  success ? Icons.check_circle : Icons.error,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    success
-                        ? '✅ Autenticación biométrica habilitada'
-                        : '❌ Error al configurar biometría',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: success ? Colors.green : Colors.red,
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        if (success) {
+          AppSnackBar.success(context, 'Autenticación biométrica habilitada');
+        } else {
+          AppSnackBar.error(context, 'Error al configurar biometría');
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.error, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Error: ${e.toString()}',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        AppSnackBar.error(context, 'Error: ${e.toString()}');
       }
     }
   }
