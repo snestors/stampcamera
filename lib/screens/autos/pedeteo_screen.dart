@@ -38,52 +38,16 @@ class PedeteoScreen extends ConsumerWidget {
       );
     }
 
-    // Error state - Distinguir entre error de conexión y otros errores
+    // Error state - ConnectionErrorScreen maneja automáticamente todos los tipos de error
     if (optionsAsync.hasError) {
-      final error = optionsAsync.error!;
-
-      // Error state - Usar ConnectionErrorScreen que maneja la detección internamente
-      if (optionsAsync.hasError) {
-        return Scaffold(
-          body: ConnectionErrorScreen(
-            error: optionsAsync.error!,
-            onRetry: () => ref.invalidate(pedeteoOptionsProvider),
-          ),
-        );
-      }
-
-      // Para otros errores, mostrar pantalla de error genérica
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                'Error al cargar opciones',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Error: ${error.toString()}',
-                style: const TextStyle(color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(pedeteoOptionsProvider),
-                child: const Text('Reintentar'),
-              ),
-            ],
-          ),
-        ),
+      return ConnectionErrorScreen(
+        error: optionsAsync.error!,
+        onRetry: () => ref.invalidate(pedeteoOptionsProvider),
       );
     }
 
     // Estado normal - Contenido principal
-    return Scaffold(
-      body: Column(
+    return Column(
         children: [
           // Barra de búsqueda
           const PedeteoSearchBar(),
@@ -99,7 +63,6 @@ class PedeteoScreen extends ConsumerWidget {
           if (!state.showScanner && !state.showForm)
             const Expanded(child: PedeteoEmptyState()),
         ],
-      ),
     );
   }
 }

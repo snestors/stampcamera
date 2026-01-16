@@ -259,11 +259,12 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
 
     // Primero detener scanner
     _scannerController?.dispose();
+    _scannerController = null;
 
     // Pequeña pausa antes de dispose de cámara
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _cameraController?.dispose();
-    });
+    // 🛡️ Dispose sincrónico - SIN Future.delayed para evitar memory leak
+    _cameraController?.dispose();
+    _cameraController = null;
 
     super.dispose();
   }
