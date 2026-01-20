@@ -52,13 +52,52 @@ class DetalleRegistroCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  r.vin,
-                  style: TextStyle(
-                    fontSize: DesignTokens.fontSizeL * 0.9,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        r.vin,
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeL * 0.9,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    // Badge URGENTE
+                    if (r.urgente) ...[
+                      SizedBox(width: DesignTokens.spaceS),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: DesignTokens.spaceS,
+                          vertical: DesignTokens.spaceXS,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.priority_high,
+                              size: DesignTokens.iconXS,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 2),
+                            Text(
+                              'URGENTE',
+                              style: TextStyle(
+                                fontSize: DesignTokens.fontSizeXS,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 if (r.serie != null && r.serie!.isNotEmpty) ...[
                   SizedBox(height: DesignTokens.spaceXS),

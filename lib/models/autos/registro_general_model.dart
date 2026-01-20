@@ -8,6 +8,7 @@ class RegistroGeneral {
   final String? bl;
   final bool pedeteado;
   final bool danos;
+  final bool urgente;
   final String? version;
 
   const RegistroGeneral({
@@ -20,6 +21,7 @@ class RegistroGeneral {
     this.bl,
     required this.pedeteado,
     required this.danos,
+    this.urgente = false,
     this.version,
   });
 
@@ -34,6 +36,7 @@ class RegistroGeneral {
       bl: json['bl'],
       pedeteado: json['pedeteado'] ?? false,
       danos: json['danos'] ?? false,
+      urgente: json['urgente'] ?? false,
       version: json['version'],
     );
   }

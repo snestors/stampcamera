@@ -481,7 +481,9 @@ class DetalleRegistrosVin extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        AppSnackBar.error(context, 'Error: $e');
+        // Limpiar el mensaje de Exception: si viene
+        final errorMsg = e.toString().replaceFirst('Exception: ', '');
+        AppSnackBar.error(context, errorMsg);
       }
     }
   }

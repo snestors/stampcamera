@@ -683,6 +683,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           : _nDocumentoController.text.trim();
 
       if (isEditMode) {
+        // Modo edicion: usa el metodo normal (necesita esperar respuesta)
         success = await notifier.updateFoto(
           fotoId: widget.fotoId!,
           tipo: _selectedTipo,
@@ -690,7 +691,8 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           nDocumento: nDocumento,
         );
       } else {
-        success = await notifier.addFoto(
+        // Modo crear: usa fire-and-forget (guarda localmente y sincroniza en background)
+        success = await notifier.addFotoOfflineFirst(
           registroVinId: _selectedRegistroVinId!,
           tipo: _selectedTipo!,
           imagen: File(_fotoPath!),
@@ -704,11 +706,11 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           _showSuccess(
             isEditMode
                 ? '✅ Foto actualizada exitosamente'
-                : '✅ Foto agregada exitosamente',
+                : '✅ Foto guardada (sincronizando...)',
           );
         } else {
           _showError(
-            '❌ Error al ${isEditMode ? 'actualizar' : 'agregar'} foto',
+            '❌ Error al ${isEditMode ? 'actualizar' : 'guardar'} foto',
           );
         }
       }

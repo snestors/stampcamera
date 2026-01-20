@@ -9,6 +9,10 @@ import 'package:stampcamera/screens/autos/registro_general/detalle_registro_scre
 import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
 import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
+import 'package:stampcamera/screens/graneles/graneles_screen.dart';
+import 'package:stampcamera/screens/graneles/servicio_dashboard_screen.dart';
+import 'package:stampcamera/screens/graneles/ticket_detalle_screen.dart';
+import 'package:stampcamera/screens/graneles/ticket_crear_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 import 'package:stampcamera/screens/device_registration_screen.dart';
@@ -70,6 +74,48 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final infIdString = state.pathParameters['infId']!;
               final infId = int.parse(infIdString);
               return InventarioDetalleScreen(informacionUnidadId: infId);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/graneles',
+        name: 'graneles',
+        builder: (context, state) => const GranelesScreen(),
+        routes: [
+          GoRoute(
+            path: 'servicio/:servicioId/dashboard',
+            name: 'servicio-dashboard',
+            builder: (context, state) {
+              final servicioIdString = state.pathParameters['servicioId']!;
+              final servicioId = int.parse(servicioIdString);
+              return ServicioDashboardScreen(servicioId: servicioId);
+            },
+          ),
+          // IMPORTANTE: Rutas específicas deben ir ANTES de las rutas con parámetros genéricos
+          GoRoute(
+            path: 'ticket/crear/:servicioId',
+            builder: (context, state) {
+              final servicioIdString = state.pathParameters['servicioId']!;
+              final servicioId = int.parse(servicioIdString);
+              return TicketCrearScreen(servicioId: servicioId);
+            },
+          ),
+          GoRoute(
+            path: 'ticket/editar/:ticketId',
+            builder: (context, state) {
+              final ticketIdString = state.pathParameters['ticketId']!;
+              final ticketId = int.parse(ticketIdString);
+              return TicketCrearScreen.edit(ticketId: ticketId);
+            },
+          ),
+          // Ruta genérica al final
+          GoRoute(
+            path: 'ticket/:ticketId',
+            builder: (context, state) {
+              final ticketIdString = state.pathParameters['ticketId']!;
+              final ticketId = int.parse(ticketIdString);
+              return TicketDetalleScreen(ticketId: ticketId);
             },
           ),
         ],

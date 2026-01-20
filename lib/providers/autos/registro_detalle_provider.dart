@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import '../../models/autos/detalle_registro_model.dart';
 import '../../services/autos/detalle_registro_service.dart';
+import '../../services/offline_first_queue.dart';
 
 // ============================================================================
 // PROVIDER DEL SERVICIO
@@ -264,7 +265,7 @@ class DetalleRegistroNotifier
     try {
       await _service.deleteRegistroVin(registroVinId);
 
-      // ✅ Actualizar state local removiendo el registro
+      // Actualizar state local removiendo el registro
       final currentDetalle = state.valueOrNull;
       if (currentDetalle != null) {
         final registrosActualizados = currentDetalle.registrosVin
@@ -288,9 +289,16 @@ class DetalleRegistroNotifier
       }
 
       return true;
+    } on DioException catch (e) {
+      // Error del servidor (500) - probablemente foreign keys protegidas
+      if (e.response?.statusCode == 500) {
+        throw Exception('No se puede eliminar: contiene datos relacionados (fotos o daños)');
+      }
+      debugPrint('Error eliminando registro VIN: $e');
+      rethrow;
     } catch (e) {
-      debugPrint('❌ Error eliminando registro VIN: $e');
-      return false;
+      debugPrint('Error eliminando registro VIN: $e');
+      rethrow;
     }
   }
 
@@ -914,6 +922,135 @@ class DetalleRegistroNotifier
   List<Dano> get danosVerificados {
     final detalle = state.valueOrNull;
     return detalle?.danos.where((d) => d.verificadoBool).toList() ?? [];
+  }
+
+  // ============================================================================
+  // METODOS OFFLINE-FIRST (FIRE AND FORGET)
+  // ============================================================================
+
+  /// Crear foto de presentacion en modo offline-first
+  /// Guarda localmente y sincroniza en segundo plano
+  /// Retorna inmediatamente sin esperar respuesta del servidor
+  Future<bool> addFotoOfflineFirst({
+    int? registroVinId,
+    required String tipo,
+    required File imagen,
+    String? nDocumento,
+  }) async {
+    try {
+      final detalle = state.valueOrNull;
+      if (detalle == null) return false;
+
+      // Obtener el registroVinId si no se proporciona
+      final targetRegistroVinId =
+          registroVinId ?? _getLatestRegistroVinId(detalle);
+      if (targetRegistroVinId == null) return false;
+
+      debugPrint('addFotoOfflineFirst: Guardando en cola offline...');
+
+      // Agregar a la cola offline
+      await offlineFirstQueue.addRecord(
+        type: OfflineRecordType.fotoPresentacion,
+        data: {
+          'vin': arg,
+          'registro_vin_id': targetRegistroVinId,
+          'tipo': tipo,
+          'n_documento': nDocumento,
+        },
+        filePaths: [imagen.path],
+      );
+
+      debugPrint('addFotoOfflineFirst: Registro agregado a cola, retornando exito');
+      return true;
+    } catch (e) {
+      debugPrint('addFotoOfflineFirst: Error: $e');
+      return false;
+    }
+  }
+
+  /// Crear dano con imagenes en modo offline-first
+  /// Guarda localmente y sincroniza en segundo plano
+  /// Retorna inmediatamente sin esperar respuesta del servidor
+  Future<bool> createDanoOfflineFirst({
+    required int registroVinId,
+    required int tipoDano,
+    required int areaDano,
+    required int severidad,
+    List<int>? zonas,
+    String? descripcion,
+    int? responsabilidad,
+    bool relevante = false,
+    List<File>? imagenes,
+    int? nDocumento,
+  }) async {
+    try {
+      debugPrint('createDanoOfflineFirst: Guardando en cola offline...');
+
+      // Obtener paths de las imagenes
+      final filePaths = imagenes?.map((f) => f.path).toList() ?? [];
+
+      // Agregar a la cola offline
+      await offlineFirstQueue.addRecord(
+        type: OfflineRecordType.dano,
+        data: {
+          'vin': arg,
+          'registro_vin_id': registroVinId,
+          'tipo_dano': tipoDano,
+          'area_dano': areaDano,
+          'severidad': severidad,
+          'zonas': zonas,
+          'descripcion': descripcion,
+          'responsabilidad': responsabilidad,
+          'relevante': relevante,
+          'n_documento': nDocumento,
+        },
+        filePaths: filePaths,
+      );
+
+      debugPrint('createDanoOfflineFirst: Registro agregado a cola, retornando exito');
+      return true;
+    } catch (e) {
+      debugPrint('createDanoOfflineFirst: Error: $e');
+      return false;
+    }
+  }
+
+  /// Crear registro VIN en modo offline-first
+  /// Guarda localmente y sincroniza en segundo plano
+  /// Retorna inmediatamente sin esperar respuesta del servidor
+  Future<bool> createRegistroVinOfflineFirst({
+    required String condicion,
+    required int zonaInspeccion,
+    required File fotoVin,
+    int? bloque,
+    int? fila,
+    int? posicion,
+    int? contenedorId,
+  }) async {
+    try {
+      debugPrint('createRegistroVinOfflineFirst: Guardando en cola offline...');
+
+      // Agregar a la cola offline
+      await offlineFirstQueue.addRecord(
+        type: OfflineRecordType.registroVin,
+        data: {
+          'vin': arg,
+          'condicion': condicion,
+          'zona_inspeccion': zonaInspeccion,
+          'bloque': bloque,
+          'fila': fila,
+          'posicion': posicion,
+          'contenedor_id': contenedorId,
+        },
+        filePaths: [fotoVin.path],
+      );
+
+      debugPrint('createRegistroVinOfflineFirst: Registro agregado a cola, retornando exito');
+      return true;
+    } catch (e) {
+      debugPrint('createRegistroVinOfflineFirst: Error: $e');
+      return false;
+    }
   }
 }
 

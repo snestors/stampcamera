@@ -1047,6 +1047,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       bool success = false;
 
       if (isEditMode) {
+        // Modo edicion: usa el metodo normal (necesita esperar respuesta)
         final nuevasImagenes = _getNewImages();
         final imagenesEliminadas = _getRemovedImageIds();
 
@@ -1067,7 +1068,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           nDocumento: _selectedFotoPresentacion,
         );
       } else {
-        success = await notifier.createDanoWithImages(
+        // Modo crear: usa fire-and-forget (guarda localmente y sincroniza en background)
+        success = await notifier.createDanoOfflineFirst(
           registroVinId: _selectedRegistroVinId!,
           tipoDano: _selectedTipoDano!,
           areaDano: _selectedAreaDano!,
@@ -1089,11 +1091,11 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           _showSuccess(
             isEditMode
                 ? '✅ Daño actualizado exitosamente'
-                : '✅ Daño creado exitosamente',
+                : '✅ Daño guardado (sincronizando...)',
           );
         } else {
           _showError(
-            '❌ Error al ${isEditMode ? 'actualizar' : 'crear'} el daño',
+            '❌ Error al ${isEditMode ? 'actualizar' : 'guardar'} el daño',
           );
         }
       }

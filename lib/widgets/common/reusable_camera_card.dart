@@ -604,7 +604,8 @@ class _CameraModalState extends State<_CameraModal> {
   CameraController? _cameraController;
   bool _isInitialized = false;
   bool _isProcessing = false;
-  String? _capturedImagePath;
+  String? _originalImagePath;  // Imagen original (para preview inmediato)
+  String? _processedImagePath; // Imagen procesada (para confirmar)
 
   @override
   void initState() {
@@ -637,44 +638,60 @@ class _CameraModalState extends State<_CameraModal> {
     if (_cameraController?.value.isInitialized != true) return;
 
     try {
-      setState(() => _isProcessing = true);
-
+      // Tomar foto
       final image = await _cameraController!.takePicture();
 
-      // Usar preset de cámara con GPS
-      final processedImagePath = await processImageWithWatermark(
+      // Mostrar imagen ORIGINAL inmediatamente (sin esperar procesamiento)
+      if (mounted) {
+        setState(() {
+          _originalImagePath = image.path;
+          _isProcessing = true; // Indica que está procesando en background
+        });
+      }
+
+      // Procesar en background (no bloquea la UI)
+      final processedPath = await processImageWithWatermark(
         image.path,
         config: WatermarkPresets.withGps,
         autoGPS: false,
       );
 
+      // Actualizar con imagen procesada
       if (mounted) {
         setState(() {
-          _capturedImagePath = processedImagePath;
+          _processedImagePath = processedPath;
           _isProcessing = false;
         });
       }
     } catch (e) {
-      setState(() => _isProcessing = false);
       if (mounted) {
+        setState(() => _isProcessing = false);
         AppSnackBar.error(context, 'Error: $e');
       }
     }
   }
 
   void _confirmImage() {
-    if (_capturedImagePath != null) {
-      widget.onImageCaptured(_capturedImagePath!);
+    // Solo confirmar si ya tenemos la imagen procesada
+    if (_processedImagePath != null) {
+      widget.onImageCaptured(_processedImagePath!);
       Navigator.of(context).pop();
     }
   }
 
   void _retakePhoto() {
     setState(() {
-      _capturedImagePath = null;
+      _originalImagePath = null;
+      _processedImagePath = null;
       _isProcessing = false;
     });
   }
+
+  // Verifica si hay una imagen para mostrar (original o procesada)
+  bool get _hasImage => _originalImagePath != null;
+
+  // Obtiene la mejor imagen disponible (procesada si existe, sino original)
+  String? get _displayImagePath => _processedImagePath ?? _originalImagePath;
 
   @override
   void dispose() {
@@ -720,7 +737,7 @@ class _CameraModalState extends State<_CameraModal> {
 
           // Camera Preview o Image Preview
           Expanded(
-            child: _capturedImagePath != null
+            child: _hasImage
                 ? _buildImagePreview()
                 : _buildCameraPreview(),
           ),
@@ -728,7 +745,7 @@ class _CameraModalState extends State<_CameraModal> {
           // Controles
           Container(
             padding: const EdgeInsets.all(20),
-            child: _capturedImagePath != null
+            child: _hasImage
                 ? _buildImageControls()
                 : _buildCameraControls(),
           ),
@@ -775,9 +792,75 @@ class _CameraModalState extends State<_CameraModal> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white, width: 2),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.file(File(_capturedImagePath!), fit: BoxFit.contain),
+      child: Stack(
+        children: [
+          // Imagen (original o procesada)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.file(
+              File(_displayImagePath!),
+              fit: BoxFit.contain,
+              width: double.infinity,
+              height: double.infinity,
+            ),
+          ),
+
+          // Indicador de procesamiento (si todavía está procesando)
+          if (_isProcessing)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(color: Colors.white),
+                      SizedBox(height: 12),
+                      Text(
+                        'Procesando...',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // Badge de estado
+          Positioned(
+            top: 8,
+            right: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _isProcessing ? Colors.orange : Colors.green,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isProcessing ? Icons.hourglass_empty : Icons.check_circle,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _isProcessing ? 'Procesando' : 'Lista',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -802,7 +885,7 @@ class _CameraModalState extends State<_CameraModal> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ElevatedButton.icon(
-          onPressed: _retakePhoto,
+          onPressed: _isProcessing ? null : _retakePhoto,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.grey[800],
             foregroundColor: Colors.white,
@@ -811,13 +894,23 @@ class _CameraModalState extends State<_CameraModal> {
           label: const Text('Repetir'),
         ),
         ElevatedButton.icon(
-          onPressed: _confirmImage,
+          // Solo habilitar cuando termine de procesar
+          onPressed: _isProcessing ? null : _confirmImage,
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
+            backgroundColor: _isProcessing ? Colors.grey : Colors.green,
             foregroundColor: Colors.white,
           ),
-          icon: const Icon(Icons.check),
-          label: const Text('Confirmar'),
+          icon: _isProcessing
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Icon(Icons.check),
+          label: Text(_isProcessing ? 'Espere...' : 'Confirmar'),
         ),
       ],
     );

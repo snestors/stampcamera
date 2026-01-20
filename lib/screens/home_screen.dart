@@ -160,11 +160,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final cards = <Widget>[];
 
     for (final module in modules) {
-      cards.add(_buildModuleCard(context, module));
+      cards.add(_buildModuleCard(context, module, user));
     }
 
-    // Agregar card de "Próximamente" si hay espacio
-    if (cards.length % 2 != 0 || cards.length < 4) {
+    // Agregar cards de "Próximamente" para completar mínimo 4 y siempre número par
+    while (cards.length < 4 || cards.length % 2 != 0) {
       cards.add(_AppCard(
         title: 'Próximamente',
         subtitle: 'Nuevas funcionalidades',
@@ -229,16 +229,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   /// Construye una card para un módulo específico
-  Widget _buildModuleCard(BuildContext context, dynamic module) {
+  Widget _buildModuleCard(BuildContext context, dynamic module, dynamic user) {
     final moduleConfig = _getModuleConfig(module.id);
+    final isBlocked = user.isModuleBlocked(module.id);
 
     return _AppCard(
       title: module.name,
-      subtitle: moduleConfig.subtitle,
+      subtitle: isBlocked
+          ? 'Requiere asistencia activa'
+          : moduleConfig.subtitle,
       icon: moduleConfig.icon,
       color: moduleConfig.color,
-      onTap: () => _navigateToModule(context, module.id),
+      onTap: () => _navigateToModule(context, module.id, user),
       isDisabled: !module.isEnabled,
+      isBlocked: isBlocked,
     );
   }
 
@@ -265,9 +269,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       case 'granos':
         return _ModuleConfig(
-          icon: Icons.agriculture,
+          icon: Icons.directions_boat,
           color: AppColors.warning,
-          subtitle: 'Gestión de granos',
+          subtitle: 'Gestión de graneles',
         );
       default:
         return _ModuleConfig(
@@ -279,7 +283,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   /// Navega al módulo seleccionado
-  void _navigateToModule(BuildContext context, String moduleId) {
+  void _navigateToModule(BuildContext context, String moduleId, dynamic user) {
+    // Verificar si el módulo está bloqueado por falta de asistencia
+    if (user.isModuleBlocked(moduleId)) {
+      _showAsistenciaRequiredDialog(context);
+      return;
+    }
+
     switch (moduleId) {
       case 'camera':
         context.push('/camera', extra: {'camera': cameras.first});
@@ -291,12 +301,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         context.push('/autos');
         break;
       case 'granos':
-        // Módulo en desarrollo
-        _showComingSoonDialog(context);
+        context.push('/graneles');
         break;
       default:
         _showComingSoonDialog(context);
     }
+  }
+
+  /// Muestra diálogo indicando que se requiere asistencia activa
+  void _showAsistenciaRequiredDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.access_time, color: Colors.orange),
+            ),
+            const SizedBox(width: 12),
+            const Text('Asistencia Requerida'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Para acceder a este módulo necesitas tener una asistencia activa.',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: DesignTokens.spaceM),
+            Container(
+              padding: EdgeInsets.all(DesignTokens.spaceM),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.info, size: 20),
+                  SizedBox(width: DesignTokens.spaceS),
+                  Expanded(
+                    child: Text(
+                      'Ve a "Asistencia" y marca tu entrada para habilitar este módulo.',
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeS,
+                        color: AppColors.info,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          AppButton.ghost(
+            text: 'Cancelar',
+            size: AppButtonSize.small,
+            onPressed: () => Navigator.pop(context),
+          ),
+          AppButton.primary(
+            text: 'Ir a Asistencia',
+            size: AppButtonSize.small,
+            onPressed: () {
+              Navigator.pop(context);
+              context.pushNamed('asistencia');
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   /// Grid por defecto (sin autenticación o error)
@@ -332,12 +416,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           onTap: () => context.push('/autos'),
         ),
         _AppCard(
-          title: 'Próximamente',
-          subtitle: 'Nuevas funcionalidades',
-          icon: Icons.upcoming,
-          color: AppColors.textSecondary,
-          onTap: () => _showComingSoonDialog(context),
-          isDisabled: true,
+          title: 'Graneles',
+          subtitle: 'Gestión de graneles',
+          icon: Icons.directions_boat,
+          color: AppColors.warning,
+          onTap: () => context.push('/graneles'),
         ),
       ],
     );
@@ -864,6 +947,7 @@ class _AppCard extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
   final bool isDisabled;
+  final bool isBlocked;
 
   const _AppCard({
     required this.title,
@@ -872,21 +956,28 @@ class _AppCard extends StatelessWidget {
     required this.color,
     required this.onTap,
     this.isDisabled = false,
+    this.isBlocked = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = isBlocked ? Colors.orange : color;
+    final isInactive = isDisabled || isBlocked;
+
     return Card(
-      elevation: isDisabled ? 1 : 4,
-      shadowColor: isDisabled
+      elevation: isInactive ? 1 : 4,
+      shadowColor: isInactive
           ? AppColors.neutral.withValues(alpha: 0.2)
-          : color.withValues(alpha: 0.3),
+          : effectiveColor.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
+        side: isBlocked
+            ? BorderSide(color: Colors.orange.withValues(alpha: 0.5), width: 2)
+            : BorderSide.none,
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
-        onTap: isDisabled ? null : onTap,
+        onTap: isDisabled ? null : onTap, // Bloqueado aún permite tap para mostrar diálogo
         child: Container(
           padding: EdgeInsets.all(DesignTokens.spaceS),
           decoration: BoxDecoration(
@@ -896,54 +987,87 @@ class _AppCard extends StatelessWidget {
                 : LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      color.withValues(alpha: 0.1),
-                      color.withValues(alpha: 0.05),
-                    ],
+                    colors: isBlocked
+                        ? [
+                            Colors.orange.withValues(alpha: 0.08),
+                            Colors.orange.withValues(alpha: 0.03),
+                          ]
+                        : [
+                            color.withValues(alpha: 0.1),
+                            color.withValues(alpha: 0.05),
+                          ],
                   ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
             children: [
-              Container(
-                padding: EdgeInsets.all(DesignTokens.spaceL),
-                decoration: BoxDecoration(
-                  color: isDisabled
-                      ? AppColors.neutral.withValues(alpha: 0.2)
-                      : color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-                ),
-                child: Icon(
-                  icon,
-                  size: DesignTokens.iconXXXL * 1.4,
-                  color: isDisabled ? AppColors.textLight : color,
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                  Container(
+                    padding: EdgeInsets.all(DesignTokens.spaceL),
+                    decoration: BoxDecoration(
+                      color: isDisabled
+                          ? AppColors.neutral.withValues(alpha: 0.2)
+                          : effectiveColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: DesignTokens.iconXXXL * 1.4,
+                      color: isDisabled ? AppColors.textLight : effectiveColor,
+                    ),
+                  ),
+                  SizedBox(height: DesignTokens.spaceS),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeRegular,
+                      fontWeight: FontWeight.bold,
+                      color: isDisabled
+                          ? AppColors.textLight
+                          : AppColors.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: DesignTokens.spaceXS),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeXS * 0.9,
+                      color: isBlocked
+                          ? Colors.orange[700]
+                          : (isDisabled
+                              ? AppColors.textLight
+                              : AppColors.textSecondary),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: DesignTokens.spaceS),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: DesignTokens.fontSizeRegular,
-                  fontWeight: FontWeight.bold,
-                  color: isDisabled
-                      ? AppColors.textLight
-                      : AppColors.textPrimary,
+              // Icono de candado para módulos bloqueados
+              if (isBlocked)
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.lock_outline,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: DesignTokens.spaceXS),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: DesignTokens.fontSizeXS * 0.9,
-                  color: isDisabled
-                      ? AppColors.textLight
-                      : AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
             ],
           ),
         ),
@@ -961,64 +1085,126 @@ class _UserInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayName = _getDisplayName(user);
     final userInitials = _getUserInitials(user);
-    final userEmail = user.email ?? '';
+    final hasAsistencia = user.hasActiveAsistencia ?? false;
+    final asistencia = user.ultimaAsistenciaActiva;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          ),
-          child: Center(
-            child: Text(
-              userInitials,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: DesignTokens.fontSizeM,
-                fontWeight: FontWeight.bold,
+        Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               ),
-            ),
-          ),
-        ),
-        SizedBox(width: DesignTokens.spaceL),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '¡Hola!',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: DesignTokens.fontSizeS,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                displayName,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: DesignTokens.fontSizeM,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (userEmail.isNotEmpty)
-                Text(
-                  userEmail,
+              child: Center(
+                child: Text(
+                  userInitials,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: DesignTokens.fontSizeXS,
+                    color: Colors.white,
+                    fontSize: DesignTokens.fontSizeM,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
+            ),
+            SizedBox(width: DesignTokens.spaceL),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '¡Hola!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: DesignTokens.fontSizeS,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    displayName,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: DesignTokens.fontSizeM,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.waving_hand,
+              color: AppColors.warning,
+              size: DesignTokens.iconL,
+            ),
+          ],
+        ),
+        // Estado de asistencia
+        SizedBox(height: DesignTokens.spaceM),
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: DesignTokens.spaceM,
+            vertical: DesignTokens.spaceS,
+          ),
+          decoration: BoxDecoration(
+            color: hasAsistencia
+                ? Colors.green.withValues(alpha: 0.2)
+                : Colors.orange.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+            border: Border.all(
+              color: hasAsistencia
+                  ? Colors.green.withValues(alpha: 0.5)
+                  : Colors.orange.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                hasAsistencia ? Icons.check_circle : Icons.access_time,
+                color: hasAsistencia ? Colors.green[300] : Colors.orange[300],
+                size: 16,
+              ),
+              SizedBox(width: DesignTokens.spaceS),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasAsistencia ? 'Asistencia Activa' : 'Sin Asistencia',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: DesignTokens.fontSizeXS,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (hasAsistencia && asistencia != null) ...[
+                      Text(
+                        '${asistencia.zonaTrabajoNombre ?? ""}${asistencia.horasTrabajadasDisplay != null ? " - ${asistencia.horasTrabajadasDisplay}" : ""}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: DesignTokens.fontSizeXS * 0.9,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ] else ...[
+                      Text(
+                        'Marca entrada para acceder a todos los módulos',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: DesignTokens.fontSizeXS * 0.9,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        Icon(
-          Icons.waving_hand,
-          color: AppColors.warning,
-          size: DesignTokens.iconL,
         ),
       ],
     );

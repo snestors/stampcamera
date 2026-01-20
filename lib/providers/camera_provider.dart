@@ -74,15 +74,41 @@ class CameraNotifier extends StateNotifier<CameraState> {
     final dir = Directory('/storage/emulated/0/DCIM/StampCamera');
     if (!await dir.exists()) return;
 
-    final files = dir.listSync()
-      ..sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+    // Usar operaciones ASÍNCRONAS para no bloquear el UI thread
+    final entities = await dir.list().toList();
 
-    final fotos = files
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.jpg') || f.path.endsWith('.png'))
-        .toList();
+    // Filtrar solo archivos de imagen
+    final imageFiles = <File>[];
+    for (final entity in entities) {
+      if (entity is File) {
+        final path = entity.path.toLowerCase();
+        if (path.endsWith('.jpg') || path.endsWith('.png')) {
+          imageFiles.add(entity);
+        }
+      }
+    }
 
-    state = state.copyWith(imagenes: fotos);
+    // Ordenar por fecha de modificación (más recientes primero)
+    // Limitar a las últimas 50 fotos para mejor rendimiento
+    if (imageFiles.length > 1) {
+      final fileStats = <File, DateTime>{};
+      for (final file in imageFiles) {
+        try {
+          final stat = await file.stat();
+          fileStats[file] = stat.modified;
+        } catch (e) {
+          fileStats[file] = DateTime.now();
+        }
+      }
+      imageFiles.sort((a, b) =>
+        (fileStats[b] ?? DateTime.now()).compareTo(fileStats[a] ?? DateTime.now())
+      );
+    }
+
+    // Limitar a 50 fotos para mejor rendimiento
+    final limitedFiles = imageFiles.take(50).toList();
+
+    state = state.copyWith(imagenes: limitedFiles);
   }
 
   Future<void> _processInBackground(String path) async {

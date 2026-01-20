@@ -919,8 +919,8 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           contenedorId: _selectedContenedor,
         );
       } else {
-        // ✅ MODO CREACIÓN
-        success = await notifier.createRegistroVin(
+        // MODO CREACION: usa fire-and-forget (guarda localmente y sincroniza en background)
+        success = await notifier.createRegistroVinOfflineFirst(
           condicion: _selectedCondicion!,
           zonaInspeccion: _selectedZonaInspeccion!,
           fotoVin: File(_fotoVinPath!),
@@ -933,13 +933,13 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
 
       if (mounted) {
         if (success) {
-          // ✅ ÉXITO: Cerrar form y mostrar mensaje de éxito
+          // EXITO: Cerrar form y mostrar mensaje de exito
           Navigator.pop(context);
           AppSnackBar.success(
             context,
             isEditMode
                 ? 'Registro actualizado exitosamente'
-                : 'Registro creado exitosamente',
+                : 'Registro guardado (sincronizando...)',
           );
         } else {
           // ✅ ERROR GENÉRICO: Mostrar error pero NO cerrar

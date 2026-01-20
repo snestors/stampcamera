@@ -8,6 +8,7 @@ import 'package:stampcamera/widgets/autos/detalle_registros_vin.dart';
 import 'package:stampcamera/widgets/autos/detalle_fotos_presentacion.dart';
 import 'package:stampcamera/widgets/autos/detalle_danos.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
+import 'package:stampcamera/widgets/common/offline_sync_indicator.dart';
 
 class DetalleRegistroScreen extends ConsumerWidget {
   final String vin;
@@ -23,13 +24,22 @@ class DetalleRegistroScreen extends ConsumerWidget {
       child: Scaffold(
         //backgroundColor: AppColors.backgroundLight,
         appBar: _buildAppBar(context, ref, detalleAsync),
-        body: detalleAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-          error: (err, _) =>
-              ConnectionErrorScreen(onRetry: () => _refreshData(context, ref)),
-          data: (registro) => _buildTabContent(registro, ref),
+        body: Column(
+          children: [
+            // Banner de sincronizacion offline
+            const OfflineSyncBanner(),
+            // Contenido principal
+            Expanded(
+              child: detalleAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+                error: (err, _) =>
+                    ConnectionErrorScreen(onRetry: () => _refreshData(context, ref)),
+                data: (registro) => _buildTabContent(registro, ref),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -58,6 +68,10 @@ class DetalleRegistroScreen extends ConsumerWidget {
         ),
       ),
       actions: [
+        const Padding(
+          padding: EdgeInsets.only(right: 8),
+          child: OfflineSyncIndicator(),
+        ),
         IconButton(
           icon: const Icon(Icons.refresh),
           onPressed: () => _refreshData(context, ref),

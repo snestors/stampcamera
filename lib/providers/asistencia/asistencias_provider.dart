@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/asistencia/asistencia_model.dart';
+import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/session_manager_provider.dart';
 import 'package:stampcamera/services/http_service.dart';
 import 'package:stampcamera/utils/gps_utils.dart';
@@ -66,8 +67,12 @@ class AsistenciaActivaNotifier extends AsyncNotifier<AsistenciaActivaResponse> {
         },
       );
 
-      // Refrescar estado
+      // Refrescar estado de asistencia
       ref.invalidateSelf();
+
+      // Refrescar authProvider para actualizar ultimaAsistenciaActiva en HomeScreen
+      await ref.read(authProvider.notifier).refreshUser();
+
       return true;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -97,8 +102,12 @@ class AsistenciaActivaNotifier extends AsyncNotifier<AsistenciaActivaResponse> {
         data: {'gps': gps},
       );
 
-      // Refrescar estado
+      // Refrescar estado de asistencia
       ref.invalidateSelf();
+
+      // Refrescar authProvider para actualizar ultimaAsistenciaActiva en HomeScreen
+      await ref.read(authProvider.notifier).refreshUser();
+
       return true;
     } catch (e, st) {
       state = AsyncValue.error(e, st);

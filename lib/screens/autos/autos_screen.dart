@@ -1,12 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/core.dart';
+import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/screens/autos/contenedores/contenedores_tab.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_screen.dart';
 import 'package:stampcamera/widgets/pedeteo/queue_badget.dart';
 import 'registro_general/registro_screen.dart';
+
+/// Configuración de un tab dentro del módulo Autos
+class _TabConfig {
+  final String id;
+  final String label;
+  final IconData icon;
+  final IconData activeIcon;
+  final Widget screen;
+
+  const _TabConfig({
+    required this.id,
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+    required this.screen,
+  });
+}
 
 class AutosScreen extends ConsumerStatefulWidget {
   const AutosScreen({super.key});
@@ -16,12 +34,80 @@ class AutosScreen extends ConsumerStatefulWidget {
 }
 
 class _AutosScreenState extends ConsumerState<AutosScreen> {
-  final PageController _pageController = PageController();
+  PageController? _pageController;
   int _currentIndex = 0;
 
+  /// Obtiene los tabs disponibles según los permisos del usuario
+  List<_TabConfig> _getAvailableTabs() {
+    final authState = ref.watch(authProvider);
+    final user = authState.valueOrNull?.user;
+    final asistencia = user?.ultimaAsistenciaActiva;
+
+    // Datos de la asistencia activa
+    final zonaTipo = asistencia?.zonaTrabajoTipo;
+    final naveRubro = asistencia?.naveRubro;
+    final naveCategoriaRubro = asistencia?.naveCategoriaRubro;
+    final tieneNaveAutos = naveCategoriaRubro == 'AUTOS';
+    final isSuperuser = user?.isSuperuser ?? false;
+
+    // Caso especial: Recepción = zona ALMACEN sin nave (NO incluye ALMACEN-PDI)
+    // ALMACEN-PDI es solo para registro
+    final esRecepcion = zonaTipo == 'ALMACEN' && naveCategoriaRubro == null;
+
+    final tabs = <_TabConfig>[];
+
+    // REGISTRO - Siempre disponible
+    tabs.add(const _TabConfig(
+      id: 'registro',
+      label: 'REGISTRO',
+      icon: Icons.edit_note,
+      activeIcon: Icons.edit_note,
+      screen: RegistroScreen(),
+    ));
+
+    // PEDETEO - Solo si rubro = FPR y zona = PUERTO (o superuser)
+    if (isSuperuser || (naveRubro == 'FPR' && zonaTipo == 'PUERTO')) {
+      tabs.add(const _TabConfig(
+        id: 'pedeteo',
+        label: 'PEDETEO',
+        icon: Icons.pending_actions_outlined,
+        activeIcon: Icons.pending_actions,
+        screen: PedeteoScreen(),
+      ));
+    }
+
+    // CONTENEDORES - Solo si tiene nave AUTOS activa (o superuser)
+    // En recepción (ALMACEN sin nave) NO se muestra contenedores
+    if (isSuperuser || tieneNaveAutos) {
+      tabs.add(const _TabConfig(
+        id: 'contenedores',
+        label: 'CONTENEDORES',
+        icon: Icons.inventory_2_outlined,
+        activeIcon: Icons.inventory_2,
+        screen: ContenedoresTab(),
+      ));
+    }
+
+    // INVENTARIOS - Disponible si tiene nave AUTOS o está en recepción (o superuser)
+    if (isSuperuser || tieneNaveAutos || esRecepcion) {
+      tabs.add(const _TabConfig(
+        id: 'inventario',
+        label: 'INVENTARIOS',
+        icon: Icons.assessment_outlined,
+        activeIcon: Icons.assessment,
+        screen: InventarioScreen(),
+      ));
+    }
+
+    return tabs;
+  }
+
   void _onNavTapped(int index) {
+    final tabs = _getAvailableTabs();
+    if (index >= tabs.length) return;
+
     setState(() => _currentIndex = index);
-    _pageController.animateToPage(
+    _pageController?.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -34,14 +120,51 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _pageController?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final tabs = _getAvailableTabs();
+
+    // Recrear PageController si es necesario
+    _pageController ??= PageController();
+
+    // Asegurar que el índice actual sea válido
+    if (_currentIndex >= tabs.length) {
+      _currentIndex = 0;
+    }
+
+    // Encontrar si el tab actual es pedeteo para mostrar el botón de refresh
+    final currentTabId = tabs.isNotEmpty ? tabs[_currentIndex].id : '';
+
+    // Si solo hay 1 tab, mostrar directamente sin BottomNavigationBar
+    if (tabs.length == 1) {
+      return Scaffold(
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          title: Text(
+            'Autos',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: DesignTokens.fontSizeL,
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: EdgeInsets.only(right: DesignTokens.spaceL),
+              child: QueueBadge(),
+            ),
+          ],
+        ),
+        body: tabs.first.screen,
+      );
+    }
+
     return Scaffold(
-      // AppBar corporativo usando tu guía de estilos
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.primary,
@@ -54,8 +177,8 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
           ),
         ),
         actions: [
-          // Botón de refresh solo en pestaña de Pedeteo (índice 1)
-          if (_currentIndex == 1)
+          // Botón de refresh solo en pestaña de Pedeteo
+          if (currentTabId == 'pedeteo')
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () => ref.invalidate(pedeteoOptionsProvider),
@@ -71,15 +194,9 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
-        children: const [
-          RegistroScreen(),
-          PedeteoScreen(),
-          ContenedoresTab(),
-          InventarioScreen(),
-        ],
+        children: tabs.map((tab) => tab.screen).toList(),
       ),
 
-      // BottomNavigationBar corporativo
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -94,13 +211,9 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
           currentIndex: _currentIndex,
           onTap: _onNavTapped,
           type: BottomNavigationBarType.fixed,
-
-          // Colores corporativos
           backgroundColor: Colors.white,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSecondary,
-
-          // Estilo de labels
           selectedLabelStyle: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeXS * 0.8,
@@ -109,29 +222,11 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
             fontWeight: FontWeight.w500,
             fontSize: DesignTokens.fontSizeXS * 0.75,
           ),
-
-          items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.edit_note),
-              activeIcon: Icon(Icons.edit_note, size: DesignTokens.iconL),
-              label: 'REGISTRO',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.pending_actions_outlined),
-              activeIcon: Icon(Icons.pending_actions, size: DesignTokens.iconL),
-              label: 'PEDETEO',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.inventory_2_outlined),
-              activeIcon: Icon(Icons.inventory_2, size: DesignTokens.iconL),
-              label: 'CONTENEDORES',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.assessment_outlined),
-              activeIcon: Icon(Icons.assessment, size: DesignTokens.iconL),
-              label: 'INVENTARIOS',
-            ),
-          ],
+          items: tabs.map((tab) => BottomNavigationBarItem(
+            icon: Icon(tab.icon),
+            activeIcon: Icon(tab.activeIcon, size: DesignTokens.iconL),
+            label: tab.label,
+          )).toList(),
         ),
       ),
     );
