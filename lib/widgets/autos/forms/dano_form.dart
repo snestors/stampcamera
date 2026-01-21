@@ -39,6 +39,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
   // Estado
   bool _isLoading = false;
+  bool _hasSubmitted = false; // Previene doble submit
   bool _initialized = false;
 
   bool get isEditMode => widget.danoId != null;
@@ -879,7 +880,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
-              onPressed: (_isLoading || !_canSubmit) ? null : _submitForm,
+              onPressed: (_isLoading || _hasSubmitted || !_canSubmit) ? null : _submitForm,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFDC2626),
                 disabledBackgroundColor: Colors.grey[300],
@@ -963,6 +964,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   Future<void> _submitForm() async {
+    // Prevenir doble submit
+    if (_hasSubmitted || _isLoading) return;
+
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedRegistroVinId == null) {
@@ -970,6 +974,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       return;
     }
 
+    // Marcar como enviado ANTES de cualquier operación async
+    _hasSubmitted = true;
     setState(() => _isLoading = true);
 
     try {

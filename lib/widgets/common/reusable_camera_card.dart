@@ -633,6 +633,7 @@ class _CameraModalState extends State<_CameraModal> {
         cameras.first,
         widget.cameraResolution.toResolutionPreset,
         imageFormatGroup: ImageFormatGroup.jpeg,
+        enableAudio: false,
       );
 
       await _cameraController!.initialize().timeout(

@@ -32,6 +32,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   String? _selectedTipo;
   String? _fotoPath;
   bool _isLoading = false;
+  bool _hasSubmitted = false; // Previene doble submit
   int? _selectedRegistroVinId;
   bool _initialized = false;
 
@@ -564,7 +565,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: (_isLoading || !canSave) ? null : _submitForm,
+            onPressed: (_isLoading || _hasSubmitted || !canSave) ? null : _submitForm,
             style: ElevatedButton.styleFrom(
               backgroundColor: canSave && _selectedTipo != null
                   ? _getTipoColor(_selectedTipo!)
@@ -660,6 +661,9 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   }
 
   Future<void> _submitForm() async {
+    // Prevenir doble submit
+    if (_hasSubmitted || _isLoading) return;
+
     if (!_formKey.currentState!.validate()) return;
 
     if (!isEditMode && _fotoPath == null) {
@@ -672,6 +676,8 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       return;
     }
 
+    // Marcar como enviado ANTES de cualquier operación async
+    _hasSubmitted = true;
     setState(() => _isLoading = true);
 
     try {

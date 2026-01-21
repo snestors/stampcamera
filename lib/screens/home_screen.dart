@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
-import 'package:stampcamera/providers/biometric_provider.dart';
-import 'package:stampcamera/widgets/biometric_setup_widget.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
 
@@ -60,20 +58,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildUserHeader(authState),
-                _buildApplicationsGrid(context),
-                _buildFooter(),
-              ],
-            ),
-          ),
-          // Widget para manejar configuración de biometría
-          const BiometricSetupWidget(),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildUserHeader(authState),
+            _buildApplicationsGrid(context),
+            _buildFooter(),
+          ],
+        ),
       ),
     );
   }
@@ -471,8 +463,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    final biometricState = ref.read(biometricProvider);
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -486,219 +476,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const Text('Cerrar Sesión'),
           ],
         ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '¿Estás seguro de que quieres cerrar sesión?',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              if (biometricState.isEnabled) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                      color: Colors.orange.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.fingerprint, color: Colors.orange, size: 18),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Datos Biométricos',
-                              style: TextStyle(
-                                fontSize: DesignTokens.fontSizeXS,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.orange[700],
-                              ),
-                            ),
-                            Text(
-                              'Credenciales guardadas',
-                              style: TextStyle(
-                                fontSize: DesignTokens.fontSizeXS,
-                                color: Colors.orange[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          if (biometricState.isEnabled) ...[
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 6),
-              child: AppButton.secondary(
-                text: 'Limpiar Biométrico',
-                size: AppButtonSize.small,
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showClearBiometricOnLogoutDialog(context);
-                },
-              ),
-            ),
-          ],
-          IntrinsicHeight(
-            child: Row(
-              children: [
-                Expanded(
-                  child: AppButton.ghost(
-                    size: AppButtonSize.small,
-                    text: 'Cancelar',
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AppButton.error(
-                    text: 'Cerrar Sesión',
-                    size: AppButtonSize.small,
-                    onPressed: () {
-                      Navigator.pop(context);
-                      ref.read(authProvider.notifier).logout(ref);
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showClearBiometricOnLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.fingerprint_outlined,
-                color: Colors.orange,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text('Limpiar y Cerrar Sesión'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Se eliminarán los datos biométricos y se cerrará la sesión.',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Esta acción eliminará:',
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '• Credenciales guardadas para biometría\n'
-              '• Configuración de acceso biométrico\n'
-              '• Sesión actual del usuario',
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.info.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: AppColors.info.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: AppColors.info, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Podrás reconfigurar la biometría en el próximo login',
-                      style: TextStyle(
-                        fontSize: DesignTokens.fontSizeXS,
-                        color: AppColors.info,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        content: const Text(
+          '¿Estás seguro de que quieres cerrar sesión?',
+          style: TextStyle(fontWeight: FontWeight.w500),
         ),
         actions: [
           AppButton.ghost(
-            text: 'Cancelar',
             size: AppButtonSize.small,
+            text: 'Cancelar',
             onPressed: () => Navigator.pop(context),
           ),
-          AppButton.secondary(
-            text: 'Limpiar y Cerrar',
+          AppButton.error(
+            text: 'Cerrar Sesión',
             size: AppButtonSize.small,
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(context);
-              await _clearBiometricAndLogout();
+              ref.read(authProvider.notifier).logout(ref);
             },
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _clearBiometricAndLogout() async {
-    try {
-      // Primero limpiar biometría
-      await ref.read(biometricProvider.notifier).clearAll();
-
-      // Luego hacer logout
-      ref.read(authProvider.notifier).logout(ref);
-
-      if (mounted) {
-        AppSnackBar.success(context, 'Biometría eliminada y sesión cerrada');
-      }
-    } catch (e) {
-      // Si falla la limpieza de biometría, igual hacer logout
-      ref.read(authProvider.notifier).logout(ref);
-
-      if (mounted) {
-        AppSnackBar.warning(context, 'Sesión cerrada (error limpiando biometría)');
-      }
-    }
   }
 
   void _showComingSoonDialog(BuildContext context) {
@@ -711,8 +509,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _showSettingsDialog(BuildContext context) {
-    final biometricState = ref.read(biometricProvider);
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -730,31 +526,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (biometricState.isEnabled) ...[
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.fingerprint_outlined,
-                    color: Colors.orange,
-                  ),
-                ),
-                title: const Text('Limpiar Datos Biométricos'),
-                subtitle: const Text(
-                  'Eliminar credenciales guardadas para biometría',
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showClearBiometricDialog(context);
-                },
-              ),
-              const Divider(),
-            ],
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Container(
@@ -779,77 +550,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             text: 'Cerrar',
             size: AppButtonSize.small,
             onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showClearBiometricDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.orange,
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text('Limpiar Biometría'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '¿Estás seguro de que quieres eliminar los datos biométricos?',
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Esta acción eliminará permanentemente:',
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '• Credenciales guardadas para biometría\n'
-              '• Configuración de acceso biométrico\n'
-              '• Tendrás que volver a configurar la biometría',
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          AppButton.ghost(
-            text: 'Cancelar',
-            size: AppButtonSize.small,
-            onPressed: () => Navigator.pop(context),
-          ),
-          AppButton.secondary(
-            text: 'Limpiar Datos',
-            size: AppButtonSize.small,
-            onPressed: () async {
-              Navigator.pop(context);
-              await _clearBiometricData();
-            },
           ),
         ],
       ),
@@ -924,19 +624,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Future<void> _clearBiometricData() async {
-    try {
-      await ref.read(biometricProvider.notifier).clearAll();
-
-      if (mounted) {
-        AppSnackBar.success(context, 'Datos biométricos eliminados correctamente');
-      }
-    } catch (e) {
-      if (mounted) {
-        AppSnackBar.error(context, 'Error al eliminar datos: $e');
-      }
-    }
-  }
 }
 
 // Widgets auxiliares

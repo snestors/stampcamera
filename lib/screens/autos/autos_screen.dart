@@ -49,6 +49,7 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
     final naveCategoriaRubro = asistencia?.naveCategoriaRubro;
     final tieneNaveAutos = naveCategoriaRubro == 'AUTOS';
     final isSuperuser = user?.isSuperuser ?? false;
+    final isCoordinadorAutos = user?.groups.contains('COORDINACION AUTOS') ?? false;
 
     // Caso especial: Recepción = zona ALMACEN sin nave (NO incluye ALMACEN-PDI)
     // ALMACEN-PDI es solo para registro
@@ -65,8 +66,8 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
       screen: RegistroScreen(),
     ));
 
-    // PEDETEO - Solo si rubro = FPR y zona = PUERTO (o superuser)
-    if (isSuperuser || (naveRubro == 'FPR' && zonaTipo == 'PUERTO')) {
+    // PEDETEO - Solo si rubro = FPR y zona = PUERTO (o superuser/coordinador)
+    if (isSuperuser || isCoordinadorAutos || (naveRubro == 'FPR' && zonaTipo == 'PUERTO')) {
       tabs.add(const _TabConfig(
         id: 'pedeteo',
         label: 'PEDETEO',
@@ -76,9 +77,9 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
       ));
     }
 
-    // CONTENEDORES - Solo si tiene nave AUTOS activa (o superuser)
+    // CONTENEDORES - Solo si tiene nave AUTOS activa (o superuser/coordinador)
     // En recepción (ALMACEN sin nave) NO se muestra contenedores
-    if (isSuperuser || tieneNaveAutos) {
+    if (isSuperuser || isCoordinadorAutos || tieneNaveAutos) {
       tabs.add(const _TabConfig(
         id: 'contenedores',
         label: 'CONTENEDORES',
@@ -88,8 +89,8 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
       ));
     }
 
-    // INVENTARIOS - Disponible si tiene nave AUTOS o está en recepción (o superuser)
-    if (isSuperuser || tieneNaveAutos || esRecepcion) {
+    // INVENTARIOS - Disponible si tiene nave AUTOS o está en recepción (o superuser/coordinador)
+    if (isSuperuser || isCoordinadorAutos || tieneNaveAutos || esRecepcion) {
       tabs.add(const _TabConfig(
         id: 'inventario',
         label: 'INVENTARIOS',
