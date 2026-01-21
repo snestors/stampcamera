@@ -23,6 +23,7 @@ export 'widgets/common/app_empty_state.dart';
 export 'widgets/common/app_info_row.dart';
 export 'widgets/common/app_section_header.dart';
 export 'widgets/common/app_search_select.dart';
+export 'widgets/common/app_search_dropdown.dart';
 
 // Feedback widgets (diálogos, snackbars)
 export 'widgets/feedback/app_dialog.dart';

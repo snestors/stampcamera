@@ -425,14 +425,14 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         ),
         const SizedBox(height: 12),
 
-        AppSearchSelect<int>(
+        AppSearchDropdown<int>(
           label: 'Tipo de Daño',
-          hint: 'Seleccionar tipo de daño...',
+          hint: 'Buscar tipo de daño...',
           value: _selectedTipoDano,
           isRequired: true,
           prefixIcon: const Icon(Icons.report_problem, color: Color(0xFFDC2626)),
-          options: tiposDano.map<AppSearchSelectOption<int>>((tipo) {
-            return AppSearchSelectOption<int>(
+          options: tiposDano.map<AppSearchDropdownOption<int>>((tipo) {
+            return AppSearchDropdownOption<int>(
               value: tipo['value'],
               label: tipo['label'],
             );
@@ -444,14 +444,14 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        AppSearchSelect<int>(
+        AppSearchDropdown<int>(
           label: 'Área de Daño',
-          hint: 'Seleccionar área de daño...',
+          hint: 'Buscar área de daño...',
           value: _selectedAreaDano,
           isRequired: true,
           prefixIcon: const Icon(Icons.location_on, color: Color(0xFF059669)),
-          options: areasDano.map<AppSearchSelectOption<int>>((area) {
-            return AppSearchSelectOption<int>(
+          options: areasDano.map<AppSearchDropdownOption<int>>((area) {
+            return AppSearchDropdownOption<int>(
               value: area['value'],
               label: area['label'],
             );
@@ -463,62 +463,27 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        DropdownButtonFormField<int>(
-          initialValue: _selectedSeveridad,
-          style: TextStyle(
-            fontSize: DesignTokens.fontSizeS,
-            color: AppColors.textPrimary,
-          ),
-          decoration: InputDecoration(
-            labelText: 'Severidad *',
-            hintStyle: TextStyle(
-              fontSize: DesignTokens.fontSizeS,
-              color: AppColors.textSecondary,
-            ),
-            prefixIcon: const Icon(Icons.priority_high, color: Color(0xFFF59E0B)),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              borderSide: BorderSide(
-                color: AppColors.neutral,
-                width: DesignTokens.borderWidthNormal,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              borderSide: BorderSide(
-                color: AppColors.primary,
-                width: DesignTokens.borderWidthNormal,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              borderSide: BorderSide(
-                color: AppColors.error,
-                width: DesignTokens.borderWidthNormal,
-              ),
-            ),
-            fillColor: AppColors.surface,
-            filled: true,
-          ),
-          items: severidades.map<DropdownMenuItem<int>>((severidad) {
-            return DropdownMenuItem(
+        AppSearchDropdown<int>(
+          label: 'Severidad',
+          hint: 'Buscar severidad...',
+          value: _selectedSeveridad,
+          isRequired: true,
+          prefixIcon: const Icon(Icons.priority_high, color: Color(0xFFF59E0B)),
+          options: severidades.map<AppSearchDropdownOption<int>>((severidad) {
+            return AppSearchDropdownOption<int>(
               value: severidad['value'],
-              child: Row(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: _getSeveridadColor(severidad['label']),
-                      shape: BoxShape.circle,
-                    ),
+              label: severidad['label'],
+              leading: Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: _getSeveridadColor(severidad['label']),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: _getSeveridadColor(severidad['label']).withValues(alpha: 0.5),
+                    width: 2,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    severidad['label'],
-                    style: TextStyle(fontSize: DesignTokens.fontSizeS),
-                  ),
-                ],
+                ),
               ),
             );
           }).toList(),
@@ -564,50 +529,15 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
         const SizedBox(height: 12),
 
-        DropdownButtonFormField<int>(
-          initialValue: _selectedResponsabilidad,
-          style: TextStyle(
-            fontSize: DesignTokens.fontSizeS,
-            color: AppColors.textPrimary,
-          ),
-          decoration: InputDecoration(
-            labelText: 'Responsabilidad',
-            hintStyle: TextStyle(
-              fontSize: DesignTokens.fontSizeS,
-              color: AppColors.textSecondary,
-            ),
-            prefixIcon: const Icon(Icons.business),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              borderSide: BorderSide(
-                color: AppColors.neutral,
-                width: DesignTokens.borderWidthNormal,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              borderSide: BorderSide(
-                color: AppColors.primary,
-                width: DesignTokens.borderWidthNormal,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              borderSide: BorderSide(
-                color: AppColors.error,
-                width: DesignTokens.borderWidthNormal,
-              ),
-            ),
-            fillColor: AppColors.surface,
-            filled: true,
-          ),
-          items: responsabilidades.map<DropdownMenuItem<int>>((resp) {
-            return DropdownMenuItem(
+        AppSearchDropdown<int>(
+          label: 'Responsabilidad',
+          hint: 'Buscar responsabilidad...',
+          value: _selectedResponsabilidad,
+          prefixIcon: const Icon(Icons.business, color: Color(0xFF6366F1)),
+          options: responsabilidades.map<AppSearchDropdownOption<int>>((resp) {
+            return AppSearchDropdownOption<int>(
               value: resp['value'],
-              child: Text(
-                resp['label'],
-                style: TextStyle(fontSize: DesignTokens.fontSizeS),
-              ),
+              label: resp['label'],
             );
           }).toList(),
           onChanged: (value) => setState(() => _selectedResponsabilidad = value),

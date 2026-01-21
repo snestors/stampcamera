@@ -604,6 +604,7 @@ class _CameraModalState extends State<_CameraModal> {
   CameraController? _cameraController;
   bool _isInitialized = false;
   bool _isProcessing = false;
+  String? _initError; // Error durante inicialización
   String? _originalImagePath;  // Imagen original (para preview inmediato)
   String? _processedImagePath; // Imagen procesada (para confirmar)
 
@@ -615,22 +616,38 @@ class _CameraModalState extends State<_CameraModal> {
 
   Future<void> _initCamera() async {
     try {
-      final cameras = await availableCameras();
-      if (cameras.isNotEmpty) {
-        _cameraController = CameraController(
-          cameras.first,
-          widget
-              .cameraResolution
-              .toResolutionPreset, // Convertir usando la extensión
-          imageFormatGroup: ImageFormatGroup.jpeg,
-        );
-        await _cameraController!.initialize();
+      // Timeout de 10 segundos para evitar loading infinito
+      final cameras = await availableCameras().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw Exception('Timeout al obtener cámaras'),
+      );
+
+      if (cameras.isEmpty) {
         if (mounted) {
-          setState(() => _isInitialized = true);
+          setState(() => _initError = 'No se encontraron cámaras disponibles');
         }
+        return;
+      }
+
+      _cameraController = CameraController(
+        cameras.first,
+        widget.cameraResolution.toResolutionPreset,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
+
+      await _cameraController!.initialize().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw Exception('Timeout al inicializar cámara'),
+      );
+
+      if (mounted) {
+        setState(() => _isInitialized = true);
       }
     } catch (e) {
       debugPrint('Error inicializando cámara: $e');
+      if (mounted) {
+        setState(() => _initError = 'Error al inicializar cámara: $e');
+      }
     }
   }
 
@@ -755,9 +772,65 @@ class _CameraModalState extends State<_CameraModal> {
   }
 
   Widget _buildCameraPreview() {
+    // Mostrar error si falló la inicialización
+    if (_initError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 64),
+              const SizedBox(height: 16),
+              Text(
+                'Error de cámara',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _initError!,
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _initError = null;
+                    _isInitialized = false;
+                  });
+                  _initCamera();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                ),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (!_isInitialized) {
       return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Colors.white),
+            SizedBox(height: 16),
+            Text(
+              'Iniciando cámara...',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ],
+        ),
       );
     }
 

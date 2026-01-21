@@ -263,7 +263,12 @@ class DetalleRegistroNotifier
   /// Eliminar registro VIN
   Future<bool> deleteRegistroVin(int registroVinId) async {
     try {
-      await _service.deleteRegistroVin(registroVinId);
+      final result = await _service.deleteRegistroVin(registroVinId);
+
+      // ✅ Verificar si el servicio retornó error de permisos
+      if (result['success'] == false) {
+        throw Exception(result['error'] ?? 'No tienes permisos para eliminar este registro');
+      }
 
       // Actualizar state local removiendo el registro
       final currentDetalle = state.valueOrNull;
@@ -496,7 +501,12 @@ class DetalleRegistroNotifier
   /// Eliminar foto
   Future<bool> deleteFoto(int fotoId) async {
     try {
-      await _service.deleteFoto(fotoId);
+      final result = await _service.deleteFoto(fotoId);
+
+      // ✅ Verificar si el servicio retornó error de permisos
+      if (result['success'] == false) {
+        throw Exception(result['error'] ?? 'No tienes permisos para eliminar esta foto');
+      }
 
       // ✅ Actualizar state local removiendo la foto
       final currentDetalle = state.valueOrNull;
@@ -524,7 +534,7 @@ class DetalleRegistroNotifier
       return true;
     } catch (e) {
       debugPrint('❌ Error eliminando foto: $e');
-      return false;
+      rethrow;
     }
   }
 
@@ -720,7 +730,12 @@ class DetalleRegistroNotifier
   /// Eliminar daño
   Future<bool> deleteDano(int danoId) async {
     try {
-      await _service.deleteDano(danoId);
+      final result = await _service.deleteDano(danoId);
+
+      // ✅ Verificar si el servicio retornó error de permisos
+      if (result['success'] == false) {
+        throw Exception(result['error'] ?? 'No tienes permisos para eliminar este daño');
+      }
 
       // ✅ Actualizar state local removiendo el daño
       final currentDetalle = state.valueOrNull;
@@ -748,7 +763,7 @@ class DetalleRegistroNotifier
       return true;
     } catch (e) {
       debugPrint('❌ Error eliminando daño: $e');
-      return false;
+      rethrow;
     }
   }
 
@@ -820,7 +835,12 @@ class DetalleRegistroNotifier
     required int imagenId,
   }) async {
     try {
-      await _service.removeImagenFromDano(danoId: danoId, imagenId: imagenId);
+      final result = await _service.removeImagenFromDano(danoId: danoId, imagenId: imagenId);
+
+      // ✅ Verificar si el servicio retornó error de permisos
+      if (result['success'] == false) {
+        throw Exception(result['error'] ?? 'No tienes permisos para eliminar imágenes');
+      }
 
       // ✅ Actualizar state local removiendo la imagen del daño
       final currentDetalle = state.valueOrNull;
@@ -870,7 +890,7 @@ class DetalleRegistroNotifier
       return true;
     } catch (e) {
       debugPrint('❌ Error eliminando imagen de daño: $e');
-      return false;
+      rethrow;
     }
   }
 

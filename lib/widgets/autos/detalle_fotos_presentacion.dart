@@ -254,6 +254,29 @@ class DetalleFotosPresentacion extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         // ✅ Botón Edit
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+              onTap: () => _showEditFotoForm(context, foto),
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceXXS),
+                child: Icon(
+                  Icons.edit_outlined,
+                  size: DesignTokens.iconXXL,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        SizedBox(width: DesignTokens.spaceXS),
 
         // ✅ Botón Delete
         Container(
@@ -278,6 +301,23 @@ class DetalleFotosPresentacion extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  // ============================================================================
+  // ACCIÓN PARA EDITAR FOTO
+  // ============================================================================
+  void _showEditFotoForm(BuildContext context, FotoPresentacion foto) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => FotoPresentacionForm(
+        vin: vin,
+        fotoId: foto.id,
+        tipoInicial: foto.tipo,
+        nDocumentoInicial: foto.nDocumento,
+      ),
     );
   }
 

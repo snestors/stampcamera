@@ -254,9 +254,10 @@ class UserModel {
       isSuperuser ||
       groups.any((g) => ['AUTOS', 'PUERTO', 'ALMACEN', 'OFICINA', 'COORDINACION AUTOS'].contains(g));
 
-  /// Usuario tiene acceso al módulo de granos (futuro)
+  /// Usuario tiene acceso al módulo de graneles
   bool get hasGranosAccess =>
-      isSuperuser || groups.contains('GRANOS');
+      isSuperuser ||
+      groups.any((g) => ['GRANOS', 'GRANELES', 'COORDINACION GRANELES'].contains(g));
 
   /// Usuario tiene acceso a asistencia
   bool get hasAsistenciaAccess =>

@@ -151,8 +151,21 @@ class DetalleRegistroService {
 
   /// Eliminar registro VIN
   /// DELETE /api/v1/autos/registro-vin/{id}/
-  Future<void> deleteRegistroVin(int registroVinId) async {
-    await _http.dio.delete('/api/v1/autos/registro-vin/$registroVinId/');
+  /// Retorna mensaje de error si no tiene permisos
+  Future<Map<String, dynamic>> deleteRegistroVin(int registroVinId) async {
+    try {
+      await _http.dio.delete('/api/v1/autos/registro-vin/$registroVinId/');
+      return {'success': true, 'message': 'Registro eliminado correctamente'};
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        final errorMsg = e.response?.data?['error'] ?? 'No tienes permisos para eliminar este registro';
+        return {'success': false, 'error': errorMsg};
+      }
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+      rethrow;
+    }
   }
 
   // ============================================================================
@@ -206,8 +219,8 @@ class DetalleRegistroService {
     }
   }
 
-  /// Actualizar foto
-  /// PUT /api/v1/autos/fotos-presentacion/{id}/
+  /// Actualizar foto (parcialmente)
+  /// PATCH /api/v1/autos/fotos-presentacion/{id}/
   Future<Map<String, dynamic>> updateFoto({
     required int fotoId,
     String? tipo,
@@ -220,6 +233,8 @@ class DetalleRegistroService {
     if (tipo != null) {
       formData.fields.add(MapEntry('tipo', tipo));
     }
+
+    // n_documento puede ser string vacío para limpiar el campo
     if (nDocumento != null) {
       formData.fields.add(MapEntry('n_documento', nDocumento));
     }
@@ -231,7 +246,8 @@ class DetalleRegistroService {
       );
     }
 
-    final response = await _http.dio.put(
+    // Usar PATCH para actualización parcial (no requiere todos los campos)
+    final response = await _http.dio.patch(
       '/api/v1/autos/fotos-presentacion/$fotoId/',
       data: formData,
     );
@@ -241,8 +257,21 @@ class DetalleRegistroService {
 
   /// Eliminar foto
   /// DELETE /api/v1/autos/fotos-presentacion/{id}/
-  Future<void> deleteFoto(int fotoId) async {
-    await _http.dio.delete('/api/v1/autos/fotos-presentacion/$fotoId/');
+  /// Retorna mensaje de error si no tiene permisos
+  Future<Map<String, dynamic>> deleteFoto(int fotoId) async {
+    try {
+      await _http.dio.delete('/api/v1/autos/fotos-presentacion/$fotoId/');
+      return {'success': true, 'message': 'Foto eliminada correctamente'};
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        final errorMsg = e.response?.data?['error'] ?? 'No tienes permisos para eliminar esta foto';
+        return {'success': false, 'error': errorMsg};
+      }
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+      rethrow;
+    }
   }
 
   // ============================================================================
@@ -506,8 +535,25 @@ class DetalleRegistroService {
 
   /// ✅ ELIMINAR DAÑO - IMPLEMENTACIÓN SEGÚN MANUAL
   /// DELETE /api/v1/autos/danos/{id}/
-  Future<void> deleteDano(int danoId) async {
-    await _http.dio.delete('/api/v1/autos/danos/$danoId/');
+  /// Retorna mensaje de error si no tiene permisos
+  Future<Map<String, dynamic>> deleteDano(int danoId) async {
+    try {
+      final response = await _http.dio.delete('/api/v1/autos/danos/$danoId/');
+      // El backend puede retornar data con success y message
+      if (response.data != null && response.data is Map) {
+        return response.data as Map<String, dynamic>;
+      }
+      return {'success': true, 'message': 'Daño eliminado correctamente'};
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        final errorMsg = e.response?.data?['error'] ?? 'No tienes permisos para eliminar este daño';
+        return {'success': false, 'error': errorMsg};
+      }
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+      rethrow;
+    }
   }
 
   /// ✅ AGREGAR IMAGEN INDIVIDUAL A DAÑO - IMPLEMENTACIÓN SEGÚN MANUAL
@@ -533,6 +579,7 @@ class DetalleRegistroService {
   /// ✅ ELIMINAR IMAGEN INDIVIDUAL DE DAÑO - IMPLEMENTACIÓN SEGÚN MANUAL
   /// DELETE /api/v1/autos/danos/{id}/remove_image/
   /// Payload: {"imagen_id": 1}
+  /// Retorna mensaje de error si no tiene permisos
   Future<Map<String, dynamic>> removeImagenFromDano({
     required int danoId,
     required int imagenId,
@@ -541,13 +588,24 @@ class DetalleRegistroService {
     debugPrint('   danoId: $danoId');
     debugPrint('   imagenId: $imagenId');
 
-    final response = await _http.dio.delete(
-      '/api/v1/autos/danos/$danoId/remove_image/?imagen_id=$imagenId',
-    );
+    try {
+      final response = await _http.dio.delete(
+        '/api/v1/autos/danos/$danoId/remove_image/?imagen_id=$imagenId',
+      );
 
-    debugPrint('✅ removeImagenFromDano response: ${response.data}');
+      debugPrint('✅ removeImagenFromDano response: ${response.data}');
 
-    return response.data;
+      return response.data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        final errorMsg = e.response?.data?['error'] ?? 'No tienes permisos para eliminar imágenes';
+        return {'success': false, 'error': errorMsg};
+      }
+      if (e.response?.statusCode == 400 && e.response?.data != null) {
+        return e.response!.data as Map<String, dynamic>;
+      }
+      rethrow;
+    }
   }
 
   /// ✅ AGREGAR MÚLTIPLES IMÁGENES A DAÑO EXISTENTE - IMPLEMENTACIÓN SEGÚN MANUAL
