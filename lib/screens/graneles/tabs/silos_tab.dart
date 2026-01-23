@@ -1,5 +1,5 @@
 // =============================================================================
-// TAB DE SILOS
+// TAB DE SILOS - TODOS LOS SILOS CON BÚSQUEDA E INFINITE SCROLL
 // =============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,108 +7,212 @@ import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
+import 'package:stampcamera/widgets/common/search_bar_widget.dart';
+import 'package:stampcamera/widgets/connection_error_screen.dart';
 
-class SilosTab extends ConsumerWidget {
-  final int? servicioId;
-
-  const SilosTab({super.key, this.servicioId});
+class SilosTab extends ConsumerStatefulWidget {
+  const SilosTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (servicioId == null) {
-      return _buildNoServicioSelected();
-    }
+  ConsumerState<SilosTab> createState() => _SilosTabState();
+}
 
-    final silosAsync = ref.watch(silosProvider(servicioId!));
+class _SilosTabState extends ConsumerState<SilosTab> {
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _searchFocusNode = FocusNode();
 
-    return silosAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
-            SizedBox(height: DesignTokens.spaceM),
-            Text(
-              'Error al cargar silos',
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeM,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            SizedBox(height: DesignTokens.spaceS),
-            TextButton.icon(
-              onPressed: () => ref.invalidate(silosProvider(servicioId!)),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      ),
-      data: (silos) {
-        if (silos.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.storage_outlined, size: 64, color: AppColors.textSecondary),
-                SizedBox(height: DesignTokens.spaceM),
-                Text(
-                  'No hay registros de silos',
-                  style: TextStyle(
-                    fontSize: DesignTokens.fontSizeM,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          );
+  @override
+  void initState() {
+    super.initState();
+    _setupScrollListener();
+  }
+
+  void _setupScrollListener() {
+    _scrollController.addListener(() {
+      final notifier = ref.read(silosListProvider.notifier);
+
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        if (!notifier.isLoadingMore && notifier.hasNextPage) {
+          notifier.loadMore();
         }
+      }
+    });
+  }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(silosProvider(servicioId!));
-          },
-          child: ListView.builder(
-            padding: EdgeInsets.all(DesignTokens.spaceM),
-            itemCount: silos.length,
-            itemBuilder: (context, index) {
-              return _SiloCard(silo: silos[index]);
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final silosAsync = ref.watch(silosListProvider);
+    final notifier = ref.read(silosListProvider.notifier);
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Column(
+        children: [
+          // Barra de búsqueda
+          SearchBarWidget(
+            controller: _searchController,
+            focusNode: _searchFocusNode,
+            hintText: 'Buscar por producto o número...',
+            showScannerButton: false,
+            onChanged: (value) {
+              if (value.trim().isEmpty) {
+                notifier.clearSearch();
+              } else {
+                notifier.debouncedSearch(value);
+              }
+            },
+            onSubmitted: (value) {
+              if (value.trim().isNotEmpty) {
+                notifier.search(value);
+                _searchFocusNode.unfocus();
+              }
+            },
+            onClear: () {
+              notifier.clearSearch();
+              _searchFocusNode.unfocus();
             },
           ),
-        );
-      },
+
+          // Lista de silos
+          Expanded(child: _buildResultsList(silosAsync, notifier)),
+        ],
+      ),
+      // TODO: Agregar FAB para crear silos cuando se implemente el formulario
+      // floatingActionButton: FloatingActionButton.extended(
+      //   heroTag: 'fab_silos',
+      //   onPressed: () => _navigateToCreateSilos(),
+      //   backgroundColor: AppColors.primary,
+      //   icon: const Icon(Icons.add, color: Colors.white),
+      //   label: Text('Nuevo Silo', ...),
+      // ),
     );
   }
 
-  Widget _buildNoServicioSelected() {
+  Widget _buildResultsList(
+    AsyncValue<List<Silos>> silosAsync,
+    SilosNotifier notifier,
+  ) {
+    return silosAsync.when(
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      ),
+      error: (error, stackTrace) => ConnectionErrorScreen(
+        error: error,
+        onRetry: () => notifier.refresh(),
+      ),
+      data: (silos) => _buildDataState(silos, notifier),
+    );
+  }
+
+  Widget _buildDataState(
+    List<Silos> silos,
+    SilosNotifier notifier,
+  ) {
+    if (silos.isEmpty) {
+      return _buildEmptyState(notifier);
+    }
+
+    final showLoadMoreIndicator = notifier.hasNextPage;
+
+    return RefreshIndicator(
+      onRefresh: () => notifier.refresh(),
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: EdgeInsets.all(DesignTokens.spaceM),
+        itemCount: silos.length + (showLoadMoreIndicator ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index < silos.length) {
+            final silo = silos[index];
+            return Padding(
+              padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+              child: _SiloCard(silo: silo),
+            );
+          }
+
+          return Container(
+            padding: EdgeInsets.all(DesignTokens.spaceL),
+            alignment: Alignment.center,
+            child: Column(
+              children: [
+                if (notifier.isLoadingMore) ...[
+                  AppLoadingState.circular(
+                    message: 'Cargando más registros...',
+                  ),
+                ] else ...[
+                  AppButton.ghost(
+                    text: 'Cargar más',
+                    icon: Icons.expand_more,
+                    onPressed: () => notifier.loadMore(),
+                  ),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(SilosNotifier notifier) {
+    final isSearching = _searchController.text.isNotEmpty;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.touch_app_outlined, size: 64, color: AppColors.textSecondary),
+          Icon(
+            isSearching ? Icons.search_off : Icons.storage_outlined,
+            size: 64,
+            color: Colors.grey[400],
+          ),
           SizedBox(height: DesignTokens.spaceM),
           Text(
-            'Selecciona un servicio',
-            style: TextStyle(
-              fontSize: DesignTokens.fontSizeM,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
+            isSearching ? 'Sin resultados' : 'No hay registros de silos',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Colors.grey[600],
+                ),
           ),
           SizedBox(height: DesignTokens.spaceS),
           Text(
-            'Ve a la pestaña SERVICIOS y selecciona uno',
-            style: TextStyle(
-              fontSize: DesignTokens.fontSizeS,
-              color: AppColors.textSecondary,
-            ),
+            isSearching
+                ? 'No se encontraron silos que coincidan con "${_searchController.text}"'
+                : 'Aún no hay registros de silos',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[500]),
           ),
+          SizedBox(height: DesignTokens.spaceL),
+          if (isSearching) ...[
+            AppButton.secondary(
+              text: 'Limpiar búsqueda',
+              icon: Icons.clear,
+              onPressed: () {
+                _searchController.clear();
+                notifier.clearSearch();
+              },
+            ),
+          ],
         ],
       ),
     );
   }
 }
+
+// =============================================================================
+// SILO CARD
+// =============================================================================
 
 class _SiloCard extends StatelessWidget {
   final Silos silo;
@@ -121,7 +225,7 @@ class _SiloCard extends StatelessWidget {
     final numberFormat = NumberFormat('#,##0.000', 'es_PE');
 
     return Card(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceM),
+      margin: EdgeInsets.zero,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -140,7 +244,7 @@ class _SiloCard extends StatelessWidget {
                     vertical: DesignTokens.spaceXS,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.accent,
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                   ),
                   child: Row(
@@ -273,7 +377,6 @@ class _SiloCard extends StatelessWidget {
                 ),
               ],
             ),
-
           ],
         ),
       ),

@@ -12,10 +12,8 @@ class VinScannerScreen extends StatefulWidget {
 
 class _VinScannerScreenState extends State<VinScannerScreen> {
   MobileScannerController? _controller;
-  bool _isProcessing = false;
-  String? _scannedCode;
   bool _hasScanned = false;
-  bool _torchOn = false; // ✅ Controlar manualmente el estado del flash
+  bool _torchOn = false;
 
   @override
   void initState() {
@@ -34,117 +32,22 @@ class _VinScannerScreenState extends State<VinScannerScreen> {
   }
 
   void _onBarcodeDetected(BarcodeCapture capture) {
-    if (_isProcessing || _hasScanned) return;
+    if (_hasScanned) return;
 
     final barcode = capture.barcodes.firstOrNull;
     final code = barcode?.rawValue;
 
     if (code != null && code.isNotEmpty) {
       setState(() {
-        _isProcessing = true;
-        _scannedCode = code;
         _hasScanned = true;
       });
 
-      // Pausa el scanner
       _controller?.stop();
 
-      // Mostrar el resultado antes de proceder
-      _showScannedResult(code);
+      // Directamente enviar el código al buscador y cerrar
+      widget.onScanned(code);
+      Navigator.pop(context);
     }
-  }
-
-  void _showScannedResult(String code) {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 64),
-            const SizedBox(height: 16),
-            const Text(
-              'Código Escaneado',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.qr_code, color: Colors.grey),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      code,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => _copyToClipboard(code),
-                    icon: const Icon(Icons.copy, size: 20),
-                    tooltip: 'Copiar',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _scanAgain,
-                    child: const Text('Escanear otro'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => _useScannedCode(code),
-                    child: const Text('Usar este código'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _copyToClipboard(String text) {
-    // Implementar copy to clipboard si necesitas
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Código copiado')));
-  }
-
-  void _scanAgain() {
-    Navigator.pop(context); // Cerrar bottom sheet
-    setState(() {
-      _isProcessing = false;
-      _scannedCode = null;
-      _hasScanned = false;
-    });
-    _controller?.start(); // Reanudar scanner
-  }
-
-  void _useScannedCode(String code) {
-    Navigator.pop(context); // Cerrar bottom sheet
-    widget.onScanned(code);
-    Navigator.pop(context); // Cerrar scanner
   }
 
   void _toggleTorch() async {
@@ -197,16 +100,16 @@ class _VinScannerScreenState extends State<VinScannerScreen> {
                 color: Colors.black.withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
+              child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.qr_code_scanner,
                     color: Colors.white,
                     size: 32,
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Posiciona el código dentro del marco',
                     style: TextStyle(
                       color: Colors.white,
@@ -215,37 +118,11 @@ class _VinScannerScreenState extends State<VinScannerScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  if (_scannedCode != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Último código: $_scannedCode',
-                      style: const TextStyle(color: Colors.green, fontSize: 12),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
                 ],
               ),
             ),
           ),
 
-          // Loading indicator cuando está procesando
-          if (_isProcessing)
-            Container(
-              color: Colors.black.withValues(alpha: 0.5),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
-                    Text(
-                      'Procesando código...',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );

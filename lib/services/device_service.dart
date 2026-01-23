@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'biometric_service.dart';
 import 'http_service.dart';
 
 /// Modelo para el estado del dispositivo
@@ -178,12 +179,20 @@ class DeviceService {
     return await _storage.read(key: _deviceTypeKey);
   }
 
-  /// Limpia la información del dispositivo
+  /// Verifica si es un dispositivo personal
+  Future<bool> isPersonalDevice() async {
+    final type = await getStoredDeviceType();
+    return type == 'personal';
+  }
+
+  /// Limpia la información del dispositivo (incluyendo biométrico)
   Future<void> clearDeviceInfo() async {
     await _storage.delete(key: _deviceIdKey);
     await _storage.delete(key: _deviceTypeKey);
     await _storage.delete(key: _deviceNameKey);
     await _storage.delete(key: _deviceUsernameKey);
+    // Limpiar biométrico al desvincular dispositivo
+    await BiometricService().disableBiometric();
   }
 
   /// Verifica el estado del dispositivo en el servidor

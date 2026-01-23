@@ -6,8 +6,6 @@ import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/providers/autos/registro_general_provider.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
-// import 'package:stampcamera/providers/camera_provider.dart';       // Comentado hasta verificar
-// import 'package:stampcamera/providers/biometric_provider.dart';    // Comentado hasta verificar
 
 class SessionManager extends StateNotifier<String?> {
   SessionManager() : super(null);
@@ -126,11 +124,8 @@ class SessionManager extends StateNotifier<String?> {
     // ref.invalidate(queueStateProvider);
 
     // ============================================================================
-    // PROVIDERS GENERALES CON DATOS DE USUARIO
-    // ============================================================================
-    // ref.invalidate(cameraProvider);        // Comentado hasta verificar si existe
-    // ref.invalidate(biometricProvider);     // Comentado hasta verificar si existe
     // NOTA: NO limpiar themeProvider ni connectivityProvider (configuraciones globales)
+    // ============================================================================
 
     // Limpiar cualquier caché local
     _clearLocalCaches();

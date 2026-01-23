@@ -7,61 +7,124 @@ import 'package:stampcamera/widgets/autos/detalle_info_general.dart';
 import 'package:stampcamera/widgets/autos/detalle_registros_vin.dart';
 import 'package:stampcamera/widgets/autos/detalle_fotos_presentacion.dart';
 import 'package:stampcamera/widgets/autos/detalle_danos.dart';
+import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
+import 'package:stampcamera/widgets/autos/forms/fotos_presentacion_form.dart';
+import 'package:stampcamera/widgets/autos/forms/dano_form.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 import 'package:stampcamera/widgets/common/offline_sync_indicator.dart';
 
-class DetalleRegistroScreen extends ConsumerWidget {
+class DetalleRegistroScreen extends ConsumerStatefulWidget {
   final String vin;
 
   const DetalleRegistroScreen({super.key, required this.vin});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detalleAsync = ref.watch(detalleRegistroProvider(vin));
+  ConsumerState<DetalleRegistroScreen> createState() => _DetalleRegistroScreenState();
+}
 
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        //backgroundColor: AppColors.backgroundLight,
-        appBar: _buildAppBar(context, ref, detalleAsync),
-        body: Column(
-          children: [
-            // Banner de sincronizacion offline
-            const OfflineSyncBanner(),
-            // Contenido principal
-            Expanded(
-              child: detalleAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-                error: (err, _) =>
-                    ConnectionErrorScreen(onRetry: () => _refreshData(context, ref)),
-                data: (registro) => _buildTabContent(registro, ref),
+class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final detalleAsync = ref.watch(detalleRegistroProvider(widget.vin));
+
+    return Scaffold(
+      appBar: _buildAppBar(detalleAsync),
+      body: Column(
+        children: [
+          const OfflineSyncBanner(),
+          Expanded(
+            child: detalleAsync.when(
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
               ),
+              error: (err, _) =>
+                  ConnectionErrorScreen(onRetry: () => _refreshData()),
+              data: (registro) => _buildTabContent(registro),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+      floatingActionButton: _tabController.index > 0
+          ? FloatingActionButton(
+              onPressed: () => _onFabPressed(detalleAsync.valueOrNull),
+              backgroundColor: _tabController.index == 3
+                  ? AppColors.error
+                  : AppColors.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            )
+          : null,
     );
+  }
+
+  void _onFabPressed(DetalleRegistroModel? registro) async {
+    switch (_tabController.index) {
+      case 1: // Historial - crear registro
+        final result = await Navigator.push<String>(
+          context,
+          MaterialPageRoute(builder: (context) => RegistroVinForm(vin: widget.vin)),
+        );
+        // Si eligió crear foto de presentación
+        if (result == 'create_foto' && mounted) {
+          String? fotoResult = 'create_another';
+          while (fotoResult == 'create_another' && mounted) {
+            fotoResult = await Navigator.push<String>(
+              context,
+              MaterialPageRoute(builder: (context) => FotoPresentacionForm(vin: widget.vin)),
+            );
+          }
+        }
+        break;
+      case 2: // Fotos - crear foto (loop)
+        String? fotoResult = 'create_another';
+        while (fotoResult == 'create_another' && mounted) {
+          fotoResult = await Navigator.push<String>(
+            context,
+            MaterialPageRoute(builder: (context) => FotoPresentacionForm(vin: widget.vin)),
+          );
+        }
+        break;
+      case 3: // Daños - crear daño
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => DanoForm(vin: widget.vin)),
+        );
+        break;
+    }
   }
 
   // ============================================================================
   // APP BAR CON TABS INTEGRADAS
   // ============================================================================
-  PreferredSizeWidget _buildAppBar(
-    BuildContext context,
-    WidgetRef ref,
-    AsyncValue detalleAsync,
-  ) {
+  PreferredSizeWidget _buildAppBar(AsyncValue detalleAsync) {
     return AppBar(
       elevation: 0,
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero, // Cuadrado sin bordes
+        borderRadius: BorderRadius.zero,
       ),
       title: Text(
-        vin,
+        widget.vin,
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: DesignTokens.fontSizeM,
@@ -74,7 +137,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
         ),
         IconButton(
           icon: const Icon(Icons.refresh),
-          onPressed: () => _refreshData(context, ref),
+          onPressed: _refreshData,
         ),
       ],
       bottom: PreferredSize(
@@ -93,6 +156,7 @@ class DetalleRegistroScreen extends ConsumerWidget {
 
   Widget _buildTabs(DetalleRegistroModel registro) {
     return TabBar(
+      controller: _tabController,
       indicatorColor: Colors.white,
       indicatorWeight: 3,
       labelColor: Colors.white,
@@ -190,11 +254,12 @@ class DetalleRegistroScreen extends ConsumerWidget {
   }
 
   Widget _buildLoadingTabs() {
-    return const TabBar(
+    return TabBar(
+      controller: _tabController,
       indicatorColor: Colors.white,
       labelColor: Colors.white,
       unselectedLabelColor: Colors.white70,
-      tabs: [
+      tabs: const [
         Tab(icon: Icon(Icons.info_outline, size: 16), text: 'General'),
         Tab(icon: Icon(Icons.history, size: 16), text: 'Historial'),
         Tab(icon: Icon(Icons.photo_library, size: 16), text: 'Fotos'),
@@ -204,11 +269,12 @@ class DetalleRegistroScreen extends ConsumerWidget {
   }
 
   Widget _buildErrorTabs() {
-    return const TabBar(
+    return TabBar(
+      controller: _tabController,
       indicatorColor: Colors.white,
       labelColor: Colors.white,
       unselectedLabelColor: Colors.white70,
-      tabs: [
+      tabs: const [
         Tab(icon: Icon(Icons.info_outline, size: 16), text: 'General'),
         Tab(icon: Icon(Icons.history, size: 16), text: 'Historial'),
         Tab(icon: Icon(Icons.photo_library, size: 16), text: 'Fotos'),
@@ -220,33 +286,30 @@ class DetalleRegistroScreen extends ConsumerWidget {
   // ============================================================================
   // CONTENIDO DE TABS
   // ============================================================================
-  Widget _buildTabContent(DetalleRegistroModel registro, WidgetRef ref) {
+  Widget _buildTabContent(DetalleRegistroModel registro) {
     return TabBarView(
+      controller: _tabController,
       children: [
         _buildScrollableTab(
           child: DetalleInfoGeneral(r: registro),
-          ref: ref,
         ),
         _buildScrollableTab(
-          child: DetalleRegistrosVin(items: registro.registrosVin, vin: vin),
-          ref: ref,
+          child: DetalleRegistrosVin(items: registro.registrosVin, vin: widget.vin),
         ),
         _buildScrollableTab(
           child: DetalleFotosPresentacion(
             items: registro.fotosPresentacion,
-            vin: vin,
+            vin: widget.vin,
           ),
-          ref: ref,
         ),
         _buildScrollableTab(
           child: DetalleDanos(danos: registro.danos, vin: registro.vin),
-          ref: ref,
         ),
       ],
     );
   }
 
-  Widget _buildScrollableTab({required Widget child, required WidgetRef ref}) {
+  Widget _buildScrollableTab({required Widget child}) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(DesignTokens.spaceL),
       physics: const AlwaysScrollableScrollPhysics(),
@@ -257,8 +320,8 @@ class DetalleRegistroScreen extends ConsumerWidget {
   // ============================================================================
   // UTILIDADES
   // ============================================================================
-  void _refreshData(BuildContext context, WidgetRef ref) {
-    ref.read(detalleRegistroProvider(vin).notifier).refresh();
+  void _refreshData() {
+    ref.read(detalleRegistroProvider(widget.vin).notifier).refresh();
     AppSnackBar.info(context, 'Actualizando datos...');
   }
 }

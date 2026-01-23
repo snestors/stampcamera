@@ -60,25 +60,21 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     final detalleAsync = ref.watch(detalleRegistroProvider(widget.vin));
     final optionsAsync = ref.watch(danosOptionsProvider);
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isEditMode ? 'Editar Daño' : 'Nuevo Daño'),
+        backgroundColor: const Color(0xFFDC2626),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      child: Column(
+      body: Column(
         children: [
-          _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
+              padding: const EdgeInsets.all(20),
               child: detalleAsync.when(
                 data: (detalle) => _buildContent(detalle, optionsAsync),
                 loading: () => _buildLoadingState(),
@@ -87,45 +83,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
             ),
           ),
           _buildActionButtons(),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================================
-  // HEADER FIJO
-  // ============================================================================
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isEditMode ? Icons.edit : Icons.add_circle_outline,
-            color: const Color(0xFFDC2626),
-            size: 24,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              isEditMode ? 'Editar Daño' : 'Nuevo Daño',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-          ),
         ],
       ),
     );
@@ -577,6 +534,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
 
     return DropdownButtonFormField<int>(
       initialValue: _selectedFotoPresentacion,
+      isExpanded: true,
       style: TextStyle(
         fontSize: DesignTokens.fontSizeS,
         color: AppColors.textPrimary,
@@ -628,7 +586,6 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           return DropdownMenuItem<int>(
             value: foto.id,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   padding: const EdgeInsets.all(4),
@@ -643,28 +600,14 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Flexible(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _getFotoTipoLabel(foto.tipo),
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeS,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '- ${foto.nDocumento!}',
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeS,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                Expanded(
+                  child: Text(
+                    '${_getFotoTipoLabel(foto.tipo)} - ${foto.nDocumento!}',
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeS,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -689,18 +632,45 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         InkWell(
           onTap: () =>
               _showMultiSelectDialog(label, options, selectedValues, onChanged),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: label,
-              border: const OutlineInputBorder(),
-              prefixIcon: Icon(icon),
+              labelStyle: TextStyle(
+                fontSize: DesignTokens.fontSizeS,
+                color: AppColors.textSecondary,
+              ),
+              hintStyle: TextStyle(
+                fontSize: DesignTokens.fontSizeS,
+                color: AppColors.textSecondary,
+              ),
+              prefixIcon: Icon(icon, color: const Color(0xFF3B82F6)),
+              suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                borderSide: BorderSide(
+                  color: AppColors.neutral,
+                  width: DesignTokens.borderWidthNormal,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                borderSide: BorderSide(
+                  color: AppColors.neutral,
+                  width: DesignTokens.borderWidthNormal,
+                ),
+              ),
+              filled: true,
+              fillColor: AppColors.surface,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             ),
             child: Text(
               selectedValues.isEmpty
                   ? 'Seleccionar ${label.toLowerCase()}'
-                  : '${selectedValues.length} ${label.toLowerCase()} seleccionadas',
+                  : '${selectedValues.length} ${label.toLowerCase()} seleccionada${selectedValues.length > 1 ? 's' : ''}',
               style: TextStyle(
-                color: selectedValues.isEmpty ? Colors.grey[600] : null,
+                fontSize: DesignTokens.fontSizeS,
+                color: selectedValues.isEmpty ? AppColors.textSecondary : AppColors.textPrimary,
               ),
             ),
           ),
@@ -708,20 +678,45 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         if (selectedValues.isNotEmpty) ...[
           const SizedBox(height: 8),
           Wrap(
-            spacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: selectedValues.map((id) {
               final option = options.firstWhere((opt) => opt['value'] == id);
-              return Chip(
-                label: Text(
-                  option['label'],
-                  style: const TextStyle(fontSize: 12),
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                  border: Border.all(
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                  ),
                 ),
-                onDeleted: () {
-                  final newValues = List<int>.from(selectedValues);
-                  newValues.remove(id);
-                  onChanged(newValues);
-                },
-                deleteIcon: const Icon(Icons.close, size: 18),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      option['label'],
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeXS,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF3B82F6),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () {
+                        final newValues = List<int>.from(selectedValues);
+                        newValues.remove(id);
+                        onChanged(newValues);
+                      },
+                      child: Icon(
+                        Icons.close,
+                        size: 14,
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
               );
             }).toList(),
           ),
@@ -1101,42 +1096,222 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     List<int> selectedValues,
     Function(List<int>) onChanged,
   ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Seleccionar $title'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: options.length,
-            itemBuilder: (context, index) {
-              final option = options[index];
-              final isSelected = selectedValues.contains(option['value']);
+    // Copia local para manejar selección sin cerrar el diálogo
+    List<int> tempSelected = List<int>.from(selectedValues);
 
-              return CheckboxListTile(
-                title: Text(option['label']),
-                value: isSelected,
-                onChanged: (checked) {
-                  final newValues = List<int>.from(selectedValues);
-                  if (checked == true) {
-                    newValues.add(option['value']);
-                  } else {
-                    newValues.remove(option['value']);
-                  }
-                  onChanged(newValues);
-                  Navigator.pop(context);
-                },
-              );
-            },
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(DesignTokens.radiusXL),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.grid_view,
+                        color: Color(0xFF3B82F6),
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Seleccionar $title',
+                            style: TextStyle(
+                              fontSize: DesignTokens.fontSizeL,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            '${tempSelected.length} seleccionada${tempSelected.length != 1 ? 's' : ''}',
+                            style: TextStyle(
+                              fontSize: DesignTokens.fontSizeXS,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setModalState(() {
+                          tempSelected.clear();
+                        });
+                      },
+                      child: Text(
+                        'Limpiar',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeS,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(height: 1),
+
+              // Options list
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: options.length,
+                  itemBuilder: (context, index) {
+                    final option = options[index];
+                    final isSelected = tempSelected.contains(option['value']);
+
+                    return InkWell(
+                      onTap: () {
+                        setModalState(() {
+                          if (isSelected) {
+                            tempSelected.remove(option['value']);
+                          } else {
+                            tempSelected.add(option['value']);
+                          }
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFF3B82F6)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? const Color(0xFF3B82F6)
+                                      : Colors.grey[400]!,
+                                  width: 2,
+                                ),
+                              ),
+                              child: isSelected
+                                  ? const Icon(
+                                      Icons.check,
+                                      size: 16,
+                                      color: Colors.white,
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                option['label'],
+                                style: TextStyle(
+                                  fontSize: DesignTokens.fontSizeS,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  color: isSelected
+                                      ? const Color(0xFF3B82F6)
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const Divider(height: 1),
+
+              // Actions
+              Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: MediaQuery.of(context).padding.bottom + 12,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(fontSize: DesignTokens.fontSizeS),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          onChanged(tempSelected);
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B82F6),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                          ),
+                        ),
+                        child: Text(
+                          'Aplicar',
+                          style: TextStyle(
+                            fontSize: DesignTokens.fontSizeS,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
       ),
     );
   }

@@ -47,4 +47,18 @@ class RegistroGeneralService extends BaseServiceImpl<RegistroGeneral> {
   }) async {
     return await search('', filters: {'pedeteado': true, ...?filters});
   }
+
+  /// Obtener registros sin registro vin puerto
+  Future<PaginatedResponse<RegistroGeneral>> getSinRegistroPuerto({
+    Map<String, dynamic>? filters,
+  }) async {
+    return await search('', filters: {'sin_registro_puerto': true, ...?filters});
+  }
+
+  /// Obtener registros sin recepción
+  Future<PaginatedResponse<RegistroGeneral>> getSinRecepcion({
+    Map<String, dynamic>? filters,
+  }) async {
+    return await search('', filters: {'sin_recepcion': true, ...?filters});
+  }
 }

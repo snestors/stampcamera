@@ -40,9 +40,9 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
 
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        if (!notifier.isLoadingMore &&
-            notifier.hasNextPage &&
-            !notifier.isSearching) {
+        // Permite cargar más tanto con búsqueda como sin ella
+        // isSearching solo indica que hay una búsqueda en progreso (loading)
+        if (!notifier.isLoadingMore && notifier.hasNextPage) {
           notifier.loadMore();
         }
       }
@@ -63,6 +63,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
     final notifier = ref.read(ticketsMuelleProvider.notifier);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
           // Barra de búsqueda
@@ -137,7 +138,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
       return _buildEmptyState(notifier);
     }
 
-    final showLoadMoreIndicator = notifier.hasNextPage && !notifier.isSearching;
+    final showLoadMoreIndicator = notifier.hasNextPage;
 
     return RefreshIndicator(
       onRefresh: () => notifier.refresh(),
@@ -434,7 +435,7 @@ class _TicketCard extends StatelessWidget {
                 SizedBox(height: DesignTokens.spaceS),
               ],
 
-              // Header con número de ticket, estado balanza y botón editar
+              // Header con número de ticket y botones
               Row(
                 children: [
                   Container(
@@ -462,28 +463,17 @@ class _TicketCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: DesignTokens.spaceS,
-                      vertical: DesignTokens.spaceXS,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ticket.tieneBalanza
-                          ? AppColors.success.withValues(alpha: 0.1)
-                          : AppColors.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-                    ),
-                    child: Text(
-                      ticket.tieneBalanza ? 'CON BALANZA' : 'SIN BALANZA',
-                      style: TextStyle(
-                        color: ticket.tieneBalanza ? AppColors.success : AppColors.warning,
-                        fontWeight: FontWeight.bold,
-                        fontSize: DesignTokens.fontSizeXS,
-                      ),
-                    ),
-                  ),
                   const Spacer(),
+                  // Botón foto
+                  if (ticket.fotoUrl != null)
+                    IconButton(
+                      onPressed: () => _showPhotoDialog(context, ticket.fotoUrl!),
+                      icon: Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
+                      tooltip: 'Ver foto',
+                      constraints: const BoxConstraints(),
+                      padding: EdgeInsets.all(DesignTokens.spaceXS),
+                    ),
+                  SizedBox(width: DesignTokens.spaceXS),
                   // Botón editar
                   IconButton(
                     onPressed: onEdit,
@@ -492,9 +482,31 @@ class _TicketCard extends StatelessWidget {
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.all(DesignTokens.spaceXS),
                   ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textSecondary,
+                ],
+              ),
+              SizedBox(height: DesignTokens.spaceXS),
+              // Status badges (balanza y almacén)
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spaceS,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ticket.tieneBalanza
+                          ? AppColors.success.withValues(alpha: 0.1)
+                          : AppColors.warning.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                    ),
+                    child: Text(
+                      ticket.tieneBalanza ? 'Con Balanza' : 'Sin Balanza',
+                      style: TextStyle(
+                        color: ticket.tieneBalanza ? AppColors.success : AppColors.warning,
+                        fontWeight: FontWeight.w600,
+                        fontSize: DesignTokens.fontSizeXS,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -613,6 +625,54 @@ class _TicketCard extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showPhotoDialog(BuildContext context, String url) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        insetPadding: EdgeInsets.all(DesignTokens.spaceM),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(DesignTokens.spaceM),
+              child: Row(
+                children: [
+                  Icon(Icons.photo_camera, color: AppColors.primary),
+                  SizedBox(width: DesignTokens.spaceS),
+                  Text('Foto Ticket', style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM)),
+                  const Spacer(),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx), constraints: const BoxConstraints(), padding: EdgeInsets.zero),
+                ],
+              ),
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(DesignTokens.radiusL),
+                bottomRight: Radius.circular(DesignTokens.radiusL),
+              ),
+              child: Image.network(
+                url,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, lp) {
+                  if (lp == null) return child;
+                  return Container(height: 300, color: AppColors.surface, child: const Center(child: CircularProgressIndicator()));
+                },
+                errorBuilder: (context, error, st) => Container(
+                  height: 200,
+                  color: AppColors.surface,
+                  child: Center(child: Icon(Icons.broken_image, size: 48, color: AppColors.textSecondary)),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

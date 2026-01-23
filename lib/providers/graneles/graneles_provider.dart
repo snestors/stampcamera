@@ -27,6 +27,10 @@ final silosServiceProvider = Provider<SilosService>((ref) {
   return SilosService();
 });
 
+final almacenServiceProvider = Provider<AlmacenService>((ref) {
+  return AlmacenService();
+});
+
 // ===========================================================================
 // SERVICIOS DE GRANELES (con paginación)
 // ===========================================================================
@@ -190,10 +194,32 @@ final ticketMuelleDetalleProvider =
 });
 
 // ===========================================================================
-// BALANZAS
+// BALANZAS - PROVIDER CON PAGINACIÓN Y BÚSQUEDA (como Tickets)
 // ===========================================================================
 
-/// Provider para lista de balanzas por servicio
+/// Provider principal para balanzas con paginación
+final balanzasListProvider =
+    AsyncNotifierProvider<BalanzaNotifier, List<Balanza>>(
+  BalanzaNotifier.new,
+);
+
+/// Notifier para balanzas - implementa BaseListProviderImpl
+class BalanzaNotifier extends BaseListProviderImpl<Balanza> {
+  @override
+  BalanzaService get service => ref.read(balanzaServiceProvider);
+
+  @override
+  Future<List<Balanza>> loadInitial() async {
+    try {
+      final paginated = await service.list();
+      return paginated.results;
+    } catch (e) {
+      throw Exception('Error al cargar balanzas: $e');
+    }
+  }
+}
+
+/// Provider para lista de balanzas por servicio (legacy - mantener compatibilidad)
 final balanzasProvider =
     FutureProvider.autoDispose.family<List<Balanza>, int>((ref, servicioId) async {
   final service = ref.watch(balanzaServiceProvider);
@@ -216,15 +242,70 @@ final balanzaDetalleProvider =
 });
 
 // ===========================================================================
-// SILOS
+// SILOS - PROVIDER CON PAGINACIÓN Y BÚSQUEDA (como Tickets)
 // ===========================================================================
 
-/// Provider para lista de silos por servicio
+/// Provider principal para silos con paginación
+final silosListProvider =
+    AsyncNotifierProvider<SilosNotifier, List<Silos>>(
+  SilosNotifier.new,
+);
+
+/// Notifier para silos - implementa BaseListProviderImpl
+class SilosNotifier extends BaseListProviderImpl<Silos> {
+  @override
+  SilosService get service => ref.read(silosServiceProvider);
+
+  @override
+  Future<List<Silos>> loadInitial() async {
+    try {
+      final paginated = await service.list();
+      return paginated.results;
+    } catch (e) {
+      throw Exception('Error al cargar silos: $e');
+    }
+  }
+}
+
+/// Provider para lista de silos por servicio (legacy - mantener compatibilidad)
 final silosProvider =
     FutureProvider.autoDispose.family<List<Silos>, int>((ref, servicioId) async {
   final service = ref.watch(silosServiceProvider);
   final response = await service.getByServicio(servicioId);
   return response.results;
+});
+
+// ===========================================================================
+// ALMACÉN - PROVIDER CON PAGINACIÓN Y BÚSQUEDA (como Tickets)
+// ===========================================================================
+
+/// Provider principal para almacén con paginación
+final almacenListProvider =
+    AsyncNotifierProvider<AlmacenNotifier, List<AlmacenGranel>>(
+  AlmacenNotifier.new,
+);
+
+/// Notifier para almacén - implementa BaseListProviderImpl
+class AlmacenNotifier extends BaseListProviderImpl<AlmacenGranel> {
+  @override
+  AlmacenService get service => ref.read(almacenServiceProvider);
+
+  @override
+  Future<List<AlmacenGranel>> loadInitial() async {
+    try {
+      final paginated = await service.list();
+      return paginated.results;
+    } catch (e) {
+      throw Exception('Error al cargar almacén: $e');
+    }
+  }
+}
+
+/// Provider para detalle de un almacén
+final almacenDetalleProvider =
+    FutureProvider.autoDispose.family<AlmacenGranel, int>((ref, almacenId) async {
+  final service = ref.watch(almacenServiceProvider);
+  return service.retrieve(almacenId);
 });
 
 // ===========================================================================

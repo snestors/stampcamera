@@ -1,196 +1,135 @@
-// lib/services/biometric_service.dart
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:flutter/foundation.dart';
 
+/// Servicio para manejo de autenticación biométrica
+/// Solo disponible para dispositivos personales
 class BiometricService {
   static final BiometricService _instance = BiometricService._internal();
   factory BiometricService() => _instance;
   BiometricService._internal();
 
-  final LocalAuthentication _localAuth = LocalAuthentication();
+  final LocalAuthentication _auth = LocalAuthentication();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  /// Verifica si el dispositivo soporta biometría
-  Future<bool> get isDeviceSupported async {
+  static const String _biometricEnabledKey = 'biometric_enabled';
+  static const String _biometricPasswordKey = 'biometric_password';
+
+  /// Contraseña pendiente de configurar biométrico (en memoria, no persiste)
+  String? _pendingPassword;
+
+  /// Flag para evitar doble-prompt si el usuario canceló recientemente
+  bool _recentlyDeclined = false;
+
+  /// Guarda temporalmente la contraseña para configurar biométrico después del redirect
+  void setPendingPassword(String password) {
+    _pendingPassword = password;
+  }
+
+  /// Consume la contraseña pendiente (devuelve y limpia)
+  String? consumePendingPassword() {
+    final pwd = _pendingPassword;
+    _pendingPassword = null;
+    return pwd;
+  }
+
+  /// Verifica si el dispositivo tiene hardware biométrico disponible
+  Future<bool> isDeviceSupported() async {
     try {
-      return await _localAuth.isDeviceSupported();
+      return await _auth.isDeviceSupported();
     } catch (e) {
-      debugPrint('Error verificando soporte del dispositivo: $e');
       return false;
     }
   }
 
-  /// Verifica si hay biometría disponible (configurada)
-  Future<bool> get isBiometricAvailable async {
+  /// Verifica si hay biométricos enrollados (huella o face configurados)
+  Future<bool> canCheckBiometrics() async {
     try {
-      final isSupported = await isDeviceSupported;
-      if (!isSupported) return false;
+      final canCheck = await _auth.canCheckBiometrics;
+      if (!canCheck) return false;
 
-      final availableBiometrics = await _localAuth.getAvailableBiometrics();
+      final availableBiometrics = await _auth.getAvailableBiometrics();
       return availableBiometrics.isNotEmpty;
     } catch (e) {
-      debugPrint('Error verificando biometría disponible: $e');
       return false;
     }
   }
 
-  /// Obtiene los tipos de biometría disponibles
-  Future<List<BiometricType>> get availableBiometrics async {
+  /// Obtiene los tipos de biométricos disponibles
+  Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
-      return await _localAuth.getAvailableBiometrics();
+      return await _auth.getAvailableBiometrics();
     } catch (e) {
-      debugPrint('Error obteniendo biometría disponible: $e');
       return [];
     }
   }
 
-  /// Verifica si hay alguna biometría configurada
-  Future<bool> get hasEnrolledBiometrics async {
+  /// Autentica al usuario con biométrico
+  /// Retorna true si la autenticación fue exitosa
+  Future<bool> authenticate() async {
     try {
-      final biometrics = await availableBiometrics;
-      return biometrics.isNotEmpty;
+      final result = await _auth.authenticate(
+        localizedReason: 'Verifica tu identidad para iniciar sesión',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+      if (!result) {
+        _recentlyDeclined = true;
+      }
+      return result;
     } catch (e) {
-      debugPrint('Error verificando biometría configurada: $e');
+      _recentlyDeclined = true;
       return false;
     }
   }
 
-  /// Obtiene el texto descriptivo según la biometría disponible
-  Future<String> get biometricTypeText async {
-    try {
-      final biometrics = await availableBiometrics;
+  /// Verifica si el usuario canceló el biométrico recientemente
+  bool get wasRecentlyDeclined => _recentlyDeclined;
 
-      if (biometrics.contains(BiometricType.face)) {
-        return 'Face ID';
-      } else if (biometrics.contains(BiometricType.fingerprint)) {
-        return 'Huella dactilar';
-      } else if (biometrics.contains(BiometricType.iris)) {
-        return 'Iris';
-      } else if (biometrics.contains(BiometricType.strong)) {
-        return 'Autenticación biométrica';
-      } else if (biometrics.contains(BiometricType.weak)) {
-        return 'Patrón o PIN';
-      } else {
-        return 'Autenticación biométrica';
-      }
-    } catch (e) {
-      return 'Autenticación biométrica';
-    }
+  /// Limpia el flag de rechazo (para permitir retry manual)
+  void clearDeclined() {
+    _recentlyDeclined = false;
   }
 
-  /// Obtiene el ícono según la biometría disponible
-  Future<String> get biometricIcon async {
-    try {
-      final biometrics = await availableBiometrics;
-
-      if (biometrics.contains(BiometricType.face)) {
-        return '🔒'; // O Icons.face para Material
-      } else if (biometrics.contains(BiometricType.fingerprint)) {
-        return '👆'; // O Icons.fingerprint para Material
-      } else if (biometrics.contains(BiometricType.iris)) {
-        return '👁️'; // O Icons.remove_red_eye para Material
-      } else {
-        return '🔐'; // O Icons.security para Material
-      }
-    } catch (e) {
-      return '🔐';
-    }
+  /// Verifica si el biométrico está habilitado para este dispositivo
+  Future<bool> isBiometricEnabled() async {
+    final value = await _storage.read(key: _biometricEnabledKey);
+    return value == 'true';
   }
 
-  /// Realiza la autenticación biométrica
-  Future<BiometricAuthResult> authenticate({
-    String localizedReason = 'Confirma tu identidad para continuar',
-    bool useErrorDialogs = true,
-    bool stickyAuth = false,
-    bool sensitiveTransaction = true,
-  }) async {
-    try {
-      // Verificar disponibilidad
-      final isAvailable = await isBiometricAvailable;
-      if (!isAvailable) {
-        return BiometricAuthResult.notAvailable;
-      }
-
-      // Autenticar con la nueva API
-      final result = await _localAuth.authenticate(
-        localizedReason: localizedReason,
-        options: AuthenticationOptions(
-          useErrorDialogs: useErrorDialogs,
-          stickyAuth: stickyAuth,
-          sensitiveTransaction: sensitiveTransaction,
-          biometricOnly: true,
-        ),
-      );
-
-      return result ? BiometricAuthResult.success : BiometricAuthResult.failure;
-    } catch (e) {
-      debugPrint('Error en autenticación biométrica: $e');
-
-      // Manejar errores específicos
-      if (e.toString().contains('UserCancel')) {
-        return BiometricAuthResult.cancelled;
-      } else if (e.toString().contains('NotEnrolled')) {
-        return BiometricAuthResult.notEnrolled;
-      } else if (e.toString().contains('NotAvailable')) {
-        return BiometricAuthResult.notAvailable;
-      } else {
-        return BiometricAuthResult.error;
-      }
-    }
+  /// Habilita el biométrico y almacena la contraseña encriptada
+  Future<void> enableBiometric(String password) async {
+    await _storage.write(key: _biometricEnabledKey, value: 'true');
+    await _storage.write(key: _biometricPasswordKey, value: password);
   }
 
-  /// Método de conveniencia para verificar y autenticar
-  Future<BiometricAuthResult> authenticateIfAvailable({
-    String? customReason,
-  }) async {
-    final isAvailable = await isBiometricAvailable;
-    if (!isAvailable) {
-      return BiometricAuthResult.notAvailable;
-    }
-
-    final biometricText = await biometricTypeText;
-    final reason = customReason ?? 'Usa tu $biometricText para acceder';
-
-    return authenticate(localizedReason: reason);
+  /// Deshabilita el biométrico y elimina la contraseña almacenada
+  Future<void> disableBiometric() async {
+    await _storage.delete(key: _biometricEnabledKey);
+    await _storage.delete(key: _biometricPasswordKey);
   }
 
-  /// Detener la autenticación (útil para cancelar desde código)
-  Future<void> stopAuthentication() async {
-    try {
-      await _localAuth.stopAuthentication();
-    } catch (e) {
-      debugPrint('Error deteniendo autenticación: $e');
-    }
-  }
-}
-
-/// Enum para los resultados de autenticación biométrica
-enum BiometricAuthResult {
-  success, // Autenticación exitosa
-  failure, // Falló la autenticación (huella incorrecta, etc.)
-  cancelled, // Usuario canceló
-  notAvailable, // No hay biometría disponible
-  notEnrolled, // No hay biometría configurada
-  error, // Error del sistema
-}
-
-/// Extension para obtener mensajes user-friendly
-extension BiometricAuthResultExtension on BiometricAuthResult {
-  String get message {
-    switch (this) {
-      case BiometricAuthResult.success:
-        return 'Autenticación exitosa';
-      case BiometricAuthResult.failure:
-        return 'Autenticación fallida. Intenta de nuevo';
-      case BiometricAuthResult.cancelled:
-        return 'Autenticación cancelada';
-      case BiometricAuthResult.notAvailable:
-        return 'Autenticación biométrica no disponible';
-      case BiometricAuthResult.notEnrolled:
-        return 'No hay biometría configurada en el dispositivo';
-      case BiometricAuthResult.error:
-        return 'Error en la autenticación biométrica';
-    }
+  /// Obtiene la contraseña almacenada (solo después de autenticación biométrica)
+  Future<String?> getStoredPassword() async {
+    return await _storage.read(key: _biometricPasswordKey);
   }
 
-  bool get isSuccess => this == BiometricAuthResult.success;
+  /// Verifica si tiene credenciales almacenadas para login biométrico
+  Future<bool> hasStoredCredentials() async {
+    final enabled = await isBiometricEnabled();
+    if (!enabled) return false;
+
+    final password = await _storage.read(key: _biometricPasswordKey);
+    return password != null && password.isNotEmpty;
+  }
+
+  /// Flujo completo: verifica biométrico y retorna credenciales si éxito
+  /// Retorna null si falla la autenticación
+  Future<String?> authenticateAndGetPassword() async {
+    final authenticated = await authenticate();
+    if (!authenticated) return null;
+
+    return await getStoredPassword();
+  }
 }

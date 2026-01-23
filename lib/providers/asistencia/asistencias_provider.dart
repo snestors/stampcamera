@@ -164,10 +164,21 @@ final asistenciaFormOptionsProvider =
   final res = await HttpService().dio.get(
     '/api/v1/asistencias/formulario-options/',
   );
+
+  // Parsear zonas y ordenar por tipo: PUERTO, OFICINA, ALMACEN-PDI, ALMACEN
+  final zonas = (res.data['zonas'] as List)
+      .map((e) => ZonaTrabajo.fromJson(e))
+      .toList()
+    ..sort((a, b) {
+      // Primero por tipo (prioridad)
+      final compareTipo = a.ordenPrioridad.compareTo(b.ordenPrioridad);
+      if (compareTipo != 0) return compareTipo;
+      // Luego alfabéticamente dentro del mismo tipo
+      return a.value.compareTo(b.value);
+    });
+
   return FormularioAsistenciaOptions(
-    zonas: (res.data['zonas'] as List)
-        .map((e) => ZonaTrabajo.fromJson(e))
-        .toList(),
+    zonas: zonas,
     naves: (res.data['naves'] as List)
         .map((e) => Nave.fromJson(e))
         .toList(),

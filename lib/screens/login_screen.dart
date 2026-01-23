@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stampcamera/core/core.dart';
+import '../models/auth_state.dart';
 import '../providers/auth_provider.dart';
 import '../providers/device_provider.dart';
 import '../services/device_service.dart';
+import '../services/biometric_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -29,6 +31,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   String? _lastUsername;
   String? _lastPassword;
   bool _isPersonalDevice = false;
+  bool _biometricAvailable = false;
+  bool _biometricEnabled = false;
+  bool _biometricLoading = false;
 
   @override
   void initState() {
@@ -78,11 +83,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           _isPersonalDevice = true;
           _usernameCtrl.text = storedUsername;
         });
-        // Auto-focus en password para equipos personales
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _passwordFocusNode.requestFocus();
-        });
+
+        // Verificar si biométrico está disponible y habilitado
+        await _checkBiometricStatus();
+
+        // Si biométrico está activo y no fue rechazado recientemente, lanzar automáticamente
+        if (_biometricEnabled && !BiometricService().wasRecentlyDeclined) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loginWithBiometric();
+          });
+        } else {
+          // Auto-focus en password para equipos personales sin biométrico
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _passwordFocusNode.requestFocus();
+            });
+          }
+        }
       }
+    }
+  }
+
+  Future<void> _checkBiometricStatus() async {
+    final biometricService = BiometricService();
+    final deviceSupported = await biometricService.isDeviceSupported();
+    final canCheck = await biometricService.canCheckBiometrics();
+    final isEnabled = await biometricService.isBiometricEnabled();
+    final hasCredentials = await biometricService.hasStoredCredentials();
+
+    if (mounted) {
+      setState(() {
+        _biometricAvailable = deviceSupported && canCheck;
+        _biometricEnabled = isEnabled && hasCredentials;
+      });
     }
   }
 
@@ -100,9 +133,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       _lastUsername = _usernameCtrl.text.trim();
       _lastPassword = _passwordCtrl.text.trim();
 
+      // Para equipos personales con biométrico disponible:
+      // Guardar password pendiente para configurar biométrico en home
+      if (_isPersonalDevice && _biometricAvailable && _lastPassword != null) {
+        BiometricService().setPendingPassword(_lastPassword!);
+      }
+
       await ref
           .read(authProvider.notifier)
           .login(_lastUsername!, _lastPassword!);
+    }
+  }
+
+  Future<void> _loginWithBiometric() async {
+    if (_biometricLoading) return;
+
+    setState(() => _biometricLoading = true);
+
+    try {
+      final biometricService = BiometricService();
+      biometricService.clearDeclined();
+      final password = await biometricService.authenticateAndGetPassword();
+
+      if (password == null) {
+        // Usuario canceló o falló la autenticación
+        if (mounted) {
+          setState(() => _biometricLoading = false);
+        }
+        return;
+      }
+
+      final username = _usernameCtrl.text.trim();
+      if (username.isEmpty) {
+        if (mounted) {
+          setState(() => _biometricLoading = false);
+        }
+        return;
+      }
+
+      _lastUsername = username;
+      _lastPassword = password;
+
+      await ref.read(authProvider.notifier).login(username, password);
+
+      // Si falla el login con biométrico (contraseña cambió),
+      // desactivar biométrico para que use contraseña manual
+      if (mounted && ref.read(authProvider).value?.status != AuthStatus.loggedIn) {
+        await biometricService.disableBiometric();
+        setState(() {
+          _biometricEnabled = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _biometricLoading = false);
+      }
+    }
+  }
+
+  Future<void> _disableBiometric() async {
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Desactivar biométrico',
+      message: '¿Deseas desactivar el acceso biométrico? Deberás ingresar tu contraseña cada vez.',
+      confirmText: 'Desactivar',
+      cancelText: 'Cancelar',
+      isDanger: true,
+    );
+
+    if (confirmed == true) {
+      await BiometricService().disableBiometric();
+      if (mounted) {
+        setState(() {
+          _biometricEnabled = false;
+        });
+      }
     }
   }
 
@@ -282,13 +387,75 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                 AppButton.primary(
                   text: 'Ingresar',
-                  onPressed: isLoading ? null : _submit,
+                  onPressed: isLoading || _biometricLoading ? null : _submit,
                   isLoading: isLoading,
                   size: AppButtonSize.large,
                 ),
+
+                // Botón biométrico para dispositivos personales
+                if (_isPersonalDevice && _biometricEnabled) ...[
+                  SizedBox(height: DesignTokens.spaceM),
+                  _buildBiometricButton(isLoading),
+                ],
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBiometricButton(bool isLoading) {
+    return InkWell(
+      onTap: isLoading || _biometricLoading ? null : _loginWithBiometric,
+      borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.3),
+          ),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_biometricLoading) ...[
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+              SizedBox(width: DesignTokens.spaceS),
+              Text(
+                'Verificando...',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: DesignTokens.fontSizeM,
+                ),
+              ),
+            ] else ...[
+              Icon(
+                Icons.fingerprint,
+                color: AppColors.primary,
+                size: 24,
+              ),
+              SizedBox(width: DesignTokens.spaceS),
+              Text(
+                'Ingresar con biométrico',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: DesignTokens.fontSizeM,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -368,32 +535,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             height: 1,
           ),
           const SizedBox(height: 8),
-          // Acción para cambiar dispositivo
-          InkWell(
-            onTap: _clearDeviceRegistration,
-            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.swap_horiz,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Cambiar dispositivo',
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeS,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+          // Acciones
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Biométrico toggle
+              if (_biometricAvailable && _biometricEnabled)
+                InkWell(
+                  onTap: _disableBiometric,
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.fingerprint,
+                          size: 16,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Biométrico',
+                          style: TextStyle(
+                            fontSize: DesignTokens.fontSizeXS,
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
+              // Cambiar dispositivo
+              InkWell(
+                onTap: _clearDeviceRegistration,
+                borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.swap_horiz,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Cambiar equipo',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeXS,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
       ),

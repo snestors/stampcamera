@@ -31,28 +31,25 @@ class RegistroGeneralNotifier extends BaseListProviderImpl<RegistroGeneral> {
   // MÉTODOS ESPECÍFICOS DEL DOMINIO
   // ============================================================================
 
+  /// Buscar registros con filtros personalizados (con paginación)
+  Future<void> searchWithFilters(Map<String, dynamic> filters) async {
+    await listWithFilters(filters);
+  }
+
   /// Buscar registros con daños
   Future<void> searchWithDanos({Map<String, dynamic>? filters}) async {
-    state = const AsyncValue.loading();
-
-    try {
-      final paginated = await service.getWithDanos(filters: filters);
-      _updateSearchState(paginated, query: 'con_danos');
-    } catch (e, st) {
-      state = AsyncValue.error(Exception(parseError(e)), st);
-    }
+    await listWithFilters({'danos': true, ...?filters});
   }
 
   /// Buscar registros pedeteados
   Future<void> searchPedeteados({Map<String, dynamic>? filters}) async {
-    state = const AsyncValue.loading();
+    await listWithFilters({'pedeteado': true, ...?filters});
+  }
 
-    try {
-      final paginated = await service.getPedeteados(filters: filters);
-      _updateSearchState(paginated, query: 'pedeteados');
-    } catch (e, st) {
-      state = AsyncValue.error(Exception(parseError(e)), st);
-    }
+  /// Limpiar filtros y volver a la lista normal
+  @override
+  Future<void> clearSearch() async {
+    await super.clearSearch();
   }
 
   /// Verificar si un VIN existe
@@ -69,18 +66,6 @@ class RegistroGeneralNotifier extends BaseListProviderImpl<RegistroGeneral> {
     }
   }
 
-  // ============================================================================
-  // MÉTODOS PRIVADOS AUXILIARES
-  // ============================================================================
-
-  void _updateSearchState(dynamic paginated, {String? query}) {
-    // Simular búsqueda para mantener consistencia con BaseListProviderImpl
-    if (query != null) {}
-
-    state = AsyncValue.data(paginated.results);
-  }
-
-  // Acceso a variables privadas de la clase base (workaround)
 }
 
 // ============================================================================

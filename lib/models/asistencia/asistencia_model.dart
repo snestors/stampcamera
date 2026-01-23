@@ -28,11 +28,31 @@ class Turno {
 class ZonaTrabajo {
   final int id;
   final String value;
+  final String? tipo; // PUERTO, OFICINA, ALMACEN-PDI, ALMACEN
 
-  ZonaTrabajo({required this.id, required this.value});
+  ZonaTrabajo({required this.id, required this.value, this.tipo});
 
-  factory ZonaTrabajo.fromJson(Map<String, dynamic> json) =>
-      ZonaTrabajo(id: json['id'], value: json['value']);
+  factory ZonaTrabajo.fromJson(Map<String, dynamic> json) => ZonaTrabajo(
+        id: json['id'],
+        value: json['value'],
+        tipo: json['tipo'],
+      );
+
+  /// Orden de prioridad para ordenamiento
+  int get ordenPrioridad {
+    switch (tipo?.toUpperCase()) {
+      case 'PUERTO':
+        return 0;
+      case 'OFICINA':
+        return 1;
+      case 'ALMACEN-PDI':
+        return 2;
+      case 'ALMACEN':
+        return 3;
+      default:
+        return 99;
+    }
+  }
 
   @override
   bool operator ==(Object other) {

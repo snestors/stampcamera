@@ -250,9 +250,10 @@ class UserModel {
   bool get isCliente => groups.contains('CLIENTE');
 
   /// Usuario tiene acceso al módulo de autos
+  /// Solo superusers y grupo GESTORES COORDINACION AUTOS pueden acceder
   bool get hasAutosAccess =>
       isSuperuser ||
-      groups.any((g) => ['AUTOS', 'PUERTO', 'ALMACEN', 'OFICINA', 'COORDINACION AUTOS'].contains(g));
+      groups.any((g) => ['GESTORES COORDINACION AUTOS', 'COORDINACION AUTOS'].contains(g));
 
   /// Usuario tiene acceso al módulo de graneles
   bool get hasGranosAccess =>

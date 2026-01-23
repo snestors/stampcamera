@@ -633,6 +633,12 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
           final time = await showTimePicker(
             context: context,
             initialTime: TimeOfDay.fromDateTime(value),
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                child: child!,
+              );
+            },
           );
           if (time != null) {
             onChanged(DateTime(

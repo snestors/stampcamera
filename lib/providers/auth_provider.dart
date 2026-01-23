@@ -8,6 +8,8 @@ import 'dart:convert';
 import '../models/user_model.dart';
 import '../models/auth_state.dart';
 import '../services/http_service.dart';
+import '../services/device_service.dart';
+import '../services/biometric_service.dart';
 
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
   (ref) {
@@ -32,8 +34,43 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     } catch (e) {
       final currentState = state.value;
       if (currentState?.status != AuthStatus.loggedIn) {
-        state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+        // Intentar login biométrico automático si está disponible
+        final biometricSuccess = await _attemptBiometricLogin();
+        if (!biometricSuccess) {
+          state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+        }
       }
+    }
+  }
+
+  /// Intenta login automático con biométrico (solo dispositivos personales)
+  Future<bool> _attemptBiometricLogin() async {
+    try {
+      final deviceService = DeviceService();
+      final isPersonal = await deviceService.isPersonalDevice();
+      if (!isPersonal) return false;
+
+      final biometricService = BiometricService();
+      final hasCredentials = await biometricService.hasStoredCredentials();
+      if (!hasCredentials) return false;
+
+      final canCheck = await biometricService.canCheckBiometrics();
+      if (!canCheck) return false;
+
+      // Intentar autenticación biométrica
+      final password = await biometricService.authenticateAndGetPassword();
+      if (password == null) return false;
+
+      final username = await deviceService.getStoredUsername();
+      if (username == null) return false;
+
+      // Hacer login con credenciales almacenadas
+      await login(username, password);
+
+      // Verificar si el login fue exitoso
+      return state.value?.status == AuthStatus.loggedIn;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -88,7 +125,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  Future<void> login(String username, String password, {bool isBiometricLogin = false}) async {
+  Future<void> login(String username, String password) async {
     print('🔐 AuthProvider: Iniciando login para: $username');
 
     if (username.trim().isEmpty || password.trim().isEmpty) {
@@ -126,17 +163,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       print('❌ AuthProvider: Error en login: $e');
 
       final errorMessage = _handleGenericError(e);
-      
-      // Si es login biométrico y el error es 401, tratar como sesión expirada
-      // En lugar de "credenciales incorrectas"
-      final finalErrorMessage = isBiometricLogin && 
-          (errorMessage.contains('Usuario o contraseña incorrectos') || 
-           errorMessage.contains('Datos de login inválidos'))
-          ? 'Sesión expirada. Vuelve a autenticarte.'
-          : errorMessage;
-      
+
       state = AsyncValue.data(
-        AuthState(status: AuthStatus.loggedOut, errorMessage: finalErrorMessage),
+        AuthState(status: AuthStatus.loggedOut, errorMessage: errorMessage),
       );
     }
   }

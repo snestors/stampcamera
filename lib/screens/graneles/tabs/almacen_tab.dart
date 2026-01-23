@@ -1,5 +1,5 @@
 // =============================================================================
-// TAB DE BALANZAS - TODAS LAS BALANZAS CON BÚSQUEDA E INFINITE SCROLL
+// TAB DE ALMACÉN - TODOS LOS REGISTROS CON BÚSQUEDA E INFINITE SCROLL
 // =============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,14 +11,14 @@ import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
-class BalanzasTab extends ConsumerStatefulWidget {
-  const BalanzasTab({super.key});
+class AlmacenTab extends ConsumerStatefulWidget {
+  const AlmacenTab({super.key});
 
   @override
-  ConsumerState<BalanzasTab> createState() => _BalanzasTabState();
+  ConsumerState<AlmacenTab> createState() => _AlmacenTabState();
 }
 
-class _BalanzasTabState extends ConsumerState<BalanzasTab> {
+class _AlmacenTabState extends ConsumerState<AlmacenTab> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -31,7 +31,7 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
 
   void _setupScrollListener() {
     _scrollController.addListener(() {
-      final notifier = ref.read(balanzasListProvider.notifier);
+      final notifier = ref.read(almacenListProvider.notifier);
 
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
@@ -52,14 +52,13 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
 
   @override
   Widget build(BuildContext context) {
-    final balanzasAsync = ref.watch(balanzasListProvider);
-    final notifier = ref.read(balanzasListProvider.notifier);
+    final almacenAsync = ref.watch(almacenListProvider);
+    final notifier = ref.read(almacenListProvider.notifier);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          // Barra de búsqueda
           SearchBarWidget(
             controller: _searchController,
             focusNode: _searchFocusNode,
@@ -83,18 +82,16 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
               _searchFocusNode.unfocus();
             },
           ),
-
-          // Lista de balanzas
-          Expanded(child: _buildResultsList(balanzasAsync, notifier)),
+          Expanded(child: _buildResultsList(almacenAsync, notifier)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_balanza',
-        onPressed: () => context.push('/graneles/balanza/crear'),
+        heroTag: 'fab_almacen',
+        onPressed: () => context.push('/graneles/almacen/crear'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
-          'Nueva Balanza',
+          'Nuevo Almacén',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -106,10 +103,10 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
   }
 
   Widget _buildResultsList(
-    AsyncValue<List<Balanza>> balanzasAsync,
-    BalanzaNotifier notifier,
+    AsyncValue<List<AlmacenGranel>> almacenAsync,
+    AlmacenNotifier notifier,
   ) {
-    return balanzasAsync.when(
+    return almacenAsync.when(
       loading: () => const Center(
         child: Padding(
           padding: EdgeInsets.all(32.0),
@@ -120,15 +117,15 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
         error: error,
         onRetry: () => notifier.refresh(),
       ),
-      data: (balanzas) => _buildDataState(balanzas, notifier),
+      data: (registros) => _buildDataState(registros, notifier),
     );
   }
 
   Widget _buildDataState(
-    List<Balanza> balanzas,
-    BalanzaNotifier notifier,
+    List<AlmacenGranel> registros,
+    AlmacenNotifier notifier,
   ) {
-    if (balanzas.isEmpty) {
+    if (registros.isEmpty) {
       return _buildEmptyState(notifier);
     }
 
@@ -139,15 +136,15 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
       child: ListView.builder(
         controller: _scrollController,
         padding: EdgeInsets.all(DesignTokens.spaceM),
-        itemCount: balanzas.length + (showLoadMoreIndicator ? 1 : 0),
+        itemCount: registros.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index < balanzas.length) {
-            final balanza = balanzas[index];
+          if (index < registros.length) {
+            final almacen = registros[index];
             return Padding(
               padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
-              child: _BalanzaCard(
-                balanza: balanza,
-                onEdit: () => context.push('/graneles/balanza/editar/${balanza.id}'),
+              child: _AlmacenCard(
+                almacen: almacen,
+                onEdit: () => context.push('/graneles/almacen/editar/${almacen.id}'),
               ),
             );
           }
@@ -159,7 +156,7 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
               children: [
                 if (notifier.isLoadingMore) ...[
                   AppLoadingState.circular(
-                    message: 'Cargando más balanzas...',
+                    message: 'Cargando más registros...',
                   ),
                 ] else ...[
                   AppButton.ghost(
@@ -176,7 +173,7 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
     );
   }
 
-  Widget _buildEmptyState(BalanzaNotifier notifier) {
+  Widget _buildEmptyState(AlmacenNotifier notifier) {
     final isSearching = _searchController.text.isNotEmpty;
 
     return Center(
@@ -184,13 +181,13 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            isSearching ? Icons.search_off : Icons.scale_outlined,
+            isSearching ? Icons.search_off : Icons.warehouse_outlined,
             size: 64,
             color: Colors.grey[400],
           ),
           SizedBox(height: DesignTokens.spaceM),
           Text(
-            isSearching ? 'Sin resultados' : 'No hay balanzas registradas',
+            isSearching ? 'Sin resultados' : 'No hay registros de almacén',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: Colors.grey[600],
                 ),
@@ -198,8 +195,8 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
           SizedBox(height: DesignTokens.spaceS),
           Text(
             isSearching
-                ? 'No se encontraron balanzas que coincidan con "${_searchController.text}"'
-                : 'Aún no hay registros de balanza',
+                ? 'No se encontraron registros que coincidan con "${_searchController.text}"'
+                : 'Aún no hay registros de almacén',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[500]),
           ),
@@ -215,31 +212,30 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
             ),
           ] else ...[
             AppButton.primary(
-              text: 'Crear primera balanza',
+              text: 'Crear primer registro',
               icon: Icons.add,
-              onPressed: () => context.push('/graneles/balanza/crear'),
+              onPressed: () => context.push('/graneles/almacen/crear'),
             ),
           ],
         ],
       ),
     );
   }
-
 }
 
 // =============================================================================
-// BALANZA CARD
+// ALMACÉN CARD
 // =============================================================================
 
-class _BalanzaCard extends StatelessWidget {
-  final Balanza balanza;
+class _AlmacenCard extends StatelessWidget {
+  final AlmacenGranel almacen;
   final VoidCallback? onEdit;
 
-  const _BalanzaCard({required this.balanza, this.onEdit});
+  const _AlmacenCard({required this.almacen, this.onEdit});
 
   @override
   Widget build(BuildContext context) {
-    final timeFormat = DateFormat('HH:mm');
+    final dateFormat = DateFormat('dd/MM HH:mm');
     final numberFormat = NumberFormat('#,##0.000', 'es_PE');
 
     return Card(
@@ -253,15 +249,15 @@ class _BalanzaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Info del servicio (código)
-            if (balanza.servicioCodigo != null) ...[
+            // Info del servicio
+            if (almacen.servicioCodigo != null) ...[
               Row(
                 children: [
                   Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
                   SizedBox(width: DesignTokens.spaceXS),
                   Expanded(
                     child: Text(
-                      balanza.servicioCodigo!,
+                      almacen.servicioCodigo!,
                       style: TextStyle(
                         fontSize: DesignTokens.fontSizeXS,
                         color: AppColors.accent,
@@ -289,10 +285,10 @@ class _BalanzaCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.scale, size: 14, color: Colors.white),
+                      const Icon(Icons.warehouse, size: 14, color: Colors.white),
                       SizedBox(width: DesignTokens.spaceXS),
                       Text(
-                        'Guía: ${balanza.guia}',
+                        almacen.almacenNombre ?? 'Almacén',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -304,29 +300,40 @@ class _BalanzaCard extends StatelessWidget {
                 ),
                 SizedBox(width: DesignTokens.spaceS),
                 Expanded(
-                  child: Text(
-                    'Ticket: ${balanza.ticketNumero ?? "-"}',
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeS,
-                      color: AppColors.textSecondary,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (almacen.guia != null)
+                        Text(
+                          'Guía: ${almacen.guia}',
+                          style: TextStyle(
+                            fontSize: DesignTokens.fontSizeS,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      Text(
+                        'Ticket: ${almacen.ticketNumero ?? "-"}',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeXS,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                // Botón foto
-                if (balanza.foto1Url != null)
+                if (almacen.foto1Url != null)
                   IconButton(
-                    onPressed: () => _showPhotoDialog(context, balanza.foto1Url!),
+                    onPressed: () => _showPhotoDialog(context, almacen.foto1Url!),
                     icon: Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
                     tooltip: 'Ver foto',
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.all(DesignTokens.spaceXS),
                   ),
-                // Botón editar
                 if (onEdit != null)
                   IconButton(
                     onPressed: onEdit,
                     icon: Icon(Icons.edit, size: 20, color: AppColors.primary),
-                    tooltip: 'Editar balanza',
+                    tooltip: 'Editar registro',
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.all(DesignTokens.spaceXS),
                   ),
@@ -334,26 +341,16 @@ class _BalanzaCard extends StatelessWidget {
             ),
             SizedBox(height: DesignTokens.spaceM),
 
-            // Placa y almacén
+            // Placa
             Row(
               children: [
                 Icon(Icons.local_shipping, size: 16, color: AppColors.textSecondary),
                 SizedBox(width: DesignTokens.spaceS),
                 Text(
-                  balanza.placaStr ?? 'Sin placa',
+                  almacen.placaStr ?? 'Sin placa',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeM,
                     fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.warehouse, size: 14, color: AppColors.textSecondary),
-                SizedBox(width: DesignTokens.spaceXS),
-                Text(
-                  balanza.almacen ?? 'Sin almacén',
-                  style: TextStyle(
-                    fontSize: DesignTokens.fontSizeS,
-                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -372,39 +369,27 @@ class _BalanzaCard extends StatelessWidget {
                 children: [
                   _PesoItem(
                     label: 'Bruto',
-                    value: numberFormat.format(balanza.pesoBruto),
+                    value: numberFormat.format(almacen.pesoBruto),
                     unit: 'TM',
                   ),
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: AppColors.neutral,
-                  ),
+                  Container(height: 30, width: 1, color: AppColors.neutral),
                   _PesoItem(
                     label: 'Tara',
-                    value: numberFormat.format(balanza.pesoTara),
+                    value: numberFormat.format(almacen.pesoTara),
                     unit: 'TM',
                   ),
-                  Container(
-                    height: 30,
-                    width: 1,
-                    color: AppColors.neutral,
-                  ),
+                  Container(height: 30, width: 1, color: AppColors.neutral),
                   _PesoItem(
                     label: 'Neto',
-                    value: numberFormat.format(balanza.pesoNeto),
+                    value: numberFormat.format(almacen.pesoNeto),
                     unit: 'TM',
                     highlight: true,
                   ),
-                  if (balanza.bags != null) ...[
-                    Container(
-                      height: 30,
-                      width: 1,
-                      color: AppColors.neutral,
-                    ),
+                  if (almacen.bags != null) ...[
+                    Container(height: 30, width: 1, color: AppColors.neutral),
                     _PesoItem(
                       label: 'Bags',
-                      value: balanza.bags.toString(),
+                      value: almacen.bags.toString(),
                       unit: '',
                     ),
                   ],
@@ -419,7 +404,7 @@ class _BalanzaCard extends StatelessWidget {
                 Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
                 SizedBox(width: DesignTokens.spaceXS),
                 Text(
-                  'Entrada: ${balanza.fechaEntradaBalanza != null ? timeFormat.format(balanza.fechaEntradaBalanza!) : "-"}',
+                  'Entrada: ${almacen.fechaEntradaAlmacen != null ? dateFormat.format(almacen.fechaEntradaAlmacen!) : "-"}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,
@@ -427,7 +412,7 @@ class _BalanzaCard extends StatelessWidget {
                 ),
                 SizedBox(width: DesignTokens.spaceM),
                 Text(
-                  'Salida: ${balanza.fechaSalidaBalanza != null ? timeFormat.format(balanza.fechaSalidaBalanza!) : "-"}',
+                  'Salida: ${almacen.fechaSalidaAlmacen != null ? dateFormat.format(almacen.fechaSalidaAlmacen!) : "-"}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,
@@ -437,11 +422,11 @@ class _BalanzaCard extends StatelessWidget {
             ),
 
             // Observaciones
-            if (balanza.observaciones != null && balanza.observaciones!.isNotEmpty) ...[
+            if (almacen.observaciones != null && almacen.observaciones!.isNotEmpty) ...[
               SizedBox(height: DesignTokens.spaceS),
               const Divider(),
               Text(
-                balanza.observaciones!,
+                almacen.observaciones!,
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.textSecondary,
@@ -474,7 +459,7 @@ class _BalanzaCard extends StatelessWidget {
                 children: [
                   Icon(Icons.photo_camera, color: AppColors.primary),
                   SizedBox(width: DesignTokens.spaceS),
-                  Text('Foto Balanza', style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM)),
+                  Text('Foto Almacén', style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM)),
                   const Spacer(),
                   IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx), constraints: const BoxConstraints(), padding: EdgeInsets.zero),
                 ],

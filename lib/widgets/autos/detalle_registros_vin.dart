@@ -4,6 +4,7 @@ import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
+import 'package:stampcamera/widgets/autos/forms/fotos_presentacion_form.dart';
 import 'package:stampcamera/core/core.dart';
 
 class DetalleRegistrosVin extends ConsumerWidget {
@@ -46,43 +47,13 @@ class DetalleRegistrosVin extends ConsumerWidget {
   }
 
   // ============================================================================
-  // HEADER DE SECCIÓN CON BOTÓN AGREGAR
+  // HEADER DE SECCIÓN
   // ============================================================================
   Widget _buildSectionHeader(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppSectionHeader(
-            icon: Icons.history,
-            title: 'Historial de Inspecciones',
-            count: items.length,
-          ),
-        ),
-        SizedBox(width: DesignTokens.spaceXS),
-
-        // ✅ Botón agregar nuevo registro
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.secondary,
-            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-              onTap: () => _showAgregarRegistroForm(context),
-              child: Padding(
-                padding: EdgeInsets.all(DesignTokens.spaceS),
-                child: Icon(
-                  Icons.add,
-                  size: DesignTokens.iconXL,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return AppSectionHeader(
+      icon: Icons.history,
+      title: 'Historial de Inspecciones',
+      count: items.length,
     );
   }
 
@@ -90,30 +61,31 @@ class DetalleRegistrosVin extends ConsumerWidget {
   // ACCIÓN PARA MOSTRAR FORMULARIO
   // ============================================================================
 
-  void _showAgregarRegistroForm(BuildContext context) {
-    // Ejecutar callback adicional si existe
+  void _showAgregarRegistroForm(BuildContext context) async {
     onAddPressed?.call();
 
-    // ✅ Mostrar formulario en modo CREAR
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) =>
-          RegistroVinForm(vin: vin), // ✅ Sin registroVin = modo crear
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (context) => RegistroVinForm(vin: vin)),
     );
+
+    // Si el usuario eligió crear foto de presentación
+    if (result == 'create_foto' && context.mounted) {
+      String? fotoResult = 'create_another';
+      while (fotoResult == 'create_another' && context.mounted) {
+        fotoResult = await Navigator.push<String>(
+          context,
+          MaterialPageRoute(builder: (context) => FotoPresentacionForm(vin: vin)),
+        );
+      }
+    }
   }
 
   void _showEditarRegistroForm(BuildContext context, RegistroVin registro) {
-    // ✅ Mostrar formulario en modo EDITAR
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => RegistroVinForm(
-        // ✅ Mismo componente
-        vin: vin,
-        registroVin: registro, // ✅ Con registroVin = modo editar
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RegistroVinForm(vin: vin, registroVin: registro),
       ),
     );
   }

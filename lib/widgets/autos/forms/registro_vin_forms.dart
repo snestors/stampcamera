@@ -41,7 +41,7 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   bool get isEditMode => widget.registroVin != null;
   String get formTitle => isEditMode ? 'Editar Inspección' : 'Nueva Inspección';
   String get submitButtonText => isEditMode ? 'Actualizar' : 'Guardar';
-  Color get primaryColor => isEditMode ? Colors.orange : AppColors.secondary;
+  Color get primaryColor => isEditMode ? Colors.orange : AppColors.primary;
 
   // ✅ Control de initial_values
   bool _hasAppliedInitialValues = false;
@@ -120,29 +120,23 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   Widget build(BuildContext context) {
     final optionsAsync = ref.watch(registroVinOptionsProvider);
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(formTitle),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
         child: optionsAsync.when(
           data: (options) {
-            // ✅ Obtener detalle del VIN para contexto
             final detalleAsync = ref.watch(detalleRegistroProvider(widget.vin));
             final detalle = detalleAsync.valueOrNull;
 
-            // ✅ Aplicar initial_values solo en modo crear y solo una vez
             if (!isEditMode && !_hasAppliedInitialValues) {
               _applyInitialValues(options);
             }
@@ -158,12 +152,6 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   Widget _buildForm(RegistroVinOptions options, DetalleRegistroModel? detalle) {
     return Column(
       children: [
-        // Header fijo
-        _buildHeader(),
-
-        const SizedBox(height: 16),
-
-        // ✅ Contenido scrolleable
         Expanded(
           child: SingleChildScrollView(
             child: Padding(
@@ -243,37 +231,6 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           child: const Text('Reintentar'),
         ),
         const SizedBox(height: 50),
-      ],
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        // ✅ Icono diferente según modo
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            isEditMode ? Icons.edit : Icons.add,
-            color: primaryColor,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            formTitle,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-        ),
-        IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.close),
-        ),
       ],
     );
   }
@@ -882,6 +839,44 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   }
 
   // ============================================================================
+  // DIÁLOGO POST-GUARDADO
+  // ============================================================================
+
+  Future<String?> _showPostSaveDialog() async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            SizedBox(width: 10),
+            Expanded(child: Text('Registro guardado', style: TextStyle(fontSize: 18))),
+          ],
+        ),
+        content: const Text('¿Qué deseas hacer ahora?'),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(ctx, null),
+            icon: const Icon(Icons.done),
+            label: const Text('Solo guardar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(ctx, 'create_foto'),
+            icon: const Icon(Icons.add_a_photo),
+            label: const Text('Crear foto presentación'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.secondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================================
   // SUBMIT FORM - UNIVERSAL (CREATE O UPDATE)
   // ============================================================================
 
@@ -919,8 +914,9 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           contenedorId: _selectedContenedor,
         );
       } else {
-        // MODO CREACION: usa fire-and-forget (guarda localmente y sincroniza en background)
-        success = await notifier.createRegistroVinOfflineFirst(
+        // MODO CREACION: espera respuesta del backend para asegurar
+        // que el registro existe antes de encadenar con foto
+        success = await notifier.createRegistroVin(
           condicion: _selectedCondicion!,
           zonaInspeccion: _selectedZonaInspeccion!,
           fotoVin: File(_fotoVinPath!),
@@ -933,16 +929,17 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
 
       if (mounted) {
         if (success) {
-          // EXITO: Cerrar form y mostrar mensaje de exito
-          Navigator.pop(context);
-          AppSnackBar.success(
-            context,
-            isEditMode
-                ? 'Registro actualizado exitosamente'
-                : 'Registro guardado (sincronizando...)',
-          );
+          if (isEditMode) {
+            AppSnackBar.success(context, 'Registro actualizado exitosamente');
+            Navigator.pop(context);
+          } else {
+            // Modo crear: preguntar siguiente acción
+            final action = await _showPostSaveDialog();
+            if (mounted) {
+              Navigator.pop(context, action);
+            }
+          }
         } else {
-          // ✅ ERROR GENÉRICO: Mostrar error pero NO cerrar
           AppSnackBar.error(
             context,
             isEditMode

@@ -6,6 +6,7 @@ import 'package:stampcamera/screens/autos/autos_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_nave_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_screen.dart';
 import 'package:stampcamera/screens/autos/registro_general/detalle_registro_screen.dart';
+import 'package:stampcamera/screens/autos/reporte_pedeteo_screen.dart';
 import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
 import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
@@ -13,6 +14,8 @@ import 'package:stampcamera/screens/graneles/graneles_screen.dart';
 import 'package:stampcamera/screens/graneles/servicio_dashboard_screen.dart';
 import 'package:stampcamera/screens/graneles/ticket_detalle_screen.dart';
 import 'package:stampcamera/screens/graneles/ticket_crear_screen.dart';
+import 'package:stampcamera/screens/graneles/balanza_crear_screen.dart';
+import 'package:stampcamera/screens/graneles/almacen_crear_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 import 'package:stampcamera/screens/device_registration_screen.dart';
@@ -76,6 +79,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               return InventarioDetalleScreen(informacionUnidadId: infId);
             },
           ),
+          GoRoute(
+            path: 'reporte-pedeteo',
+            name: 'reporte-pedeteo',
+            builder: (context, state) => const ReportePedeteoScreen(),
+          ),
         ],
       ),
       GoRoute(
@@ -109,13 +117,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               return TicketCrearScreen.edit(ticketId: ticketId);
             },
           ),
-          // Ruta genérica al final
+          // Ruta genérica de ticket al final
           GoRoute(
             path: 'ticket/:ticketId',
             builder: (context, state) {
               final ticketIdString = state.pathParameters['ticketId']!;
               final ticketId = int.parse(ticketIdString);
               return TicketDetalleScreen(ticketId: ticketId);
+            },
+          ),
+          // Rutas de Balanza
+          GoRoute(
+            path: 'balanza/crear',
+            builder: (context, state) {
+              return const BalanzaCrearScreen();
+            },
+          ),
+          GoRoute(
+            path: 'balanza/editar/:balanzaId',
+            builder: (context, state) {
+              final balanzaIdString = state.pathParameters['balanzaId']!;
+              final balanzaId = int.parse(balanzaIdString);
+              return BalanzaCrearScreen.edit(balanzaId: balanzaId);
+            },
+          ),
+          // Rutas de Almacén
+          GoRoute(
+            path: 'almacen/crear',
+            builder: (context, state) {
+              return const AlmacenCrearScreen();
+            },
+          ),
+          GoRoute(
+            path: 'almacen/editar/:almacenId',
+            builder: (context, state) {
+              final almacenIdString = state.pathParameters['almacenId']!;
+              final almacenId = int.parse(almacenIdString);
+              return AlmacenCrearScreen.edit(almacenId: almacenId);
             },
           ),
         ],

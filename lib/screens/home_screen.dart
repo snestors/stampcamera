@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
+import 'package:stampcamera/services/biometric_service.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
 
@@ -14,6 +15,44 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Verificar si hay configuración biométrica pendiente
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPendingBiometricSetup();
+    });
+  }
+
+  Future<void> _checkPendingBiometricSetup() async {
+    final biometricService = BiometricService();
+    final pendingPassword = biometricService.consumePendingPassword();
+
+    if (pendingPassword == null) return;
+
+    // Si ya está habilitado, solo actualizar la contraseña silenciosamente
+    final isEnabled = await biometricService.isBiometricEnabled();
+    if (isEnabled) {
+      await biometricService.enableBiometric(pendingPassword);
+      return;
+    }
+
+    // Primera vez: preguntar si quiere habilitar biométrico
+    if (!mounted) return;
+    final shouldEnable = await AppDialog.confirm(
+      context,
+      title: 'Acceso biométrico',
+      message:
+          '¿Deseas habilitar el acceso con huella/rostro para iniciar sesión más rápido?',
+      confirmText: 'Habilitar',
+      cancelText: 'Ahora no',
+    );
+
+    if (shouldEnable == true) {
+      await biometricService.enableBiometric(pendingPassword);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);

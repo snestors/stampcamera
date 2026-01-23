@@ -616,7 +616,6 @@ class _CameraModalState extends State<_CameraModal> {
 
   Future<void> _initCamera() async {
     try {
-      // Timeout de 10 segundos para evitar loading infinito
       final cameras = await availableCameras().timeout(
         const Duration(seconds: 10),
         onTimeout: () => throw Exception('Timeout al obtener cámaras'),
@@ -629,20 +628,41 @@ class _CameraModalState extends State<_CameraModal> {
         return;
       }
 
-      _cameraController = CameraController(
-        cameras.first,
+      // Intentar con resoluciones progresivamente menores si falla
+      final resolutions = [
         widget.cameraResolution.toResolutionPreset,
-        imageFormatGroup: ImageFormatGroup.jpeg,
-        enableAudio: false,
-      );
+        ResolutionPreset.high,
+        ResolutionPreset.medium,
+      ];
 
-      await _cameraController!.initialize().timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => throw Exception('Timeout al inicializar cámara'),
-      );
+      for (final resolution in resolutions) {
+        try {
+          await _cameraController?.dispose();
+          _cameraController = CameraController(
+            cameras.first,
+            resolution,
+            imageFormatGroup: ImageFormatGroup.jpeg,
+            enableAudio: false,
+          );
 
+          await _cameraController!.initialize().timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw Exception('Timeout al inicializar cámara'),
+          );
+
+          if (mounted) {
+            setState(() => _isInitialized = true);
+          }
+          return; // Éxito, salir del loop
+        } catch (e) {
+          debugPrint('Cámara: falló con resolución $resolution: $e');
+          // Continuar con la siguiente resolución
+        }
+      }
+
+      // Si ninguna resolución funcionó
       if (mounted) {
-        setState(() => _isInitialized = true);
+        setState(() => _initError = 'No se pudo inicializar la cámara. Verifique los permisos de cámara.');
       }
     } catch (e) {
       debugPrint('Error inicializando cámara: $e');

@@ -49,41 +49,11 @@ class DetalleDanos extends ConsumerWidget {
   // HEADER DE SECCIÓN CON BOTÓN AGREGAR (IGUAL QUE FOTOS)
   // ============================================================================
   Widget _buildSectionHeader(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppSectionHeader(
-            icon: Icons.warning_outlined,
-            title: 'Daños Reportados',
-            count: danos.length,
-            iconColor: AppColors.error,
-          ),
-        ),
-        SizedBox(width: DesignTokens.spaceXS),
-
-        // ✅ Botón agregar nuevo daño
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.error,
-            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-              onTap: () => _showAgregarDanoForm(context),
-              child: Padding(
-                padding: EdgeInsets.all(DesignTokens.spaceS),
-                child: Icon(
-                  Icons.add_circle_outline,
-                  size: DesignTokens.iconXL,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return AppSectionHeader(
+      icon: Icons.warning_outlined,
+      title: 'Daños Reportados',
+      count: danos.length,
+      iconColor: AppColors.error,
     );
   }
 
@@ -92,15 +62,11 @@ class DetalleDanos extends ConsumerWidget {
   // ============================================================================
 
   void _showAgregarDanoForm(BuildContext context) {
-    // Ejecutar callback adicional si existe
     onAddPressed?.call();
 
-    // Mostrar formulario
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DanoForm(vin: vin),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DanoForm(vin: vin)),
     );
   }
 
@@ -333,11 +299,9 @@ class DetalleDanos extends ConsumerWidget {
   // ============================================================================
 
   void _showEditForm(BuildContext context, Dano dano) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DanoForm(vin: vin, danoId: dano.id),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DanoForm(vin: vin, danoId: dano.id)),
     );
   }
 

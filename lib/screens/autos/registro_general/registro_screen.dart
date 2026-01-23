@@ -19,10 +19,20 @@ class RegistroScreen extends ConsumerStatefulWidget {
   ConsumerState<RegistroScreen> createState() => _RegistroScreenState();
 }
 
+/// Tipos de filtro disponibles
+enum RegistroFilterType {
+  todos,
+  sinRegistroPuerto,
+  sinRecepcion,
+  pedeteados,
+  conDanos,
+}
+
 class _RegistroScreenState extends ConsumerState<RegistroScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _searchFocusNode = FocusNode();
+  RegistroFilterType _currentFilter = RegistroFilterType.todos;
 
   @override
   void initState() {
@@ -68,7 +78,7 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
             hintText: 'Buscar por VIN o Serie...',
             onChanged: (value) {
               if (value.trim().isEmpty) {
-                notifier.clearSearch();
+                _applyCurrentFilter(notifier);
               } else {
                 notifier.debouncedSearch(value);
               }
@@ -80,18 +90,130 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
               }
             },
             onClear: () {
-              notifier.clearSearch();
+              _applyCurrentFilter(notifier);
               _searchFocusNode.unfocus();
             },
             onScannerPressed: () => _openScanner(notifier),
             scannerTooltip: 'Escanear código VIN',
           ),
 
+          // ✅ Filtros de estado
+          _buildFilterChips(notifier),
+
           // ✅ Lista de resultados
           Expanded(child: _buildResultsList(registrosAsync, notifier)),
         ],
       ),
     );
+  }
+
+  /// Construye los chips de filtro
+  Widget _buildFilterChips(RegistroGeneralNotifier notifier) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceS,
+        vertical: DesignTokens.spaceXS,
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildFilterChip(
+              label: 'Todos',
+              isSelected: _currentFilter == RegistroFilterType.todos,
+              onSelected: () => _onFilterChanged(RegistroFilterType.todos, notifier),
+            ),
+            SizedBox(width: DesignTokens.spaceXS),
+            _buildFilterChip(
+              label: 'Con Daños',
+              isSelected: _currentFilter == RegistroFilterType.conDanos,
+              onSelected: () => _onFilterChanged(RegistroFilterType.conDanos, notifier),
+              color: AppColors.error,
+            ),
+            SizedBox(width: DesignTokens.spaceXS),
+            _buildFilterChip(
+              label: 'Sin Reg. Puerto',
+              isSelected: _currentFilter == RegistroFilterType.sinRegistroPuerto,
+              onSelected: () => _onFilterChanged(RegistroFilterType.sinRegistroPuerto, notifier),
+              color: AppColors.warning,
+            ),
+            SizedBox(width: DesignTokens.spaceXS),
+            _buildFilterChip(
+              label: 'Sin Recepción',
+              isSelected: _currentFilter == RegistroFilterType.sinRecepcion,
+              onSelected: () => _onFilterChanged(RegistroFilterType.sinRecepcion, notifier),
+              color: AppColors.accent,
+            ),
+            SizedBox(width: DesignTokens.spaceXS),
+            _buildFilterChip(
+              label: 'Pedeteados',
+              isSelected: _currentFilter == RegistroFilterType.pedeteados,
+              onSelected: () => _onFilterChanged(RegistroFilterType.pedeteados, notifier),
+              color: AppColors.success,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onSelected,
+    Color? color,
+  }) {
+    final chipColor = color ?? AppColors.primary;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: DesignTokens.fontSizeXS,
+          color: isSelected ? Colors.white : chipColor,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (_) => onSelected(),
+      backgroundColor: chipColor.withValues(alpha: 0.1),
+      selectedColor: chipColor,
+      checkmarkColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        side: BorderSide(
+          color: isSelected ? chipColor : chipColor.withValues(alpha: 0.3),
+        ),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceXS),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  void _onFilterChanged(RegistroFilterType filter, RegistroGeneralNotifier notifier) {
+    setState(() => _currentFilter = filter);
+    _searchController.clear();
+    _applyCurrentFilter(notifier);
+  }
+
+  void _applyCurrentFilter(RegistroGeneralNotifier notifier) {
+    switch (_currentFilter) {
+      case RegistroFilterType.todos:
+        notifier.clearSearch();
+        break;
+      case RegistroFilterType.sinRegistroPuerto:
+        notifier.searchWithFilters({'sin_registro_puerto': true});
+        break;
+      case RegistroFilterType.sinRecepcion:
+        notifier.searchWithFilters({'sin_recepcion': true});
+        break;
+      case RegistroFilterType.pedeteados:
+        notifier.searchPedeteados();
+        break;
+      case RegistroFilterType.conDanos:
+        notifier.searchWithDanos();
+        break;
+    }
   }
 
   // ============================================================================
@@ -128,14 +250,12 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
       return _buildEmptyState(notifier);
     }
 
-    final showLoadMoreIndicator = notifier.hasNextPage && !notifier.isSearching;
-
     return RefreshIndicator(
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
         padding: EdgeInsets.all(DesignTokens.spaceS),
-        itemCount: registros.length + (showLoadMoreIndicator ? 1 : 0),
+        itemCount: registros.length + (notifier.hasNextPage ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < registros.length) {
             final registro = registros[index];
@@ -148,23 +268,15 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
             );
           }
 
-          return Container(
-            padding: EdgeInsets.all(DesignTokens.spaceL),
-            alignment: Alignment.center,
-            child: Column(
-              children: [
-                if (notifier.isLoadingMore) ...[
-                  AppLoadingState.circular(
-                    message: 'Cargando más resultados...',
-                  ),
-                ] else ...[
-                  AppButton.ghost(
-                    text: 'Cargar más',
-                    icon: Icons.expand_more,
-                    onPressed: () => notifier.loadMore(),
-                  ),
-                ],
-              ],
+          // Indicador de carga al final (sin botón manual)
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
           );
         },

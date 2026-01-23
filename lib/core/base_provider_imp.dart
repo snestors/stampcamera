@@ -178,6 +178,36 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
     });
   }
 
+  /// Lista con filtros personalizados y soporte de paginación.
+  /// Los filtros se preservan automáticamente en las URLs de paginación del backend.
+  Future<void> listWithFilters(Map<String, dynamic> filters) async {
+    _isSearching = true;
+    state = const AsyncValue.loading();
+    _searchQuery = '__filter__'; // Marker para indicar modo filtro
+    _searchToken++;
+    final currentToken = _searchToken;
+
+    try {
+      final paginated = await service.list(queryParameters: filters);
+
+      if (_searchToken != currentToken) return;
+
+      _searchNextUrl = paginated.next;
+      state = AsyncValue.data(paginated.results);
+    } catch (e, st) {
+      if (_searchToken == currentToken) {
+        state = AsyncValue.error(Exception(_parseError(e)), st);
+      }
+    } finally {
+      if (_searchToken == currentToken) {
+        _isSearching = false;
+        if (!state.hasError) {
+          state = AsyncValue.data([...?state.value]);
+        }
+      }
+    }
+  }
+
   @override
   Future<void> clearSearch() async {
     if (_searchQuery == null) return;

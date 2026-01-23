@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
@@ -178,6 +179,13 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
           ),
         ),
         actions: [
+          // Botón de reporte solo en pestaña de Pedeteo
+          if (currentTabId == 'pedeteo')
+            IconButton(
+              icon: const Icon(Icons.assessment),
+              onPressed: () => context.push('/autos/reporte-pedeteo'),
+              tooltip: 'Reporte por jornadas',
+            ),
           // Botón de refresh solo en pestaña de Pedeteo
           if (currentTabId == 'pedeteo')
             IconButton(

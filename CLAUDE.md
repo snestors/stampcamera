@@ -351,34 +351,35 @@ claude-code .
 3. **Validación previa**: Verificar dependencias antes de eliminar
 4. **Testing**: Probar eliminación con y sin dependencias
 
-## 🏠 **CONTINUAR DESDE CASA - SESIÓN ACTUAL COMPLETADA**
+## 🏠 **ÚLTIMA SESIÓN COMPLETADA**
 
-### **✅ Completado Hoy (2025-07-16)**
-- ✅ **Sistema de Pedeteo Pulido** - Eliminados problemas críticos y mejorada robustez
-- ✅ **Sistema de Asistencia Mejorado** - Bloqueada navegación durante operaciones críticas
-- ✅ **Código 100% limpio** - Sin warnings, errores ni memory leaks
-- ✅ **UX optimizada** - Feedback claro y estados de loading consistentes
+### **✅ Completado (2026-01-22) - v1.3.12+37**
 
-#### **🔧 Mejoras Implementadas en Pedeteo:**
-1. **Fix código duplicado** - Eliminado error handling redundante
-2. **Memory leak corregido** - Scanner dispose sincrónico sin Future.delayed
-3. **Validaciones robustas** - Patrón .when() reemplaza null assertions peligrosas
-4. **Botón refresh integrado** - Acción en AppBar principal para actualizar opciones
-5. **SessionManager simplificado** - Una sola función para todas las limpiezas
+#### **📊 Reporte de Pedeteo - Mejoras:**
+1. **Restricción de acceso a Autos** - Solo usuarios de grupos "GESTORES COORDINACION AUTOS", "COORDINACION AUTOS" y superuser
+2. **Filtros en Registro General** - Agregados filtros: Con Daños, Sin Reg. Puerto, Sin Recepción, Pedeteados
+3. **Optimización de filtro "Con Daños"** - Cambiado de JOINs a `Exists` subqueries + índices en DB
+4. **Reporte por jornadas** - Jornadas de 8 horas (23-07, 07-15, 15-23) con orden correcto
+5. **Resumen por hora** - Al tocar en un empleado muestra desglose por hora con barra de progreso
+6. **Orden nocturna corregido** - Horas ordenadas: 23:00 → 00:00 → 01:00 → ... → 06:00
 
-#### **🔒 Mejoras Implementadas en Asistencia:**
-1. **Modal entrada bloqueado** - PopScope + isDismissible + enableDrag = false
-2. **Modal salida con loading** - Bloquea navegación durante "Marcando salida..."
-3. **FAB coordinado** - Desaparece durante loading para evitar redundancia visual
-4. **Estados consistentes** - Loading inmediato + cleanup automático
+#### **📁 Archivos Flutter Modificados:**
+- `lib/models/user_model.dart` - Restricción `hasAutosAccess`
+- `lib/providers/autos/registro_general_provider.dart` - Métodos `searchWithFilters`, `searchWithDanos`, `searchPedeteados`
+- `lib/screens/autos/registro_general/registro_screen.dart` - Filter chips UI
+- `lib/models/autos/reporte_pedeteo_model.dart` - Nuevo modelo con `ResumenHora`
+- `lib/services/autos/reporte_pedeteo_service.dart` - Nuevo servicio
+- `lib/screens/autos/reporte_pedeteo_screen.dart` - Nueva pantalla con desglose por hora
 
-### **📍 Estado Actual - FUNCIONAL Y ESTABLE**
-El proyecto está **completamente funcional** con todas las mejoras implementadas:
-- ✅ `flutter analyze` - **0 issues**
-- ✅ **Pedeteo robusto** - Sin crashes, memory leaks ni estados inconsistentes
-- ✅ **Asistencia segura** - Imposible navegar durante operaciones críticas
-- ✅ **UX pulida** - Estados de loading claros y feedback apropiado
-- ✅ **Código limpio** - Sin warnings, null assertions peligrosas ni debug prints
+#### **📁 Archivos Backend Modificados:**
+- `core/autos/apis/viewsapi.py`:
+  - `RegistroGeneralFilter` - Filtros optimizados con `Exists`
+  - `reporte_pedeteo_jornadas` - Endpoint con resumen por hora y orden nocturna
+- `core/autos/models.py` - Índice en `DanosModel.vin` + índice compuesto
+
+### **📍 Estado Actual - v1.3.12+37**
+- ✅ Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (56.3MB)
+- ✅ Código limpio y funcional
 
 ## 📋 **PRÓXIMAS TAREAS PRIORITARIAS - PRÓXIMA SESIÓN**
 
@@ -514,10 +515,13 @@ claude-code .
 
 ### **✅ Lo que NO necesitas hacer**
 - ❌ Corregir warnings (ya están todos eliminados)
-- ❌ Actualizar dependencias (ya están actualizadas)  
+- ❌ Actualizar dependencias (ya están actualizadas)
 - ❌ Implementar sistema de providers (ya está completo)
 - ❌ Crear AppSearchSelect (ya está implementado y funcionando)
-- ❌ Fix biometría (ya está completamente solucionado)
+- ❌ Fix biometría (ya fue removido completamente)
+- ❌ Fix edición de fotos (ya usa PATCH correctamente)
+- ❌ Fix permisos cámara/audio (ya tiene enableAudio: false)
+- ❌ Fix coordinadores sin acceso (ya tienen acceso completo)
 
 ## Notas Técnicas
 
@@ -543,12 +547,51 @@ DetalleRegistroModel {
 - `VehicleHelpers.getCondicionColor()` - Colores por condición
 
 ## Versiones
-- **Flutter**: 3.x+
-- **Dart**: 3.x+
-- **flutter_riverpod**: ^2.x
-- **go_router**: Para navegación
+- **App**: 1.3.12+37
+- **Flutter**: 3.38.7
+- **Dart**: 3.10.7
+- **flutter_riverpod**: ^2.6.1
+- **go_router**: ^16.0.0
+
+## ✅ **COMPLETADO - SESIÓN 2026-01-22 (Continuación)**
+
+### **🏭 Módulo Graneles - Tabs Balanzas y Silos**
+1. **BalanzaService** - Implementado `BaseService<Balanza>` con CRUD completo y paginación
+2. **SilosService** - Implementado `BaseService<Silos>` con CRUD completo y paginación
+3. **BalanzaNotifier** - Nuevo provider con `BaseListProviderImpl` para paginación y búsqueda
+4. **SilosNotifier** - Nuevo provider con `BaseListProviderImpl` para paginación y búsqueda
+5. **BalanzasTab** - Reescrito para funcionar igual que TicketsTab (global, sin necesidad de seleccionar servicio)
+6. **SilosTab** - Reescrito para funcionar igual que TicketsTab (global, sin necesidad de seleccionar servicio)
+7. **GranelesScreen** - Simplificado, ya no requiere servicio seleccionado para tabs
+
+#### **Archivos Modificados:**
+- `lib/services/graneles/graneles_service.dart` - BalanzaService y SilosService ahora implementan BaseService
+- `lib/providers/graneles/graneles_provider.dart` - Nuevos providers: `balanzasListProvider`, `silosListProvider`
+- `lib/screens/graneles/tabs/balanzas_tab.dart` - Reescrito con paginación y búsqueda global
+- `lib/screens/graneles/tabs/silos_tab.dart` - Reescrito con paginación y búsqueda global
+- `lib/screens/graneles/graneles_screen.dart` - Simplificado
+
+## 📋 **TAREAS PENDIENTES - PRÓXIMA SESIÓN**
+
+### **🏭 Módulo Graneles (Prioridad Alta)**
+1. ✅ **Tabs funcionando como Tickets** - Completado
+2. **Formulario de Balanza** - Verificar que funciona correctamente al crear nueva balanza
+3. **Formulario de Silos** - Implementar (actualmente solo lectura)
+4. **Tab Almacén** - Evaluar si se necesita un tab separado o es parte de otro flujo
+
+### **🏗️ Reorganización del Proyecto (Cuando haya tiempo)**
+- Reorganizar estructura en features
+- Implementar pantallas dinámicas según asistencia
+
+### **🎯 Comando para Próxima Sesión**
+```bash
+cd "C:\Users\Nestor\Desktop\Flutter\stampcamera"
+claude-code .
+```
+
+**Decir a Claude:** "Revisa CLAUDE.md. Prueba los tabs de Balanzas y Silos, verifica que funcionan correctamente."
 
 ---
 
 *Archivo generado automáticamente por Claude Code*
-*Última actualización: 2025-07-16 - ✅ PEDETEO Y ASISTENCIA PULIDOS - PRÓXIMO: REORGANIZACIÓN POR FEATURES*
+*Última actualización: 2026-01-22 - v1.3.12+37 - ✅ REPORTE PEDETEO CON RESUMEN POR HORA*

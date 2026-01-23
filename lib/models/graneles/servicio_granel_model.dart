@@ -2,6 +2,15 @@
 // MODELOS DE GRANELES
 // =============================================================================
 
+/// Helper para parsear double desde string o número (el backend puede devolver ambos)
+double _parseDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
+}
+
 /// Producto dentro de un servicio de granel
 class ProductoGranel {
   final int id;
@@ -83,6 +92,110 @@ class ServicioGranel {
   }
 }
 
+/// Datos de balanza anidados en el detalle del ticket
+class BalanzaResumen {
+  final int id;
+  final String guia;
+  final double pesoBruto;
+  final double pesoTara;
+  final double pesoNeto;
+  final int? bags;
+  final DateTime? fechaEntradaBalanza;
+  final DateTime? fechaSalidaBalanza;
+  final String? balanzaEntrada;
+  final String? balanzaSalida;
+  final String? almacen;
+  final String? precinto;
+  final String? permiso;
+  final String? observaciones;
+  final String? foto1Url;
+
+  const BalanzaResumen({
+    required this.id,
+    required this.guia,
+    required this.pesoBruto,
+    required this.pesoTara,
+    required this.pesoNeto,
+    this.bags,
+    this.fechaEntradaBalanza,
+    this.fechaSalidaBalanza,
+    this.balanzaEntrada,
+    this.balanzaSalida,
+    this.almacen,
+    this.precinto,
+    this.permiso,
+    this.observaciones,
+    this.foto1Url,
+  });
+
+  factory BalanzaResumen.fromJson(Map<String, dynamic> json) {
+    return BalanzaResumen(
+      id: json['id'] ?? 0,
+      guia: json['guia'] ?? '',
+      pesoBruto: _parseDouble(json['peso_bruto']),
+      pesoTara: _parseDouble(json['peso_tara']),
+      pesoNeto: _parseDouble(json['peso_neto']),
+      bags: json['bags'],
+      fechaEntradaBalanza: json['fecha_entrada_balanza'] != null
+          ? DateTime.tryParse(json['fecha_entrada_balanza'])
+          : null,
+      fechaSalidaBalanza: json['fecha_salida_balanza'] != null
+          ? DateTime.tryParse(json['fecha_salida_balanza'])
+          : null,
+      balanzaEntrada: json['balanza_entrada'],
+      balanzaSalida: json['balanza_salida'],
+      almacen: json['almacen'],
+      precinto: json['precinto'],
+      permiso: json['permiso'],
+      observaciones: json['observaciones'],
+      foto1Url: json['foto1_url'],
+    );
+  }
+}
+
+/// Datos de almacén anidados en el detalle del ticket
+class AlmacenResumen {
+  final int id;
+  final double pesoBruto;
+  final double pesoTara;
+  final double pesoNeto;
+  final int? bags;
+  final DateTime? fechaEntradaAlmacen;
+  final DateTime? fechaSalidaAlmacen;
+  final String? observaciones;
+  final String? foto1Url;
+
+  const AlmacenResumen({
+    required this.id,
+    required this.pesoBruto,
+    required this.pesoTara,
+    required this.pesoNeto,
+    this.bags,
+    this.fechaEntradaAlmacen,
+    this.fechaSalidaAlmacen,
+    this.observaciones,
+    this.foto1Url,
+  });
+
+  factory AlmacenResumen.fromJson(Map<String, dynamic> json) {
+    return AlmacenResumen(
+      id: json['id'] ?? 0,
+      pesoBruto: _parseDouble(json['peso_bruto']),
+      pesoTara: _parseDouble(json['peso_tara']),
+      pesoNeto: _parseDouble(json['peso_neto']),
+      bags: json['bags'],
+      fechaEntradaAlmacen: json['fecha_entrada_almacen'] != null
+          ? DateTime.tryParse(json['fecha_entrada_almacen'])
+          : null,
+      fechaSalidaAlmacen: json['fecha_salida_almacen'] != null
+          ? DateTime.tryParse(json['fecha_salida_almacen'])
+          : null,
+      observaciones: json['observaciones'],
+      foto1Url: json['foto1_url'],
+    );
+  }
+}
+
 /// Ticket de muelle
 class TicketMuelle {
   final int id;
@@ -112,6 +225,9 @@ class TicketMuelle {
   final int? placaTractoId;
   final int? transporteId;
   final int? choferId;
+  // Datos anidados para detalle
+  final BalanzaResumen? balanzaData;
+  final AlmacenResumen? almacenData;
 
   const TicketMuelle({
     required this.id,
@@ -138,6 +254,8 @@ class TicketMuelle {
     this.placaTractoId,
     this.transporteId,
     this.choferId,
+    this.balanzaData,
+    this.almacenData,
   });
 
   factory TicketMuelle.fromJson(Map<String, dynamic> json) {
@@ -170,6 +288,12 @@ class TicketMuelle {
       placaTractoId: json['placa_tracto'],
       transporteId: json['transporte'],
       choferId: json['chofer'],
+      balanzaData: json['balanza_data'] != null
+          ? BalanzaResumen.fromJson(json['balanza_data'])
+          : null,
+      almacenData: json['almacen_data'] != null
+          ? AlmacenResumen.fromJson(json['almacen_data'])
+          : null,
     );
   }
 }
@@ -177,6 +301,8 @@ class TicketMuelle {
 /// Registro de balanza
 class Balanza {
   final int id;
+  final int? servicioId;
+  final String? servicioCodigo;
   final String guia;
   final String? ticketNumero;
   final String? placaStr;
@@ -194,9 +320,16 @@ class Balanza {
   final String? permisoStr;
   final String? balanzaEntrada;
   final String? balanzaSalida;
+  // IDs para edición
+  final int? ticketId;
+  final int? distribucionAlmacenId;
+  final int? precintoId;
+  final int? permisoId;
 
   const Balanza({
     required this.id,
+    this.servicioId,
+    this.servicioCodigo,
     required this.guia,
     this.ticketNumero,
     this.placaStr,
@@ -214,18 +347,24 @@ class Balanza {
     this.permisoStr,
     this.balanzaEntrada,
     this.balanzaSalida,
+    this.ticketId,
+    this.distribucionAlmacenId,
+    this.precintoId,
+    this.permisoId,
   });
 
   factory Balanza.fromJson(Map<String, dynamic> json) {
     return Balanza(
       id: json['id'] ?? 0,
+      servicioId: json['servicio_id'],
+      servicioCodigo: json['servicio_codigo'],
       guia: json['guia'] ?? '',
       ticketNumero: json['ticket_numero'],
       placaStr: json['placa_str'],
       almacen: json['almacen'],
-      pesoBruto: (json['peso_bruto'] ?? 0).toDouble(),
-      pesoTara: (json['peso_tara'] ?? 0).toDouble(),
-      pesoNeto: (json['peso_neto'] ?? 0).toDouble(),
+      pesoBruto: _parseDouble(json['peso_bruto']),
+      pesoTara: _parseDouble(json['peso_tara']),
+      pesoNeto: _parseDouble(json['peso_neto']),
       bags: json['bags'],
       fechaEntradaBalanza: json['fecha_entrada_balanza'] != null
           ? DateTime.tryParse(json['fecha_entrada_balanza'])
@@ -240,6 +379,10 @@ class Balanza {
       permisoStr: json['permiso_str'],
       balanzaEntrada: json['balanza_entrada'],
       balanzaSalida: json['balanza_salida'],
+      ticketId: json['ticket_id'],
+      distribucionAlmacenId: json['distribucion_almacen_id'],
+      precintoId: json['precinto_id'],
+      permisoId: json['permiso_id'],
     );
   }
 }
@@ -269,7 +412,7 @@ class Silos {
       id: json['id'] ?? 0,
       numeroSilo: json['numero_silo'],
       productoNombre: json['producto_nombre'],
-      peso: json['peso']?.toDouble(),
+      peso: json['peso'] != null ? _parseDouble(json['peso']) : null,
       bags: json['bags'],
       fechaHora: json['fecha_hora'] != null
           ? DateTime.tryParse(json['fecha_hora'])
@@ -428,16 +571,16 @@ class DashboardKpis {
 
   factory DashboardKpis.fromJson(Map<String, dynamic> json) {
     return DashboardKpis(
-      totalManifestado: (json['total_manifestado'] ?? 0).toDouble(),
-      totalDescargado: (json['total_descargado'] ?? 0).toDouble(),
-      totalDespachado: (json['total_despachado'] ?? 0).toDouble(),
-      porcentajeDescarga: (json['porcentaje_descarga'] ?? 0).toDouble(),
-      porcentajeDespacho: (json['porcentaje_despacho'] ?? 0).toDouble(),
+      totalManifestado: _parseDouble(json['total_manifestado']),
+      totalDescargado: _parseDouble(json['total_descargado']),
+      totalDespachado: _parseDouble(json['total_despachado']),
+      porcentajeDescarga: _parseDouble(json['porcentaje_descarga']),
+      porcentajeDespacho: _parseDouble(json['porcentaje_despacho']),
       viajesMuelle: json['viajes_muelle'] ?? 0,
       viajesBalanza: json['viajes_balanza'] ?? 0,
       viajesAlmacen: json['viajes_almacen'] ?? 0,
-      saldoDescarga: (json['saldo_descarga'] ?? 0).toDouble(),
-      saldoDespacho: (json['saldo_despacho'] ?? 0).toDouble(),
+      saldoDescarga: _parseDouble(json['saldo_descarga']),
+      saldoDespacho: _parseDouble(json['saldo_despacho']),
     );
   }
 }
@@ -467,13 +610,13 @@ class DistribucionAlmacenDashboard {
   factory DistribucionAlmacenDashboard.fromJson(Map<String, dynamic> json) {
     return DistribucionAlmacenDashboard(
       almacen: json['almacen'] ?? '',
-      manifestado: (json['manifestado'] ?? 0).toDouble(),
-      pesoBalanza: (json['peso_balanza_distribucion'] ?? 0).toDouble(),
+      manifestado: _parseDouble(json['manifestado']),
+      pesoBalanza: _parseDouble(json['peso_balanza_distribucion']),
       viajesBalanza: json['viajes_balanza_distribucion'] ?? 0,
       viajesTransito: json['viajes_transito'] ?? 0,
-      pesoAlmacen: (json['peso_almacen'] ?? 0).toDouble(),
+      pesoAlmacen: _parseDouble(json['peso_almacen']),
       viajesAlmacen: json['viajes_almacen'] ?? 0,
-      saldo: (json['saldo'] ?? 0).toDouble(),
+      saldo: _parseDouble(json['saldo']),
     );
   }
 }
@@ -509,11 +652,11 @@ class DashboardProducto {
   factory DashboardProducto.fromJson(Map<String, dynamic> json) {
     return DashboardProducto(
       producto: json['producto'] ?? '',
-      pesoManifestado: (json['peso_manifestado'] ?? 0).toDouble(),
-      pesoDescargado: (json['peso_descargado'] ?? 0).toDouble(),
-      pesoDespachado: (json['peso_despachado'] ?? 0).toDouble(),
-      porcentajeDescarga: (json['porcentaje_descarga'] ?? 0).toDouble(),
-      porcentajeDespacho: (json['porcentaje_despacho'] ?? 0).toDouble(),
+      pesoManifestado: _parseDouble(json['peso_manifestado']),
+      pesoDescargado: _parseDouble(json['peso_descargado']),
+      pesoDespachado: _parseDouble(json['peso_despachado']),
+      porcentajeDescarga: _parseDouble(json['porcentaje_descarga']),
+      porcentajeDespacho: _parseDouble(json['porcentaje_despacho']),
       viajesMuelle: json['viajes_muelle'] ?? 0,
       viajesBalanza: json['viajes_balanza'] ?? 0,
       viajesAlmacen: json['viajes_almacen'] ?? 0,
@@ -546,7 +689,7 @@ class SilosProducto {
   factory SilosProducto.fromJson(Map<String, dynamic> json) {
     return SilosProducto(
       producto: json['producto'] ?? '',
-      peso: (json['peso'] ?? 0).toDouble(),
+      peso: _parseDouble(json['peso']),
       bags: json['bags'] ?? 0,
       viajes: json['viajes'] ?? 0,
     );
@@ -569,7 +712,7 @@ class DashboardSilos {
 
   factory DashboardSilos.fromJson(Map<String, dynamic> json) {
     return DashboardSilos(
-      totalPeso: (json['total_peso'] ?? 0).toDouble(),
+      totalPeso: _parseDouble(json['total_peso']),
       totalBags: json['total_bags'] ?? 0,
       totalViajes: json['total_viajes'] ?? 0,
       porProducto: (json['por_producto'] as List?)
@@ -597,8 +740,8 @@ class BodegaItem {
   factory BodegaItem.fromJson(Map<String, dynamic> json) {
     return BodegaItem(
       bodega: json['bodega'] ?? '',
-      manifestado: (json['manifestado'] ?? 0).toDouble(),
-      descargado: (json['descargado'] ?? 0).toDouble(),
+      manifestado: _parseDouble(json['manifestado']),
+      descargado: _parseDouble(json['descargado']),
       viajes: json['viajes'] ?? 0,
     );
   }
@@ -626,8 +769,8 @@ class DashboardBodegas {
 
   factory DashboardBodegas.fromJson(Map<String, dynamic> json) {
     return DashboardBodegas(
-      totalManifestado: (json['total_manifestado'] ?? 0).toDouble(),
-      totalDescargado: (json['total_descargado'] ?? 0).toDouble(),
+      totalManifestado: _parseDouble(json['total_manifestado']),
+      totalDescargado: _parseDouble(json['total_descargado']),
       totalViajes: json['total_viajes'] ?? 0,
       porBodega: (json['por_bodega'] as List?)
               ?.map((e) => BodegaItem.fromJson(e))
@@ -699,6 +842,64 @@ class BalanzaOptions {
               ?.map((e) => OptionItem.fromJson(e))
               .toList() ??
           [],
+    );
+  }
+}
+
+/// Registro de almacén
+class AlmacenGranel {
+  final int id;
+  final String? guia;
+  final String? ticketNumero;
+  final String? placaStr;
+  final String? almacenNombre;
+  final String? servicioCodigo;
+  final DateTime? fechaEntradaAlmacen;
+  final DateTime? fechaSalidaAlmacen;
+  final double pesoBruto;
+  final double pesoTara;
+  final double pesoNeto;
+  final int? bags;
+  final String? foto1Url;
+  final String? observaciones;
+
+  const AlmacenGranel({
+    required this.id,
+    this.guia,
+    this.ticketNumero,
+    this.placaStr,
+    this.almacenNombre,
+    this.servicioCodigo,
+    this.fechaEntradaAlmacen,
+    this.fechaSalidaAlmacen,
+    this.pesoBruto = 0,
+    this.pesoTara = 0,
+    this.pesoNeto = 0,
+    this.bags,
+    this.foto1Url,
+    this.observaciones,
+  });
+
+  factory AlmacenGranel.fromJson(Map<String, dynamic> json) {
+    return AlmacenGranel(
+      id: json['id'] ?? 0,
+      guia: json['guia'],
+      ticketNumero: json['ticket_numero'],
+      placaStr: json['placa_str'],
+      almacenNombre: json['almacen_nombre'],
+      servicioCodigo: json['servicio_codigo'],
+      fechaEntradaAlmacen: json['fecha_entrada_almacen'] != null
+          ? DateTime.tryParse(json['fecha_entrada_almacen'])
+          : null,
+      fechaSalidaAlmacen: json['fecha_salida_almacen'] != null
+          ? DateTime.tryParse(json['fecha_salida_almacen'])
+          : null,
+      pesoBruto: _parseDouble(json['peso_bruto']),
+      pesoTara: _parseDouble(json['peso_tara']),
+      pesoNeto: _parseDouble(json['peso_neto']),
+      bags: json['bags'],
+      foto1Url: json['foto1_url'],
+      observaciones: json['observaciones'],
     );
   }
 }

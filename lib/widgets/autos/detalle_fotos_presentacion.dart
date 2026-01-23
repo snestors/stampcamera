@@ -42,40 +42,10 @@ class DetalleFotosPresentacion extends ConsumerWidget {
   // HEADER DE SECCIÓN CON BOTÓN AGREGAR
   // ============================================================================
   Widget _buildSectionHeader(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: AppSectionHeader(
-            icon: Icons.photo_library,
-            title: 'Fotos de Presentación',
-            count: items.length,
-          ),
-        ),
-        SizedBox(width: DesignTokens.spaceXS),
-
-        // ✅ Botón agregar nueva foto
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.secondary,
-            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-              onTap: () => _showAgregarFotoForm(context),
-              child: Padding(
-                padding: EdgeInsets.all(DesignTokens.spaceS),
-                child: Icon(
-                  Icons.add_a_photo,
-                  size: DesignTokens.iconXL,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return AppSectionHeader(
+      icon: Icons.photo_library,
+      title: 'Fotos de Presentación',
+      count: items.length,
     );
   }
 
@@ -83,17 +53,16 @@ class DetalleFotosPresentacion extends ConsumerWidget {
   // ACCIÓN PARA MOSTRAR FORMULARIO
   // ============================================================================
 
-  void _showAgregarFotoForm(BuildContext context) {
-    // Ejecutar callback adicional si existe
+  void _showAgregarFotoForm(BuildContext context) async {
     onAddPressed?.call();
 
-    // Mostrar formulario
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FotoPresentacionForm(vin: vin),
-    );
+    String? result = 'create_another';
+    while (result == 'create_another' && context.mounted) {
+      result = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (context) => FotoPresentacionForm(vin: vin)),
+      );
+    }
   }
 
   // ============================================================================
@@ -308,15 +277,15 @@ class DetalleFotosPresentacion extends ConsumerWidget {
   // ACCIÓN PARA EDITAR FOTO
   // ============================================================================
   void _showEditFotoForm(BuildContext context, FotoPresentacion foto) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => FotoPresentacionForm(
-        vin: vin,
-        fotoId: foto.id,
-        tipoInicial: foto.tipo,
-        nDocumentoInicial: foto.nDocumento,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FotoPresentacionForm(
+          vin: vin,
+          fotoId: foto.id,
+          tipoInicial: foto.tipo,
+          nDocumentoInicial: foto.nDocumento,
+        ),
       ),
     );
   }

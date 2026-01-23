@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
+import 'package:stampcamera/core/core.dart';
 
 class FotoPresentacionForm extends ConsumerStatefulWidget {
   final String vin;
@@ -56,25 +57,21 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
     final detalleAsync = ref.watch(detalleRegistroProvider(widget.vin));
     final optionsAsync = ref.watch(fotosOptionsProvider);
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isEditMode ? 'Editar Foto' : 'Nueva Foto de Presentación'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      child: Column(
+      body: Column(
         children: [
-          _buildHeader(),
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
+              padding: const EdgeInsets.all(20),
               child: detalleAsync.when(
                 data: (detalle) => _buildContent(detalle, optionsAsync),
                 loading: () => _buildLoadingState(),
@@ -83,45 +80,6 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
             ),
           ),
           _buildActionButtons(),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================================
-  // HEADER FIJO
-  // ============================================================================
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isEditMode ? Icons.edit : Icons.add_a_photo,
-            color: const Color(0xFF003B5C),
-            size: 24,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              isEditMode ? 'Editar Foto' : 'Nueva Foto de Presentación',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-          ),
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-          ),
         ],
       ),
     );
@@ -525,7 +483,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           showGalleryOption: true,
           primaryColor: _selectedTipo != null
               ? _getTipoColor(_selectedTipo!)
-              : const Color(0xFF00B4D8),
+              : AppColors.primary,
         ),
       ],
     );
@@ -567,9 +525,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           child: ElevatedButton(
             onPressed: (_isLoading || _hasSubmitted || !canSave) ? null : _submitForm,
             style: ElevatedButton.styleFrom(
-              backgroundColor: canSave && _selectedTipo != null
-                  ? _getTipoColor(_selectedTipo!)
-                  : (canSave ? const Color(0xFF00B4D8) : Colors.grey),
+              backgroundColor: canSave ? AppColors.primary : Colors.grey,
             ),
             child: _isLoading
                 ? const SizedBox(
@@ -605,6 +561,44 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           ),
         ),
       ],
+    );
+  }
+
+  // ============================================================================
+  // DIÁLOGO POST-GUARDADO
+  // ============================================================================
+
+  Future<String?> _showPostSaveDialog() async {
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            SizedBox(width: 10),
+            Expanded(child: Text('Foto guardada', style: TextStyle(fontSize: 18))),
+          ],
+        ),
+        content: const Text('¿Qué deseas hacer ahora?'),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pop(ctx, null),
+            icon: const Icon(Icons.done),
+            label: const Text('Solo guardar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(ctx, 'create_another'),
+            icon: const Icon(Icons.add_a_photo),
+            label: const Text('Crear otra foto'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -708,15 +702,19 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
 
       if (mounted) {
         if (success) {
-          Navigator.pop(context);
-          _showSuccess(
-            isEditMode
-                ? '✅ Foto actualizada exitosamente'
-                : '✅ Foto guardada (sincronizando...)',
-          );
+          if (isEditMode) {
+            _showSuccess('Foto actualizada exitosamente');
+            Navigator.pop(context);
+          } else {
+            // Modo crear: preguntar siguiente acción
+            final action = await _showPostSaveDialog();
+            if (mounted) {
+              Navigator.pop(context, action);
+            }
+          }
         } else {
           _showError(
-            '❌ Error al ${isEditMode ? 'actualizar' : 'guardar'} foto',
+            'Error al ${isEditMode ? 'actualizar' : 'guardar'} foto',
           );
         }
       }
@@ -761,7 +759,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF003B5C),
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
           ),
           child: Text(buttonText),
