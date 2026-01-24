@@ -28,7 +28,7 @@ class DetalleRegistroService {
 
   /// Obtener opciones de registro VIN
   Future<Map<String, dynamic>> getRegistroVinOptions() async {
-    final response = await _http.dio.get('/api/v1/autos/registro-vin/options/');
+    final response = await _http.dio.get('/api/v1/autos/registro-vin/options/?registros=True');
     return response.data;
   }
 

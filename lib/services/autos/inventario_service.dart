@@ -84,7 +84,6 @@ class InventarioBaseService {
     int informacionUnidadId,
   ) async {
     try {
-      print('/api/v1/autos/inventarios-base/$informacionUnidadId/');
       final response = await _http.dio.get(
         '/api/v1/autos/inventarios-base/$informacionUnidadId/',
       );
@@ -105,7 +104,6 @@ class InventarioBaseService {
         ...inventarioData,
         'informacion_unidad_id': informacionUnidadId,
       };
-      print(dataToSend);
       final response = await _http.dio.post(
         '/api/v1/autos/inventarios-base/',
         data: dataToSend,
@@ -113,7 +111,6 @@ class InventarioBaseService {
 
       return InventarioBase.fromJson(response.data);
     } on DioException catch (e) {
-      print(e.response?.data);
       if (e.response?.statusCode == 400) {
         final errorData = e.response?.data;
         if (errorData is Map<String, dynamic>) {
@@ -172,8 +169,7 @@ class InventarioBaseService {
       );
       return InventarioBase.fromJson(response.data);
     } on DioException catch (e) {
-      print("Error DIo: ${e.message}");
-      throw Exception('Error al actualizar inventario: $e');
+      throw Exception('Error al actualizar inventario: ${e.message}');
     }
   }
 
@@ -252,7 +248,6 @@ class InventarioBaseService {
       if (descripcion != null) {
         formData.fields.add(MapEntry('descripcion', descripcion));
       }
-      print("Desciption : $descripcion");
       final response = await _http.dio.patch(
         '/api/v1/autos/inventarios-base/$informacionUnidadId/imagenes/$imageId/',
         data: formData,
@@ -303,8 +298,8 @@ class InventarioBaseService {
               : null,
         );
         createdImages.add(imagen);
-      } catch (e) {
-        print('Error creando imagen ${i + 1}: $e');
+      } catch (_) {
+        // Skip failed images silently
       }
     }
 

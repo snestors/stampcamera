@@ -78,9 +78,8 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
       ));
     }
 
-    // CONTENEDORES - Solo si tiene nave AUTOS activa (o superuser/coordinador)
-    // En recepción (ALMACEN sin nave) NO se muestra contenedores
-    if (isSuperuser || isCoordinadorAutos || tieneNaveAutos) {
+    // CONTENEDORES - Solo si nave tiene rubro SIC (o superuser/coordinador)
+    if (isSuperuser || isCoordinadorAutos || (tieneNaveAutos && naveRubro == 'SIC')) {
       tabs.add(const _TabConfig(
         id: 'contenedores',
         label: 'CONTENEDORES',

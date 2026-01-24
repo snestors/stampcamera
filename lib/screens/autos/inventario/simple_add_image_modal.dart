@@ -69,7 +69,7 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
   Widget _buildHeader() {
     return Row(
       children: [
-        const Icon(Icons.add_a_photo, color: Color(0xFF003B5C), size: 28),
+        Icon(Icons.add_a_photo, color: AppColors.primary, size: 28),
         const SizedBox(width: 12),
         const Expanded(
           child: Text(
@@ -99,7 +99,7 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
             const SizedBox(height: 8),
             const Text(
               'Selecciona una o varias imágenes desde la galería',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -109,7 +109,7 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
                 icon: const Icon(Icons.photo_library),
                 label: const Text('Seleccionar Imágenes'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF003B5C),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -129,7 +129,7 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
       padding: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        border: Border(top: BorderSide(color: AppColors.neutral)),
       ),
       child: Row(
         children: [

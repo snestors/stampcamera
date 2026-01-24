@@ -62,7 +62,7 @@ class InventarioTabWidget extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeS,
-                color: Colors.grey.shade600,
+                color: AppColors.textSecondary,
                 height: 1.5,
               ),
             ),
@@ -280,13 +280,13 @@ class InventarioTabWidget extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               color: quantity > 0
-                  ? Colors.green.shade100
-                  : Colors.grey.shade100,
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: quantity > 0
-                    ? Colors.green.shade300
-                    : Colors.grey.shade300,
+                    ? AppColors.success.withValues(alpha: 0.4)
+                    : AppColors.neutral,
                 width: 1,
               ),
             ),
@@ -296,8 +296,8 @@ class InventarioTabWidget extends ConsumerWidget {
                 fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.bold,
                 color: quantity > 0
-                    ? Colors.green.shade700
-                    : Colors.grey.shade600,
+                    ? AppColors.success
+                    : AppColors.textSecondary,
               ),
             ),
           ),

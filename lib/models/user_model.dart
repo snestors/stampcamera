@@ -6,8 +6,10 @@
 class AsistenciaActiva {
   final int id;
   final String fechaHoraEntrada;
+  final int? zonaTrabajoId;
   final String? zonaTrabajoNombre;
   final String? zonaTrabajoTipo; // PUERTO, ALMACEN, ALMACEN-PDI, OFICINA
+  final int? naveId;
   final String? naveNombre;
   final String? naveRubro; // FPR, SIC, etc.
   final String? naveCategoriaRubro; // AUTOS, GRANELES
@@ -17,8 +19,10 @@ class AsistenciaActiva {
   const AsistenciaActiva({
     required this.id,
     required this.fechaHoraEntrada,
+    this.zonaTrabajoId,
     this.zonaTrabajoNombre,
     this.zonaTrabajoTipo,
+    this.naveId,
     this.naveNombre,
     this.naveRubro,
     this.naveCategoriaRubro,
@@ -28,23 +32,30 @@ class AsistenciaActiva {
 
   factory AsistenciaActiva.fromJson(Map<String, dynamic> json) {
     // Extraer datos de zona de trabajo
+    int? zonaId;
     String? zonaNombre;
     String? zonaTipo;
     if (json['zona_trabajo'] != null) {
       if (json['zona_trabajo'] is Map) {
-        zonaNombre = json['zona_trabajo']['zona'] ?? json['zona_trabajo']['nombre'];
+        zonaId = json['zona_trabajo']['id'];
+        zonaNombre = json['zona_trabajo']['zona'] ?? json['zona_trabajo']['nombre'] ?? json['zona_trabajo']['value'];
         zonaTipo = json['zona_trabajo']['tipo'];
       } else if (json['zona_trabajo'] is String) {
         zonaNombre = json['zona_trabajo'];
       }
     }
+    // Fallback: leer campos planos (datos restaurados desde storage)
+    zonaId ??= json['zona_trabajo_id'] as int?;
+    zonaTipo ??= json['zona_trabajo_tipo'] as String?;
 
     // Extraer datos de nave
+    int? naveId;
     String? naveNombre;
     String? naveRubro;
     String? naveCategoriaRubro;
     if (json['nave'] != null) {
       if (json['nave'] is Map) {
+        naveId = json['nave']['id'];
         naveNombre = json['nave']['nombre'] ?? json['nave']['value'];
         naveRubro = json['nave']['rubro'];
         naveCategoriaRubro = json['nave']['categoria_rubro'];
@@ -52,12 +63,18 @@ class AsistenciaActiva {
         naveNombre = json['nave'];
       }
     }
+    // Fallback: leer campos planos (datos restaurados desde storage)
+    naveId ??= json['nave_id'] as int?;
+    naveRubro ??= json['nave_rubro'] as String?;
+    naveCategoriaRubro ??= json['nave_categoria_rubro'] as String?;
 
     return AsistenciaActiva(
       id: json['id'] ?? 0,
       fechaHoraEntrada: json['fecha_hora_entrada'] ?? '',
+      zonaTrabajoId: zonaId,
       zonaTrabajoNombre: zonaNombre,
       zonaTrabajoTipo: zonaTipo,
+      naveId: naveId,
       naveNombre: naveNombre,
       naveRubro: naveRubro,
       naveCategoriaRubro: naveCategoriaRubro,
@@ -70,8 +87,10 @@ class AsistenciaActiva {
     'id': id,
     'fecha_hora_entrada': fechaHoraEntrada,
     'zona_trabajo': zonaTrabajoNombre,
+    'zona_trabajo_id': zonaTrabajoId,
     'zona_trabajo_tipo': zonaTrabajoTipo,
     'nave': naveNombre,
+    'nave_id': naveId,
     'nave_rubro': naveRubro,
     'nave_categoria_rubro': naveCategoriaRubro,
     'activo': activo,

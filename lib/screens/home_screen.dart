@@ -194,18 +194,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       cards.add(_buildModuleCard(context, module, user));
     }
 
-    // Agregar cards de "Próximamente" para completar mínimo 4 y siempre número par
-    while (cards.length < 4 || cards.length % 2 != 0) {
-      cards.add(_AppCard(
-        title: 'Próximamente',
-        subtitle: 'Nuevas funcionalidades',
-        icon: Icons.upcoming,
-        color: AppColors.textSecondary,
-        onTap: () => _showComingSoonDialog(context),
-        isDisabled: true,
-      ));
-    }
-
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/widgets/asistencia/marcar_salida.dart';
-import 'package:stampcamera/widgets/asistencia/resumen_asistencia_widget.dart';
-import 'package:stampcamera/widgets/asistencia/lista_asistencias_widget.dart';
 import 'package:stampcamera/widgets/asistencia/modal_entrada.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
@@ -119,19 +118,7 @@ class _RegistroAsistenciaScreenState
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(bottom: 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Timer en vivo
-                  _buildLiveTimer(asistencia.fechaHoraEntrada),
-
-                  // Resumen
-                  ResumenAsistenciaWidget(asistencia: asistencia),
-
-                  // Lista de registros
-                  ListaAsistenciasWidget(asistencias: [asistencia]),
-                ],
-              ),
+              child: _buildActiveCard(asistencia),
             ),
           );
         },
@@ -145,10 +132,9 @@ class _RegistroAsistenciaScreenState
     );
   }
 
-  Widget _buildLiveTimer(DateTime entryTime) {
+  Widget _buildActiveCard(Asistencia asistencia) {
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF003B5C), Color(0xFF00587A)],
@@ -166,90 +152,138 @@ class _RegistroAsistenciaScreenState
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedBuilder(
-                animation: _pulseController,
-                builder: (context, child) => Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: Colors.greenAccent.withValues(
-                      alpha: 0.5 + (_pulseController.value * 0.5),
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.greenAccent.withValues(
-                          alpha: _pulseController.value * 0.5,
+          // Timer section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _pulseController,
+                      builder: (context, child) => Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent.withValues(
+                            alpha: 0.5 + (_pulseController.value * 0.5),
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.greenAccent.withValues(
+                                alpha: _pulseController.value * 0.5,
+                              ),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
-                        blurRadius: 8,
-                        spreadRadius: 2,
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'JORNADA ACTIVA',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _formatDuration(_elapsedTime),
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.white,
+                    fontFamily: 'monospace',
+                    letterSpacing: 4,
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'JORNADA ACTIVA',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withValues(alpha: 0.9),
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _formatDuration(_elapsedTime),
-            style: const TextStyle(
-              fontSize: 48,
-              fontWeight: FontWeight.w300,
-              color: Colors.white,
-              fontFamily: 'monospace',
-              letterSpacing: 4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tiempo trabajado',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.login_rounded,
-                  size: 16,
-                  color: Colors.white.withValues(alpha: 0.8),
-                ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 4),
                 Text(
-                  'Entrada: ${_formatTime(entryTime)}',
+                  'Tiempo trabajado',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
               ],
             ),
           ),
+
+          // Divider
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Divider(
+              color: Colors.white.withValues(alpha: 0.2),
+              height: 1,
+            ),
+          ),
+
+          // Details section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+            child: Column(
+              children: [
+                _buildDetailRow(
+                  Icons.login_rounded,
+                  'Entrada',
+                  _formatTime(asistencia.fechaHoraEntrada),
+                ),
+                if (asistencia.zonaTrabajo != null) ...[
+                  const SizedBox(height: 12),
+                  _buildDetailRow(
+                    Icons.place_rounded,
+                    'Zona',
+                    asistencia.zonaTrabajo!.value,
+                  ),
+                ],
+                if (asistencia.nave != null) ...[
+                  const SizedBox(height: 12),
+                  _buildDetailRow(
+                    Icons.directions_boat_rounded,
+                    'Nave',
+                    asistencia.nave!.value,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.white.withValues(alpha: 0.7)),
+        const SizedBox(width: 10),
+        Text(
+          '$label:',
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.white.withValues(alpha: 0.95),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -398,7 +398,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
               // Botón decrementar
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: AppColors.neutral),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(8),
                     bottomLeft: Radius.circular(8),
@@ -421,7 +421,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
                 height: 50,
                 decoration: BoxDecoration(
                   border: Border.symmetric(
-                    horizontal: BorderSide(color: Colors.grey.shade300),
+                    horizontal: BorderSide(color: AppColors.neutral),
                   ),
                 ),
                 child: Center(
@@ -438,7 +438,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
               // Botón incrementar
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: AppColors.neutral),
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(8),
                     bottomRight: Radius.circular(8),
@@ -503,7 +503,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
       padding: const EdgeInsets.only(top: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        border: Border(top: BorderSide(color: AppColors.neutral)),
       ),
       child: Row(
         children: [

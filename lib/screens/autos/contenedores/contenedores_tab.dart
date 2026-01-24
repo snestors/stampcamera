@@ -205,204 +205,225 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
   }
 
   Widget _buildContenedorCard(ContenedorModel contenedor) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header del contenedor
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(DesignTokens.spaceS),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                ),
-                child: Icon(
-                  Icons.inventory_2,
-                  color: AppColors.secondary,
-                  size: DesignTokens.iconL,
+    // Color del accent strip según completitud de fotos
+    final int photoCount = [
+      contenedor.hasContenedorPhoto,
+      contenedor.hasPrecinto1Photo,
+    ].where((b) => b).length;
+    final Color accentColor;
+    if (photoCount >= 2) {
+      accentColor = AppColors.success;
+    } else if (photoCount == 1) {
+      accentColor = AppColors.warning;
+    } else {
+      accentColor = AppColors.secondary;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Accent strip lateral
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
                 ),
               ),
-              const SizedBox(width: DesignTokens.spaceM),
-              Expanded(
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceM),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      contenedor.nContenedor,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                    // Header: icon + numero + nave + menu
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(DesignTokens.spaceS),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                          ),
+                          child: Icon(
+                            Icons.inventory_2,
+                            color: AppColors.secondary,
+                            size: 20,
+                          ),
+                        ),
+                        SizedBox(width: DesignTokens.spaceS),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                contenedor.nContenedor,
+                                style: TextStyle(
+                                  fontSize: DesignTokens.fontSizeL,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                contenedor.naveDescarga.displayName,
+                                style: TextStyle(
+                                  fontSize: DesignTokens.fontSizeXS,
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) => _handleMenuAction(value, contenedor),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'editar',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit, size: 16),
+                                  SizedBox(width: 8),
+                                  Text('Editar'),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuItem(
+                              value: 'eliminar',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, size: 16, color: AppColors.error),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Eliminar',
+                                    style: TextStyle(color: AppColors.error),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      contenedor.naveDescarga.displayName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+
+                    SizedBox(height: DesignTokens.spaceS),
+
+                    // Metadata: zona + precintos
+                    Wrap(
+                      spacing: DesignTokens.spaceM,
+                      runSpacing: DesignTokens.spaceXS,
+                      children: [
+                        if (contenedor.zonaInspeccion != null)
+                          _buildMetaItem(Icons.location_on, contenedor.zonaInspeccion!.value),
+                        if (contenedor.precinto1 != null)
+                          _buildMetaItem(Icons.lock_outline, 'P1: ${contenedor.precinto1!}'),
+                        if (contenedor.precinto2 != null)
+                          _buildMetaItem(Icons.lock_outline, 'P2: ${contenedor.precinto2!}'),
+                      ],
+                    ),
+
+                    SizedBox(height: DesignTokens.spaceS),
+
+                    // Fotos disponibles
+                    Row(
+                      children: [
+                        _buildPhotoIndicator(
+                          'Contenedor',
+                          contenedor.hasContenedorPhoto,
+                          contenedor.imagenThumbnailUrl,
+                          contenedor.fotoContenedorUrl,
+                        ),
+                        SizedBox(width: DesignTokens.spaceS),
+                        _buildPhotoIndicator(
+                          'Precinto 1',
+                          contenedor.hasPrecinto1Photo,
+                          contenedor.imagenThumbnailPrecintoUrl,
+                          contenedor.fotoPrecinto1Url,
+                        ),
+                        if (contenedor.hasPrecinto2Photo) ...[
+                          SizedBox(width: DesignTokens.spaceS),
+                          _buildPhotoIndicator(
+                            'Precinto 2',
+                            contenedor.hasPrecinto2Photo,
+                            contenedor.imagenThumbnailPrecinto2Url,
+                            contenedor.fotoPrecinto2Url,
+                          ),
+                        ],
+                        if (contenedor.hasContenedorVacioPhoto) ...[
+                          SizedBox(width: DesignTokens.spaceS),
+                          _buildPhotoIndicator(
+                            'Vacío',
+                            contenedor.hasContenedorVacioPhoto,
+                            contenedor.imagenThumbnailContenedorVacioUrl,
+                            contenedor.fotoContenedorVacioUrl,
+                          ),
+                        ],
+                        const Spacer(),
+                        // Footer: date + user
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 10,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              contenedor.createAt,
+                              style: TextStyle(
+                                fontSize: DesignTokens.fontSizeXS,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              PopupMenuButton<String>(
-                onSelected: (value) => _handleMenuAction(value, contenedor),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'editar',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 16),
-                        SizedBox(width: 8),
-                        Text('Editar'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'eliminar',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 16, color: AppColors.error),
-                        SizedBox(width: 8),
-                        Text(
-                          'Eliminar',
-                          style: TextStyle(color: AppColors.error),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: DesignTokens.spaceM),
-
-          // Información del contenedor
-          if (contenedor.zonaInspeccion != null) ...[
-            AppInfoRow(
-              icon: Icons.location_on,
-              label: 'Zona de Inspección',
-              value: contenedor.zonaInspeccion!.value,
-              color: AppColors.info,
             ),
-            const SizedBox(height: DesignTokens.spaceS),
           ],
-
-          // Precintos
-          if (contenedor.precinto1 != null || contenedor.precinto2 != null) ...[
-            Row(
-              children: [
-                if (contenedor.precinto1 != null) ...[
-                  Expanded(
-                    child: AppInfoRow(
-                      icon: Icons.lock_outline,
-                      label: 'Precinto 1',
-                      value: contenedor.precinto1!,
-                      color: AppColors.warning,
-                    ),
-                  ),
-                ],
-                if (contenedor.precinto1 != null &&
-                    contenedor.precinto2 != null)
-                  const SizedBox(width: DesignTokens.spaceM),
-                if (contenedor.precinto2 != null) ...[
-                  Expanded(
-                    child: AppInfoRow(
-                      icon: Icons.lock_outline,
-                      label: 'Precinto 2',
-                      value: contenedor.precinto2!,
-                      color: AppColors.warning,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: DesignTokens.spaceS),
-          ],
-
-          // Fotos disponibles
-          Row(
-            children: [
-              _buildPhotoIndicator(
-                'Contenedor',
-                contenedor.hasContenedorPhoto,
-                contenedor.imagenThumbnailUrl,
-                contenedor.fotoContenedorUrl,
-              ),
-              const SizedBox(width: DesignTokens.spaceS),
-              _buildPhotoIndicator(
-                'Precinto 1',
-                contenedor.hasPrecinto1Photo,
-                contenedor.imagenThumbnailPrecintoUrl,
-                contenedor.fotoPrecinto1Url,
-              ),
-              if (contenedor.hasPrecinto2Photo) ...[
-                const SizedBox(width: DesignTokens.spaceS),
-                _buildPhotoIndicator(
-                  'Precinto 2',
-                  contenedor.hasPrecinto2Photo,
-                  contenedor.imagenThumbnailPrecinto2Url,
-                  contenedor.fotoPrecinto2Url,
-                ),
-              ],
-              if (contenedor.hasContenedorVacioPhoto) ...[
-                const SizedBox(width: DesignTokens.spaceS),
-                _buildPhotoIndicator(
-                  'Vacío',
-                  contenedor.hasContenedorVacioPhoto,
-                  contenedor.imagenThumbnailContenedorVacioUrl,
-                  contenedor.fotoContenedorVacioUrl,
-                ),
-              ],
-            ],
-          ),
-
-          const SizedBox(height: DesignTokens.spaceS),
-
-          // Footer con fecha y usuario
-          Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                size: DesignTokens.iconS,
-                color: AppColors.textLight,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                contenedor.createAt,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textLight,
-                ),
-              ),
-              const SizedBox(width: DesignTokens.spaceM),
-              Icon(
-                Icons.person,
-                size: DesignTokens.iconS,
-                color: AppColors.textLight,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  _extractUserName(contenedor.createBy),
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: AppColors.textLight,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildMetaItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: AppColors.textSecondary),
+        SizedBox(width: DesignTokens.spaceXS),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 
@@ -661,15 +682,6 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     );
   }
 
-  String _extractUserName(String fullUserInfo) {
-    // Extrae solo el nombre del formato "Apellido, Nombre (email)"
-    final parts = fullUserInfo.split('(');
-    if (parts.isNotEmpty) {
-      return parts[0].trim();
-    }
-    return fullUserInfo;
-  }
-
   void _handleMenuAction(String action, ContenedorModel contenedor) {
     switch (action) {
       case 'editar':
@@ -681,27 +693,17 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     }
   }
 
-  // ============================================================================
-  // MODAL BOTTOM SHEET PARA CREAR CONTENEDOR
-  // ============================================================================
   void _showCreateForm(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const ContenedorForm(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ContenedorForm()),
     );
   }
 
-  // ============================================================================
-  // MODAL BOTTOM SHEET PARA EDITAR CONTENEDOR
-  // ============================================================================
   void _showEditForm(ContenedorModel contenedor) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ContenedorForm(contenedor: contenedor),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ContenedorForm(contenedor: contenedor)),
     );
   }
 

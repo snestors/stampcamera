@@ -48,7 +48,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddImageModal(context),
-        backgroundColor: const Color(0xFF003B5C),
+        backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -60,26 +60,32 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        color: AppColors.surface,
+        border: Border(bottom: BorderSide(color: AppColors.neutral)),
       ),
       child: Row(
         children: [
-          Icon(Icons.photo_library, color: const Color(0xFF003B5C), size: 24),
-          const SizedBox(width: 12),
+          Icon(Icons.photo_library, color: AppColors.primary, size: 24),
+          SizedBox(width: DesignTokens.spaceM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Imágenes del Inventario',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeL + 2,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   '${widget.response.imageCount} imagen${widget.response.imageCount != 1 ? 'es' : ''} registrada${widget.response.imageCount != 1 ? 's' : ''}',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeM,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -133,10 +139,10 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                         size: 80,
                       )
                     : Container(
-                        color: Colors.grey.shade200,
-                        child: const Icon(
+                        color: AppColors.surface,
+                        child: Icon(
                           Icons.image,
-                          color: Colors.grey,
+                          color: AppColors.textSecondary,
                           size: 32,
                         ),
                       ),
@@ -186,14 +192,14 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                       Icon(
                         Icons.schedule,
                         size: 14,
-                        color: Colors.grey.shade500,
+                        color: AppColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         imagen.createAt ?? 'Fecha no disponible',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -205,7 +211,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                         Icon(
                           Icons.person,
                           size: 14,
-                          color: Colors.grey.shade500,
+                          color: AppColors.textSecondary,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -213,7 +219,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                             imagen.createBy ?? 'Usuario no disponible',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade500,
+                              color: AppColors.textSecondary,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -231,7 +237,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                 IconButton(
                   onPressed: () => _confirmDeleteImage(context, imagen),
                   icon: const Icon(Icons.delete),
-                  color: Colors.red,
+                  color: AppColors.error,
                   iconSize: 20,
                   tooltip: 'Eliminar',
                 ),
@@ -257,13 +263,13 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: AppColors.surface,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.photo_library_outlined,
                 size: 64,
-                color: Colors.grey.shade400,
+                color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -272,7 +278,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
@@ -281,12 +287,12 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey.shade600,
+                color: AppColors.textSecondary,
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 32),
-            Icon(Icons.arrow_downward, size: 32, color: Colors.grey.shade400),
+            Icon(Icons.arrow_downward, size: 32, color: AppColors.textSecondary),
           ],
         ),
       ),

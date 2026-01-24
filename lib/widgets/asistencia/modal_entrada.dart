@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/core.dart';
-import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 
 void showMarcarEntradaBottomSheet(BuildContext context, WidgetRef ref) {
@@ -23,8 +22,8 @@ class ModalMarcarEntrada extends ConsumerStatefulWidget {
 
 class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
     with SingleTickerProviderStateMixin {
-  ZonaTrabajo? zonaSeleccionada;
-  Nave? naveSeleccionada;
+  int? _selectedZonaId;
+  int? _selectedNaveId;
   final TextEditingController comentarioCtrl = TextEditingController();
   late AnimationController _animController;
   late Animation<double> _scaleAnim;
@@ -199,33 +198,41 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                 const SizedBox(height: 24),
 
                 // Zona de trabajo (requerido)
-                _buildDropdownField<ZonaTrabajo>(
+                AppSearchDropdown<int>(
                   label: 'Zona de trabajo',
-                  hint: 'Selecciona tu zona',
-                  value: zonaSeleccionada,
-                  items: zonas,
+                  hint: 'Buscar zona...',
+                  value: _selectedZonaId,
                   isRequired: true,
-                  enabled: !isLoading,
-                  icon: Icons.location_on,
-                  itemBuilder: (zona) => Text(zona.value),
-                  onChanged: (value) =>
-                      setState(() => zonaSeleccionada = value),
+                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF003B5C)),
+                  options: zonas
+                      .map((zona) => AppSearchDropdownOption<int>(
+                            value: zona.id,
+                            label: zona.value,
+                          ))
+                      .toList(),
+                  onChanged: isLoading
+                      ? null
+                      : (value) => setState(() => _selectedZonaId = value),
                 ),
 
                 const SizedBox(height: 16),
 
                 // Nave (opcional)
-                _buildDropdownField<Nave>(
+                AppSearchDropdown<int>(
                   label: 'Nave / Embarque',
-                  hint: 'Selecciona una nave (opcional)',
-                  value: naveSeleccionada,
-                  items: naves,
+                  hint: 'Buscar nave (opcional)...',
+                  value: _selectedNaveId,
                   isRequired: false,
-                  enabled: !isLoading,
-                  icon: Icons.directions_boat,
-                  itemBuilder: (nave) => Text(nave.value),
-                  onChanged: (value) =>
-                      setState(() => naveSeleccionada = value),
+                  prefixIcon: const Icon(Icons.directions_boat, color: Color(0xFF00B4D8)),
+                  options: naves
+                      .map((nave) => AppSearchDropdownOption<int>(
+                            value: nave.id,
+                            label: nave.value,
+                          ))
+                      .toList(),
+                  onChanged: isLoading
+                      ? null
+                      : (value) => setState(() => _selectedNaveId = value),
                 ),
 
                 const SizedBox(height: 16),
@@ -399,89 +406,13 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
     );
   }
 
-  Widget _buildDropdownField<T>({
-    required String label,
-    required String hint,
-    required T? value,
-    required List<T> items,
-    required bool isRequired,
-    required bool enabled,
-    required IconData icon,
-    required Widget Function(T) itemBuilder,
-    required ValueChanged<T?> onChanged,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 18, color: const Color(0xFF003B5C)),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF003B5C),
-              ),
-            ),
-            if (isRequired)
-              const Text(
-                ' *',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<T>(
-          isExpanded: true,
-          initialValue: value,
-          hint: Text(hint, style: TextStyle(color: Colors.grey[500])),
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color(0xFF003B5C),
-                width: 2,
-              ),
-            ),
-            disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[200]!),
-            ),
-            filled: true,
-            fillColor: enabled ? Colors.grey[50] : Colors.grey[100],
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
-          items: items.map((item) {
-            return DropdownMenuItem<T>(
-              value: item,
-              child: itemBuilder(item),
-            );
-          }).toList(),
-          onChanged: enabled ? onChanged : null,
-        ),
-      ],
-    );
-  }
 
   Future<void> _handleSubmit() async {
     // Prevenir doble tap
     if (_isSubmitting) return;
 
     // Validación
-    if (zonaSeleccionada == null) {
+    if (_selectedZonaId == null) {
       HapticFeedback.heavyImpact();
       _showErrorSnackbar('Selecciona una zona de trabajo');
       return;
@@ -494,8 +425,8 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
     try {
       final notifier = ref.read(asistenciaActivaProvider.notifier);
       final ok = await notifier.marcarEntrada(
-        zonaTrabajoId: zonaSeleccionada!.id,
-        naveId: naveSeleccionada?.id,
+        zonaTrabajoId: _selectedZonaId!,
+        naveId: _selectedNaveId,
         comentario:
             comentarioCtrl.text.trim().isEmpty ? null : comentarioCtrl.text.trim(),
         wref: ref,

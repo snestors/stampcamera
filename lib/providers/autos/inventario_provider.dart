@@ -82,8 +82,8 @@ class InventarioBaseNotifier extends AsyncNotifier<List<InventarioNave>> {
 
       _nextUrl = paginated.next;
       state = AsyncValue.data(newResults);
-    } catch (e) {
-      print('❌ Error cargando más resultados: ${parseError(e)}');
+    } catch (_) {
+      // Error loading more results - silently fail
     } finally {
       _isLoadingMore = false;
       _notifyState();
@@ -270,7 +270,6 @@ class InventarioDetalleNotifier
     Map<String, dynamic> inventarioData,
   ) async {
     try {
-      print("arg: $arg, invetarioData: $inventarioData");
       final service = ref.read(inventarioBaseServiceProvider);
       final inventario = await service.partialUpdate(arg, inventarioData);
 
@@ -286,7 +285,6 @@ class InventarioDetalleNotifier
 
       return inventario;
     } on DioException catch (e) {
-      print("Error: ${e.message}");
       throw Exception(parseError(e));
     }
   }

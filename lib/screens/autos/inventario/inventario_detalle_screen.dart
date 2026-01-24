@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/screens/autos/inventario/imagenes_tab_widget.dart';
@@ -43,7 +44,7 @@ class _InventarioDetalleScreenState
       loading: () => Scaffold(
         appBar: AppBar(
           title: const Text('Cargando...'),
-          backgroundColor: const Color(0xFF003B5C),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
         ),
         body: const Center(
@@ -60,7 +61,7 @@ class _InventarioDetalleScreenState
       error: (error, stackTrace) => Scaffold(
         appBar: AppBar(
           title: const Text('Error'),
-          backgroundColor: const Color(0xFF003B5C),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
         ),
         body: ConnectionErrorScreen(
@@ -95,7 +96,7 @@ class _InventarioDetalleScreenState
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF003B5C),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,

@@ -16,340 +16,229 @@ class DetalleRegistroCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final r = registro;
 
-    // 🎯 TIEMPO REAL: Combinar estado del servidor + sesión local
+    // Combinar estado del servidor + sesión local
     final pedeteadosLocal = ref.watch(pedeteadosEnSesionProvider);
     final isPedeteado = r.pedeteado || pedeteadosLocal.contains(r.vin);
 
-    return AppCard.elevated(
-      margin: EdgeInsets.symmetric(
-        horizontal: DesignTokens.spaceS,
-        vertical: DesignTokens.spaceXS,
-      ),
-      elevation: 4,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(r),
-          SizedBox(height: DesignTokens.spaceM),
-          _buildVehicleInfo(r),
-          SizedBox(height: DesignTokens.spaceM),
-          _buildLogisticsInfo(r),
-          SizedBox(height: DesignTokens.spaceL),
-          _buildStatusBadges(r, isPedeteado),
+    // Determinar color del accent strip según prioridad
+    final Color accentColor;
+    if (r.urgente) {
+      accentColor = AppColors.error;
+    } else if (r.danos) {
+      accentColor = AppColors.warning;
+    } else if (isPedeteado) {
+      accentColor = AppColors.success;
+    } else {
+      accentColor = AppColors.primary;
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildHeader(RegistroGeneral r) {
-    return Material(
-      type: MaterialType.transparency,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // VIN principal
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Accent strip lateral
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: accentColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                ),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceM),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        r.vin,
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeL * 0.9,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    // Badge URGENTE
-                    if (r.urgente) ...[
-                      SizedBox(width: DesignTokens.spaceS),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: DesignTokens.spaceS,
-                          vertical: DesignTokens.spaceXS,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.priority_high,
-                              size: DesignTokens.iconXS,
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: 2),
-                            Text(
-                              'URGENTE',
-                              style: TextStyle(
-                                fontSize: DesignTokens.fontSizeXS,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    // Header: VIN + urgente + chevron
+                    _buildHeader(r, isPedeteado),
+                    SizedBox(height: DesignTokens.spaceS),
+
+                    // Metadata: marca/modelo, color, nave
+                    _buildMetadata(r),
+                    SizedBox(height: DesignTokens.spaceS),
+
+                    // Status badges
+                    _buildStatusRow(r, isPedeteado),
                   ],
                 ),
-                if (r.serie != null && r.serie!.isNotEmpty) ...[
-                  SizedBox(height: DesignTokens.spaceXS),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: DesignTokens.spaceS,
-                      vertical: DesignTokens.spaceXS,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                      border: Border.all(
-                        color: AppColors.secondary.withValues(alpha: 0.3),
-                        width: DesignTokens.borderWidthNormal,
-                      ),
-                    ),
-                    child: Text(
-                      'Serie: ${r.serie}',
-                      style: TextStyle(
-                        fontSize: DesignTokens.fontSizeXS,
-                        color: AppColors.secondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ),
-          ),
-
-          // Icono indicativo (camión o auto según marca)
-          Container(
-            padding: EdgeInsets.all(DesignTokens.spaceS),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-            ),
-            child: _buildBrandIcon(r.marca ?? 'N/A'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================================
-  // 🚛🚗 MÉTODO PARA ÍCONO SEGÚN TIPO DE VEHÍCULO
-  // ============================================================================
-  Widget _buildBrandIcon(String marca) {
-    // Marcas que son principalmente camiones/comerciales
-    final truckBrands = {
-      'HINO', 'FUSO', 'T-KING', 'UD TRUCKS', 'JAC PESADO', 'KOMATSU',
-      'JAC', // JAC también maneja comerciales
-    };
-
-    if (truckBrands.contains(marca.toUpperCase())) {
-      return Icon(
-        Icons.local_shipping, // Camión
-        color: AppColors.primary,
-        size: DesignTokens.iconXXL,
-      );
-    } else {
-      // Default para autos
-      return Icon(
-        Icons.directions_car, // Auto
-        color: AppColors.primary,
-        size: DesignTokens.iconXXL,
-      );
-    }
-  }
-
-  Widget _buildVehicleInfo(RegistroGeneral r) {
-    return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.15),
-          width: DesignTokens.borderWidthNormal,
+          ],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Marca y Modelo
-          _buildInfoRow(
-            Icons.branding_watermark,
-            'Marca / Modelo',
-            '${r.marca ?? 'N/A'} ${r.modelo ?? ''}',
-            AppColors.primary,
-          ),
-          SizedBox(height: DesignTokens.spaceS),
-
-          Row(
-            children: [
-              // Color
-              Expanded(
-                child: _buildInfoRow(
-                  Icons.palette,
-                  'Color',
-                  r.color ?? 'N/A',
-                  AppColors.accent,
-                ),
-              ),
-              SizedBox(width: DesignTokens.spaceL),
-
-              // Versión
-              Expanded(
-                child: _buildInfoRow(
-                  Icons.info_outline,
-                  'Versión',
-                  r.version ?? 'N/A',
-                  AppColors.secondary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildLogisticsInfo(RegistroGeneral r) {
-    return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
-      decoration: BoxDecoration(
-        color: AppColors.secondary.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.2),
-          width: DesignTokens.borderWidthNormal,
-        ),
-      ),
-      child: Row(
-        children: [
-          // Nave
-          Expanded(
-            child: _buildInfoRow(
-              Icons.local_shipping,
-              'Nave',
-              r.naveDescarga ?? 'N/A',
-              AppColors.secondary,
-            ),
-          ),
-          SizedBox(width: DesignTokens.spaceL),
-
-          // BL
-          Expanded(
-            child: _buildInfoRow(
-              Icons.receipt_long,
-              'BL',
-              r.bl ?? 'N/A',
-              AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
+  Widget _buildHeader(RegistroGeneral r, bool isPedeteado) {
     return Row(
       children: [
+        // Brand icon
         Container(
-          padding: EdgeInsets.all(DesignTokens.spaceXS),
+          padding: EdgeInsets.all(DesignTokens.spaceS),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           ),
-          child: Icon(icon, size: DesignTokens.iconS, color: color),
+          child: Icon(
+            VehicleHelpers.getVehicleIcon(r.marca ?? 'N/A'),
+            color: AppColors.primary,
+            size: 20,
+          ),
         ),
         SizedBox(width: DesignTokens.spaceS),
+
+        // VIN + Serie
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                r.vin,
                 style: TextStyle(
-                  fontSize: DesignTokens.fontSizeXS * 0.8,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: DesignTokens.fontSizeS,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  fontSize: DesignTokens.fontSizeM,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  letterSpacing: 0.3,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
+              if (r.serie != null && r.serie!.isNotEmpty)
+                Text(
+                  'Serie: ${r.serie}',
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeXS,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
             ],
           ),
         ),
+
+        // Urgente badge
+        if (r.urgente) ...[
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: DesignTokens.spaceS,
+              vertical: 2,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.error,
+              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+            ),
+            child: Text(
+              'URGENTE',
+              style: TextStyle(
+                fontSize: DesignTokens.fontSizeXS,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          SizedBox(width: DesignTokens.spaceS),
+        ],
+
+        Icon(
+          Icons.chevron_right,
+          size: 20,
+          color: AppColors.textSecondary,
+        ),
       ],
     );
   }
 
-  Widget _buildStatusBadges(RegistroGeneral r, bool isPedeteado) {
-    return Row(
+  Widget _buildMetadata(RegistroGeneral r) {
+    return Wrap(
+      spacing: DesignTokens.spaceM,
+      runSpacing: DesignTokens.spaceXS,
       children: [
-        // Badge Pedeteado (usa estado en tiempo real)
-        Expanded(
-          child: _buildStatusBadge(
-            isPedeteado ? 'Pedeteado' : 'No Pedeteado',
-            isPedeteado ? AppColors.success : AppColors.warning,
-            isPedeteado ? Icons.check_circle : Icons.pending,
-          ),
+        _buildMetaItem(
+          Icons.directions_car,
+          '${r.marca ?? 'N/A'} ${r.modelo ?? ''}',
         ),
-        SizedBox(width: DesignTokens.spaceM),
+        if (r.color != null && r.color!.isNotEmpty)
+          _buildMetaItem(Icons.palette, r.color!),
+        if (r.naveDescarga != null && r.naveDescarga!.isNotEmpty)
+          _buildMetaItem(Icons.directions_boat, r.naveDescarga!),
+        if (r.version != null && r.version!.isNotEmpty)
+          _buildMetaItem(Icons.info_outline, r.version!),
+      ],
+    );
+  }
 
-        // Badge Daños
-        Expanded(
-          child: _buildStatusBadge(
-            r.danos ? 'Con Daños' : 'Sin Daños',
-            r.danos ? AppColors.error : AppColors.success,
-            r.danos ? Icons.warning : Icons.check_circle,
+  Widget _buildMetaItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: AppColors.textSecondary),
+        SizedBox(width: DesignTokens.spaceXS),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w500,
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
   }
 
-  Widget _buildStatusBadge(String label, Color color, IconData icon) {
+  Widget _buildStatusRow(RegistroGeneral r, bool isPedeteado) {
+    return Wrap(
+      spacing: DesignTokens.spaceS,
+      runSpacing: DesignTokens.spaceXS,
+      children: [
+        _buildBadge(
+          isPedeteado ? 'Pedeteado' : 'Sin pedetear',
+          isPedeteado ? AppColors.success : AppColors.warning,
+          isPedeteado ? Icons.check_circle : Icons.pending,
+        ),
+        _buildBadge(
+          r.danos ? 'Con Daños' : 'Sin Daños',
+          r.danos ? AppColors.error : AppColors.success,
+          r.danos ? Icons.warning : Icons.check_circle,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBadge(String text, Color color, IconData icon) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: DesignTokens.spaceM,
-        vertical: DesignTokens.spaceS,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: DesignTokens.borderWidthNormal,
-        ),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusS),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: DesignTokens.iconS, color: color),
+          Icon(icon, size: 12, color: color),
           SizedBox(width: DesignTokens.spaceXS),
           Text(
-            label,
+            text,
             style: TextStyle(
               fontSize: DesignTokens.fontSizeXS,
-              fontWeight: FontWeight.w600,
               color: color,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

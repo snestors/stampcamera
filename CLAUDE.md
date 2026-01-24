@@ -547,7 +547,7 @@ DetalleRegistroModel {
 - `VehicleHelpers.getCondicionColor()` - Colores por condición
 
 ## Versiones
-- **App**: 1.3.12+37
+- **App**: 1.3.16+42
 - **Flutter**: 3.38.7
 - **Dart**: 3.10.7
 - **flutter_riverpod**: ^2.6.1
@@ -571,27 +571,96 @@ DetalleRegistroModel {
 - `lib/screens/graneles/tabs/silos_tab.dart` - Reescrito con paginación y búsqueda global
 - `lib/screens/graneles/graneles_screen.dart` - Simplificado
 
+## ✅ **COMPLETADO - SESIÓN 2026-01-23 - v1.3.14+39**
+
+### **🚗 Mejoras UX Inventario - Detalle General**
+
+#### **1. Botón "Versión / Inventario" rediseñado**
+- Antes: fila idéntica a las demás (no se veía que era tocable)
+- Ahora: botón con fondo de color (verde/naranja), borde, texto "Ver" + flecha, efecto ripple
+
+#### **2. Vista General del vehículo rediseñada (estilo ticket graneles)**
+- **Header con gradient**: VIN en grande, badges de Marca y Serie, icono de vehículo
+- **Sección "Vehículo"**: Filas label:value (Modelo, Versión, Color) + botón inventario
+- **Sección "Embarque"**: Filas label:value con toda la info de nave/embarque
+- Unificado en un solo estilo consistente con el detalle de ticket en graneles
+
+#### **3. Backend - Más datos de nave/embarque**
+- Agregados campos: `puerto_descarga`, `fecha_atraque`, `destinatario`, `agente_aduanal`, `nombre_embarque`, `n_viaje`, `cantidad_embarque`
+- Serializer con `SerializerMethodField` para relaciones profundas
+- Queryset de retrieve separado sin `.only()` para evitar conflicto con `select_related`
+
+#### **4. Filas de versiones en nave (inventario_detalle_nave_screen)**
+- Antes: fila estática con flecha pequeña
+- Ahora: tarjetas tocables con fondo color, efecto ripple, texto "Ver" + chevron
+
+#### **Archivos Modificados Flutter:**
+- `lib/widgets/autos/detalle_info_general.dart` - Rediseño completo
+- `lib/models/autos/detalle_registro_model.dart` - 7 campos nuevos
+- `lib/screens/autos/inventario/inventario_detalle_nave_screen.dart` - Versiones tocables
+- `pubspec.yaml` - v1.3.14+39
+
+#### **Archivos Modificados Backend:**
+- `core/autos/apis/autos_serializers.py` - Campos nave/embarque en RegistroGeneralDetailSerializer
+- `core/autos/apis/viewsapi.py` - Queryset retrieve con select_related adicional
+
+### **📍 Estado: Bundle generado** - `build\app\outputs\bundle\release\app-release.aab` (56.4MB)
+
+---
+
+## ✅ **COMPLETADO - SESIÓN 2026-01-23 (Sesión 2) - v1.3.16+42**
+
+### **🏠 Limpieza UI - Asistencia y Home**
+
+#### **1. Asistencia - Vista activa unificada en una sola tarjeta**
+- Antes: 3 widgets separados (LiveTimer + ResumenAsistenciaWidget + ListaAsistenciasWidget) con información repetida
+- Ahora: Una sola tarjeta con gradient que muestra todo:
+  - Indicador pulsante + "JORNADA ACTIVA"
+  - Timer grande con tiempo transcurrido
+  - Divider sutil
+  - Filas de detalle: Entrada, Zona, Nave
+- Eliminado `ResumenAsistenciaWidget` del screen (ya no se importa)
+- Eliminado `ListaAsistenciasWidget` del screen (info integrada en la tarjeta)
+
+#### **2. Home - Eliminadas cards "Próximamente"**
+- Removido el loop que rellenaba el grid con cards de "Próximamente" para completar mínimo 4
+- Ahora solo muestra los módulos reales del usuario
+
+#### **3. Android 15 Edge-to-Edge Fix**
+- **Problema**: Google Play advertía sobre APIs deprecadas (`setStatusBarColor`, `setNavigationBarColor`, `setNavigationBarDividerColor`)
+- **Solución**:
+  - `MainActivity.kt` - Agregado `enableEdgeToEdge()` en `onCreate()`
+  - `styles.xml` (regular y night) - Removido `android:windowDrawsSystemBarBackgrounds=false`
+- Esto resuelve el aviso de compatibilidad con Android 15+ (SDK 35+)
+
+#### **Archivos Modificados:**
+- `lib/screens/registro_asistencia_screen.dart` - Vista activa unificada en una tarjeta
+- `lib/screens/home_screen.dart` - Removidas cards "Próximamente"
+- `android/app/src/main/kotlin/.../MainActivity.kt` - `enableEdgeToEdge()`
+- `android/app/src/main/res/values/styles.xml` - Edge-to-edge compatible
+- `android/app/src/main/res/values-night/styles.xml` - Edge-to-edge compatible
+- `pubspec.yaml` - v1.3.16+42
+
+### **📍 Estado: Bundle generado** - `build\app\outputs\bundle\release\app-release.aab` (56.4MB)
+
+---
+
 ## 📋 **TAREAS PENDIENTES - PRÓXIMA SESIÓN**
 
-### **🏭 Módulo Graneles (Prioridad Alta)**
-1. ✅ **Tabs funcionando como Tickets** - Completado
-2. **Formulario de Balanza** - Verificar que funciona correctamente al crear nueva balanza
-3. **Formulario de Silos** - Implementar (actualmente solo lectura)
-4. **Tab Almacén** - Evaluar si se necesita un tab separado o es parte de otro flujo
+### **🚗 Inventario (Siguientes partes)**
+1. **Vista de nave** - Mejorar UX: cargas lentas, diseño visual, usabilidad
+2. **Sección resumen/avances de nave** - Poco intuitivo, mejorar
+3. **Formulario de inventario** - Revisar flujo
+
+### **🏭 Módulo Graneles**
+1. **Formulario de Balanza** - Verificar que funciona correctamente
+2. **Formulario de Silos** - Implementar (actualmente solo lectura)
 
 ### **🏗️ Reorganización del Proyecto (Cuando haya tiempo)**
 - Reorganizar estructura en features
 - Implementar pantallas dinámicas según asistencia
 
-### **🎯 Comando para Próxima Sesión**
-```bash
-cd "C:\Users\Nestor\Desktop\Flutter\stampcamera"
-claude-code .
-```
-
-**Decir a Claude:** "Revisa CLAUDE.md. Prueba los tabs de Balanzas y Silos, verifica que funcionan correctamente."
-
 ---
 
 *Archivo generado automáticamente por Claude Code*
-*Última actualización: 2026-01-22 - v1.3.12+37 - ✅ REPORTE PEDETEO CON RESUMEN POR HORA*
+*Última actualización: 2026-01-23 - v1.3.16+42 - ✅ LIMPIEZA UI ASISTENCIA/HOME + EDGE-TO-EDGE FIX*

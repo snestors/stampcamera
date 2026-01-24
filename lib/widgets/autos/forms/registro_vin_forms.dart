@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
-import 'package:stampcamera/widgets/autos/forms/dialogs/contenedor_search_dialog.dart';
+import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
 import 'package:stampcamera/core/core.dart';
 
@@ -33,7 +33,6 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   int? _selectedFila;
   int? _selectedPosicion;
   int? _selectedContenedor;
-  String? _selectedContenedorText; // ✅ NUEVA: Para guardar el texto descriptivo
   String? _fotoVinPath;
   bool _isLoading = false;
 
@@ -42,6 +41,19 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
   String get formTitle => isEditMode ? 'Editar Inspección' : 'Nueva Inspección';
   String get submitButtonText => isEditMode ? 'Actualizar' : 'Guardar';
   Color get primaryColor => isEditMode ? Colors.orange : AppColors.primary;
+
+  /// Verifica si el usuario puede ver contenedores (nave SIC o superuser/coordinador)
+  bool get _showContenedores {
+    final authState = ref.watch(authProvider);
+    final user = authState.valueOrNull?.user;
+    if (user == null) return false;
+    final isSuperuser = user.isSuperuser;
+    final isCoordinador = user.groups.contains('COORDINACION AUTOS');
+    final asistencia = user.ultimaAsistenciaActiva;
+    final naveRubro = asistencia?.naveRubro;
+    final naveCategoriaRubro = asistencia?.naveCategoriaRubro;
+    return isSuperuser || isCoordinador || (naveCategoriaRubro == 'AUTOS' && naveRubro == 'SIC');
+  }
 
   // ✅ Control de initial_values
   bool _hasAppliedInitialValues = false;
@@ -65,10 +77,9 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
       _selectedFila = registro.fila;
       _selectedPosicion = registro.posicion;
 
-      // ✅ NUEVO: Inicializar contenedor si existe
+      // ✅ Inicializar contenedor si existe
       if (registro.contenedor != null) {
         _selectedContenedor = registro.contenedor!.id;
-        _selectedContenedorText = registro.contenedor!.value;
       }
     }
     // Nota: Para modo crear, los initial_values se manejan en initState después de cargar options
@@ -265,10 +276,6 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
                       _selectedFila = null;
                       _selectedPosicion = null;
                     }
-                    if (value?.toUpperCase() != 'ALMACEN') {
-                      _selectedContenedor = null;
-                      _selectedContenedorText = null;
-                    }
                   });
                 }
               : null,
@@ -441,43 +448,30 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           ),
         ],
 
-        // ✅ CAMPOS ESPECÍFICOS PARA ALMACEN
-        if (_selectedCondicion?.toUpperCase() == 'ALMACEN') ...[
+        // ✅ CAMPOS ESPECÍFICOS PARA NAVE SIC + condición PUERTO/ALMACEN
+        if (_showContenedores &&
+            (_selectedCondicion?.toUpperCase() == 'PUERTO' ||
+             _selectedCondicion?.toUpperCase() == 'ALMACEN')) ...[
           const SizedBox(height: 16),
 
-          // Banner informativo para ALMACEN
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.warehouse, color: AppColors.accent, size: 20),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Campos específicos para zona de almacenamiento',
-                    style: TextStyle(
-                      color: AppColors.accent,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          // Contenedor - AppSearchDropdown
+          AppSearchDropdown<int>(
+            label: 'Contenedor',
+            hint: 'Buscar contenedor...',
+            value: _selectedContenedor,
+            isRequired: false,
+            prefixIcon: const Icon(Icons.inventory_2, color: Color(0xFF6366F1)),
+            options: options.contenedoresDisponibles
+                .map((c) => AppSearchDropdownOption<int>(
+                      value: c.id,
+                      label: c.nContenedor,
+                      subtitle: c.naveDescarga,
+                    ))
+                .toList(),
+            onChanged: (value) {
+              setState(() => _selectedContenedor = value);
+            },
           ),
-
-          const SizedBox(height: 16),
-
-          // ✅ CAMPO DE BÚSQUEDA DE CONTENEDORES
-          _buildContenedorField(options, detalle),
         ],
 
         // ✅ Mensaje informativo si no hay campos específicos
@@ -523,246 +517,10 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
     );
   }
 
-  // ============================================================================
-  // MÉTODOS DE CONTENEDORES CON BÚSQUEDA
-  // ============================================================================
-
-  /// Construir campo de contenedor con búsqueda
-  Widget _buildContenedorField(
-    RegistroVinOptions options,
-    DetalleRegistroModel? detalle,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ✅ Campo de búsqueda de contenedores
-        _buildContenedorSearchField(),
-
-        // ✅ Información del contenedor seleccionado (si existe)
-        if (_selectedContenedor != null) _buildSelectedContenedorDisplay(),
-      ],
-    );
-  }
-
-  /// Campo de búsqueda/selección de contenedores
-  Widget _buildContenedorSearchField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ✅ Mostrar contenedor actual en modo edición
-        if (isEditMode &&
-            widget.registroVin?.contenedor != null &&
-            _selectedContenedor == null) ...[
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.accent.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.inventory_2,
-                      color: AppColors.accent,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Contenedor actual:',
-                      style: TextStyle(
-                        color: AppColors.accent,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.registroVin!.contenedor!.value,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showContenedorSearchDialog(),
-                        icon: const Icon(Icons.search, size: 16),
-                        label: const Text('Cambiar contenedor'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.accent,
-                          side: const BorderSide(color: AppColors.accent),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _selectedContenedor = null;
-                          _selectedContenedorText = null;
-                        });
-                      },
-                      icon: const Icon(Icons.clear, size: 16),
-                      label: const Text('Quitar'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ] else ...[
-          // ✅ Campo para crear/seleccionar contenedor
-          InkWell(
-            onTap: () => _showContenedorSearchDialog(),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.inventory_2, color: AppColors.accent),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _selectedContenedor != null
-                              ? 'Contenedor seleccionado'
-                              : 'Seleccionar contenedor${_isContenedorRequired() ? ' *' : ''}',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: _selectedContenedor != null
-                                ? Colors.black87
-                                : Colors.grey[600],
-                          ),
-                        ),
-                        if (_selectedContenedor != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            _getSelectedContenedorText(),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ] else ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Toca para buscar y seleccionar un contenedor',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    _selectedContenedor != null ? Icons.edit : Icons.search,
-                    color: AppColors.accent,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-
-        // ✅ Mensaje de validación si es requerido
-        if (_isContenedorRequired() && _selectedContenedor == null) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Seleccione un contenedor',
-            style: TextStyle(color: Colors.red[700], fontSize: 12),
-          ),
-        ],
-      ],
-    );
-  }
-
-  /// Mostrar dialog de búsqueda de contenedores
-  void _showContenedorSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => ContenedorSearchDialog(
-        onContenedorSelected: (contenedorId, contenedorText) {
-          setState(() {
-            _selectedContenedor = contenedorId;
-            _selectedContenedorText =
-                contenedorText; // Nueva variable para guardar el texto
-          });
-          Navigator.of(context).pop();
-        },
-      ),
-    );
-  }
-
-  /// Obtener texto del contenedor seleccionado
-  String _getSelectedContenedorText() {
-    if (isEditMode &&
-        widget.registroVin?.contenedor != null &&
-        _selectedContenedor == null) {
-      return widget.registroVin!.contenedor!.value;
-    }
-    return _selectedContenedorText ?? 'Contenedor ID: $_selectedContenedor';
-  }
-
-  /// Display del contenedor seleccionado (información adicional)
-  Widget _buildSelectedContenedorDisplay() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: AppColors.accent.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle, color: AppColors.accent, size: 16),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              '✓ Contenedor configurado',
-              style: const TextStyle(
-                color: AppColors.accent,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   /// Determinar si el contenedor es requerido
   bool _isContenedorRequired() {
-    // Por ejemplo: requerido solo para condición ALMACEN
-    return _selectedCondicion?.toUpperCase() == 'ALMACEN';
+    return false;
   }
 
   // ============================================================================

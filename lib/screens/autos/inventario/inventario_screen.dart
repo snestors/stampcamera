@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
-
-// Importaciones del proyecto
-import '../../../widgets/connection_error_screen.dart';
+import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class InventarioScreen extends ConsumerStatefulWidget {
   const InventarioScreen({super.key});
@@ -83,9 +82,9 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                   },
                 )
               : null,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusL)),
           filled: true,
-          fillColor: Colors.grey[50],
+          fillColor: AppColors.surface,
         ),
         onChanged: (value) {
           setState(() {});
@@ -118,7 +117,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
             SizedBox(height: 16),
             Text(
               'Cargando inventarios...',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -156,26 +155,17 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
             );
           }
 
-          return Container(
-            padding: const EdgeInsets.all(16),
-            alignment: Alignment.center,
-            child: Column(
-              children: [
-                if (notifier.isLoadingMore) ...[
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Cargando más resultados...',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ] else ...[
-                  TextButton.icon(
-                    onPressed: () => notifier.loadMore(),
-                    icon: const Icon(Icons.expand_more),
-                    label: const Text('Cargar más'),
-                  ),
-                ],
-              ],
+          return Padding(
+            padding: EdgeInsets.all(DesignTokens.spaceM),
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
           );
         },
@@ -184,139 +174,155 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
   }
 
   Widget _buildNaveCard(InventarioNave nave) {
-    return Card(
-      child: ListTile(
-        title: Row(
-          children: [
-            Icon(
-              nave.isSIC ? Icons.inventory : Icons.directions_boat,
-              color: nave.isSIC ? Colors.orange.shade700 : Colors.blue.shade700,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                nave.naveDescargaNombre,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ],
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (nave.naveDescargaPuerto.isNotEmpty)
-                Text(
-                  'Puerto: ${nave.naveDescargaPuerto}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              if (nave.naveDescargaRubro.isNotEmpty)
-                Text(
-                  'Rubro: ${nave.naveDescargaRubro}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              if (nave.naveDescargaFechaAtraque.isNotEmpty)
-                Text(
-                  'Atraque: ${nave.naveDescargaFechaAtraque}',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              const SizedBox(height: 4),
+    final accentColor = nave.isSIC ? AppColors.warning : AppColors.primary;
 
-              // Fila principal con total
-              Row(
-                children: [
-                  Text(
-                    '${nave.totalUnidades} unidades',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 4),
-
-              // Fila con contadores específicos usando getters del modelo
-              Row(
-                children: [
-                  // Mostrar descargadas según el tipo de rubro
-                  if (nave.isFPR && nave.totalDescargadoPuerto > 0) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${nave.totalDescargadoPuerto} descargadas',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.blue.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-
-                  if (nave.isSIC && nave.totalDescargadoAlmacen > 0) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${nave.totalDescargadoAlmacen} descargadas',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.orange.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-
-                  // Recepcionadas - para TODOS
-                  if (nave.totalDescargadoRecepcion > 0) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '${nave.totalDescargadoRecepcion} recepcionadas',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.green.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _navigateToNaveDetail(nave.naveDescargaId),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                // Accent strip lateral
+                Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      bottomLeft: Radius.circular(12),
+                    ),
+                  ),
+                ),
+                // Content
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.all(DesignTokens.spaceM),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title row
+                        Row(
+                          children: [
+                            Icon(
+                              nave.isSIC ? Icons.inventory : Icons.directions_boat,
+                              color: accentColor,
+                              size: 20,
+                            ),
+                            SizedBox(width: DesignTokens.spaceS),
+                            Expanded(
+                              child: Text(
+                                nave.naveDescargaNombre,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: DesignTokens.fontSizeL,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 20,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: DesignTokens.spaceS),
+
+                        // Metadata row
+                        Wrap(
+                          spacing: DesignTokens.spaceM,
+                          runSpacing: DesignTokens.spaceXS,
+                          children: [
+                            if (nave.naveDescargaPuerto.isNotEmpty)
+                              _buildMetaItem(Icons.location_on, nave.naveDescargaPuerto),
+                            if (nave.naveDescargaFechaAtraque.isNotEmpty)
+                              _buildMetaItem(Icons.calendar_today, nave.naveDescargaFechaAtraque),
+                            _buildMetaItem(Icons.inventory_2, '${nave.totalUnidades} unidades'),
+                          ],
+                        ),
+
+                        SizedBox(height: DesignTokens.spaceS),
+
+                        // Stats badges
+                        Wrap(
+                          spacing: DesignTokens.spaceS,
+                          runSpacing: DesignTokens.spaceXS,
+                          children: [
+                            if (nave.isFPR && nave.totalDescargadoPuerto > 0)
+                              _buildBadge(
+                                '${nave.totalDescargadoPuerto} puerto',
+                                AppColors.primary,
+                              ),
+                            if (nave.isSIC && nave.totalDescargadoAlmacen > 0)
+                              _buildBadge(
+                                '${nave.totalDescargadoAlmacen} almacén',
+                                AppColors.warning,
+                              ),
+                            if (nave.totalDescargadoRecepcion > 0)
+                              _buildBadge(
+                                '${nave.totalDescargadoRecepcion} recep.',
+                                AppColors.success,
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        onTap: () => _navigateToNaveDetail(nave.naveDescargaId),
+      ),
+    );
+  }
+
+  Widget _buildMetaItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 12, color: AppColors.textSecondary),
+        SizedBox(width: DesignTokens.spaceXS),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: DesignTokens.fontSizeXS,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -331,14 +337,14 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
           Icon(
             isSearching ? Icons.search_off : Icons.inventory_outlined,
             size: 64,
-            color: Colors.grey[400],
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 16),
           Text(
             isSearching ? 'Sin resultados' : 'No hay inventarios',
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
+            ).textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
           ),
           const SizedBox(height: 8),
           Text(
@@ -346,7 +352,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                 ? 'No se encontraron inventarios que coincidan con "${_searchController.text}"'
                 : 'Aún no hay inventarios registrados',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
           if (isSearching) ...[
@@ -375,7 +381,6 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
   // ============================================================================
 
   void _navigateToNaveDetail(int naveId) {
-    print("To inventario Detalle ID: $naveId");
     context.push('/autos/inventario/nave/${naveId.toString()}');
   }
 

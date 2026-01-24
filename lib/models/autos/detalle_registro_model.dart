@@ -5,6 +5,13 @@ class DetalleRegistroModel {
   final String? factura;
   final String? bl;
   final String? naveDescarga;
+  final String? puertoDescarga;
+  final String? fechaAtraque;
+  final String? destinatario;
+  final String? agenteAduanal;
+  final String? nombreEmbarque;
+  final String? nViaje;
+  final int? cantidadEmbarque;
   final InformacionUnidad? informacionUnidad;
   final List<RegistroVin> registrosVin;
   final List<FotoPresentacion> fotosPresentacion;
@@ -17,6 +24,13 @@ class DetalleRegistroModel {
     this.factura,
     this.bl,
     this.naveDescarga,
+    this.puertoDescarga,
+    this.fechaAtraque,
+    this.destinatario,
+    this.agenteAduanal,
+    this.nombreEmbarque,
+    this.nViaje,
+    this.cantidadEmbarque,
     this.informacionUnidad,
     required this.registrosVin,
     required this.fotosPresentacion,
@@ -31,6 +45,13 @@ class DetalleRegistroModel {
       factura: json['factura'],
       bl: json['bl'],
       naveDescarga: json['nave_descarga'],
+      puertoDescarga: json['puerto_descarga'],
+      fechaAtraque: json['fecha_atraque'],
+      destinatario: json['destinatario'],
+      agenteAduanal: json['agente_aduanal'],
+      nombreEmbarque: json['nombre_embarque'],
+      nViaje: json['n_viaje'],
+      cantidadEmbarque: json['cantidad_embarque'],
       informacionUnidad: json['informacion_unidad'] != null
           ? InformacionUnidad.fromJson(json['informacion_unidad'])
           : null,
@@ -129,9 +150,6 @@ class RegistroVin {
   });
 
   factory RegistroVin.fromJson(Map<String, dynamic> json) {
-    // ✅ DEBUG: Imprimir el JSON para diagnosticar
-    print('🔍 RegistroVin.fromJson recibió: $json');
-
     return RegistroVin(
       // ✅ FIX: Validar que id no sea null
       id:

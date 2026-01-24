@@ -39,7 +39,7 @@ class _InventarioDetalleNaveScreenState
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle de Inventarios'),
-        backgroundColor: const Color(0xFF003B5C),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -123,7 +123,7 @@ class _InventarioDetalleNaveScreenState
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF003B5C),
+          color: AppColors.primary,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -259,12 +259,12 @@ class _InventarioDetalleNaveScreenState
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.business,
-                color: Color(0xFF003B5C),
+                color: AppColors.primary,
                 size: 20,
               ),
             ),
@@ -314,8 +314,8 @@ class _InventarioDetalleNaveScreenState
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.neutral),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
       ),
       child: Column(
         children: [
@@ -323,7 +323,7 @@ class _InventarioDetalleNaveScreenState
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF003B5C),
+              color: AppColors.primary,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -353,7 +353,7 @@ class _InventarioDetalleNaveScreenState
           // Header de la tabla
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(color: Colors.grey.shade100),
+            decoration: BoxDecoration(color: AppColors.surface),
             child: Row(
               children: [
                 const Expanded(
@@ -376,7 +376,7 @@ class _InventarioDetalleNaveScreenState
                   child: Icon(
                     Icons.download,
                     size: 16,
-                    color: Colors.grey.shade600,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const Spacer(),
@@ -391,9 +391,9 @@ class _InventarioDetalleNaveScreenState
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: AppColors.surface,
               border: Border(
-                top: BorderSide(color: Colors.grey.shade300, width: 1),
+                top: BorderSide(color: AppColors.neutral, width: 1),
               ),
             ),
             child: Row(
@@ -444,8 +444,8 @@ class _InventarioDetalleNaveScreenState
       childrenPadding: const EdgeInsets.only(left: 32, right: 16, bottom: 8),
       backgroundColor: Colors.white,
       collapsedBackgroundColor: Colors.white,
-      iconColor: Colors.grey.shade600,
-      collapsedIconColor: Colors.grey.shade600,
+      iconColor: AppColors.textSecondary,
+      collapsedIconColor: AppColors.textSecondary,
       title: Row(
         children: [
           Expanded(
@@ -475,8 +475,8 @@ class _InventarioDetalleNaveScreenState
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.blue.shade50,
-            borderRadius: BorderRadius.circular(6),
+            color: AppColors.primary.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +486,7 @@ class _InventarioDetalleNaveScreenState
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
-                  color: Color(0xFF003B5C),
+                  color: AppColors.primary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -502,69 +502,81 @@ class _InventarioDetalleNaveScreenState
 
   Widget _buildVersionRowSimple(InventarioVersion version) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          // Estado de inventario
-          Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(
-              color: version.inventario ? Colors.green : Colors.orange,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 10),
-
-          // Información de la versión
-          Expanded(
-            child: Text(
-              '${version.version} (${version.cantidadUnidades} unidades)',
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
-
-          // Badge de estado
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToInventarioDetail(version.informacionUnidadId),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: version.inventario
-                  ? Colors.green.shade100
-                  : Colors.orange.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              version.inventario ? 'Con Inv.' : 'Sin Inv.',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+                  ? AppColors.success.withValues(alpha: 0.08)
+                  : AppColors.warning.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              border: Border.all(
                 color: version.inventario
-                    ? Colors.green.shade700
-                    : Colors.orange.shade700,
+                    ? AppColors.success.withValues(alpha: 0.3)
+                    : AppColors.warning.withValues(alpha: 0.3),
+                width: 0.8,
               ),
             ),
-          ),
+            child: Row(
+              children: [
+                // Estado de inventario
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: version.inventario ? AppColors.success : AppColors.warning,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
 
-          const SizedBox(width: 8),
+                // Información de la versión
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        version.version,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${version.cantidadUnidades} unidades • ${version.inventario ? "Inventariado" : "Pendiente"}',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeXS,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
-          // Botón de acción
-          GestureDetector(
-            onTap: () =>
-                _navigateToInventarioDetail(version.informacionUnidadId),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF003B5C).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
-                color: Color(0xFF003B5C),
-              ),
+                // Texto + flecha de acción
+                Text(
+                  'Ver',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -689,7 +701,7 @@ class _InventarioDetalleNaveScreenState
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: const BoxDecoration(
-              color: Color(0xFF003B5C),
+              color: AppColors.primary,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
@@ -859,7 +871,6 @@ class _InventarioDetalleNaveScreenState
   }
 
   void _navigateToInventarioDetail(int informacionUnidadId) {
-    print("Informacion Unidad $informacionUnidadId");
     context.push('/autos/inventario/detalle/$informacionUnidadId');
   }
 }

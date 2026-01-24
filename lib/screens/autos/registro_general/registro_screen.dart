@@ -294,14 +294,14 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
           Icon(
             isSearching ? Icons.search_off : Icons.inbox_outlined,
             size: 64,
-            color: Colors.grey[400],
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 16),
           Text(
             isSearching ? 'Sin resultados' : 'No hay registros',
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
+            ).textTheme.titleLarge?.copyWith(color: AppColors.textPrimary),
           ),
           const SizedBox(height: 8),
           Text(
@@ -309,7 +309,7 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
                 ? 'No se encontraron registros que coincidan con "${_searchController.text}"'
                 : 'Aún no hay registros disponibles',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
           if (isSearching) ...[
