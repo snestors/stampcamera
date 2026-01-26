@@ -1,9 +1,10 @@
 // screens/autos/contenedores/contenedores_tab.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
-import 'package:stampcamera/screens/autos/contenedores/contenedor_form.dart';
 import 'package:stampcamera/core/core.dart';
 
 class ContenedoresTab extends ConsumerStatefulWidget {
@@ -467,40 +468,30 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(DesignTokens.radiusS - 1),
-          child: Image.network(
-            thumbnailUrl,
+          child: CachedNetworkImage(
+            imageUrl: thumbnailUrl,
             fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-
-              return Container(
-                color: AppColors.backgroundLight,
-                child: Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.secondary,
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                          : null,
-                    ),
+            placeholder: (context, url) => Container(
+              color: AppColors.backgroundLight,
+              child: const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.secondary,
                   ),
                 ),
-              );
-            },
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: AppColors.error.withValues(alpha: 0.1),
-                child: Icon(
-                  Icons.error_outline,
-                  size: DesignTokens.iconL,
-                  color: AppColors.error,
-                ),
-              );
-            },
+              ),
+            ),
+            errorWidget: (context, url, error) => Container(
+              color: AppColors.error.withValues(alpha: 0.1),
+              child: Icon(
+                Icons.error_outline,
+                size: DesignTokens.iconL,
+                color: AppColors.error,
+              ),
+            ),
           ),
         ),
       ),
@@ -575,65 +566,47 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                       bottomRight: Radius.circular(DesignTokens.radiusXL),
                     ),
                     child: InteractiveViewer(
-                      child: Image.network(
-                        imageUrl,
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
                         fit: BoxFit.contain,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-
-                          return SizedBox(
-                            height: 300,
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircularProgressIndicator(
-                                    color: AppColors.secondary,
-                                    value:
-                                        loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                  .cumulativeBytesLoaded /
-                                              loadingProgress
-                                                  .expectedTotalBytes!
-                                        : null,
-                                  ),
-                                  const SizedBox(
-                                    height: DesignTokens.spaceM,
-                                  ),
-                                  const Text(
-                                    'Cargando imagen...',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
+                        placeholder: (context, url) => SizedBox(
+                          height: 300,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  color: AppColors.secondary,
+                                ),
+                                const SizedBox(height: DesignTokens.spaceM),
+                                const Text(
+                                  'Cargando imagen...',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return SizedBox(
-                            height: 300,
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.error_outline,
-                                    color: AppColors.error,
-                                    size: 48,
-                                  ),
-                                  const SizedBox(
-                                    height: DesignTokens.spaceM,
-                                  ),
-                                  const Text(
-                                    'Error al cargar imagen',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => SizedBox(
+                          height: 300,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: AppColors.error,
+                                  size: 48,
+                                ),
+                                const SizedBox(height: DesignTokens.spaceM),
+                                const Text(
+                                  'Error al cargar imagen',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -694,17 +667,11 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
   }
 
   void _showCreateForm(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ContenedorForm()),
-    );
+    context.push('/autos/contenedor/crear');
   }
 
   void _showEditForm(ContenedorModel contenedor) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ContenedorForm(contenedor: contenedor)),
-    );
+    context.push('/autos/contenedor/editar', extra: {'contenedor': contenedor});
   }
 
   Future<void> _confirmDelete(ContenedorModel contenedor) async {

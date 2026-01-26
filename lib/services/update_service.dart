@@ -8,24 +8,13 @@ class UpdateService {
     try {
       final info = await InAppUpdate.checkForUpdate();
 
-      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-        // 🎯 IGUAL QUE EL EJEMPLO - DIRECTAMENTE INICIA FLEXIBLE UPDATE
-        await _startUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable &&
+          info.immediateUpdateAllowed) {
+        // Actualización obligatoria - bloquea la app hasta que actualice
+        await InAppUpdate.performImmediateUpdate();
       }
     } catch (error) {
       // Error silencioso - continúa normal
-    }
-  }
-
-  static Future<void> _startUpdate() async {
-    try {
-      // 🔥 INICIA DESCARGA EN SEGUNDO PLANO (como el ejemplo)
-      await InAppUpdate.startFlexibleUpdate();
-
-      // 🔄 COMPLETA LA INSTALACIÓN AUTOMÁTICAMENTE
-      await InAppUpdate.completeFlexibleUpdate();
-    } catch (error) {
-      // Error silencioso
     }
   }
 }

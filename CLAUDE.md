@@ -547,7 +547,7 @@ DetalleRegistroModel {
 - `VehicleHelpers.getCondicionColor()` - Colores por condición
 
 ## Versiones
-- **App**: 1.3.16+42
+- **App**: 1.3.19+45
 - **Flutter**: 3.38.7
 - **Dart**: 3.10.7
 - **flutter_riverpod**: ^2.6.1
@@ -645,6 +645,57 @@ DetalleRegistroModel {
 
 ---
 
+## ✅ **COMPLETADO - SESIÓN 2026-01-24 - v1.3.19+45**
+
+### **🔄 Fase 1: Migración navegación a go_router**
+Migrados los últimos 3 archivos de `Navigator.push(MaterialPageRoute(...))` a `context.push()`:
+- `detalle_fotos_presentacion.dart` — crear/editar foto
+- `detalle_registro_screen.dart` — FAB de registroVin, foto, daño
+- `contenedores_tab.dart` — crear/editar contenedor
+
+**Quedan 2 `Navigator.push` intencionales** (no migrar):
+- `detalle_imagen_preview.dart` — overlay fullscreen de imagen
+- `registro_screen.dart` — escáner VIN con callback
+
+### **⚡ Fase 2: Timers adaptativos + CachedNetworkImage**
+
+#### Timers con backoff exponencial (10s → 120s):
+- `lib/services/queue_service.dart` — Timer.periodic 30s → Timer adaptativo
+- `lib/services/offline_first_queue.dart` — Timer.periodic 30s → Timer adaptativo
+
+#### Image.network → CachedNetworkImage (10 instancias, 7 archivos):
+- `lib/widgets/common/reusable_camera_card.dart` (2)
+- `lib/widgets/autos/detalle_imagen_preview.dart` (2)
+- `lib/screens/graneles/ticket_detalle_screen.dart` (1)
+- `lib/screens/graneles/tabs/tickets_tab.dart` (1)
+- `lib/screens/graneles/tabs/balanzas_tab.dart` (1)
+- `lib/screens/graneles/tabs/almacen_tab.dart` (1)
+- `lib/screens/autos/contenedores/contenedores_tab.dart` (2)
+
+**Dependencia agregada:** `cached_network_image: ^3.4.1`
+
+### **🎯 Fase 3: Optimización de rebuilds**
+- `lib/screens/registro_asistencia_screen.dart` — Timer 1s con setState → `ValueNotifier<Duration>` + `ValueListenableBuilder` (eliminados 60 rebuilds/min)
+- `lib/screens/autos/contenedores/contenedor_form.dart` — 4 setState consecutivos → 1 consolidado
+
+### **🐛 Bug Fix: Formulario de daño con botón bloqueado**
+
+**Síntoma:** Botón de submit queda deshabilitado permanentemente después de un intento fallido.
+
+**Causa raíz:** `_hasSubmitted = true` nunca se reseteaba si la operación fallaba. Condición del botón: `(_isLoading || _hasSubmitted || !_canSubmit) ? null : _submitForm`
+
+**Fixes aplicados (2 capas):**
+1. `_hasSubmitted = false` en branches de error y catch
+2. Timeout de 10s en llamadas offline-first (previene hang si SharedPreferences se bloquea)
+
+**Archivos:**
+- `lib/widgets/autos/forms/dano_form.dart`
+- `lib/widgets/autos/forms/fotos_presentacion_form.dart`
+
+### **📍 Estado: Bundle generado** - `build\app\outputs\bundle\release\app-release.aab` (56.6MB)
+
+---
+
 ## 📋 **TAREAS PENDIENTES - PRÓXIMA SESIÓN**
 
 ### **🚗 Inventario (Siguientes partes)**
@@ -663,4 +714,4 @@ DetalleRegistroModel {
 ---
 
 *Archivo generado automáticamente por Claude Code*
-*Última actualización: 2026-01-23 - v1.3.16+42 - ✅ LIMPIEZA UI ASISTENCIA/HOME + EDGE-TO-EDGE FIX*
+*Última actualización: 2026-01-24 - v1.3.19+45 - ✅ GO_ROUTER MIGRATION + ADAPTIVE TIMERS + CACHED IMAGES + BUGFIX*

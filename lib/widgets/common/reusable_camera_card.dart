@@ -46,6 +46,7 @@
 library;
 
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
@@ -283,23 +284,15 @@ class ReusableCameraCard extends StatelessWidget {
 
   /// Widget para imagen desde URL
   Widget _buildNetworkImage() {
-    return Image.network(
-      effectiveImageUrl!,
+    return CachedNetworkImage(
+      imageUrl: effectiveImageUrl!,
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Center(
-          child: CircularProgressIndicator(
-            value: loadingProgress.expectedTotalBytes != null
-                ? loadingProgress.cumulativeBytesLoaded /
-                      loadingProgress.expectedTotalBytes!
-                : null,
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
+      placeholder: (context, url) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      errorWidget: (context, url, error) {
         return Container(
           color: Colors.red.shade50,
           child: const Center(
@@ -557,17 +550,17 @@ class ReusableCameraCard extends StatelessWidget {
               child: InteractiveViewer(
                 child: isLocalImage
                     ? Image.file(File(currentImagePath!), fit: BoxFit.contain)
-                    : Image.network(
-                        currentImageUrl!, // Usar URL completa para fullscreen
+                    : CachedNetworkImage(
+                        imageUrl: currentImageUrl!,
                         fit: BoxFit.contain,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          );
-                        },
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => const Center(
+                          child: Icon(Icons.error, color: Colors.red),
+                        ),
                       ),
               ),
             ),

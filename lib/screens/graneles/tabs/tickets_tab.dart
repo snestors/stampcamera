@@ -1,6 +1,7 @@
 // =============================================================================
 // TAB DE TICKETS DE MUELLE - TODOS LOS TICKETS CON BÚSQUEDA E INFINITE SCROLL
 // =============================================================================
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -658,14 +659,15 @@ class _TicketCard extends StatelessWidget {
                 bottomLeft: Radius.circular(DesignTokens.radiusL),
                 bottomRight: Radius.circular(DesignTokens.radiusL),
               ),
-              child: Image.network(
-                url,
+              child: CachedNetworkImage(
+                imageUrl: url,
                 fit: BoxFit.contain,
-                loadingBuilder: (context, child, lp) {
-                  if (lp == null) return child;
-                  return Container(height: 300, color: AppColors.surface, child: const Center(child: CircularProgressIndicator()));
-                },
-                errorBuilder: (context, error, st) => Container(
+                placeholder: (context, url) => Container(
+                  height: 300,
+                  color: AppColors.surface,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
                   height: 200,
                   color: AppColors.surface,
                   child: Center(child: Icon(Icons.broken_image, size: 48, color: AppColors.textSecondary)),

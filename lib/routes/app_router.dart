@@ -1,8 +1,13 @@
 import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stampcamera/screens/autos/autos_screen.dart';
+import 'package:stampcamera/screens/autos/contenedores/contenedor_form.dart';
+import 'package:stampcamera/widgets/autos/forms/dano_form.dart';
+import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
+import 'package:stampcamera/widgets/autos/forms/fotos_presentacion_form.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_nave_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_screen.dart';
 import 'package:stampcamera/screens/autos/registro_general/detalle_registro_screen.dart';
@@ -83,6 +88,83 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'reporte-pedeteo',
             name: 'reporte-pedeteo',
             builder: (context, state) => const ReportePedeteoScreen(),
+          ),
+          // Formularios con transición slide-up
+          GoRoute(
+            path: 'dano/crear/:vin',
+            pageBuilder: (context, state) => _slideUpPage(
+              state,
+              DanoForm(vin: state.pathParameters['vin']!),
+            ),
+          ),
+          GoRoute(
+            path: 'dano/editar/:vin/:danoId',
+            pageBuilder: (context, state) => _slideUpPage(
+              state,
+              DanoForm(
+                vin: state.pathParameters['vin']!,
+                danoId: int.parse(state.pathParameters['danoId']!),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: 'registro-vin/crear/:vin',
+            pageBuilder: (context, state) => _slideUpPage(
+              state,
+              RegistroVinForm(vin: state.pathParameters['vin']!),
+            ),
+          ),
+          GoRoute(
+            path: 'registro-vin/editar/:vin',
+            pageBuilder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return _slideUpPage(
+                state,
+                RegistroVinForm(
+                  vin: state.pathParameters['vin']!,
+                  registroVin: extra?['registroVin'],
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: 'foto/crear/:vin',
+            pageBuilder: (context, state) => _slideUpPage(
+              state,
+              FotoPresentacionForm(vin: state.pathParameters['vin']!),
+            ),
+          ),
+          GoRoute(
+            path: 'foto/editar/:vin',
+            pageBuilder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return _slideUpPage(
+                state,
+                FotoPresentacionForm(
+                  vin: state.pathParameters['vin']!,
+                  fotoId: extra?['fotoId'] as int?,
+                  tipoInicial: extra?['tipoInicial'] as String?,
+                  nDocumentoInicial: extra?['nDocumentoInicial'] as String?,
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: 'contenedor/crear',
+            pageBuilder: (context, state) => _slideUpPage(
+              state,
+              const ContenedorForm(),
+            ),
+          ),
+          GoRoute(
+            path: 'contenedor/editar',
+            pageBuilder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return _slideUpPage(
+                state,
+                ContenedorForm(contenedor: extra?['contenedor']),
+              );
+            },
           ),
         ],
       ),
@@ -253,3 +335,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
   );
 });
+
+/// Transición slide-up para formularios (como modal fullscreen)
+CustomTransitionPage<T> _slideUpPage<T>(GoRouterState state, Widget child) {
+  return CustomTransitionPage<T>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 300),
+    reverseTransitionDuration: const Duration(milliseconds: 250),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        )),
+        child: child,
+      );
+    },
+  );
+}

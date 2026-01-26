@@ -1,6 +1,7 @@
 // =============================================================================
 // PANTALLA DE DETALLE DE TICKET MUELLE - RESUMEN COMPLETO
 // =============================================================================
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -616,18 +617,15 @@ class _PhotoButton extends StatelessWidget {
                 bottomLeft: Radius.circular(DesignTokens.radiusL),
                 bottomRight: Radius.circular(DesignTokens.radiusL),
               ),
-              child: Image.network(
-                url,
+              child: CachedNetworkImage(
+                imageUrl: url,
                 fit: BoxFit.contain,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    height: 300,
-                    color: AppColors.surface,
-                    child: const Center(child: CircularProgressIndicator()),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) => Container(
+                placeholder: (context, url) => Container(
+                  height: 300,
+                  color: AppColors.surface,
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
                   height: 200,
                   color: AppColors.surface,
                   child: Column(

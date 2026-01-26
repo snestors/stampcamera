@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
-import 'package:stampcamera/widgets/autos/forms/fotos_presentacion_form.dart';
 import 'package:stampcamera/core/core.dart';
 
 class DetalleFotosPresentacion extends ConsumerWidget {
@@ -58,10 +58,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
 
     String? result = 'create_another';
     while (result == 'create_another' && context.mounted) {
-      result = await Navigator.push<String>(
-        context,
-        MaterialPageRoute(builder: (context) => FotoPresentacionForm(vin: vin)),
-      );
+      result = await context.push<String>('/autos/foto/crear/$vin');
     }
   }
 
@@ -277,17 +274,11 @@ class DetalleFotosPresentacion extends ConsumerWidget {
   // ACCIÓN PARA EDITAR FOTO
   // ============================================================================
   void _showEditFotoForm(BuildContext context, FotoPresentacion foto) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FotoPresentacionForm(
-          vin: vin,
-          fotoId: foto.id,
-          tipoInicial: foto.tipo,
-          nDocumentoInicial: foto.nDocumento,
-        ),
-      ),
-    );
+    context.push('/autos/foto/editar/$vin', extra: {
+      'fotoId': foto.id,
+      'tipoInicial': foto.tipo,
+      'nDocumentoInicial': foto.nDocumento,
+    });
   }
 
   // ============================================================================

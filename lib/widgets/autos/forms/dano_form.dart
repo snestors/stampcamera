@@ -82,7 +82,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
               ),
             ),
           ),
-          _buildActionButtons(),
+          SafeArea(top: false, child: _buildActionButtons()),
         ],
       ),
     );
@@ -1000,6 +1000,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         );
       } else {
         // Modo crear: usa fire-and-forget (guarda localmente y sincroniza en background)
+        // Timeout de seguridad: si SharedPreferences se bloquea, no dejar el form colgado
         success = await notifier.createDanoOfflineFirst(
           registroVinId: _selectedRegistroVinId!,
           tipoDano: _selectedTipoDano!,
@@ -1013,6 +1014,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           relevante: _relevante,
           imagenes: _getValidImages(),
           nDocumento: _selectedFotoPresentacion,
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => false,
         );
       }
 
@@ -1025,6 +1029,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                 : '✅ Daño guardado (sincronizando...)',
           );
         } else {
+          _hasSubmitted = false; // Permitir reintentar
           _showError(
             '❌ Error al ${isEditMode ? 'actualizar' : 'guardar'} el daño',
           );
@@ -1032,6 +1037,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       }
     } catch (e) {
       if (mounted) {
+        _hasSubmitted = false; // Permitir reintentar
         _showError('❌ Error: ${e.toString()}');
       }
     } finally {

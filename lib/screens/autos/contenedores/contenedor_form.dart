@@ -71,41 +71,41 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
     // Solo aplicar initial_values si estamos creando (no editando)
     if (widget.contenedor != null || !mounted) return;
 
+    int? naveId = _selectedNaveId;
+    int? zonaId = _selectedZonaId;
+
     // Primero intentar con initialValues del backend
     if (options.initialValues.isNotEmpty) {
-      if (options.initialValues.containsKey('nave_descarga')) {
-        final naveId = options.initialValues['nave_descarga'] as int?;
-        if (naveId != null && _selectedNaveId == null) {
-          setState(() => _selectedNaveId = naveId);
-        }
+      if (naveId == null && options.initialValues.containsKey('nave_descarga')) {
+        naveId = options.initialValues['nave_descarga'] as int?;
       }
-      if (options.initialValues.containsKey('zona_inspeccion')) {
-        final zonaId = options.initialValues['zona_inspeccion'] as int?;
-        if (zonaId != null && _selectedZonaId == null) {
-          setState(() => _selectedZonaId = zonaId);
-        }
+      if (zonaId == null && options.initialValues.containsKey('zona_inspeccion')) {
+        zonaId = options.initialValues['zona_inspeccion'] as int?;
       }
     }
 
     // Fallback: usar datos de asistencia activa del usuario
-    if (_selectedNaveId == null || _selectedZonaId == null) {
+    if (naveId == null || zonaId == null) {
       final authState = ref.read(authProvider);
       final asistencia = authState.valueOrNull?.user?.ultimaAsistenciaActiva;
       if (asistencia != null) {
-        if (_selectedNaveId == null && asistencia.naveId != null) {
-          // Verificar que la nave existe en las opciones disponibles
+        if (naveId == null && asistencia.naveId != null) {
           final naveExists = options.navesDisponibles.any((n) => n.id == asistencia.naveId);
-          if (naveExists) {
-            setState(() => _selectedNaveId = asistencia.naveId);
-          }
+          if (naveExists) naveId = asistencia.naveId;
         }
-        if (_selectedZonaId == null && asistencia.zonaTrabajoId != null) {
+        if (zonaId == null && asistencia.zonaTrabajoId != null) {
           final zonaExists = options.zonasDisponibles.any((z) => z.id == asistencia.zonaTrabajoId);
-          if (zonaExists) {
-            setState(() => _selectedZonaId = asistencia.zonaTrabajoId);
-          }
+          if (zonaExists) zonaId = asistencia.zonaTrabajoId;
         }
       }
+    }
+
+    // Aplicar cambios en un solo setState
+    if (naveId != _selectedNaveId || zonaId != _selectedZonaId) {
+      setState(() {
+        _selectedNaveId = naveId;
+        _selectedZonaId = zonaId;
+      });
     }
   }
 

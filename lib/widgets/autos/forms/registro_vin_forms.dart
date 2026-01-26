@@ -192,34 +192,37 @@ class _RegistroVinFormState extends ConsumerState<RegistroVinForm> {
           ),
         ),
 
-        // ✅ Botones fijos en la parte inferior
-        Container(
-          padding: const EdgeInsets.only(top: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(
-                color: Colors.grey.withValues(alpha: 0.2),
-                width: 1,
+        // Botones fijos en la parte inferior
+        SafeArea(
+          top: false,
+          child: Container(
+            padding: const EdgeInsets.only(top: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(
+                  color: Colors.grey.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
             ),
+            child: _buildActionButtons(),
           ),
-          child: _buildActionButtons(),
         ),
       ],
     );
   }
 
   Widget _buildLoadingState() {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(height: 100),
-        CircularProgressIndicator(),
-        SizedBox(height: 16),
-        Text('Cargando opciones...'),
-        SizedBox(height: 100),
-      ],
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Cargando opciones...'),
+        ],
+      ),
     );
   }
 

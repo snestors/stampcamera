@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
-import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
-import 'package:stampcamera/widgets/autos/forms/fotos_presentacion_form.dart';
 import 'package:stampcamera/core/core.dart';
 
 class DetalleRegistrosVin extends ConsumerWidget {
@@ -64,29 +63,21 @@ class DetalleRegistrosVin extends ConsumerWidget {
   void _showAgregarRegistroForm(BuildContext context) async {
     onAddPressed?.call();
 
-    final result = await Navigator.push<String>(
-      context,
-      MaterialPageRoute(builder: (context) => RegistroVinForm(vin: vin)),
-    );
+    final result = await context.push<String>('/autos/registro-vin/crear/$vin');
 
     // Si el usuario eligió crear foto de presentación
     if (result == 'create_foto' && context.mounted) {
       String? fotoResult = 'create_another';
       while (fotoResult == 'create_another' && context.mounted) {
-        fotoResult = await Navigator.push<String>(
-          context,
-          MaterialPageRoute(builder: (context) => FotoPresentacionForm(vin: vin)),
-        );
+        fotoResult = await context.push<String>('/autos/foto/crear/$vin');
       }
     }
   }
 
   void _showEditarRegistroForm(BuildContext context, RegistroVin registro) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RegistroVinForm(vin: vin, registroVin: registro),
-      ),
+    context.push(
+      '/autos/registro-vin/editar/$vin',
+      extra: {'registroVin': registro},
     );
   }
 

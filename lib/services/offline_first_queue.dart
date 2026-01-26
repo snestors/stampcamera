@@ -127,6 +127,11 @@ class OfflineFirstQueue {
   Timer? _syncTimer;
   bool _isSyncing = false;
 
+  // Adaptive backoff para el timer de sincronización
+  static const Duration _minInterval = Duration(seconds: 10);
+  static const Duration _maxInterval = Duration(seconds: 120);
+  Duration _currentInterval = _minInterval;
+
   // Callbacks para sincronizacion - se configuran desde fuera
   Future<bool> Function(OfflineRecord record)? onSyncRecord;
   void Function(OfflineRecord record)? onRecordSynced;
@@ -235,12 +240,29 @@ class OfflineFirstQueue {
 
   void _startAutoSync() {
     _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      _syncPendingRecords();
+    _syncTimer = Timer(_currentInterval, () async {
+      await _syncPendingRecords();
+      // Si se sincronizó algo, resetear intervalo; si no, backoff
+      final records = await _getAllRecords();
+      final hasPending = records.any(
+        (r) => r.status == OfflineRecordStatus.pending && r.retryCount < _maxRetries,
+      );
+      if (hasPending) {
+        _currentInterval = _minInterval;
+      } else {
+        _currentInterval = Duration(
+          seconds: (_currentInterval.inSeconds * 2).clamp(
+            _minInterval.inSeconds,
+            _maxInterval.inSeconds,
+          ),
+        );
+      }
+      _startAutoSync(); // Re-programar con nuevo intervalo
     });
   }
 
   void _tryImmediateSync() {
+    _currentInterval = _minInterval; // Resetear backoff
     if (!_isSyncing) {
       Future.delayed(const Duration(milliseconds: 500), _syncPendingRecords);
     }

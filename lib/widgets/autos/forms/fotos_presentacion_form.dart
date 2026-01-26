@@ -79,7 +79,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
               ),
             ),
           ),
-          _buildActionButtons(),
+          SafeArea(top: false, child: _buildActionButtons()),
         ],
       ),
     );
@@ -692,11 +692,15 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         );
       } else {
         // Modo crear: usa fire-and-forget (guarda localmente y sincroniza en background)
+        // Timeout de seguridad: si SharedPreferences se bloquea, no dejar el form colgado
         success = await notifier.addFotoOfflineFirst(
           registroVinId: _selectedRegistroVinId!,
           tipo: _selectedTipo!,
           imagen: File(_fotoPath!),
           nDocumento: nDocumento,
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => false,
         );
       }
 
@@ -713,6 +717,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
             }
           }
         } else {
+          _hasSubmitted = false; // Permitir reintentar
           _showError(
             'Error al ${isEditMode ? 'actualizar' : 'guardar'} foto',
           );
@@ -720,6 +725,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       }
     } catch (e) {
       if (mounted) {
+        _hasSubmitted = false; // Permitir reintentar
         _showError('❌ Error: ${e.toString()}');
       }
     } finally {

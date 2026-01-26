@@ -21,7 +21,7 @@ class _RegistroAsistenciaScreenState
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   Timer? _timer;
-  Duration _elapsedTime = Duration.zero;
+  final ValueNotifier<Duration> _elapsedTime = ValueNotifier(Duration.zero);
   DateTime? _entryTime;
 
   @override
@@ -37,6 +37,7 @@ class _RegistroAsistenciaScreenState
   void dispose() {
     _pulseController.dispose();
     _timer?.cancel();
+    _elapsedTime.dispose();
     super.dispose();
   }
 
@@ -55,10 +56,8 @@ class _RegistroAsistenciaScreenState
   }
 
   void _updateElapsedTime() {
-    if (_entryTime != null && mounted) {
-      setState(() {
-        _elapsedTime = DateTime.now().difference(_entryTime!);
-      });
+    if (_entryTime != null) {
+      _elapsedTime.value = DateTime.now().difference(_entryTime!);
     }
   }
 
@@ -195,14 +194,17 @@ class _RegistroAsistenciaScreenState
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  _formatDuration(_elapsedTime),
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w300,
-                    color: Colors.white,
-                    fontFamily: 'monospace',
-                    letterSpacing: 4,
+                ValueListenableBuilder<Duration>(
+                  valueListenable: _elapsedTime,
+                  builder: (context, elapsed, _) => Text(
+                    _formatDuration(elapsed),
+                    style: const TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w300,
+                      color: Colors.white,
+                      fontFamily: 'monospace',
+                      letterSpacing: 4,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),

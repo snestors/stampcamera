@@ -23,6 +23,11 @@ class QueueService {
   bool _isProcessing = false;
   QueueSnapshot _currentSnapshot = QueueSnapshot.empty();
 
+  // Adaptive backoff para el timer de procesamiento
+  static const Duration _minInterval = Duration(seconds: 10);
+  static const Duration _maxInterval = Duration(seconds: 120);
+  Duration _currentInterval = _minInterval;
+
   // ============================================================================
   // STREAM PÚBLICO - UNA SOLA FUENTE DE VERDAD
   // ============================================================================
@@ -166,14 +171,26 @@ class QueueService {
 
   void _startAutoProcessing() {
     _processingTimer?.cancel();
-    _processingTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _processingTimer = Timer(_currentInterval, () async {
       if (!_isProcessing && _currentSnapshot.pendingCount > 0) {
-        _processAllPending();
+        await _processAllPending();
+        // Items procesados → resetear a intervalo mínimo
+        _currentInterval = _minInterval;
+      } else {
+        // Nada que procesar → backoff (duplicar intervalo, máximo 120s)
+        _currentInterval = Duration(
+          seconds: (_currentInterval.inSeconds * 2).clamp(
+            _minInterval.inSeconds,
+            _maxInterval.inSeconds,
+          ),
+        );
       }
+      _startAutoProcessing(); // Re-programar con nuevo intervalo
     });
   }
 
   void _tryImmediateProcessing() {
+    _currentInterval = _minInterval; // Resetear backoff
     if (!_isProcessing) {
       Future.delayed(const Duration(milliseconds: 500), _processAllPending);
     }

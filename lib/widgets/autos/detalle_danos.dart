@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
-import 'package:stampcamera/widgets/autos/forms/dano_form.dart'; // ✅ Import del formulario
 import 'package:stampcamera/core/core.dart';
 
 class DetalleDanos extends ConsumerWidget {
@@ -63,11 +63,7 @@ class DetalleDanos extends ConsumerWidget {
 
   void _showAgregarDanoForm(BuildContext context) {
     onAddPressed?.call();
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => DanoForm(vin: vin)),
-    );
+    context.push('/autos/dano/crear/$vin');
   }
 
   // ============================================================================
@@ -299,10 +295,7 @@ class DetalleDanos extends ConsumerWidget {
   // ============================================================================
 
   void _showEditForm(BuildContext context, Dano dano) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => DanoForm(vin: vin, danoId: dano.id)),
-    );
+    context.push('/autos/dano/editar/$vin/${dano.id}');
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, Dano dano) async {

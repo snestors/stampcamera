@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
@@ -27,13 +28,18 @@ class NetworkImagePreview extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          errorBuilder: (context, error, stackTrace) =>
-              Text("❗️Error al cargar imagen"),
-          thumbnailUrl,
+        child: CachedNetworkImage(
+          imageUrl: thumbnailUrl,
           width: size,
           height: size,
           fit: BoxFit.cover,
+          placeholder: (context, url) => SizedBox(
+            width: size,
+            height: size,
+            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+          errorWidget: (context, url, error) =>
+              const Text("Error al cargar imagen"),
         ),
       ),
     );
@@ -117,7 +123,16 @@ class _FullscreenImageState extends State<_FullscreenImage> {
           minScale: 1.0,
           maxScale: 4.0,
           child: Center(
-            child: Image.network(widget.fullImageUrl, fit: BoxFit.contain),
+            child: CachedNetworkImage(
+              imageUrl: widget.fullImageUrl,
+              fit: BoxFit.contain,
+              placeholder: (context, url) => const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              ),
+              errorWidget: (context, url, error) => const Center(
+                child: Icon(Icons.error, color: Colors.red, size: 48),
+              ),
+            ),
           ),
         ),
       ),
