@@ -1,7 +1,6 @@
 // =============================================================================
 // TAB DE TICKETS DE MUELLE - TODOS LOS TICKETS CON BÚSQUEDA E INFINITE SCROLL
 // =============================================================================
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,7 @@ import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class TicketsTab extends ConsumerStatefulWidget {
@@ -41,9 +41,10 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
 
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        // Permite cargar más tanto con búsqueda como sin ella
-        // isSearching solo indica que hay una búsqueda en progreso (loading)
-        if (!notifier.isLoadingMore && notifier.hasNextPage) {
+        // Solo cargar más si no está buscando activamente y hay más páginas
+        if (!notifier.isLoadingMore &&
+            notifier.hasNextPage &&
+            !notifier.isSearching) {
           notifier.loadMore();
         }
       }
@@ -62,6 +63,8 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
   Widget build(BuildContext context) {
     final ticketsAsync = ref.watch(ticketsMuelleProvider);
     final notifier = ref.read(ticketsMuelleProvider.notifier);
+    // Usar el estado del filtro del notifier (server-side)
+    final filterPendientes = notifier.filterSinBalanza;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -93,7 +96,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
           ),
 
           // Lista de tickets
-          Expanded(child: _buildResultsList(ticketsAsync, notifier)),
+          Expanded(child: _buildResultsList(ticketsAsync, notifier, filterPendientes)),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -115,6 +118,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
   Widget _buildResultsList(
     AsyncValue<List<TicketMuelle>> ticketsAsync,
     TicketMuelleNotifier notifier,
+    bool filterPendientes,
   ) {
     return ticketsAsync.when(
       loading: () => const Center(
@@ -127,25 +131,36 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
         error: error,
         onRetry: () => notifier.refresh(),
       ),
-      data: (tickets) => _buildDataState(tickets, notifier),
+      data: (tickets) {
+        // Ya no se filtra client-side - el filtro es server-side
+        return _buildDataState(tickets, notifier, filterPendientes);
+      },
     );
   }
 
   Widget _buildDataState(
     List<TicketMuelle> tickets,
     TicketMuelleNotifier notifier,
+    bool filterPendientes,
   ) {
     if (tickets.isEmpty) {
-      return _buildEmptyState(notifier);
+      return _buildEmptyState(notifier, filterPendientes);
     }
 
+    // Con filtro server-side, el infinite scroll funciona con o sin filtro
     final showLoadMoreIndicator = notifier.hasNextPage;
 
     return RefreshIndicator(
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        // Padding extra abajo para el FAB (80px)
+        padding: EdgeInsets.fromLTRB(
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM + 80,
+        ),
         itemCount: tickets.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < tickets.length) {
@@ -184,30 +199,46 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
     );
   }
 
-  Widget _buildEmptyState(TicketMuelleNotifier notifier) {
+  Widget _buildEmptyState(TicketMuelleNotifier notifier, bool filterPendientes) {
     final isSearching = _searchController.text.isNotEmpty;
+
+    String title;
+    String subtitle;
+    IconData icon;
+
+    if (isSearching) {
+      title = 'Sin resultados';
+      subtitle = 'No se encontraron tickets que coincidan con "${_searchController.text}"';
+      icon = Icons.search_off;
+    } else if (filterPendientes) {
+      title = 'Sin pendientes';
+      subtitle = 'Todos los tickets tienen balanza asignada';
+      icon = Icons.check_circle_outline;
+    } else {
+      title = 'No hay tickets registrados';
+      subtitle = 'Aún no hay tickets de muelle registrados';
+      icon = Icons.receipt_long_outlined;
+    }
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            isSearching ? Icons.search_off : Icons.receipt_long_outlined,
+            icon,
             size: 64,
-            color: Colors.grey[400],
+            color: filterPendientes && !isSearching ? AppColors.success : Colors.grey[400],
           ),
           SizedBox(height: DesignTokens.spaceM),
           Text(
-            isSearching ? 'Sin resultados' : 'No hay tickets registrados',
+            title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: Colors.grey[600],
                 ),
           ),
           SizedBox(height: DesignTokens.spaceS),
           Text(
-            isSearching
-                ? 'No se encontraron tickets que coincidan con "${_searchController.text}"'
-                : 'Aún no hay tickets de muelle registrados',
+            subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[500]),
           ),
@@ -219,6 +250,15 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               onPressed: () {
                 _searchController.clear();
                 notifier.clearSearch();
+              },
+            ),
+          ] else if (filterPendientes) ...[
+            AppButton.secondary(
+              text: 'Ver todos',
+              icon: Icons.list,
+              onPressed: () {
+                // Usar filtro server-side
+                ref.read(ticketsMuelleProvider.notifier).setFilterSinBalanza(false);
               },
             ),
           ] else ...[
@@ -241,144 +281,9 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
     context.push('/graneles/ticket/editar/$ticketId');
   }
 
-  void _navigateToCreateTicket() async {
-    // Mostrar selector de servicio antes de crear ticket
-    final serviciosAsync = ref.read(serviciosGranelesProvider);
-
-    serviciosAsync.when(
-      loading: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cargando servicios...')),
-        );
-      },
-      error: (error, stackTrace) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar servicios: $error'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      },
-      data: (servicios) async {
-        if (servicios.isEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No hay servicios disponibles'),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-          return;
-        }
-
-        // Mostrar bottom sheet para seleccionar servicio
-        final servicioSeleccionado = await showModalBottomSheet<ServicioGranel>(
-          context: context,
-          isScrollControlled: true,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(DesignTokens.radiusL),
-            ),
-          ),
-          builder: (context) => _ServicioSelectorSheet(servicios: servicios),
-        );
-
-        if (servicioSeleccionado != null && mounted) {
-          context.push('/graneles/ticket/crear/${servicioSeleccionado.id}');
-        }
-      },
-    );
-  }
-}
-
-// =============================================================================
-// SELECTOR DE SERVICIO PARA CREAR TICKET
-// =============================================================================
-
-class _ServicioSelectorSheet extends StatelessWidget {
-  final List<ServicioGranel> servicios;
-
-  const _ServicioSelectorSheet({required this.servicios});
-
-  @override
-  Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.3,
-      maxChildSize: 0.9,
-      expand: false,
-      builder: (context, scrollController) {
-        return Column(
-          children: [
-            // Handle
-            Container(
-              margin: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.neutral,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Título
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceM),
-              child: Row(
-                children: [
-                  Icon(Icons.directions_boat, color: AppColors.primary),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Text(
-                    'Seleccionar Servicio',
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeL,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: DesignTokens.spaceS),
-            Divider(),
-            // Lista de servicios
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                padding: EdgeInsets.all(DesignTokens.spaceM),
-                itemCount: servicios.length,
-                itemBuilder: (context, index) {
-                  final servicio = servicios[index];
-                  return Card(
-                    margin: EdgeInsets.only(bottom: DesignTokens.spaceS),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                        child: Icon(
-                          Icons.directions_boat,
-                          color: AppColors.primary,
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        servicio.codigo,
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        servicio.naveNombre ?? 'Sin nave asignada',
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeS,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      trailing: Icon(Icons.chevron_right),
-                      onTap: () => Navigator.pop(context, servicio),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
+  void _navigateToCreateTicket() {
+    // Navegar directamente a crear ticket - el formulario mostrará BLs de naves en operación
+    context.push('/graneles/ticket/crear');
   }
 }
 
@@ -632,51 +537,10 @@ class _TicketCard extends StatelessWidget {
   }
 
   void _showPhotoDialog(BuildContext context, String url) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: EdgeInsets.all(DesignTokens.spaceM),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
-              child: Row(
-                children: [
-                  Icon(Icons.photo_camera, color: AppColors.primary),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Text('Foto Ticket', style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM)),
-                  const Spacer(),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx), constraints: const BoxConstraints(), padding: EdgeInsets.zero),
-                ],
-              ),
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(DesignTokens.radiusL),
-                bottomRight: Radius.circular(DesignTokens.radiusL),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: url,
-                fit: BoxFit.contain,
-                placeholder: (context, url) => Container(
-                  height: 300,
-                  color: AppColors.surface,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 200,
-                  color: AppColors.surface,
-                  child: Center(child: Icon(Icons.broken_image, size: 48, color: AppColors.textSecondary)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    FullscreenImageViewer.open(
+      context,
+      imageUrl: url,
+      title: 'Foto Ticket',
     );
   }
 }

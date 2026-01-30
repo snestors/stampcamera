@@ -4,10 +4,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
+import 'package:stampcamera/services/graneles/graneles_service.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class TicketDetalleScreen extends ConsumerWidget {
@@ -18,6 +20,7 @@ class TicketDetalleScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ticketAsync = ref.watch(ticketMuelleDetalleProvider(ticketId));
+    final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +43,11 @@ class TicketDetalleScreen extends ConsumerWidget {
           error: error,
           onRetry: () => ref.invalidate(ticketMuelleDetalleProvider(ticketId)),
         ),
-        data: (ticket) => _TicketDetalleContent(ticket: ticket),
+        data: (ticket) => _TicketDetalleContent(
+          ticket: ticket,
+          permissions: permissionsAsync.valueOrNull ?? UserGranelesPermissions.defaults(),
+          onRefresh: () => ref.invalidate(ticketMuelleDetalleProvider(ticketId)),
+        ),
       ),
     );
   }
@@ -48,8 +55,14 @@ class TicketDetalleScreen extends ConsumerWidget {
 
 class _TicketDetalleContent extends StatelessWidget {
   final TicketMuelle ticket;
+  final UserGranelesPermissions permissions;
+  final VoidCallback onRefresh;
 
-  const _TicketDetalleContent({required this.ticket});
+  const _TicketDetalleContent({
+    required this.ticket,
+    required this.permissions,
+    required this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -69,11 +82,15 @@ class _TicketDetalleContent extends StatelessWidget {
           // SECCIÓN: MUELLE
           // =============================================
           _buildSection(
+            context: context,
             title: 'Muelle',
             icon: Icons.anchor,
-            trailing: ticket.fotoUrl != null
-                ? _PhotoButton(url: ticket.fotoUrl!, context: context)
-                : null,
+            trailing: _buildSectionActions(
+              context: context,
+              photoUrl: ticket.fotoUrl,
+              canEdit: permissions.muelle.canEdit,
+              onEdit: () => context.push('/graneles/ticket/editar/${ticket.id}'),
+            ),
             children: [
               _buildInfoRow('Número Ticket', ticket.numeroTicket),
               _buildInfoRow('Placa', ticket.placaStr ?? '-'),
@@ -123,11 +140,15 @@ class _TicketDetalleContent extends StatelessWidget {
           // =============================================
           if (ticket.balanzaData != null) ...[
             _buildSection(
+              context: context,
               title: 'Balanza',
               icon: Icons.scale,
-              trailing: ticket.balanzaData!.foto1Url != null
-                  ? _PhotoButton(url: ticket.balanzaData!.foto1Url!, context: context)
-                  : null,
+              trailing: _buildSectionActions(
+                context: context,
+                photoUrl: ticket.balanzaData!.foto1Url,
+                canEdit: permissions.balanza.canEdit,
+                onEdit: () => context.push('/graneles/balanza/editar/${ticket.balanzaData!.id}'),
+              ),
               children: [
                 _buildInfoRow('Guía', ticket.balanzaData!.guia),
                 if (ticket.balanzaData!.almacen != null)
@@ -212,11 +233,15 @@ class _TicketDetalleContent extends StatelessWidget {
           // =============================================
           if (ticket.almacenData != null) ...[
             _buildSection(
+              context: context,
               title: 'Almacén',
               icon: Icons.warehouse,
-              trailing: ticket.almacenData!.foto1Url != null
-                  ? _PhotoButton(url: ticket.almacenData!.foto1Url!, context: context)
-                  : null,
+              trailing: _buildSectionActions(
+                context: context,
+                photoUrl: ticket.almacenData!.foto1Url,
+                canEdit: permissions.almacen.canEdit,
+                onEdit: () => context.push('/graneles/almacen/editar/${ticket.almacenData!.id}'),
+              ),
               children: [
                 // Pesos
                 _buildWeightRow(
@@ -373,7 +398,31 @@ class _TicketDetalleContent extends StatelessWidget {
     );
   }
 
+  /// Construye los botones de acción para cada sección (foto + editar)
+  Widget? _buildSectionActions({
+    required BuildContext context,
+    String? photoUrl,
+    required bool canEdit,
+    required VoidCallback onEdit,
+  }) {
+    final hasPhoto = photoUrl != null;
+    if (!hasPhoto && !canEdit) return null;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasPhoto) ...[
+          _PhotoButton(url: photoUrl, context: context),
+          if (canEdit) SizedBox(width: DesignTokens.spaceXS),
+        ],
+        if (canEdit)
+          _EditButton(onTap: onEdit),
+      ],
+    );
+  }
+
   Widget _buildSection({
+    required BuildContext context,
     required String title,
     required IconData icon,
     required List<Widget> children,
@@ -535,8 +584,50 @@ class _TicketDetalleContent extends StatelessWidget {
 }
 
 // =============================================================================
-// BOTÓN PARA VER FOTO
+// BOTONES DE ACCIÓN
 // =============================================================================
+
+/// Botón para editar sección
+class _EditButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _EditButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: DesignTokens.spaceS,
+          vertical: DesignTokens.spaceXS,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.edit, size: 16, color: AppColors.warning),
+            SizedBox(width: DesignTokens.spaceXS),
+            Text(
+              'Editar',
+              style: TextStyle(
+                fontSize: DesignTokens.fontSizeXS,
+                color: AppColors.warning,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Botón para ver foto
 class _PhotoButton extends StatelessWidget {
   final String url;
   final BuildContext context;

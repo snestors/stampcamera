@@ -33,6 +33,8 @@ class AppSearchSelect<T> extends StatefulWidget {
   final String? errorText;
   final bool isRequired;
   final String searchHint;
+  /// Padding adicional para scroll cuando se abre el teclado (default: 100)
+  final double scrollPaddingBottom;
 
   const AppSearchSelect({
     super.key,
@@ -48,6 +50,7 @@ class AppSearchSelect<T> extends StatefulWidget {
     this.errorText,
     this.isRequired = false,
     this.searchHint = 'Buscar...',
+    this.scrollPaddingBottom = 100,
   });
 
   @override
@@ -58,6 +61,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
+  final GlobalKey _fieldKey = GlobalKey();
   OverlayEntry? _overlayEntry;
   bool _isOpen = false;
   List<AppSearchSelectOption<T>> _filteredOptions = [];
@@ -82,9 +86,30 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
 
     if (_focusNode.hasFocus && !_isOpen) {
       _showOverlay();
+      // Hacer scroll para que el campo sea visible sobre el teclado
+      _scrollToField();
     } else if (!_focusNode.hasFocus && _isOpen) {
       _removeOverlay();
     }
+  }
+
+  /// Scroll automático para asegurar que el campo sea visible sobre el teclado
+  void _scrollToField() {
+    // Esperar un frame para que el teclado esté visible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final fieldContext = _fieldKey.currentContext;
+      if (fieldContext != null) {
+        Scrollable.ensureVisible(
+          fieldContext,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignment: 0.3, // Posiciona el campo al 30% desde arriba
+          alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+        );
+      }
+    });
   }
 
   @override
@@ -152,6 +177,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
 
         // Search Select Field
         CompositedTransformTarget(
+          key: _fieldKey,
           link: _layerLink,
           child: TextField(
             controller: _searchController,

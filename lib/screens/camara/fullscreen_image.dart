@@ -42,8 +42,7 @@ class _FullscreenImageState extends ConsumerState<FullscreenImage> {
       final position = _doubleTapDetails!.localPosition;
       _transformationController.value = Matrix4.identity()
         ..setTranslationRaw(-position.dx * 2, -position.dy * 2, 0.0)
-        // ignore: deprecated_member_use
-        ..scale(3.0, 3.0, 1.0);
+        ..multiply(Matrix4.diagonal3Values(3.0, 3.0, 1.0));
     }
   }
 

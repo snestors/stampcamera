@@ -52,7 +52,10 @@ class TicketMuelleService implements BaseService<TicketMuelle> {
 
   @override
   Future<PaginatedResponse<TicketMuelle>> loadMore(String url) async {
-    final response = await _http.dio.get(url);
+    // Extraer solo el path de la URL (DRF retorna URLs completas)
+    final uri = Uri.parse(url);
+    final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
+    final response = await _http.dio.get(path);
     return PaginatedResponse.fromJson(response.data, fromJson);
   }
 
@@ -129,10 +132,22 @@ class TicketMuelleService implements BaseService<TicketMuelle> {
   // ===========================================================================
 
   /// Obtener opciones para formulario
-  Future<TicketMuelleOptions> getFormOptions(int servicioId) async {
+  ///
+  /// Parámetros opcionales:
+  /// - [servicioId]: ID del servicio para filtrar BLs y distribuciones
+  /// - [ticketId]: ID del ticket que se está editando (incluye BLs de su nave aunque no esté en operación)
+  /// - [embarqueId]: ID del embarque (nave) de la asistencia activa para filtrar BLs
+  ///
+  /// Si no se pasa ningún parámetro, retorna BLs de todas las naves en operación (estatus 03/04)
+  Future<TicketMuelleOptions> getFormOptions({int? servicioId, int? ticketId, int? embarqueId}) async {
+    final queryParams = <String, dynamic>{};
+    if (servicioId != null) queryParams['servicio_id'] = servicioId;
+    if (ticketId != null) queryParams['ticket_id'] = ticketId;
+    if (embarqueId != null) queryParams['embarque_id'] = embarqueId;
+
     final response = await _http.dio.get(
       '${endpoint}options_form/',
-      queryParameters: {'servicio_id': servicioId},
+      queryParameters: queryParams.isEmpty ? null : queryParams,
     );
     return TicketMuelleOptions.fromJson(response.data);
   }
@@ -278,7 +293,10 @@ class ServiciosGranelesService implements BaseService<ServicioGranel> {
 
   @override
   Future<PaginatedResponse<ServicioGranel>> loadMore(String url) async {
-    final response = await _http.dio.get(url);
+    // Extraer solo el path de la URL (DRF retorna URLs completas)
+    final uri = Uri.parse(url);
+    final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
+    final response = await _http.dio.get(path);
     return PaginatedResponse.fromJson(response.data, fromJson);
   }
 
@@ -355,6 +373,120 @@ class ServiciosGranelesService implements BaseService<ServicioGranel> {
     final response = await _http.dio.get('$endpoint$servicioId/dashboard/');
     return ServicioDashboard.fromJson(response.data);
   }
+
+  /// Obtener permisos del usuario para módulo graneles
+  Future<UserGranelesPermissions> getUserPermissions() async {
+    final response = await _http.dio.get('${endpoint}user_permissions/');
+    return UserGranelesPermissions.fromJson(response.data);
+  }
+}
+
+// =============================================================================
+// MODELO PARA PERMISOS DE USUARIO EN GRANELES
+// =============================================================================
+
+class TabPermission {
+  final bool visible;
+  final bool canAdd;
+  final bool canEdit;
+  final bool canDelete;
+
+  TabPermission({
+    required this.visible,
+    required this.canAdd,
+    required this.canEdit,
+    this.canDelete = false,
+  });
+
+  factory TabPermission.fromJson(Map<String, dynamic> json) => TabPermission(
+    visible: json['visible'] ?? false,
+    canAdd: json['can_add'] ?? false,
+    canEdit: json['can_edit'] ?? false,
+    canDelete: json['can_delete'] ?? false,
+  );
+
+  factory TabPermission.hidden() => TabPermission(
+    visible: false,
+    canAdd: false,
+    canEdit: false,
+    canDelete: false,
+  );
+}
+
+class UserGranelesPermissions {
+  final bool isSuperuser;
+  final List<String> groups;
+  final String? zonaTipo;
+  final int? naveId;
+  final String? naveNombre;
+  final bool tieneNaveGraneles;
+  final TabPermission servicios;
+  final TabPermission muelle;
+  final TabPermission balanza;
+  final TabPermission almacen;
+  final TabPermission silos;
+
+  UserGranelesPermissions({
+    required this.isSuperuser,
+    required this.groups,
+    this.zonaTipo,
+    this.naveId,
+    this.naveNombre,
+    this.tieneNaveGraneles = false,
+    required this.servicios,
+    required this.muelle,
+    required this.balanza,
+    required this.almacen,
+    required this.silos,
+  });
+
+  factory UserGranelesPermissions.fromJson(Map<String, dynamic> json) {
+    final tabs = json['tabs'] as Map<String, dynamic>? ?? {};
+    return UserGranelesPermissions(
+      isSuperuser: json['is_superuser'] ?? false,
+      groups: (json['groups'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      zonaTipo: json['zona_tipo'],
+      naveId: json['nave_id'],
+      naveNombre: json['nave_nombre'],
+      tieneNaveGraneles: json['tiene_nave_graneles'] ?? false,
+      servicios: TabPermission.fromJson(tabs['servicios'] ?? {}),
+      muelle: TabPermission.fromJson(tabs['muelle'] ?? {}),
+      balanza: TabPermission.fromJson(tabs['balanza'] ?? {}),
+      almacen: TabPermission.fromJson(tabs['almacen'] ?? {}),
+      silos: TabPermission.fromJson(tabs['silos'] ?? {}),
+    );
+  }
+
+  /// Permisos por defecto (restrictivos - solo ver, no editar)
+  /// Se usan cuando los permisos aún no han cargado o hay error
+  factory UserGranelesPermissions.defaults() => UserGranelesPermissions(
+    isSuperuser: false,
+    groups: [],
+    zonaTipo: null,
+    naveId: null,
+    naveNombre: null,
+    tieneNaveGraneles: false,
+    servicios: TabPermission(visible: true, canAdd: false, canEdit: false),
+    muelle: TabPermission(visible: true, canAdd: false, canEdit: false),
+    balanza: TabPermission(visible: true, canAdd: false, canEdit: false),
+    almacen: TabPermission(visible: true, canAdd: false, canEdit: false),
+    silos: TabPermission(visible: true, canAdd: false, canEdit: false),
+  );
+
+  /// Lista de tabs visibles (en orden)
+  List<String> get visibleTabs {
+    final tabs = <String>[];
+    if (servicios.visible) tabs.add('servicios');
+    if (muelle.visible) tabs.add('muelle');
+    if (balanza.visible) tabs.add('balanza');
+    if (almacen.visible) tabs.add('almacen');
+    if (silos.visible) tabs.add('silos');
+    return tabs;
+  }
+
+  bool get isCoordinacion => groups.contains('COORDINACION GRANELES') || groups.contains('COORDINACION');
+  bool get isInspector => groups.contains('INSPECTOR');
+  bool get isGestor => groups.contains('GESTORES');
 }
 
 // =============================================================================
@@ -388,7 +520,10 @@ class BalanzaService implements BaseService<Balanza> {
 
   @override
   Future<PaginatedResponse<Balanza>> loadMore(String url) async {
-    final response = await _http.dio.get(url);
+    // Extraer solo el path de la URL (DRF retorna URLs completas)
+    final uri = Uri.parse(url);
+    final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
+    final response = await _http.dio.get(path);
     return PaginatedResponse.fromJson(response.data, fromJson);
   }
 
@@ -651,7 +786,10 @@ class SilosService implements BaseService<Silos> {
 
   @override
   Future<PaginatedResponse<Silos>> loadMore(String url) async {
-    final response = await _http.dio.get(url);
+    // Extraer solo el path de la URL (DRF retorna URLs completas)
+    final uri = Uri.parse(url);
+    final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
+    final response = await _http.dio.get(path);
     return PaginatedResponse.fromJson(response.data, fromJson);
   }
 
@@ -767,7 +905,10 @@ class AlmacenService implements BaseService<AlmacenGranel> {
 
   @override
   Future<PaginatedResponse<AlmacenGranel>> loadMore(String url) async {
-    final response = await _http.dio.get(url);
+    // Extraer solo el path de la URL (DRF retorna URLs completas)
+    final uri = Uri.parse(url);
+    final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
+    final response = await _http.dio.get(path);
     return PaginatedResponse.fromJson(response.data, fromJson);
   }
 

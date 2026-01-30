@@ -1,7 +1,6 @@
 // =============================================================================
 // TAB DE BALANZAS - TODAS LAS BALANZAS CON BÚSQUEDA E INFINITE SCROLL
 // =============================================================================
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +8,9 @@ import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
+import 'package:stampcamera/services/graneles/graneles_service.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class BalanzasTab extends ConsumerStatefulWidget {
@@ -36,7 +37,10 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
 
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        if (!notifier.isLoadingMore && notifier.hasNextPage) {
+        // Solo cargar más si no está buscando activamente y hay más páginas
+        if (!notifier.isLoadingMore &&
+            notifier.hasNextPage &&
+            !notifier.isSearching) {
           notifier.loadMore();
         }
       }
@@ -55,6 +59,14 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
   Widget build(BuildContext context) {
     final balanzasAsync = ref.watch(balanzasListProvider);
     final notifier = ref.read(balanzasListProvider.notifier);
+    final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
+    // Usar el estado del filtro del notifier (server-side)
+    final filterPendientes = notifier.filterSinAlmacen;
+
+    // Obtener permisos de balanza
+    final permissions = permissionsAsync.valueOrNull ?? UserGranelesPermissions.defaults();
+    final canAdd = permissions.balanza.canAdd;
+    final canEdit = permissions.balanza.canEdit;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -86,29 +98,34 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
           ),
 
           // Lista de balanzas
-          Expanded(child: _buildResultsList(balanzasAsync, notifier)),
+          Expanded(child: _buildResultsList(balanzasAsync, notifier, canEdit, filterPendientes)),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_balanza',
-        onPressed: () => context.push('/graneles/balanza/crear'),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          'Nueva Balanza',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: DesignTokens.fontSizeS,
-          ),
-        ),
-      ),
+      // Solo mostrar FAB si tiene permiso de agregar
+      floatingActionButton: canAdd
+          ? FloatingActionButton.extended(
+              heroTag: 'fab_balanza',
+              onPressed: () => context.push('/graneles/balanza/crear'),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(
+                'Nueva Balanza',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: DesignTokens.fontSizeS,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
   Widget _buildResultsList(
     AsyncValue<List<Balanza>> balanzasAsync,
     BalanzaNotifier notifier,
+    bool canEdit,
+    bool filterPendientes,
   ) {
     return balanzasAsync.when(
       loading: () => const Center(
@@ -121,25 +138,37 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
         error: error,
         onRetry: () => notifier.refresh(),
       ),
-      data: (balanzas) => _buildDataState(balanzas, notifier),
+      data: (balanzas) {
+        // Ya no se filtra client-side - el filtro es server-side
+        return _buildDataState(balanzas, notifier, canEdit, filterPendientes);
+      },
     );
   }
 
   Widget _buildDataState(
     List<Balanza> balanzas,
     BalanzaNotifier notifier,
+    bool canEdit,
+    bool filterPendientes,
   ) {
     if (balanzas.isEmpty) {
-      return _buildEmptyState(notifier);
+      return _buildEmptyState(notifier, filterPendientes);
     }
 
+    // Con filtro server-side, el infinite scroll funciona con o sin filtro
     final showLoadMoreIndicator = notifier.hasNextPage;
 
     return RefreshIndicator(
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        // Padding extra abajo para el FAB (80px)
+        padding: EdgeInsets.fromLTRB(
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM + 80,
+        ),
         itemCount: balanzas.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < balanzas.length) {
@@ -148,7 +177,10 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
               padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _BalanzaCard(
                 balanza: balanza,
-                onEdit: () => context.push('/graneles/balanza/editar/${balanza.id}'),
+                // Solo mostrar botón editar si tiene permiso
+                onEdit: canEdit
+                    ? () => context.push('/graneles/balanza/editar/${balanza.id}')
+                    : null,
               ),
             );
           }
@@ -177,30 +209,48 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
     );
   }
 
-  Widget _buildEmptyState(BalanzaNotifier notifier) {
+  Widget _buildEmptyState(BalanzaNotifier notifier, bool filterPendientes) {
     final isSearching = _searchController.text.isNotEmpty;
+    final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
+    final canAdd = permissionsAsync.valueOrNull?.balanza.canAdd ?? false;
+
+    String title;
+    String subtitle;
+    IconData icon;
+
+    if (isSearching) {
+      title = 'Sin resultados';
+      subtitle = 'No se encontraron balanzas que coincidan con "${_searchController.text}"';
+      icon = Icons.search_off;
+    } else if (filterPendientes) {
+      title = 'Sin pendientes';
+      subtitle = 'Todas las balanzas tienen almacén asignado';
+      icon = Icons.check_circle_outline;
+    } else {
+      title = 'No hay balanzas registradas';
+      subtitle = 'Aún no hay registros de balanza';
+      icon = Icons.scale_outlined;
+    }
 
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            isSearching ? Icons.search_off : Icons.scale_outlined,
+            icon,
             size: 64,
-            color: Colors.grey[400],
+            color: filterPendientes && !isSearching ? AppColors.success : Colors.grey[400],
           ),
           SizedBox(height: DesignTokens.spaceM),
           Text(
-            isSearching ? 'Sin resultados' : 'No hay balanzas registradas',
+            title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   color: Colors.grey[600],
                 ),
           ),
           SizedBox(height: DesignTokens.spaceS),
           Text(
-            isSearching
-                ? 'No se encontraron balanzas que coincidan con "${_searchController.text}"'
-                : 'Aún no hay registros de balanza',
+            subtitle,
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[500]),
           ),
@@ -214,7 +264,17 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
                 notifier.clearSearch();
               },
             ),
-          ] else ...[
+          ] else if (filterPendientes) ...[
+            AppButton.secondary(
+              text: 'Ver todas',
+              icon: Icons.list,
+              onPressed: () {
+                // Usar filtro server-side
+                ref.read(balanzasListProvider.notifier).setFilterSinAlmacen(false);
+              },
+            ),
+          ] else if (canAdd) ...[
+            // Solo mostrar botón crear si tiene permiso
             AppButton.primary(
               text: 'Crear primera balanza',
               icon: Icons.add,
@@ -459,51 +519,10 @@ class _BalanzaCard extends StatelessWidget {
   }
 
   void _showPhotoDialog(BuildContext context, String url) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: EdgeInsets.all(DesignTokens.spaceM),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
-              child: Row(
-                children: [
-                  Icon(Icons.photo_camera, color: AppColors.primary),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Text('Foto Balanza', style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM)),
-                  const Spacer(),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx), constraints: const BoxConstraints(), padding: EdgeInsets.zero),
-                ],
-              ),
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(DesignTokens.radiusL),
-                bottomRight: Radius.circular(DesignTokens.radiusL),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: url,
-                fit: BoxFit.contain,
-                placeholder: (context, url) => Container(
-                  height: 300,
-                  color: AppColors.surface,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 200,
-                  color: AppColors.surface,
-                  child: Center(child: Icon(Icons.broken_image, size: 48, color: AppColors.textSecondary)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    FullscreenImageViewer.open(
+      context,
+      imageUrl: url,
+      title: 'Foto Balanza',
     );
   }
 }

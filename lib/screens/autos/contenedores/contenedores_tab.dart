@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
 import 'package:stampcamera/core/core.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 
 class ContenedoresTab extends ConsumerStatefulWidget {
   const ContenedoresTab({super.key});
@@ -499,123 +500,10 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
   }
 
   void _showImageModal(String title, String imageUrl) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.8,
-            maxWidth: MediaQuery.of(context).size.width * 0.9,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header del modal
-              Container(
-                padding: const EdgeInsets.all(DesignTokens.spaceL),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(DesignTokens.radiusXL),
-                    topRight: Radius.circular(DesignTokens.radiusXL),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.camera_alt,
-                      color: AppColors.secondary,
-                      size: DesignTokens.iconL,
-                    ),
-                    const SizedBox(width: DesignTokens.spaceS),
-                    Expanded(
-                      child: Text(
-                        'Foto: $title',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close),
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Imagen
-              Flexible(
-                child: Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(DesignTokens.radiusXL),
-                      bottomRight: Radius.circular(DesignTokens.radiusXL),
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(DesignTokens.radiusXL),
-                      bottomRight: Radius.circular(DesignTokens.radiusXL),
-                    ),
-                    child: InteractiveViewer(
-                      child: CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.contain,
-                        placeholder: (context, url) => SizedBox(
-                          height: 300,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  color: AppColors.secondary,
-                                ),
-                                const SizedBox(height: DesignTokens.spaceM),
-                                const Text(
-                                  'Cargando imagen...',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => SizedBox(
-                          height: 300,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  color: AppColors.error,
-                                  size: 48,
-                                ),
-                                const SizedBox(height: DesignTokens.spaceM),
-                                const Text(
-                                  'Error al cargar imagen',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    FullscreenImageViewer.open(
+      context,
+      imageUrl: imageUrl,
+      title: 'Foto: $title',
     );
   }
 

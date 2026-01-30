@@ -19,9 +19,12 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _loadVersion() async {
     final info = await PackageInfo.fromPlatform();
-    setState(() {
-      _appVersion = info.version;
-    });
+    // Verificar que el widget sigue montado antes de actualizar estado
+    if (mounted) {
+      setState(() {
+        _appVersion = info.version;
+      });
+    }
   }
 
   @override

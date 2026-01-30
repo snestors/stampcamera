@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:collection';
 import '../providers/auth_provider.dart';
+import 'storage_health_service.dart'; // Importa appSecureStorage
 
 // Modelo para requests pendientes
 class PendingRequest {
@@ -43,7 +44,7 @@ class HttpService {
   }
 
   late Dio dio;
-  final storage = const FlutterSecureStorage();
+  final storage = appSecureStorage; // Usar instancia global compartida
 
   static const baseUrl = 'https://www.aygajustadores.com/';
   static const tokenEndpoint = 'token/';
@@ -74,16 +75,30 @@ class HttpService {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // Agregar token de autenticación
-          final token = await storage.read(key: 'access');
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
+          try {
+            // Agregar token de autenticación
+            final token = await storage.read(key: 'access');
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
 
-          // Agregar device_id para equipos de confianza
-          final deviceId = await storage.read(key: 'device_id');
-          if (deviceId != null) {
-            options.headers['X-Device-ID'] = deviceId;
+            // Agregar device_id para equipos de confianza
+            final deviceId = await storage.read(key: 'device_id');
+            if (deviceId != null) {
+              options.headers['X-Device-ID'] = deviceId;
+            }
+          } on PlatformException catch (e) {
+            // Solo PlatformException indica corrupcion real
+            debugPrint('❌ HttpService: PlatformException en interceptor - $e');
+            try {
+              await storageHealthService.forceCleanStorage();
+              debugPrint('🧹 HttpService: Storage reparado automaticamente');
+            } catch (cleanError) {
+              debugPrint('❌ HttpService: No se pudo reparar storage - $cleanError');
+            }
+          } catch (e) {
+            // Otros errores no requieren limpiar storage
+            debugPrint('⚠️ HttpService: Error leyendo storage en interceptor - $e');
           }
 
           return handler.next(options);
@@ -243,7 +258,20 @@ class HttpService {
   }
 
   Future<bool> _refreshToken() async {
-    final refreshToken = await storage.read(key: 'refresh');
+    String? refreshToken;
+    try {
+      refreshToken = await storage.read(key: 'refresh');
+    } on PlatformException catch (e) {
+      // Solo PlatformException indica corrupcion real
+      debugPrint('❌ HttpService: PlatformException leyendo refresh token - $e');
+      await _handleStorageCorruption();
+      return false;
+    } catch (e) {
+      // Otros errores no requieren limpiar storage
+      debugPrint('⚠️ HttpService: Error leyendo refresh token - $e');
+      return false;
+    }
+
     if (refreshToken == null) {
       await _handleAuthFailure();
       return false;
@@ -282,9 +310,21 @@ class HttpService {
   Future<void> _handleAuthFailure() async {
     // ⚠️ NO usar deleteAll() - solo borrar claves de auth para preservar biometría
     await storage.delete(key: 'access');
-    await storage.delete(key: 'refresh'); 
+    await storage.delete(key: 'refresh');
     await storage.delete(key: 'user_data');
     print('🗑️ HttpService: Solo limpiando datos de auth (preservando biometría)');
+    _authNotifier?.logout();
+  }
+
+  /// Manejar corrupcion de storage (ocurre al cambiar entre debug y release)
+  Future<void> _handleStorageCorruption() async {
+    debugPrint('🔧 HttpService: Reparando storage corrupto...');
+    try {
+      await storageHealthService.forceCleanStorage();
+      debugPrint('✅ HttpService: Storage reparado');
+    } catch (e) {
+      debugPrint('❌ HttpService: Error reparando storage - $e');
+    }
     _authNotifier?.logout();
   }
 

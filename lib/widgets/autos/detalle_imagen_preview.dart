@@ -1,10 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
-import 'dart:io';
-import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 
+/// Widget para mostrar preview de imagen de red con tap para ver fullscreen
 class NetworkImagePreview extends StatelessWidget {
   final String thumbnailUrl;
   final String fullImageUrl;
@@ -20,11 +18,9 @@ class NetworkImagePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(
+      onTap: () => FullscreenImageViewer.open(
         context,
-        MaterialPageRoute(
-          builder: (_) => _FullscreenImage(fullImageUrl: fullImageUrl),
-        ),
+        imageUrl: fullImageUrl,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
@@ -40,100 +36,6 @@ class NetworkImagePreview extends StatelessWidget {
           ),
           errorWidget: (context, url, error) =>
               const Text("Error al cargar imagen"),
-        ),
-      ),
-    );
-  }
-}
-
-class _FullscreenImage extends StatefulWidget {
-  final String fullImageUrl;
-
-  const _FullscreenImage({required this.fullImageUrl});
-
-  @override
-  State<_FullscreenImage> createState() => _FullscreenImageState();
-}
-
-class _FullscreenImageState extends State<_FullscreenImage> {
-  final TransformationController _controller = TransformationController();
-  TapDownDetails? _tapDownDetails;
-
-  Future<void> shareImageFromUrl(String imageUrl) async {
-    try {
-      final dir = await getTemporaryDirectory();
-      final filePath =
-          '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-      final response = await Dio().get<List<int>>(
-        imageUrl,
-        options: Options(responseType: ResponseType.bytes),
-      );
-
-      final file = File(filePath);
-      await file.writeAsBytes(response.data!);
-
-      await SharePlus.instance.share(ShareParams(files: [XFile(filePath)]));
-    } catch (e) {
-      debugPrint('❌ Error al compartir imagen: $e');
-    }
-  }
-
-  void _handleDoubleTap() {
-    if (_controller.value != Matrix4.identity()) {
-      _controller.value = Matrix4.identity();
-    } else if (_tapDownDetails != null) {
-      final position = _tapDownDetails!.localPosition;
-      _controller.value = Matrix4.identity()
-        ..setTranslationRaw(-position.dx * 2, -position.dy * 2, 0.0)
-        // ignore: deprecated_member_use
-        ..scale(3.0, 3.0, 1.0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              shareImageFromUrl(widget.fullImageUrl);
-            },
-          ),
-        ],
-      ),
-      body: GestureDetector(
-        onDoubleTapDown: (details) => _tapDownDetails = details,
-        onDoubleTap: _handleDoubleTap,
-        child: InteractiveViewer(
-          transformationController: _controller,
-          panEnabled: true,
-          scaleEnabled: true,
-          minScale: 1.0,
-          maxScale: 4.0,
-          child: Center(
-            child: CachedNetworkImage(
-              imageUrl: widget.fullImageUrl,
-              fit: BoxFit.contain,
-              placeholder: (context, url) => const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-              errorWidget: (context, url, error) => const Center(
-                child: Icon(Icons.error, color: Colors.red, size: 48),
-              ),
-            ),
-          ),
         ),
       ),
     );

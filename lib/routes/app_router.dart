@@ -21,6 +21,7 @@ import 'package:stampcamera/screens/graneles/ticket_detalle_screen.dart';
 import 'package:stampcamera/screens/graneles/ticket_crear_screen.dart';
 import 'package:stampcamera/screens/graneles/balanza_crear_screen.dart';
 import 'package:stampcamera/screens/graneles/almacen_crear_screen.dart';
+import 'package:stampcamera/screens/graneles/silos_crear_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 import 'package:stampcamera/screens/device_registration_screen.dart';
@@ -183,6 +184,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             },
           ),
           // IMPORTANTE: Rutas específicas deben ir ANTES de las rutas con parámetros genéricos
+          // Ruta sin servicioId - muestra BLs de todas las naves en operación
+          GoRoute(
+            path: 'ticket/crear',
+            builder: (context, state) {
+              return const TicketCrearScreen();
+            },
+          ),
+          // Ruta con servicioId - para compatibilidad con navegación desde servicio específico
           GoRoute(
             path: 'ticket/crear/:servicioId',
             builder: (context, state) {
@@ -236,6 +245,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final almacenIdString = state.pathParameters['almacenId']!;
               final almacenId = int.parse(almacenIdString);
               return AlmacenCrearScreen.edit(almacenId: almacenId);
+            },
+          ),
+          // Rutas de Silos
+          GoRoute(
+            path: 'silos/crear',
+            builder: (context, state) {
+              return const SilosCrearScreen();
+            },
+          ),
+          GoRoute(
+            path: 'silos/editar/:siloId',
+            builder: (context, state) {
+              final siloIdString = state.pathParameters['siloId']!;
+              final siloId = int.parse(siloIdString);
+              return SilosCrearScreen.edit(siloId: siloId);
             },
           ),
         ],

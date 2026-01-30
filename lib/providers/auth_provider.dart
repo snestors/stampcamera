@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:stampcamera/providers/session_manager_provider.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -10,6 +11,7 @@ import '../models/auth_state.dart';
 import '../services/http_service.dart';
 import '../services/device_service.dart';
 import '../services/biometric_service.dart';
+import '../services/storage_health_service.dart'; // Importa appSecureStorage
 
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
   (ref) {
@@ -24,7 +26,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     _initializeAuth();
   }
 
-  final _storage = const FlutterSecureStorage();
+  final _storage = appSecureStorage; // Usar instancia global compartida
   final _http = HttpService();
 
   Future<void> _initializeAuth() async {
@@ -103,7 +105,19 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       } else {
         state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
       }
+    } on PlatformException catch (e) {
+      // Solo PlatformException indica corrupcion real
+      debugPrint('❌ AuthProvider: PlatformException - $e');
+      try {
+        await storageHealthService.forceCleanStorage();
+        debugPrint('🧹 AuthProvider: Storage reparado automaticamente');
+      } catch (cleanError) {
+        debugPrint('❌ AuthProvider: No se pudo reparar storage - $cleanError');
+      }
+      state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
     } catch (e) {
+      // Otros errores no requieren limpiar storage
+      debugPrint('⚠️ AuthProvider: Error leyendo storage - $e');
       state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
     }
   }

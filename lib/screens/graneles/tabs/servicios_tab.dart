@@ -35,7 +35,9 @@ class _ServiciosTabState extends ConsumerState<ServiciosTab> {
 
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        if (!notifier.isLoadingMore && notifier.hasNextPage) {
+        if (!notifier.isLoadingMore &&
+            notifier.hasNextPage &&
+            !notifier.isSearching) {
           notifier.loadMore();
         }
       }
@@ -206,7 +208,7 @@ class _ServiciosTabState extends ConsumerState<ServiciosTab> {
 }
 
 // =============================================================================
-// SERVICIO CARD
+// SERVICIO CARD - Diseño compacto y limpio
 // =============================================================================
 
 class _ServicioCard extends StatelessWidget {
@@ -224,185 +226,210 @@ class _ServicioCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      elevation: 2,
+      elevation: 1,
+      shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        side: BorderSide(
+          color: servicio.cierreServicio
+              ? AppColors.success.withValues(alpha: 0.3)
+              : AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        child: Padding(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header: código, nave y estado
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header con color de fondo
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: DesignTokens.spaceM,
+                vertical: DesignTokens.spaceS,
+              ),
+              decoration: BoxDecoration(
+                color: servicio.cierreServicio
+                    ? AppColors.success.withValues(alpha: 0.08)
+                    : AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(DesignTokens.radiusM),
+                  topRight: Radius.circular(DesignTokens.radiusM),
+                ),
+              ),
+              child: Row(
                 children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: DesignTokens.spaceS,
-                      vertical: DesignTokens.spaceXS,
-                    ),
-                    decoration: BoxDecoration(
+                  // Código
+                  Text(
+                    servicio.codigo,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: DesignTokens.fontSizeM,
                       color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.directions_boat, size: 14, color: Colors.white),
-                        SizedBox(width: DesignTokens.spaceXS),
-                        Text(
-                          servicio.codigo,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: DesignTokens.fontSizeS,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                   SizedBox(width: DesignTokens.spaceS),
+                  // Estado badge
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: DesignTokens.spaceS,
-                      vertical: DesignTokens.spaceXS,
+                      vertical: 2,
                     ),
                     decoration: BoxDecoration(
                       color: servicio.cierreServicio
-                          ? AppColors.success.withValues(alpha: 0.1)
-                          : AppColors.warning.withValues(alpha: 0.1),
+                          ? AppColors.success
+                          : AppColors.warning,
                       borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                     ),
                     child: Text(
                       servicio.cierreServicio ? 'CERRADO' : 'ACTIVO',
                       style: TextStyle(
-                        color: servicio.cierreServicio ? AppColors.success : AppColors.warning,
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: DesignTokens.fontSizeXS,
+                        fontSize: 10,
                       ),
                     ),
                   ),
                   const Spacer(),
+                  // Tickets count
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spaceS,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.receipt_long, size: 12, color: AppColors.textSecondary),
+                        SizedBox(width: 4),
+                        Text(
+                          '${servicio.totalTickets}',
+                          style: TextStyle(
+                            fontSize: DesignTokens.fontSizeXS,
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: DesignTokens.spaceXS),
+                  Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+                ],
+              ),
+            ),
+
+            // Contenido principal
+            Padding(
+              padding: EdgeInsets.all(DesignTokens.spaceM),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nave (título principal)
                   Text(
-                    '${servicio.totalTickets} tickets',
+                    servicio.naveNombre ?? 'Sin nave',
                     style: TextStyle(
-                      fontSize: DesignTokens.fontSizeXS,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontSize: DesignTokens.fontSizeM,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(width: DesignTokens.spaceXS),
-                  Icon(
-                    Icons.chevron_right,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  ),
-                ],
-              ),
-              SizedBox(height: DesignTokens.spaceM),
+                  SizedBox(height: DesignTokens.spaceXS),
 
-              // Nave
-              Row(
-                children: [
-                  Icon(Icons.directions_boat_filled, size: 16, color: AppColors.textSecondary),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Expanded(
-                    child: Text(
-                      servicio.naveNombre ?? 'Sin nave',
-                      style: TextStyle(
-                        fontSize: DesignTokens.fontSizeM,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: DesignTokens.spaceS),
-
-              // Consignatario
-              Row(
-                children: [
-                  Icon(Icons.business, size: 14, color: AppColors.textSecondary),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Expanded(
-                    child: Text(
-                      servicio.consignatarioNombre ?? 'Sin consignatario',
-                      style: TextStyle(
-                        fontSize: DesignTokens.fontSizeS,
-                        color: AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: DesignTokens.spaceS),
-
-              // Puerto y fecha
-              Row(
-                children: [
-                  Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
-                  SizedBox(width: DesignTokens.spaceXS),
+                  // Consignatario
                   Text(
-                    servicio.puerto ?? 'Sin puerto',
+                    servicio.consignatarioNombre ?? 'Sin consignatario',
                     style: TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       color: AppColors.textSecondary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(),
-                  Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
-                  SizedBox(width: DesignTokens.spaceXS),
-                  Text(
-                    servicio.fechaAtraque != null
-                        ? dateFormat.format(servicio.fechaAtraque!)
-                        : 'Sin fecha',
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeS,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                  SizedBox(height: DesignTokens.spaceS),
 
-              // Productos
-              if (servicio.productos.isNotEmpty) ...[
-                SizedBox(height: DesignTokens.spaceS),
-                const Divider(),
-                SizedBox(height: DesignTokens.spaceXS),
-                Wrap(
-                  spacing: DesignTokens.spaceS,
-                  runSpacing: DesignTokens.spaceXS,
-                  children: servicio.productos.map((p) {
-                    return Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: DesignTokens.spaceS,
-                        vertical: DesignTokens.spaceXS,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-                      ),
-                      child: Text(
-                        '${p.producto} (${p.cantidad} TM)',
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeXS,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
+                  // Puerto y fecha en fila
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
+                      SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          servicio.puerto ?? 'Sin puerto',
+                          style: TextStyle(
+                            fontSize: DesignTokens.fontSizeXS,
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ],
-          ),
+                      SizedBox(width: DesignTokens.spaceM),
+                      Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
+                      SizedBox(width: 4),
+                      Text(
+                        servicio.fechaAtraque != null
+                            ? dateFormat.format(servicio.fechaAtraque!)
+                            : 'Sin fecha',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeXS,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Productos (chips compactos)
+                  if (servicio.productos.isNotEmpty) ...[
+                    SizedBox(height: DesignTokens.spaceS),
+                    Wrap(
+                      spacing: DesignTokens.spaceXS,
+                      runSpacing: DesignTokens.spaceXS,
+                      children: servicio.productos.take(3).map((p) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: DesignTokens.spaceS,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                          ),
+                          child: Text(
+                            '${p.producto} ${p.cantidad} TM',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColors.secondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    // Indicador si hay más productos
+                    if (servicio.productos.length > 3)
+                      Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          '+${servicio.productos.length - 3} más',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

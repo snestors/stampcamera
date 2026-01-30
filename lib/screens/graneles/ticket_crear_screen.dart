@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
+import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/services/graneles/graneles_service.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
@@ -18,10 +19,13 @@ class TicketCrearScreen extends ConsumerStatefulWidget {
   final int? ticketId;
   final bool isEditMode;
 
-  const TicketCrearScreen({super.key, required this.servicioId})
+  /// Constructor para crear nuevo ticket
+  /// - [servicioId] es opcional - si no se proporciona, se mostrarán BLs de todas las naves en operación
+  const TicketCrearScreen({super.key, this.servicioId})
       : ticketId = null,
         isEditMode = false;
 
+  /// Constructor para editar ticket existente
   const TicketCrearScreen.edit({super.key, required this.ticketId})
       : servicioId = null,
         isEditMode = true;
@@ -151,21 +155,17 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
       );
     }
 
-    if (_effectiveServicioId == null) {
-      return Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          title: const Text('Error'),
-        ),
-        body: const Center(
-          child: Text('No se pudo determinar el servicio'),
-        ),
-      );
-    }
+    // Obtener embarqueId de la asistencia activa para filtrar BLs
+    final asistenciaAsync = ref.watch(asistenciaActivaProvider);
+    final embarqueId = asistenciaAsync.valueOrNull?.asistencia?.nave?.id;
 
-    final optionsAsync = ref.watch(ticketMuelleOptionsProvider(_effectiveServicioId!));
+    // Usar el provider flexible que funciona con o sin servicioId
+    final optionsParams = TicketFormOptionsParams(
+      servicioId: _effectiveServicioId,
+      ticketId: widget.isEditMode ? widget.ticketId : null,
+      embarqueId: embarqueId,  // Filtrar BLs por la nave de la asistencia
+    );
+    final optionsAsync = ref.watch(ticketMuelleOptionsFlexProvider(optionsParams));
 
     return Scaffold(
       appBar: AppBar(
@@ -186,7 +186,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
         ),
         error: (error, stackTrace) => ConnectionErrorScreen(
           error: error,
-          onRetry: () => ref.invalidate(ticketMuelleOptionsProvider(_effectiveServicioId!)),
+          onRetry: () => ref.invalidate(ticketMuelleOptionsFlexProvider(optionsParams)),
         ),
         data: (options) => _buildForm(options),
       ),
@@ -330,10 +330,23 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
                     label: 'Fin *',
                     value: _finDescarga,
                     onChanged: (value) => setState(() => _finDescarga = value),
+                    hasError: _inicioDescarga.isAfter(_finDescarga) || _inicioDescarga.isAtSameMomentAs(_finDescarga),
                   ),
                 ),
               ],
             ),
+            // Mostrar error de tiempo si inicio >= fin
+            if (_inicioDescarga.isAfter(_finDescarga) || _inicioDescarga.isAtSameMomentAs(_finDescarga))
+              Padding(
+                padding: EdgeInsets.only(top: DesignTokens.spaceXS),
+                child: Text(
+                  'El fin de cargío debe ser mayor que el inicio',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: DesignTokens.fontSizeXS,
+                  ),
+                ),
+              ),
             SizedBox(height: DesignTokens.spaceL),
 
             // Observaciones
@@ -403,7 +416,8 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
                 ),
               ),
             ),
-            SizedBox(height: DesignTokens.spaceXL),
+            // SafeArea inferior + espacio adicional
+            SizedBox(height: DesignTokens.spaceXL + MediaQuery.of(context).padding.bottom),
           ],
         ),
       ),
@@ -620,6 +634,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
     required String label,
     required DateTime value,
     required ValueChanged<DateTime> onChanged,
+    bool hasError = false,
   }) {
     return InkWell(
       onTap: () async {
@@ -633,6 +648,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
           final time = await showTimePicker(
             context: context,
             initialTime: TimeOfDay.fromDateTime(value),
+            initialEntryMode: TimePickerEntryMode.input, // Modo texto, sin dial
             builder: (context, child) {
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -654,9 +670,12 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
       child: Container(
         padding: EdgeInsets.all(DesignTokens.spaceM),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: hasError ? AppColors.error.withValues(alpha: 0.05) : AppColors.surface,
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          border: Border.all(color: AppColors.neutral),
+          border: Border.all(
+            color: hasError ? AppColors.error : AppColors.neutral,
+            width: hasError ? 1.5 : 1.0,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -665,19 +684,20 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
               label,
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeXS,
-                color: AppColors.textSecondary,
+                color: hasError ? AppColors.error : AppColors.textSecondary,
               ),
             ),
             SizedBox(height: DesignTokens.spaceXS),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
+                Icon(Icons.calendar_today, size: 16, color: hasError ? AppColors.error : AppColors.primary),
                 SizedBox(width: DesignTokens.spaceS),
                 Text(
                   '${value.day}/${value.month}/${value.year}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
+                    color: hasError ? AppColors.error : null,
                   ),
                 ),
               ],
@@ -685,13 +705,14 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             SizedBox(height: DesignTokens.spaceXS),
             Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: AppColors.primary),
+                Icon(Icons.access_time, size: 16, color: hasError ? AppColors.error : AppColors.primary),
                 SizedBox(width: DesignTokens.spaceS),
                 Text(
                   '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
+                    color: hasError ? AppColors.error : null,
                   ),
                 ),
               ],
@@ -704,6 +725,17 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validar tiempo antes de enviar
+    if (_inicioDescarga.isAfter(_finDescarga) || _inicioDescarga.isAtSameMomentAs(_finDescarga)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El fin de cargío debe ser mayor que el inicio'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
 
     // En modo edición, solo validamos campos opcionales si fueron modificados
     // En modo creación, BL y Distribución son requeridos
@@ -720,12 +752,11 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      TicketMuelle? ticket;
       final File? fotoFile = _fotoPath != null ? File(_fotoPath!) : null;
 
       if (widget.isEditMode && widget.ticketId != null) {
         // Modo edición - actualizar ticket existente
-        ticket = await ref.read(ticketsMuelleProvider.notifier).updateTicket(
+        await ref.read(ticketsMuelleProvider.notifier).updateTicket(
           ticketId: widget.ticketId!,
           numeroTicket: _numeroTicketController.text,
           blId: _selectedBlId,
@@ -741,7 +772,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
         );
       } else {
         // Modo creación - crear nuevo ticket
-        ticket = await ref.read(ticketsMuelleProvider.notifier).createTicket(
+        await ref.read(ticketsMuelleProvider.notifier).createTicket(
           numeroTicket: _numeroTicketController.text,
           blId: _selectedBlId!,
           distribucionId: _selectedDistribucionId!,
@@ -756,7 +787,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
         );
       }
 
-      if (ticket != null && mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(widget.isEditMode
@@ -766,22 +797,16 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
           ),
         );
         context.pop();
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.isEditMode
-                ? 'Error al actualizar el ticket'
-                : 'Error al crear el ticket'),
-            backgroundColor: AppColors.error,
-          ),
-        );
       }
     } catch (e) {
       if (mounted) {
+        // Parsear errores de validación del backend
+        final errorMessage = _parseBackendError(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(errorMessage),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -790,5 +815,89 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  /// Parsea errores del backend para mostrar mensajes amigables
+  String _parseBackendError(dynamic error) {
+    String errorStr = error.toString();
+
+    // Si es DioException, extraer el response data
+    if (error.runtimeType.toString().contains('DioException')) {
+      try {
+        final response = error.response;
+        if (response != null && response.data != null) {
+          final data = response.data;
+          if (data is Map) {
+            // Buscar campos de error comunes
+            final errorMessages = <String>[];
+
+            data.forEach((key, value) {
+              if (value is List && value.isNotEmpty) {
+                final fieldName = _translateFieldName(key.toString());
+                errorMessages.add('$fieldName: ${value.first}');
+              } else if (value is String) {
+                final fieldName = _translateFieldName(key.toString());
+                errorMessages.add('$fieldName: $value');
+              }
+            });
+
+            if (errorMessages.isNotEmpty) {
+              return errorMessages.join('\n');
+            }
+          } else if (data is String) {
+            errorStr = data;
+          }
+        }
+      } catch (_) {
+        // Si falla, continuar con el string del error
+      }
+    }
+
+    // Errores comunes de validación del backend (fallback con string)
+    if (errorStr.contains('numero_ticket') && errorStr.contains('Ya existe')) {
+      return 'Ya existe un ticket con este número para el servicio actual';
+    }
+    if (errorStr.contains('fin_descarga') && errorStr.contains('mayor')) {
+      return 'El fin de cargío debe ser mayor que el inicio';
+    }
+    if (errorStr.contains('unique') || errorStr.contains('already exists')) {
+      return 'Ya existe un registro con estos datos';
+    }
+
+    // Intentar extraer mensaje de campo específico del JSON de error
+    final fieldPattern = RegExp(r'[\x27"](\w+)[\x27"]\s*:\s*\[?\s*[\x27"]([^\x27"\]]+)');
+    final match = fieldPattern.firstMatch(errorStr);
+    if (match != null) {
+      final field = match.group(1);
+      final message = match.group(2);
+      if (field != null && message != null) {
+        final displayField = _translateFieldName(field);
+        return '$displayField: $message';
+      }
+    }
+
+    // Limpiar prefijos comunes
+    return errorStr
+        .replaceAll('Exception: ', '')
+        .replaceAll('DioException [bad response]: ', '')
+        .replaceAll('DioException: ', '');
+  }
+
+  /// Traduce nombres de campos del backend a español
+  String _translateFieldName(String field) {
+    const fieldNames = {
+      'numero_ticket': 'Número de ticket',
+      'fin_descarga': 'Fin de cargío',
+      'inicio_descarga': 'Inicio de cargío',
+      'bl': 'BL',
+      'distribucion': 'Bodega',
+      'placa': 'Placa',
+      'transporte': 'Transporte',
+      'observaciones': 'Observaciones',
+      'foto': 'Foto',
+      'non_field_errors': 'Error',
+      'detail': 'Error',
+    };
+    return fieldNames[field] ?? field;
   }
 }

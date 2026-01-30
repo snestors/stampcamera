@@ -696,7 +696,265 @@ Migrados los últimos 3 archivos de `Navigator.push(MaterialPageRoute(...))` a `
 
 ---
 
+---
+
+## 🔐 **SISTEMA DE PERMISOS UNIFICADO - Flutter/React (2026-01-30)**
+
+### **Resumen**
+Se unificó el endpoint `/api/v1/check-auth/` para que Flutter y React consuman el mismo formato de permisos con CRUD granular.
+
+### **Endpoint: GET /api/v1/check-auth/**
+
+```json
+{
+  "user": {
+    "id": 123,
+    "username": "jperez",
+    "email": "jperez@empresa.com",
+    "first_name": "Juan",
+    "last_name": "Perez",
+    "is_superuser": false,
+    "groups": ["INSPECTOR", "AUTOS"],
+    "ultima_asistencia_activa": {
+      "id": 456,
+      "zona_trabajo": "PUERTO",
+      "nave_id": 789,
+      "nave_nombre": "NAVE EJEMPLO",
+      "rubro": "AUTOS"
+    },
+    "available_modules": [
+      {
+        "id": "camera",
+        "name": "Cámara",
+        "icon": "camera_alt",
+        "requires_asistencia": false,
+        "permisos": {
+          "ver": true,
+          "crear": true,
+          "editar": false,
+          "eliminar": false
+        }
+      },
+      {
+        "id": "autos",
+        "name": "Autos",
+        "icon": "directions_car",
+        "requires_asistencia": true,
+        "permisos": {
+          "ver": true,
+          "crear": true,
+          "editar": true,
+          "eliminar": false
+        }
+      }
+    ]
+  },
+  "es_cliente": false,
+  "cliente_empresa": null,
+  "es_empleado": true,
+  "empleado": {
+    "id": 45,
+    "nombre_completo": "Juan Perez",
+    "cargo": "Inspector"
+  }
+}
+```
+
+### **Campos ELIMINADOS del Response**
+Ya NO se envían (filtrado por queryset en backend):
+- `puertos_permitidos`
+- `talleres_clientes_ids`
+
+### **Módulos Disponibles**
+
+| ID | Descripción | Grupos |
+|----|-------------|--------|
+| `camera` | Cámara/Fotos | Todos (excepto clientes) |
+| `asistencia` | Marcar entrada/salida | Todos (excepto clientes) |
+| `autos` | Embarques, VINs, Daños | AUTOS, INSPECTOR, COORDINACION AUTOS, GESTORES |
+| `granos` | Servicios, Tickets | GRANELES, INSPECTOR, COORDINACION GRANELES |
+| `casos` | Casos y Documentos | CASOS Y DOCUMENTOS |
+
+### **Implementación Flutter - Modelos**
+
+```dart
+// lib/models/permisos.dart
+
+class ModuloPermiso {
+  final String id;
+  final String name;
+  final String icon;
+  final bool requiresAsistencia;
+  final PermisosCRUD permisos;
+
+  ModuloPermiso({
+    required this.id,
+    required this.name,
+    required this.icon,
+    required this.requiresAsistencia,
+    required this.permisos,
+  });
+
+  factory ModuloPermiso.fromJson(Map<String, dynamic> json) {
+    return ModuloPermiso(
+      id: json['id'],
+      name: json['name'],
+      icon: json['icon'],
+      requiresAsistencia: json['requires_asistencia'] ?? false,
+      permisos: PermisosCRUD.fromJson(json['permisos']),
+    );
+  }
+}
+
+class PermisosCRUD {
+  final bool ver;
+  final bool crear;
+  final bool editar;
+  final bool eliminar;
+
+  PermisosCRUD({
+    required this.ver,
+    required this.crear,
+    required this.editar,
+    required this.eliminar,
+  });
+
+  factory PermisosCRUD.fromJson(Map<String, dynamic> json) {
+    return PermisosCRUD(
+      ver: json['ver'] ?? false,
+      crear: json['crear'] ?? false,
+      editar: json['editar'] ?? false,
+      eliminar: json['eliminar'] ?? false,
+    );
+  }
+}
+```
+
+### **Implementación Flutter - Helper en UserState**
+
+```dart
+class UserState {
+  List<ModuloPermiso> availableModules;
+
+  bool canAccess(String moduloId, {String accion = 'ver'}) {
+    final modulo = availableModules.firstWhereOrNull((m) => m.id == moduloId);
+    if (modulo == null) return false;
+
+    switch (accion) {
+      case 'ver': return modulo.permisos.ver;
+      case 'crear': return modulo.permisos.crear;
+      case 'editar': return modulo.permisos.editar;
+      case 'eliminar': return modulo.permisos.eliminar;
+      default: return false;
+    }
+  }
+
+  bool hasModule(String moduloId) {
+    return availableModules.any((m) => m.id == moduloId);
+  }
+}
+```
+
+### **Uso en Widgets**
+
+```dart
+// Antes - solo verificaba si tenía el módulo
+if (user.availableModules.contains('autos')) { ... }
+
+// Ahora - permisos granulares CRUD
+if (user.canAccess('autos', accion: 'ver')) {
+  // Mostrar módulo
+}
+
+if (user.canAccess('autos', accion: 'crear')) {
+  FloatingActionButton(onPressed: () => crearRegistro())
+}
+
+// Deshabilitar si no tiene permiso
+ElevatedButton(
+  onPressed: user.canAccess('autos', accion: 'editar') ? () => editar() : null,
+)
+```
+
+---
+
+## 🌐 **WEBSOCKET DE PRESENCIA (Redis)**
+
+### **Endpoint:** `wss://host/ws/presencia/`
+
+### **Eventos Cliente → Servidor:**
+```json
+{"type": "heartbeat"}           // Mantener conexión (enviar cada 30s)
+{"type": "route_change", "route": "/app/autos"}  // Cambio de pantalla
+{"type": "ping"}                // Ping simple
+```
+
+### **Eventos Servidor → Cliente:**
+```json
+{"type": "force_logout", "reason": "user_deactivated", "message": "..."}
+{"type": "permissions_updated", "grupos": [...], "modulos": {...}}
+{"type": "asistencia_changed", "asistencia": {...}}
+{"type": "pong"}
+```
+
+### **Características:**
+- Presencia almacenada en **Redis** (no en base de datos)
+- TTL: 10 minutos (renovado con heartbeat)
+- Force logout cuando usuario es desactivado
+- Actualización de permisos en tiempo real
+
+### **Implementación Flutter (Opcional)**
+
+```dart
+class PresenciaWebSocket {
+  WebSocketChannel? _channel;
+  Timer? _heartbeatTimer;
+
+  void connect(String token) {
+    _channel = WebSocketChannel.connect(
+      Uri.parse('wss://tu-servidor/ws/presencia/?token=$token'),
+    );
+
+    _channel!.stream.listen((message) {
+      final data = jsonDecode(message);
+      switch (data['type']) {
+        case 'force_logout':
+          // Cerrar sesión y redirigir a login
+          break;
+        case 'permissions_updated':
+          // Actualizar permisos locales
+          break;
+        case 'asistencia_changed':
+          // Actualizar estado de asistencia
+          break;
+      }
+    });
+
+    // Heartbeat cada 30 segundos
+    _heartbeatTimer = Timer.periodic(Duration(seconds: 30), (_) {
+      _channel?.sink.add(jsonEncode({'type': 'heartbeat'}));
+    });
+  }
+
+  void disconnect() {
+    _heartbeatTimer?.cancel();
+    _channel?.sink.close();
+  }
+}
+```
+
+---
+
 ## 📋 **TAREAS PENDIENTES - PRÓXIMA SESIÓN**
+
+### **🔐 PRIORITARIO: Implementar Sistema de Permisos Unificado**
+**Estado:** PENDIENTE - Documentado arriba, falta implementar
+
+1. **Crear modelos** - `ModuloPermiso` y `PermisosCRUD` (código arriba)
+2. **Actualizar UserModel/AuthProvider** - Parsear `available_modules` del check-auth
+3. **Agregar helper `canAccess()`** - Verificar permisos CRUD
+4. **Actualizar widgets** - Usar `canAccess('autos', accion: 'crear')` en vez de `contains('autos')`
+5. **Opcional: WebSocket presencia** - Para force_logout y actualizaciones en tiempo real
 
 ### **🚗 Inventario (Siguientes partes)**
 1. **Vista de nave** - Mejorar UX: cargas lentas, diseño visual, usabilidad

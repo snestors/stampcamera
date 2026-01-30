@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:stampcamera/core/core.dart';
 
 class DetalleDanos extends ConsumerWidget {
@@ -678,145 +679,12 @@ class DetalleDanos extends ConsumerWidget {
   }
 
   void _showDocumentoModal(BuildContext context, FotoPresentacion documento) {
-    // Modal implementation (sin cambios del original)
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(dialogContext).size.height * 0.8,
-              maxWidth: MediaQuery.of(dialogContext).size.width * 0.9,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header del modal
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF003B5C),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.article, color: Colors.white, size: 20),
-                      SizedBox(width: DesignTokens.spaceXS),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Documento de Referencia',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              documento.nDocumento ?? 'Sin número',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(),
-                        icon: const Icon(Icons.close, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
+    if (documento.imagenUrl == null) return;
 
-                // Imagen del documento
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: NetworkImagePreview(
-                        thumbnailUrl: documento.imagenThumbnailUrl!,
-                        fullImageUrl: documento.imagenUrl!,
-                        size: double.infinity,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Footer con información adicional
-                if (documento.createAt != null || documento.createBy != null)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF003B5C).withValues(alpha: 0.05),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(16),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        if (documento.createAt != null)
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: Color(0xFF6B7280),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Fecha: ${documento.createAt}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF6B7280),
-                                ),
-                              ),
-                            ],
-                          ),
-                        if (documento.createBy != null) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.person,
-                                size: 14,
-                                color: Color(0xFF6B7280),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'Por: ${documento.createBy}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+    FullscreenImageViewer.open(
+      context,
+      imageUrl: documento.imagenUrl!,
+      title: 'Documento: ${documento.nDocumento ?? "Sin número"}',
     );
   }
 

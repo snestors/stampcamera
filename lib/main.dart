@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:stampcamera/providers/theme_provider.dart';
 import 'package:stampcamera/services/background_queue_service.dart';
 import 'package:stampcamera/services/offline_sync_handler.dart';
+import 'package:stampcamera/services/storage_health_service.dart';
 import 'package:stampcamera/services/update_service.dart';
 import 'package:stampcamera/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -17,6 +18,13 @@ late ProviderContainer _providerContainer;
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // IMPORTANTE: Verificar salud del storage ANTES de cualquier otra operacion
+  // Esto soluciona el problema de corrupcion al cambiar entre debug y release
+  final storageHealthy = await storageHealthService.checkAndRepairStorage();
+  if (!storageHealthy) {
+    debugPrint('⚠️ Storage fue reparado - el usuario debera iniciar sesion nuevamente');
+  }
 
   cameras = await availableCameras();
 

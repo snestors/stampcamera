@@ -320,6 +320,7 @@ class Balanza {
   final String? permisoStr;
   final String? balanzaEntrada;
   final String? balanzaSalida;
+  final bool tieneAlmacen;
   // IDs para edición
   final int? ticketId;
   final int? distribucionAlmacenId;
@@ -347,6 +348,7 @@ class Balanza {
     this.permisoStr,
     this.balanzaEntrada,
     this.balanzaSalida,
+    this.tieneAlmacen = false,
     this.ticketId,
     this.distribucionAlmacenId,
     this.precintoId,
@@ -379,6 +381,7 @@ class Balanza {
       permisoStr: json['permiso_str'],
       balanzaEntrada: json['balanza_entrada'],
       balanzaSalida: json['balanza_salida'],
+      tieneAlmacen: json['tiene_almacen'] ?? false,
       ticketId: json['ticket_id'],
       distribucionAlmacenId: json['distribucion_almacen_id'],
       precintoId: json['precinto_id'],

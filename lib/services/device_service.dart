@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'biometric_service.dart';
 import 'http_service.dart';
+import 'storage_health_service.dart'; // Importa appSecureStorage
 
 /// Modelo para el estado del dispositivo
 class DeviceStatus {
@@ -134,7 +136,7 @@ class DeviceService {
   DeviceService._internal();
 
   final _http = HttpService();
-  final _storage = const FlutterSecureStorage();
+  final _storage = appSecureStorage; // Usar instancia global compartida
 
   static const String _deviceIdKey = 'device_id';
   static const String _deviceTypeKey = 'device_type';
@@ -143,7 +145,21 @@ class DeviceService {
 
   /// Obtiene el device_id almacenado localmente
   Future<String?> getStoredDeviceId() async {
-    return await _storage.read(key: _deviceIdKey);
+    try {
+      return await _storage.read(key: _deviceIdKey);
+    } on PlatformException catch (e) {
+      // Solo PlatformException indica corrupcion real del storage
+      debugPrint('❌ DeviceService: PlatformException leyendo device_id - $e');
+      try {
+        await storageHealthService.forceCleanStorage();
+        debugPrint('🧹 DeviceService: Storage reparado');
+      } catch (_) {}
+      return null;
+    } catch (e) {
+      // Otros errores no requieren limpiar storage
+      debugPrint('⚠️ DeviceService: Error leyendo device_id - $e');
+      return null;
+    }
   }
 
   /// Almacena el device_id localmente
@@ -171,18 +187,32 @@ class DeviceService {
 
   /// Obtiene el username del dispositivo (solo para equipos personales)
   Future<String?> getStoredUsername() async {
-    return await _storage.read(key: _deviceUsernameKey);
+    try {
+      return await _storage.read(key: _deviceUsernameKey);
+    } catch (e) {
+      debugPrint('❌ DeviceService: Error leyendo username - $e');
+      return null;
+    }
   }
 
   /// Obtiene el tipo de dispositivo almacenado
   Future<String?> getStoredDeviceType() async {
-    return await _storage.read(key: _deviceTypeKey);
+    try {
+      return await _storage.read(key: _deviceTypeKey);
+    } catch (e) {
+      debugPrint('❌ DeviceService: Error leyendo device_type - $e');
+      return null;
+    }
   }
 
   /// Verifica si es un dispositivo personal
   Future<bool> isPersonalDevice() async {
-    final type = await getStoredDeviceType();
-    return type == 'personal';
+    try {
+      final type = await getStoredDeviceType();
+      return type == 'personal';
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Limpia la información del dispositivo (incluyendo biométrico)

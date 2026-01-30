@@ -6,6 +6,7 @@ import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/providers/autos/registro_general_provider.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
+import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 
 class SessionManager extends StateNotifier<String?> {
   SessionManager() : super(null);
@@ -39,11 +40,13 @@ class SessionManager extends StateNotifier<String?> {
     ref.invalidate(asistenciaActivaProvider);
     ref.invalidate(asistenciaFormOptionsProvider);
     ref.invalidate(asistenciaStatusProvider);
-    
-    // Limpiar datos de trabajo del día anterior
+
+    // =========================================================================
+    // AUTOS - Limpiar datos de trabajo del día anterior
+    // =========================================================================
     ref.invalidate(registroGeneralProvider);
     ref.invalidate(contenedorProvider);
-    
+
     // Limpiar pedeteo del día anterior
     ref.invalidate(pedeteoStateProvider);
     ref.invalidate(pedeteoOptionsProvider);
@@ -51,9 +54,25 @@ class SessionManager extends StateNotifier<String?> {
     ref.invalidate(pedeteoSelectedVinProvider);
     ref.invalidate(pedeteoShowFormProvider);
     ref.invalidate(pedeteoSearchResultsProvider);
-    
+
     // NOTA: queueStateProvider se mantiene entre inicios de asistencia
-    
+
+    // =========================================================================
+    // GRANELES - Limpiar datos de trabajo del día anterior
+    // =========================================================================
+    ref.invalidate(serviciosGranelesProvider);
+    ref.invalidate(servicioSeleccionadoProvider);
+    ref.invalidate(ticketsMuelleProvider);
+    ref.invalidate(balanzasListProvider);
+    ref.invalidate(balanzasProvider);
+    ref.invalidate(silosListProvider);
+    ref.invalidate(silosProvider);
+    ref.invalidate(almacenListProvider);
+    ref.invalidate(granelesFormProvider);
+    // Filtros de UI
+    ref.invalidate(ticketsPendientesFilterProvider);
+    ref.invalidate(balanzasPendientesFilterProvider);
+
     // Mantener configuraciones y caché de opciones
     // NO limpiar: *OptionsProvider, configuraciones de usuario, etc.
   }
@@ -63,13 +82,39 @@ class SessionManager extends StateNotifier<String?> {
     // Limpiar todos los datos de trabajo
     ref.invalidate(asistenciaActivaProvider);
     ref.invalidate(asistenciaStatusProvider);
+
+    // =========================================================================
+    // AUTOS
+    // =========================================================================
     ref.invalidate(registroGeneralProvider);
     ref.invalidate(contenedorProvider);
+
+    // Limpiar pedeteo - opciones dependen de la asistencia
+    ref.invalidate(pedeteoStateProvider);
+    ref.invalidate(pedeteoOptionsProvider);
+    ref.invalidate(pedeteoSearchQueryProvider);
+    ref.invalidate(pedeteoSelectedVinProvider);
+    ref.invalidate(pedeteoShowFormProvider);
+    ref.invalidate(pedeteoSearchResultsProvider);
+
     // NOTA: queueStateProvider se mantiene entre cierres de asistencia
-    
-    // Limpiar datos temporales pero mantener configuraciones
-    // ref.invalidate(cameraProvider);        // Comentado hasta verificar si existe
-    
+
+    // =========================================================================
+    // GRANELES
+    // =========================================================================
+    ref.invalidate(serviciosGranelesProvider);
+    ref.invalidate(servicioSeleccionadoProvider);
+    ref.invalidate(ticketsMuelleProvider);
+    ref.invalidate(balanzasListProvider);
+    ref.invalidate(balanzasProvider);
+    ref.invalidate(silosListProvider);
+    ref.invalidate(silosProvider);
+    ref.invalidate(almacenListProvider);
+    ref.invalidate(granelesFormProvider);
+    // Filtros de UI
+    ref.invalidate(ticketsPendientesFilterProvider);
+    ref.invalidate(balanzasPendientesFilterProvider);
+
     // Mantener: opciones, configuraciones, autenticación
   }
 
@@ -122,6 +167,26 @@ class SessionManager extends StateNotifier<String?> {
     // ============================================================================
     // NOTA: queueStateProvider NO se invalida - mantiene estado entre sesiones
     // ref.invalidate(queueStateProvider);
+
+    // ============================================================================
+    // PROVIDERS DE GRANELES
+    // ============================================================================
+    ref.invalidate(serviciosGranelesProvider);
+    ref.invalidate(servicioSeleccionadoProvider);
+    ref.invalidate(userGranelesPermissionsProvider);
+    ref.invalidate(ticketsMuelleProvider);
+    ref.invalidate(ticketMuelleOptionsProvider);
+    ref.invalidate(ticketMuelleOptionsFlexProvider);
+    ref.invalidate(balanzasListProvider);
+    ref.invalidate(balanzasProvider);
+    ref.invalidate(balanzaOptionsProvider);
+    ref.invalidate(silosListProvider);
+    ref.invalidate(silosProvider);
+    ref.invalidate(almacenListProvider);
+    ref.invalidate(granelesFormProvider);
+    // Filtros de UI
+    ref.invalidate(ticketsPendientesFilterProvider);
+    ref.invalidate(balanzasPendientesFilterProvider);
 
     // ============================================================================
     // NOTA: NO limpiar themeProvider ni connectivityProvider (configuraciones globales)

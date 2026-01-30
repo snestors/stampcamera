@@ -53,6 +53,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/utils/image_processor.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 
 /// Enum personalizado para resoluciones de cámara
 /// Evita la necesidad de importar la librería camera en otros archivos
@@ -417,16 +418,15 @@ class ReusableCameraCard extends StatelessWidget {
     );
   }
 
-  /// Abre el modal de cámara para tomar foto
+  /// Abre la pantalla de cámara para tomar foto
   void _openCameraModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _CameraModal(
-        title: title,
-        cameraResolution: cameraResolution,
-        onImageCaptured: onImageSelected,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _CameraScreen(
+          title: title,
+          cameraResolution: cameraResolution,
+          onImageCaptured: onImageSelected,
+        ),
       ),
     );
   }
@@ -527,73 +527,45 @@ class ReusableCameraCard extends StatelessWidget {
   void _showFullImage(BuildContext context) {
     if (!hasImage) return;
 
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.black,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppBar(
-              title: Text(title),
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              automaticallyImplyLeading: false,
-              actions: [
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            Flexible(
-              child: InteractiveViewer(
-                child: isLocalImage
-                    ? Image.file(File(currentImagePath!), fit: BoxFit.contain)
-                    : CachedNetworkImage(
-                        imageUrl: currentImageUrl!,
-                        fit: BoxFit.contain,
-                        placeholder: (context, url) => const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => const Center(
-                          child: Icon(Icons.error, color: Colors.red),
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    if (isLocalImage) {
+      FullscreenImageViewer.openLocal(
+        context,
+        localPath: currentImagePath!,
+        title: title,
+      );
+    } else {
+      FullscreenImageViewer.open(
+        context,
+        imageUrl: currentImageUrl!,
+        title: title,
+      );
+    }
   }
 }
 
-/// 📷 MODAL DE CÁMARA REUTILIZABLE (Actualizado con resolución configurable)
+/// 📷 PANTALLA DE CÁMARA REUTILIZABLE (Actualizado con resolución configurable)
 ///
-/// Modal que maneja la captura de fotos con preview y confirmación.
+/// Pantalla completa que maneja la captura de fotos con preview y confirmación.
 /// Procesa automáticamente las imágenes tomadas.
 /// Ahora soporta resolución configurable.
 
-// Modal de cámara reutilizable
-class _CameraModal extends StatefulWidget {
+// Pantalla de cámara reutilizable (full screen)
+class _CameraScreen extends StatefulWidget {
   final String title;
   final CameraResolution cameraResolution;
   final Function(String) onImageCaptured;
 
-  const _CameraModal({
+  const _CameraScreen({
     required this.title,
     required this.cameraResolution,
     required this.onImageCaptured,
   });
 
   @override
-  State<_CameraModal> createState() => _CameraModalState();
+  State<_CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraModalState extends State<_CameraModal> {
+class _CameraScreenState extends State<_CameraScreen> {
   CameraController? _cameraController;
   bool _isInitialized = false;
   bool _isProcessing = false;
@@ -732,55 +704,42 @@ class _CameraModalState extends State<_CameraModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(
+          widget.title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.close),
         ),
       ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: Colors.white),
-                ),
-              ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Camera Preview o Image Preview
+            Expanded(
+              child: _hasImage
+                  ? _buildImagePreview()
+                  : _buildCameraPreview(),
             ),
-          ),
 
-          // Camera Preview o Image Preview
-          Expanded(
-            child: _hasImage
-                ? _buildImagePreview()
-                : _buildCameraPreview(),
-          ),
-
-          // Controles
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: _hasImage
-                ? _buildImageControls()
-                : _buildCameraControls(),
-          ),
-        ],
+            // Controles
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: _hasImage
+                  ? _buildImageControls()
+                  : _buildCameraControls(),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -70,26 +70,21 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
   bool _isLoadingBalanza = false;
   final DateTime _fechaEnvioWp = DateTime.now();
 
-  bool _autoCalculatePesoNeto = true;
-
   @override
   void initState() {
     super.initState();
     if (widget.isEditMode && widget.balanzaId != null) {
       _loadBalanzaData();
     }
-    _pesoBrutoController.addListener(_calculatePesoNeto);
-    _pesoTaraController.addListener(_calculatePesoNeto);
+    // Listeners para actualizar la validación reactiva cuando cambian los pesos
+    _pesoBrutoController.addListener(_onPesoChanged);
+    _pesoTaraController.addListener(_onPesoChanged);
+    _pesoNetoController.addListener(_onPesoChanged);
   }
 
-  void _calculatePesoNeto() {
-    if (!_autoCalculatePesoNeto) return;
-    final bruto = double.tryParse(_pesoBrutoController.text) ?? 0;
-    final tara = double.tryParse(_pesoTaraController.text) ?? 0;
-    final neto = bruto - tara;
-    if (neto >= 0) {
-      _pesoNetoController.text = neto.toStringAsFixed(3);
-    }
+  void _onPesoChanged() {
+    // Solo actualizar el estado para que se recalcule la validación
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadBalanzaData() async {
@@ -98,7 +93,6 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
       final balanza = await ref.read(balanzaDetalleProvider(widget.balanzaId!).future);
       if (mounted) {
         setState(() {
-          _autoCalculatePesoNeto = false;
           _guiaController.text = balanza.guia;
           _pesoBrutoController.text = balanza.pesoBruto.toStringAsFixed(3);
           _pesoTaraController.text = balanza.pesoTara.toStringAsFixed(3);
@@ -357,7 +351,8 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
 
           // Botón de guardar
           _buildSubmitButton(),
-          SizedBox(height: DesignTokens.spaceL),
+          // SafeArea inferior + espacio adicional
+          SizedBox(height: DesignTokens.spaceL + MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
@@ -559,8 +554,15 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
       );
     }
 
+    // Verificar que el valor seleccionado existe en la lista
+    // Si no existe, resetear a null para evitar el assertion error
+    final validValue = distribuciones.any((d) => d.id == _selectedDistribucionAlmacenId)
+        ? _selectedDistribucionAlmacenId
+        : null;
+
     return DropdownButtonFormField<int>(
-      initialValue: _selectedDistribucionAlmacenId,
+      key: ValueKey('dist_almacen_$validValue'), // Key para forzar rebuild cuando cambia
+      initialValue: validValue,
       decoration: InputDecoration(
         labelText: 'Almacén de Destino *',
         hintText: 'Seleccionar almacén...',
@@ -616,6 +618,12 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
       },
       validator: (value) => value == null ? 'Selecciona un almacén' : null,
     );
+  }
+
+  /// Verifica si entrada >= salida (error de tiempo)
+  bool get _hasTimeError {
+    return _fechaEntradaBalanza.isAfter(_fechaSalidaBalanza) ||
+           _fechaEntradaBalanza.isAtSameMomentAs(_fechaSalidaBalanza);
   }
 
   Widget _buildEntradaFields() {
@@ -683,61 +691,104 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
   Widget _buildSalidaFields() {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 3,
-          child: InkWell(
-            onTap: () => _selectDateTime(isEntrada: false),
-            child: InputDecorator(
-              decoration: InputDecoration(
-                labelText: 'Fecha Salida *',
-                prefixIcon: const Icon(Icons.access_time, size: 20),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                ),
-                filled: true,
-                fillColor: AppColors.surface,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: DesignTokens.spaceS,
-                  vertical: DesignTokens.spaceS,
+        Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: InkWell(
+                onTap: () => _selectDateTime(isEntrada: false),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Fecha Salida *',
+                    labelStyle: _hasTimeError ? TextStyle(color: AppColors.error) : null,
+                    prefixIcon: Icon(
+                      Icons.access_time,
+                      size: 20,
+                      color: _hasTimeError ? AppColors.error : null,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                      borderSide: BorderSide(
+                        color: _hasTimeError ? AppColors.error : AppColors.neutral,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                      borderSide: BorderSide(
+                        color: _hasTimeError ? AppColors.error : AppColors.neutral,
+                        width: _hasTimeError ? 1.5 : 1.0,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: _hasTimeError
+                        ? AppColors.error.withValues(alpha: 0.05)
+                        : AppColors.surface,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: DesignTokens.spaceS,
+                      vertical: DesignTokens.spaceS,
+                    ),
+                  ),
+                  child: Text(
+                    dateFormat.format(_fechaSalidaBalanza),
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeS,
+                      color: _hasTimeError ? AppColors.error : null,
+                    ),
+                  ),
                 ),
               ),
-              child: Text(
-                dateFormat.format(_fechaSalidaBalanza),
-                style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            ),
+            SizedBox(width: DesignTokens.spaceS),
+            Expanded(
+              flex: 1,
+              child: TextFormField(
+                controller: _balanzaSalidaController,
+                decoration: InputDecoration(
+                  labelText: 'Balanza',
+                  hintText: 'B2',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                  counterText: '',
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: DesignTokens.spaceS,
+                    vertical: DesignTokens.spaceM,
+                  ),
+                ),
+                maxLength: 2,
+                textCapitalization: TextCapitalization.characters,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: DesignTokens.fontSizeM,
+                ),
               ),
+            ),
+          ],
+        ),
+        // Mostrar error de tiempo reactivamente
+        if (_hasTimeError)
+          Padding(
+            padding: EdgeInsets.only(top: DesignTokens.spaceXS),
+            child: Row(
+              children: [
+                Icon(Icons.error_outline, size: 14, color: AppColors.error),
+                SizedBox(width: DesignTokens.spaceXS),
+                Text(
+                  'La fecha de salida debe ser mayor que la de entrada',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: DesignTokens.fontSizeXS,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        SizedBox(width: DesignTokens.spaceS),
-        Expanded(
-          flex: 1,
-          child: TextFormField(
-            controller: _balanzaSalidaController,
-            decoration: InputDecoration(
-              labelText: 'Balanza',
-              hintText: 'B2',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              ),
-              filled: true,
-              fillColor: AppColors.surface,
-              counterText: '',
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: DesignTokens.spaceS,
-                vertical: DesignTokens.spaceM,
-              ),
-            ),
-            maxLength: 2,
-            textCapitalization: TextCapitalization.characters,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: DesignTokens.fontSizeM,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -756,6 +807,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(initialDate),
+        initialEntryMode: TimePickerEntryMode.input, // Modo texto, sin dial
         builder: (context, child) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -779,6 +831,38 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
     }
   }
 
+  /// Verifica si peso bruto > peso tara
+  bool get _hasPesoError {
+    final bruto = double.tryParse(_pesoBrutoController.text) ?? 0;
+    final tara = double.tryParse(_pesoTaraController.text) ?? 0;
+    // Solo mostrar error si ambos campos tienen valores válidos
+    if (bruto > 0 && tara > 0 && bruto <= tara) {
+      return true;
+    }
+    return false;
+  }
+
+  /// Verifica si peso neto != bruto - tara
+  bool get _hasPesoNetoError {
+    final bruto = double.tryParse(_pesoBrutoController.text) ?? 0;
+    final tara = double.tryParse(_pesoTaraController.text) ?? 0;
+    final neto = double.tryParse(_pesoNetoController.text) ?? 0;
+
+    // Solo validar si todos los campos tienen valores válidos
+    if (bruto <= 0 || tara < 0 || neto <= 0) return false;
+
+    final expectedNeto = bruto - tara;
+    // Permitir pequeña diferencia por redondeo (0.001)
+    return (neto - expectedNeto).abs() > 0.001;
+  }
+
+  /// Obtiene el peso neto esperado
+  String get _expectedPesoNeto {
+    final bruto = double.tryParse(_pesoBrutoController.text) ?? 0;
+    final tara = double.tryParse(_pesoTaraController.text) ?? 0;
+    return (bruto - tara).toStringAsFixed(3);
+  }
+
   Widget _buildWeightFields() {
     return Column(
       children: [
@@ -792,9 +876,20 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
                   suffixText: 'TM',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                    borderSide: BorderSide(
+                      color: _hasPesoError ? AppColors.error : AppColors.neutral,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                    borderSide: BorderSide(
+                      color: _hasPesoError ? AppColors.error : AppColors.neutral,
+                    ),
                   ),
                   filled: true,
-                  fillColor: AppColors.surface,
+                  fillColor: _hasPesoError
+                      ? AppColors.error.withValues(alpha: 0.05)
+                      : AppColors.surface,
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
@@ -835,6 +930,24 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
             ),
           ],
         ),
+        // Mostrar error de pesos reactivamente
+        if (_hasPesoError)
+          Padding(
+            padding: EdgeInsets.only(top: DesignTokens.spaceXS),
+            child: Row(
+              children: [
+                Icon(Icons.error_outline, size: 14, color: AppColors.error),
+                SizedBox(width: DesignTokens.spaceXS),
+                Text(
+                  'El peso bruto debe ser mayor que el peso tara',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: DesignTokens.fontSizeXS,
+                  ),
+                ),
+              ],
+            ),
+          ),
         SizedBox(height: DesignTokens.spaceM),
         Row(
           children: [
@@ -846,22 +959,25 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
                   suffixText: 'TM',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                    borderSide: BorderSide(
+                      color: _hasPesoNetoError ? AppColors.error : AppColors.neutral,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                    borderSide: BorderSide(
+                      color: _hasPesoNetoError ? AppColors.error : AppColors.neutral,
+                    ),
                   ),
                   filled: true,
-                  fillColor: _autoCalculatePesoNeto
-                      ? AppColors.surface.withValues(alpha: 0.5)
+                  fillColor: _hasPesoNetoError
+                      ? AppColors.error.withValues(alpha: 0.05)
                       : AppColors.surface,
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
-                readOnly: _autoCalculatePesoNeto,
-                onTap: () {
-                  if (_autoCalculatePesoNeto) {
-                    setState(() => _autoCalculatePesoNeto = false);
-                  }
-                },
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) return 'Requerido';
                   final num = double.tryParse(value);
@@ -889,6 +1005,26 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
             ),
           ],
         ),
+        // Mostrar error de peso neto reactivamente
+        if (_hasPesoNetoError)
+          Padding(
+            padding: EdgeInsets.only(top: DesignTokens.spaceXS),
+            child: Row(
+              children: [
+                Icon(Icons.error_outline, size: 14, color: AppColors.error),
+                SizedBox(width: DesignTokens.spaceXS),
+                Expanded(
+                  child: Text(
+                    'El peso neto debe ser $_expectedPesoNeto (bruto - tara)',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontSize: DesignTokens.fontSizeXS,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -914,9 +1050,16 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
               ),
             ),
           )
-        else if (permisos.isNotEmpty)
-          DropdownButtonFormField<int>(
-            initialValue: _selectedPermisoId,
+        else if (permisos.isNotEmpty) ...[
+          Builder(builder: (context) {
+            // Verificar que el valor seleccionado existe en la lista o es null
+            final validPermisoId = _selectedPermisoId == null ||
+                    permisos.any((p) => p.id == _selectedPermisoId)
+                ? _selectedPermisoId
+                : null;
+            return DropdownButtonFormField<int>(
+            key: ValueKey('permiso_$validPermisoId'),
+            initialValue: validPermisoId,
             decoration: InputDecoration(
               labelText: 'Permiso',
               hintText: 'Seleccionar permiso (opcional)...',
@@ -989,7 +1132,9 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
             onChanged: (value) {
               setState(() => _selectedPermisoId = value);
             },
-          ),
+          );
+          }),
+        ],
       ],
     );
   }
@@ -1168,10 +1313,33 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_fechaEntradaBalanza.isAfter(_fechaSalidaBalanza)) {
+    // Validar tiempos
+    if (_hasTimeError) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('La fecha de entrada debe ser anterior a la de salida'),
+          content: Text('La fecha de salida debe ser mayor que la de entrada'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Validar pesos (bruto > tara)
+    if (_hasPesoError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El peso bruto debe ser mayor que el peso tara'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    // Validar peso neto = bruto - tara
+    if (_hasPesoNetoError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('El peso neto debe ser $_expectedPesoNeto (bruto - tara)'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -1258,13 +1426,60 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
+        // Parsear errores de validación del backend
+        final errorMessage = _parseBackendError(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(errorMessage),
             backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
     }
+  }
+
+  /// Parsea errores del backend para mostrar mensajes amigables
+  String _parseBackendError(String error) {
+    // Errores comunes de validación del backend
+    if (error.contains('guia') && error.contains('Ya existe')) {
+      return 'Ya existe una guía con este número para el servicio actual';
+    }
+    if (error.contains('guia') && error.contains('única')) {
+      return 'La guía debe ser única para el servicio';
+    }
+    if (error.contains('fecha_salida_balanza') && error.contains('mayor')) {
+      return 'La fecha de salida debe ser mayor que la de entrada';
+    }
+    if (error.contains('peso_bruto') && error.contains('mayor')) {
+      return 'El peso bruto debe ser mayor que el peso tara';
+    }
+    if (error.contains('peso_neto') && error.contains('igual')) {
+      return 'El peso neto debe ser igual a bruto menos tara';
+    }
+    // Intentar extraer mensaje de campo específico del JSON de error
+    // Buscar patrones como: "field": ["message"] o 'field': ['message']
+    final fieldPattern = RegExp(r'[\x27"](\w+)[\x27"]\s*:\s*\[?\s*[\x27"]([^\x27"\]]+)');
+    final match = fieldPattern.firstMatch(error);
+    if (match != null) {
+      final field = match.group(1);
+      final message = match.group(2);
+      if (field != null && message != null) {
+        // Traducir nombres de campos
+        final fieldNames = {
+          'guia': 'Guía',
+          'peso_bruto': 'Peso bruto',
+          'peso_tara': 'Peso tara',
+          'peso_neto': 'Peso neto',
+          'fecha_entrada_balanza': 'Fecha entrada',
+          'fecha_salida_balanza': 'Fecha salida',
+          'distribucion_almacen': 'Almacén',
+          'ticket': 'Ticket',
+        };
+        final displayField = fieldNames[field] ?? field;
+        return '$displayField: $message';
+      }
+    }
+    return error.replaceAll('Exception: ', '');
   }
 }

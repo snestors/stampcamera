@@ -32,6 +32,16 @@ final almacenServiceProvider = Provider<AlmacenService>((ref) {
 });
 
 // ===========================================================================
+// FILTROS DE PENDIENTES
+// ===========================================================================
+
+/// Filtro para mostrar solo tickets pendientes (sin balanza)
+final ticketsPendientesFilterProvider = StateProvider<bool>((ref) => false);
+
+/// Filtro para mostrar solo balanzas pendientes (sin almacén)
+final balanzasPendientesFilterProvider = StateProvider<bool>((ref) => false);
+
+// ===========================================================================
 // SERVICIOS DE GRANELES (con paginación)
 // ===========================================================================
 
@@ -45,16 +55,7 @@ final serviciosGranelesProvider =
 class ServiciosGranelesNotifier extends BaseListProviderImpl<ServicioGranel> {
   @override
   ServiciosGranelesService get service => ref.read(serviciosGranelesServiceProvider);
-
-  @override
-  Future<List<ServicioGranel>> loadInitial() async {
-    try {
-      final paginated = await service.list();
-      return paginated.results;
-    } catch (e) {
-      throw Exception('Error al cargar servicios: $e');
-    }
-  }
+  // NO sobrescribir loadInitial - usar el del base que setea _nextUrl
 }
 
 /// Provider para servicio seleccionado
@@ -65,6 +66,19 @@ final servicioDashboardProvider =
     FutureProvider.autoDispose.family<ServicioDashboard, int>((ref, servicioId) async {
   final service = ref.watch(serviciosGranelesServiceProvider);
   return service.getDashboard(servicioId);
+});
+
+/// Provider para permisos del usuario en módulo graneles
+/// Cachea los permisos para evitar llamadas repetidas
+final userGranelesPermissionsProvider =
+    FutureProvider<UserGranelesPermissions>((ref) async {
+  final service = ref.watch(serviciosGranelesServiceProvider);
+  try {
+    return await service.getUserPermissions();
+  } catch (e) {
+    // Si falla, retornar permisos por defecto (todo visible para no bloquear al usuario)
+    return UserGranelesPermissions.defaults();
+  }
 });
 
 // ===========================================================================
@@ -80,6 +94,7 @@ final ticketsMuelleProvider =
 /// Notifier para tickets de muelle - implementa BaseListProviderImpl
 class TicketMuelleNotifier extends BaseListProviderImpl<TicketMuelle> {
   int? _servicioId;
+  bool _filterSinBalanza = false;
 
   @override
   TicketMuelleService get service => ref.read(ticketMuelleServiceProvider);
@@ -89,21 +104,33 @@ class TicketMuelleNotifier extends BaseListProviderImpl<TicketMuelle> {
     if (_servicioId == servicioId) return;
     _servicioId = servicioId;
     service.setServicioId(servicioId);
-    refresh();
+    _reloadWithCurrentFilters();
   }
 
   /// Obtener el servicio ID actual
   int? get servicioId => _servicioId;
 
-  @override
-  Future<List<TicketMuelle>> loadInitial() async {
-    try {
-      final paginated = await service.list();
-      return paginated.results;
-    } catch (e) {
-      throw Exception('Error al cargar tickets: $e');
+  /// Estado actual del filtro sin balanza
+  bool get filterSinBalanza => _filterSinBalanza;
+
+  /// Filtrar por tickets sin balanza (server-side)
+  void setFilterSinBalanza(bool value) {
+    if (_filterSinBalanza == value) return;
+    _filterSinBalanza = value;
+    _reloadWithCurrentFilters();
+  }
+
+  /// Recargar con los filtros actuales (usa listWithFilters que SÍ setea _searchNextUrl)
+  void _reloadWithCurrentFilters() {
+    if (_filterSinBalanza) {
+      listWithFilters({'sin_balanza': 'true'});
+    } else {
+      // Limpiar filtro y recargar normal (esto llama al loadInitial del base)
+      clearSearch();
     }
   }
+
+  // NO sobrescribir loadInitial - usar el del base que setea _nextUrl correctamente
 
   /// Crear ticket con foto
   Future<TicketMuelle?> createTicket({
@@ -117,27 +144,23 @@ class TicketMuelleNotifier extends BaseListProviderImpl<TicketMuelle> {
     String? observaciones,
     File? foto,
   }) async {
-    try {
-      final ticket = await service.createTicket(
-        numeroTicket: numeroTicket,
-        blId: blId,
-        distribucionId: distribucionId,
-        placaId: placaId,
-        transporteId: transporteId,
-        inicioDescarga: inicioDescarga,
-        finDescarga: finDescarga,
-        observaciones: observaciones,
-        foto: foto,
-      );
+    final ticket = await service.createTicket(
+      numeroTicket: numeroTicket,
+      blId: blId,
+      distribucionId: distribucionId,
+      placaId: placaId,
+      transporteId: transporteId,
+      inicioDescarga: inicioDescarga,
+      finDescarga: finDescarga,
+      observaciones: observaciones,
+      foto: foto,
+    );
 
-      // Agregar al inicio de la lista
-      final current = state.value ?? [];
-      state = AsyncValue.data([ticket, ...current]);
+    // Agregar al inicio de la lista
+    final current = state.value ?? [];
+    state = AsyncValue.data([ticket, ...current]);
 
-      return ticket;
-    } catch (e) {
-      return null;
-    }
+    return ticket;
   }
 
   /// Actualizar ticket existente
@@ -153,37 +176,65 @@ class TicketMuelleNotifier extends BaseListProviderImpl<TicketMuelle> {
     String? observaciones,
     File? foto,
   }) async {
-    try {
-      final ticket = await service.updateTicket(
-        ticketId: ticketId,
-        numeroTicket: numeroTicket,
-        blId: blId,
-        distribucionId: distribucionId,
-        placaId: placaId,
-        transporteId: transporteId,
-        inicioDescarga: inicioDescarga,
-        finDescarga: finDescarga,
-        observaciones: observaciones,
-        foto: foto,
-      );
+    final ticket = await service.updateTicket(
+      ticketId: ticketId,
+      numeroTicket: numeroTicket,
+      blId: blId,
+      distribucionId: distribucionId,
+      placaId: placaId,
+      transporteId: transporteId,
+      inicioDescarga: inicioDescarga,
+      finDescarga: finDescarga,
+      observaciones: observaciones,
+      foto: foto,
+    );
 
-      // Actualizar en la lista
-      final current = state.value ?? [];
-      final updatedList = current.map((t) => t.id == ticketId ? ticket : t).toList();
-      state = AsyncValue.data(updatedList);
+    // Actualizar en la lista
+    final current = state.value ?? [];
+    final updatedList = current.map((t) => t.id == ticketId ? ticket : t).toList();
+    state = AsyncValue.data(updatedList);
 
-      return ticket;
-    } catch (e) {
-      return null;
-    }
+    return ticket;
   }
 }
 
-/// Provider para opciones del formulario de ticket
+/// Parámetros para obtener opciones de formulario de ticket
+class TicketFormOptionsParams {
+  final int? servicioId;
+  final int? ticketId;
+  final int? embarqueId;  // Para filtrar BLs por la nave de la asistencia activa
+
+  const TicketFormOptionsParams({this.servicioId, this.ticketId, this.embarqueId});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TicketFormOptionsParams &&
+          runtimeType == other.runtimeType &&
+          servicioId == other.servicioId &&
+          ticketId == other.ticketId &&
+          embarqueId == other.embarqueId;
+
+  @override
+  int get hashCode => servicioId.hashCode ^ ticketId.hashCode ^ embarqueId.hashCode;
+}
+
+/// Provider para opciones del formulario de ticket (NUEVO - con parámetros flexibles)
+final ticketMuelleOptionsFlexProvider =
+    FutureProvider.autoDispose.family<TicketMuelleOptions, TicketFormOptionsParams>((ref, params) async {
+  final service = ref.watch(ticketMuelleServiceProvider);
+  return service.getFormOptions(
+    servicioId: params.servicioId,
+    ticketId: params.ticketId,
+    embarqueId: params.embarqueId,
+  );
+});
+
+/// Provider para opciones del formulario de ticket (LEGACY - mantener compatibilidad)
 final ticketMuelleOptionsProvider =
     FutureProvider.autoDispose.family<TicketMuelleOptions, int>((ref, servicioId) async {
   final service = ref.watch(ticketMuelleServiceProvider);
-  return service.getFormOptions(servicioId);
+  return service.getFormOptions(servicioId: servicioId);
 });
 
 /// Provider para detalle de un ticket específico
@@ -205,18 +256,32 @@ final balanzasListProvider =
 
 /// Notifier para balanzas - implementa BaseListProviderImpl
 class BalanzaNotifier extends BaseListProviderImpl<Balanza> {
+  bool _filterSinAlmacen = false;
+
   @override
   BalanzaService get service => ref.read(balanzaServiceProvider);
 
-  @override
-  Future<List<Balanza>> loadInitial() async {
-    try {
-      final paginated = await service.list();
-      return paginated.results;
-    } catch (e) {
-      throw Exception('Error al cargar balanzas: $e');
+  /// Estado actual del filtro sin almacén
+  bool get filterSinAlmacen => _filterSinAlmacen;
+
+  /// Filtrar por balanzas sin almacén (server-side)
+  void setFilterSinAlmacen(bool value) {
+    if (_filterSinAlmacen == value) return;
+    _filterSinAlmacen = value;
+    _reloadWithCurrentFilters();
+  }
+
+  /// Recargar con los filtros actuales (usa listWithFilters que SÍ setea _searchNextUrl)
+  void _reloadWithCurrentFilters() {
+    if (_filterSinAlmacen) {
+      listWithFilters({'sin_almacen': 'true'});
+    } else {
+      // Limpiar filtro y recargar normal (esto llama al loadInitial del base)
+      clearSearch();
     }
   }
+
+  // NO sobrescribir loadInitial - usar el del base que setea _nextUrl correctamente
 }
 
 /// Provider para lista de balanzas por servicio (legacy - mantener compatibilidad)
@@ -255,16 +320,7 @@ final silosListProvider =
 class SilosNotifier extends BaseListProviderImpl<Silos> {
   @override
   SilosService get service => ref.read(silosServiceProvider);
-
-  @override
-  Future<List<Silos>> loadInitial() async {
-    try {
-      final paginated = await service.list();
-      return paginated.results;
-    } catch (e) {
-      throw Exception('Error al cargar silos: $e');
-    }
-  }
+  // NO sobrescribir loadInitial - usar el del base que setea _nextUrl
 }
 
 /// Provider para lista de silos por servicio (legacy - mantener compatibilidad)
@@ -289,16 +345,7 @@ final almacenListProvider =
 class AlmacenNotifier extends BaseListProviderImpl<AlmacenGranel> {
   @override
   AlmacenService get service => ref.read(almacenServiceProvider);
-
-  @override
-  Future<List<AlmacenGranel>> loadInitial() async {
-    try {
-      final paginated = await service.list();
-      return paginated.results;
-    } catch (e) {
-      throw Exception('Error al cargar almacén: $e');
-    }
-  }
+  // NO sobrescribir loadInitial - usar el del base que setea _nextUrl
 }
 
 /// Provider para detalle de un almacén

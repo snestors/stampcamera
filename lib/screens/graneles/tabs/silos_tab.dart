@@ -1,12 +1,15 @@
 // =============================================================================
 // TAB DE SILOS - TODOS LOS SILOS CON BÚSQUEDA E INFINITE SCROLL
 // =============================================================================
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
@@ -34,7 +37,9 @@ class _SilosTabState extends ConsumerState<SilosTab> {
 
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        if (!notifier.isLoadingMore && notifier.hasNextPage) {
+        if (!notifier.isLoadingMore &&
+            notifier.hasNextPage &&
+            !notifier.isSearching) {
           notifier.loadMore();
         }
       }
@@ -53,6 +58,9 @@ class _SilosTabState extends ConsumerState<SilosTab> {
   Widget build(BuildContext context) {
     final silosAsync = ref.watch(silosListProvider);
     final notifier = ref.read(silosListProvider.notifier);
+    final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
+    final permissions = permissionsAsync.valueOrNull;
+    final canAdd = permissions?.silos.canAdd ?? false;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -87,14 +95,22 @@ class _SilosTabState extends ConsumerState<SilosTab> {
           Expanded(child: _buildResultsList(silosAsync, notifier)),
         ],
       ),
-      // TODO: Agregar FAB para crear silos cuando se implemente el formulario
-      // floatingActionButton: FloatingActionButton.extended(
-      //   heroTag: 'fab_silos',
-      //   onPressed: () => _navigateToCreateSilos(),
-      //   backgroundColor: AppColors.primary,
-      //   icon: const Icon(Icons.add, color: Colors.white),
-      //   label: Text('Nuevo Silo', ...),
-      // ),
+      floatingActionButton: canAdd
+          ? FloatingActionButton.extended(
+              heroTag: 'fab_silos',
+              onPressed: () => context.push('/graneles/silos/crear'),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(
+                'Nuevo Silo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: DesignTokens.fontSizeS,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -131,7 +147,13 @@ class _SilosTabState extends ConsumerState<SilosTab> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        // Padding extra abajo para el FAB (80px)
+        padding: EdgeInsets.fromLTRB(
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM + 80,
+        ),
         itemCount: silos.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < silos.length) {
@@ -211,18 +233,20 @@ class _SilosTabState extends ConsumerState<SilosTab> {
 }
 
 // =============================================================================
-// SILO CARD
+// SILO CARD - Mejorada con foto y botones de acción
 // =============================================================================
 
-class _SiloCard extends StatelessWidget {
+class _SiloCard extends ConsumerWidget {
   final Silos silo;
 
   const _SiloCard({required this.silo});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm');
     final numberFormat = NumberFormat('#,##0.000', 'es_PE');
+    final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
+    final canEdit = permissionsAsync.valueOrNull?.silos.canEdit ?? false;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -230,124 +254,187 @@ class _SiloCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header con número de silo
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: DesignTokens.spaceS,
-                    vertical: DesignTokens.spaceXS,
+      child: InkWell(
+        onTap: canEdit ? () => context.push('/graneles/silos/editar/${silo.id}') : null,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        child: Padding(
+          padding: EdgeInsets.all(DesignTokens.spaceM),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Foto (si existe)
+              if (silo.fotoUrl != null) ...[
+                GestureDetector(
+                  onTap: () => FullscreenImageViewer.open(
+                    context,
+                    imageUrl: silo.fotoUrl!,
+                    title: 'Silo N° ${silo.numeroSilo ?? "-"}',
                   ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.storage, size: 14, color: Colors.white),
-                      SizedBox(width: DesignTokens.spaceXS),
-                      Text(
-                        'N° ${silo.numeroSilo ?? "-"}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: DesignTokens.fontSizeS,
+                    child: CachedNetworkImage(
+                      imageUrl: silo.fotoUrl!,
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        width: 80,
+                        height: 80,
+                        color: AppColors.surface,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: DesignTokens.spaceM),
-
-            // Producto
-            Row(
-              children: [
-                Icon(Icons.inventory_2, size: 16, color: AppColors.textSecondary),
-                SizedBox(width: DesignTokens.spaceS),
-                Expanded(
-                  child: Text(
-                    silo.productoNombre ?? 'Sin producto',
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeM,
-                      fontWeight: FontWeight.w600,
+                      errorWidget: (context, url, error) => Container(
+                        width: 80,
+                        height: 80,
+                        color: AppColors.surface,
+                        child: Icon(Icons.broken_image, color: AppColors.textSecondary),
+                      ),
                     ),
                   ),
                 ),
+                SizedBox(width: DesignTokens.spaceM),
               ],
-            ),
-            SizedBox(height: DesignTokens.spaceM),
 
-            // Peso y bags
-            Container(
-              padding: EdgeInsets.all(DesignTokens.spaceS),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Column(
-                    children: [
-                      Text(
-                        'Peso',
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeXS,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      SizedBox(height: DesignTokens.spaceXS),
-                      Text(
-                        silo.peso != null ? numberFormat.format(silo.peso!) : '-',
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeM,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      Text(
-                        'TM',
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeXS,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (silo.bags != null) ...[
-                    Container(
-                      height: 40,
-                      width: 1,
-                      color: AppColors.neutral,
-                    ),
-                    Column(
+              // Contenido principal
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header con número de silo y botón de editar
+                    Row(
                       children: [
-                        Text(
-                          'Bags',
-                          style: TextStyle(
-                            fontSize: DesignTokens.fontSizeXS,
-                            color: AppColors.textSecondary,
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: DesignTokens.spaceS,
+                            vertical: DesignTokens.spaceXS,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.storage, size: 14, color: Colors.white),
+                              SizedBox(width: DesignTokens.spaceXS),
+                              Text(
+                                'N° ${silo.numeroSilo ?? "-"}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: DesignTokens.fontSizeS,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: DesignTokens.spaceXS),
-                        Text(
-                          silo.bags.toString(),
-                          style: TextStyle(
-                            fontSize: DesignTokens.fontSizeM,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.secondary,
+                        const Spacer(),
+                        if (canEdit)
+                          IconButton(
+                            icon: Icon(Icons.edit, size: 20, color: AppColors.primary),
+                            onPressed: () => context.push('/graneles/silos/editar/${silo.id}'),
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                            tooltip: 'Editar',
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: DesignTokens.spaceS),
+
+                    // Producto
+                    Row(
+                      children: [
+                        Icon(Icons.inventory_2, size: 14, color: AppColors.textSecondary),
+                        SizedBox(width: DesignTokens.spaceXS),
+                        Expanded(
+                          child: Text(
+                            silo.productoNombre ?? 'Sin producto',
+                            style: TextStyle(
+                              fontSize: DesignTokens.fontSizeS,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                    SizedBox(height: DesignTokens.spaceS),
+
+                    // Peso y bags en fila compacta
+                    Row(
+                      children: [
+                        // Peso
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: DesignTokens.spaceS,
+                            vertical: DesignTokens.spaceXS,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.scale, size: 14, color: AppColors.primary),
+                              SizedBox(width: DesignTokens.spaceXS),
+                              Text(
+                                silo.peso != null
+                                    ? '${numberFormat.format(silo.peso!)} TM'
+                                    : '- TM',
+                                style: TextStyle(
+                                  fontSize: DesignTokens.fontSizeS,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: DesignTokens.spaceS),
+
+                        // Bags (si existe)
+                        if (silo.bags != null) ...[
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: DesignTokens.spaceS,
+                              vertical: DesignTokens.spaceXS,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.inventory, size: 14, color: AppColors.secondary),
+                                SizedBox(width: DesignTokens.spaceXS),
+                                Text(
+                                  '${silo.bags} bags',
+                                  style: TextStyle(
+                                    fontSize: DesignTokens.fontSizeS,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.secondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    SizedBox(height: DesignTokens.spaceS),
+
+                    // Fecha y hora
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 12, color: AppColors.textSecondary),
+                        SizedBox(width: DesignTokens.spaceXS),
                         Text(
-                          'unidades',
+                          silo.fechaHora != null
+                              ? dateTimeFormat.format(silo.fechaHora!)
+                              : 'Sin fecha',
                           style: TextStyle(
                             fontSize: DesignTokens.fontSizeXS,
                             color: AppColors.textSecondary,
@@ -356,28 +443,10 @@ class _SiloCard extends StatelessWidget {
                       ],
                     ),
                   ],
-                ],
-              ),
-            ),
-            SizedBox(height: DesignTokens.spaceS),
-
-            // Fecha y hora
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
-                SizedBox(width: DesignTokens.spaceXS),
-                Text(
-                  silo.fechaHora != null
-                      ? dateTimeFormat.format(silo.fechaHora!)
-                      : 'Sin fecha',
-                  style: TextStyle(
-                    fontSize: DesignTokens.fontSizeS,
-                    color: AppColors.textSecondary,
-                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

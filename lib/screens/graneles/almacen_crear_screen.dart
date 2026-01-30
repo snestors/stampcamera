@@ -52,26 +52,49 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
   bool _isSubmitting = false;
   bool _isLoadingAlmacen = false;
 
-  bool _autoCalculatePesoNeto = true;
-
   @override
   void initState() {
     super.initState();
     if (widget.isEditMode && widget.almacenId != null) {
       _loadAlmacenData();
     }
-    _pesoBrutoController.addListener(_calculatePesoNeto);
-    _pesoTaraController.addListener(_calculatePesoNeto);
+    // Listeners para actualizar la validación reactiva cuando cambian los pesos
+    _pesoBrutoController.addListener(_onPesoChanged);
+    _pesoTaraController.addListener(_onPesoChanged);
+    _pesoNetoController.addListener(_onPesoChanged);
   }
 
-  void _calculatePesoNeto() {
-    if (!_autoCalculatePesoNeto) return;
+  void _onPesoChanged() {
+    // Solo actualizar el estado para que se recalcule la validación
+    if (mounted) setState(() {});
+  }
+
+  // Getter para validación de peso neto
+  bool get _hasPesoNetoError {
     final bruto = double.tryParse(_pesoBrutoController.text) ?? 0;
     final tara = double.tryParse(_pesoTaraController.text) ?? 0;
-    final neto = bruto - tara;
-    if (neto >= 0) {
-      _pesoNetoController.text = neto.toStringAsFixed(3);
-    }
+    final neto = double.tryParse(_pesoNetoController.text) ?? 0;
+    if (bruto <= 0 || tara < 0 || neto <= 0) return false;
+    final expectedNeto = bruto - tara;
+    return (neto - expectedNeto).abs() > 0.001;
+  }
+
+  double get _expectedPesoNeto {
+    final bruto = double.tryParse(_pesoBrutoController.text) ?? 0;
+    final tara = double.tryParse(_pesoTaraController.text) ?? 0;
+    return bruto - tara;
+  }
+
+  // Getter para validación de fechas
+  bool get _hasEntradaAntesSalidaBalanzaError {
+    if (widget.isEditMode || _selectedBalanza == null) return false;
+    final salidaBalanza = _selectedBalanza!.fechaSalidaBalanza;
+    if (salidaBalanza == null) return false;
+    return _fechaEntradaAlmacen.isBefore(salidaBalanza);
+  }
+
+  bool get _hasEntradaDespuesSalidaError {
+    return _fechaEntradaAlmacen.isAfter(_fechaSalidaAlmacen);
   }
 
   Future<void> _loadAlmacenData() async {
@@ -80,7 +103,6 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
       final almacen = await ref.read(almacenDetalleProvider(widget.almacenId!).future);
       if (mounted) {
         setState(() {
-          _autoCalculatePesoNeto = false;
           _pesoBrutoController.text = almacen.pesoBruto.toStringAsFixed(3);
           _pesoTaraController.text = almacen.pesoTara.toStringAsFixed(3);
           _pesoNetoController.text = almacen.pesoNeto.toStringAsFixed(3);
@@ -230,7 +252,8 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
 
           // Botón de guardar
           _buildSubmitButton(),
-          SizedBox(height: DesignTokens.spaceL),
+          // SafeArea inferior + espacio adicional
+          SizedBox(height: DesignTokens.spaceL + MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
@@ -382,6 +405,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
 
   Widget _buildDateTimeFields() {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
+    final hasEntradaError = _hasEntradaAntesSalidaBalanzaError || _hasEntradaDespuesSalidaError;
 
     return Column(
       children: [
@@ -390,38 +414,110 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: 'Entrada a Almacén *',
-              prefixIcon: const Icon(Icons.login),
+              prefixIcon: Icon(
+                Icons.login,
+                color: hasEntradaError ? AppColors.error : null,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                borderSide: BorderSide(
+                  color: hasEntradaError ? AppColors.error : AppColors.neutral,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                borderSide: BorderSide(
+                  color: hasEntradaError ? AppColors.error : AppColors.neutral,
+                ),
               ),
               filled: true,
-              fillColor: AppColors.surface,
+              fillColor: hasEntradaError
+                  ? AppColors.error.withValues(alpha: 0.05)
+                  : AppColors.surface,
             ),
             child: Text(
               dateFormat.format(_fechaEntradaAlmacen),
-              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              style: TextStyle(
+                fontSize: DesignTokens.fontSizeS,
+                color: hasEntradaError ? AppColors.error : null,
+              ),
             ),
           ),
         ),
+        // Mensaje de error: entrada antes de salida balanza
+        if (_hasEntradaAntesSalidaBalanzaError) ...[
+          SizedBox(height: DesignTokens.spaceXS),
+          Row(
+            children: [
+              Icon(Icons.warning_amber, color: AppColors.error, size: 14),
+              SizedBox(width: DesignTokens.spaceXS),
+              Expanded(
+                child: Text(
+                  'Debe ser posterior a salida balanza: ${dateFormat.format(_selectedBalanza!.fechaSalidaBalanza!)}',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: DesignTokens.fontSizeXS,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
         SizedBox(height: DesignTokens.spaceM),
         InkWell(
           onTap: () => _selectDateTime(isEntrada: false),
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: 'Salida de Almacén *',
-              prefixIcon: const Icon(Icons.logout),
+              prefixIcon: Icon(
+                Icons.logout,
+                color: _hasEntradaDespuesSalidaError ? AppColors.error : null,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                borderSide: BorderSide(
+                  color: _hasEntradaDespuesSalidaError ? AppColors.error : AppColors.neutral,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                borderSide: BorderSide(
+                  color: _hasEntradaDespuesSalidaError ? AppColors.error : AppColors.neutral,
+                ),
               ),
               filled: true,
-              fillColor: AppColors.surface,
+              fillColor: _hasEntradaDespuesSalidaError
+                  ? AppColors.error.withValues(alpha: 0.05)
+                  : AppColors.surface,
             ),
             child: Text(
               dateFormat.format(_fechaSalidaAlmacen),
-              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              style: TextStyle(
+                fontSize: DesignTokens.fontSizeS,
+                color: _hasEntradaDespuesSalidaError ? AppColors.error : null,
+              ),
             ),
           ),
         ),
+        // Mensaje de error: entrada después de salida
+        if (_hasEntradaDespuesSalidaError) ...[
+          SizedBox(height: DesignTokens.spaceXS),
+          Row(
+            children: [
+              Icon(Icons.warning_amber, color: AppColors.error, size: 14),
+              SizedBox(width: DesignTokens.spaceXS),
+              Expanded(
+                child: Text(
+                  'La entrada debe ser anterior a la salida',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: DesignTokens.fontSizeXS,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
@@ -440,6 +536,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(initialDate),
+        initialEntryMode: TimePickerEntryMode.input, // Modo texto, sin dial
         builder: (context, child) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
@@ -530,22 +627,25 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
                   suffixText: 'TM',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                    borderSide: BorderSide(
+                      color: _hasPesoNetoError ? AppColors.error : AppColors.neutral,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                    borderSide: BorderSide(
+                      color: _hasPesoNetoError ? AppColors.error : AppColors.neutral,
+                    ),
                   ),
                   filled: true,
-                  fillColor: _autoCalculatePesoNeto
-                      ? AppColors.surface.withValues(alpha: 0.5)
+                  fillColor: _hasPesoNetoError
+                      ? AppColors.error.withValues(alpha: 0.05)
                       : AppColors.surface,
                 ),
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
-                readOnly: _autoCalculatePesoNeto,
-                onTap: () {
-                  if (_autoCalculatePesoNeto) {
-                    setState(() => _autoCalculatePesoNeto = false);
-                  }
-                },
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) return 'Requerido';
                   final num = double.tryParse(value);
@@ -573,6 +673,34 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
             ),
           ],
         ),
+        // Mensaje de error cuando peso neto no coincide
+        if (_hasPesoNetoError) ...[
+          SizedBox(height: DesignTokens.spaceS),
+          Container(
+            padding: EdgeInsets.all(DesignTokens.spaceS),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber, color: AppColors.error, size: 18),
+                SizedBox(width: DesignTokens.spaceS),
+                Expanded(
+                  child: Text(
+                    'Peso Neto no coincide. Esperado: ${_expectedPesoNeto.toStringAsFixed(3)} TM',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontSize: DesignTokens.fontSizeS,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -633,6 +761,23 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Validar que entrada almacén sea posterior a salida balanza (solo en creación)
+    if (!widget.isEditMode && _selectedBalanza != null) {
+      final salidaBalanza = _selectedBalanza!.fechaSalidaBalanza;
+      if (salidaBalanza != null && _fechaEntradaAlmacen.isBefore(salidaBalanza)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'La entrada a almacén debe ser posterior a la salida de balanza (${DateFormat('dd/MM/yyyy HH:mm').format(salidaBalanza)})',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        return;
+      }
+    }
+
+    // Validar que entrada sea anterior a salida de almacén
     if (_fechaEntradaAlmacen.isAfter(_fechaSalidaAlmacen)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

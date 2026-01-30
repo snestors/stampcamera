@@ -1,5 +1,6 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
+import 'storage_health_service.dart'; // Importa appSecureStorage
 
 /// Servicio para manejo de autenticación biométrica
 /// Solo disponible para dispositivos personales
@@ -9,7 +10,7 @@ class BiometricService {
   BiometricService._internal();
 
   final LocalAuthentication _auth = LocalAuthentication();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final _storage = appSecureStorage; // Usar instancia global compartida
 
   static const String _biometricEnabledKey = 'biometric_enabled';
   static const String _biometricPasswordKey = 'biometric_password';
@@ -94,8 +95,13 @@ class BiometricService {
 
   /// Verifica si el biométrico está habilitado para este dispositivo
   Future<bool> isBiometricEnabled() async {
-    final value = await _storage.read(key: _biometricEnabledKey);
-    return value == 'true';
+    try {
+      final value = await _storage.read(key: _biometricEnabledKey);
+      return value == 'true';
+    } catch (e) {
+      debugPrint('❌ BiometricService: Error leyendo biometric_enabled - $e');
+      return false;
+    }
   }
 
   /// Habilita el biométrico y almacena la contraseña encriptada
@@ -112,16 +118,26 @@ class BiometricService {
 
   /// Obtiene la contraseña almacenada (solo después de autenticación biométrica)
   Future<String?> getStoredPassword() async {
-    return await _storage.read(key: _biometricPasswordKey);
+    try {
+      return await _storage.read(key: _biometricPasswordKey);
+    } catch (e) {
+      debugPrint('❌ BiometricService: Error leyendo password - $e');
+      return null;
+    }
   }
 
   /// Verifica si tiene credenciales almacenadas para login biométrico
   Future<bool> hasStoredCredentials() async {
-    final enabled = await isBiometricEnabled();
-    if (!enabled) return false;
+    try {
+      final enabled = await isBiometricEnabled();
+      if (!enabled) return false;
 
-    final password = await _storage.read(key: _biometricPasswordKey);
-    return password != null && password.isNotEmpty;
+      final password = await _storage.read(key: _biometricPasswordKey);
+      return password != null && password.isNotEmpty;
+    } catch (e) {
+      debugPrint('❌ BiometricService: Error verificando credenciales - $e');
+      return false;
+    }
   }
 
   /// Flujo completo: verifica biométrico y retorna credenciales si éxito

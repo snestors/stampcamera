@@ -1,7 +1,6 @@
 // =============================================================================
 // TAB DE ALMACÉN - TODOS LOS REGISTROS CON BÚSQUEDA E INFINITE SCROLL
 // =============================================================================
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,7 @@ import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class AlmacenTab extends ConsumerStatefulWidget {
@@ -36,7 +36,9 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
 
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        if (!notifier.isLoadingMore && notifier.hasNextPage) {
+        if (!notifier.isLoadingMore &&
+            notifier.hasNextPage &&
+            !notifier.isSearching) {
           notifier.loadMore();
         }
       }
@@ -136,7 +138,13 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        // Padding extra abajo para el FAB (80px)
+        padding: EdgeInsets.fromLTRB(
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM + 80,
+        ),
         itemCount: registros.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < registros.length) {
@@ -444,51 +452,10 @@ class _AlmacenCard extends StatelessWidget {
   }
 
   void _showPhotoDialog(BuildContext context, String url) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: EdgeInsets.all(DesignTokens.spaceM),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
-              child: Row(
-                children: [
-                  Icon(Icons.photo_camera, color: AppColors.primary),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Text('Foto Almacén', style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM)),
-                  const Spacer(),
-                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx), constraints: const BoxConstraints(), padding: EdgeInsets.zero),
-                ],
-              ),
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(DesignTokens.radiusL),
-                bottomRight: Radius.circular(DesignTokens.radiusL),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: url,
-                fit: BoxFit.contain,
-                placeholder: (context, url) => Container(
-                  height: 300,
-                  color: AppColors.surface,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 200,
-                  color: AppColors.surface,
-                  child: Center(child: Icon(Icons.broken_image, size: 48, color: AppColors.textSecondary)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    FullscreenImageViewer.open(
+      context,
+      imageUrl: url,
+      title: 'Foto Almacén',
     );
   }
 }
