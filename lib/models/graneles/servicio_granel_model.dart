@@ -431,12 +431,16 @@ class OptionItem {
   final String label;
   final String? extra;
   final int? productoId;  // Para relacionar BL con Distribución
+  final int? servicioId;  // Para obtener jornadas del servicio
+  final int? naveId;      // Para filtrar jornadas por nave
 
   const OptionItem({
     required this.id,
     required this.label,
     this.extra,
     this.productoId,
+    this.servicioId,
+    this.naveId,
   });
 
   factory OptionItem.fromJson(Map<String, dynamic> json) {
@@ -445,6 +449,8 @@ class OptionItem {
       label: json['label'] ?? '',
       extra: json['extra'] ?? json['placa'] ?? json['bl'] ?? json['bodega'],
       productoId: json['producto_id'],
+      servicioId: json['servicio_id'],
+      naveId: json['nave_id'],
     );
   }
 }
@@ -842,6 +848,36 @@ class BalanzaOptions {
               .toList() ??
           [],
       permisos: (json['permisos'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+/// Opciones para crear silos
+class SilosOptions {
+  final List<OptionItem> bls;
+  final List<OptionItem> distribuciones;
+  final List<OptionItem> jornadas;
+
+  const SilosOptions({
+    this.bls = const [],
+    this.distribuciones = const [],
+    this.jornadas = const [],
+  });
+
+  factory SilosOptions.fromJson(Map<String, dynamic> json) {
+    return SilosOptions(
+      bls: (json['bls'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      distribuciones: (json['distribuciones'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      jornadas: (json['jornadas'] as List?)
               ?.map((e) => OptionItem.fromJson(e))
               .toList() ??
           [],

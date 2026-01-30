@@ -8,8 +8,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
+import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
+import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class SilosCrearScreen extends ConsumerStatefulWidget {
   final int? siloId;
@@ -28,17 +30,21 @@ class SilosCrearScreen extends ConsumerStatefulWidget {
 
 class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _numeroSiloController = TextEditingController();
+  final _numeroCamionController = TextEditingController();
   final _pesoController = TextEditingController();
   final _bagsController = TextEditingController();
   final _observacionesController = TextEditingController();
 
-  // Servicio y producto seleccionados
-  int? _selectedServicioId;
-  int? _selectedProductoId;
-  List<ServicioGranel> _servicios = [];
-  List<ProductoGranel> _productosDelServicio = [];
-  bool _isLoadingServicios = true;
+  // Selecciones del formulario
+  int? _selectedBlId;
+  int? _selectedDistribucionId;
+  int? _selectedJornadaId;
+
+  // Datos cargados (distribuciones y jornadas se cargan al seleccionar BL)
+  List<OptionItem> _distribuciones = [];
+  List<OptionItem> _jornadas = [];
+
+  bool _isLoadingOptions = false;
 
   DateTime _fechaHora = DateTime.now();
   String? _fotoPath;
@@ -49,41 +55,45 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   @override
   void initState() {
     super.initState();
-    _loadServicios();
     if (widget.isEditMode && widget.siloId != null) {
       _loadSiloData();
     }
   }
 
-  Future<void> _loadServicios() async {
+  /// Cuando cambia el BL, cargar distribuciones y jornadas
+  Future<void> _onBlChanged(int? blId) async {
+    setState(() {
+      _selectedBlId = blId;
+      _selectedDistribucionId = null;
+      _selectedJornadaId = null;
+      _distribuciones = [];
+      _jornadas = [];
+    });
+
+    if (blId != null) {
+      await _loadOptionsForBl(blId);
+    }
+  }
+
+  /// Cargar distribuciones y jornadas para un BL específico
+  Future<void> _loadOptionsForBl(int blId) async {
+    setState(() => _isLoadingOptions = true);
     try {
-      final service = ref.read(serviciosGranelesServiceProvider);
-      final response = await service.list(queryParameters: {'cierre_servicio': false});
+      final service = ref.read(silosServiceProvider);
+      final options = await service.getFormOptions(blId: blId);
       if (mounted) {
         setState(() {
-          _servicios = response.results;
-          _isLoadingServicios = false;
+          _distribuciones = options.distribuciones;
+          _jornadas = options.jornadas;
+          _isLoadingOptions = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoadingServicios = false);
-        AppSnackBar.error(context, 'Error al cargar servicios: $e');
+        setState(() => _isLoadingOptions = false);
+        AppSnackBar.error(context, 'Error al cargar opciones: $e');
       }
     }
-  }
-
-  void _onServicioChanged(int? servicioId) {
-    setState(() {
-      _selectedServicioId = servicioId;
-      _selectedProductoId = null;
-      if (servicioId != null) {
-        final servicio = _servicios.firstWhere((s) => s.id == servicioId);
-        _productosDelServicio = servicio.productos;
-      } else {
-        _productosDelServicio = [];
-      }
-    });
   }
 
   Future<void> _loadSiloData() async {
@@ -92,7 +102,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       final silo = await ref.read(silosServiceProvider).retrieve(widget.siloId!);
       if (mounted) {
         setState(() {
-          _numeroSiloController.text = silo.numeroSilo?.toString() ?? '';
+          _numeroCamionController.text = silo.numeroSilo?.toString() ?? '';
           _pesoController.text = silo.peso?.toStringAsFixed(3) ?? '';
           _bagsController.text = silo.bags?.toString() ?? '';
           _fechaHora = silo.fechaHora ?? DateTime.now();
@@ -110,7 +120,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
 
   @override
   void dispose() {
-    _numeroSiloController.dispose();
+    _numeroCamionController.dispose();
     _pesoController.dispose();
     _bagsController.dispose();
     _observacionesController.dispose();
@@ -133,6 +143,14 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       );
     }
 
+    // Obtener embarqueId de la asistencia activa para filtrar BLs
+    final asistenciaAsync = ref.watch(asistenciaActivaProvider);
+    final embarqueId = asistenciaAsync.valueOrNull?.asistencia?.nave?.id;
+
+    // Cargar BLs (solo inicial, sin bl_id)
+    final optionsParams = SilosFormOptionsParams(embarqueId: embarqueId);
+    final optionsAsync = ref.watch(silosOptionsProvider(optionsParams));
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -146,35 +164,50 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           ),
         ),
       ),
-      body: _buildForm(),
+      body: optionsAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (error, stackTrace) => ConnectionErrorScreen(
+          error: error,
+          onRetry: () => ref.invalidate(silosOptionsProvider(optionsParams)),
+        ),
+        data: (options) => _buildForm(options),
+      ),
     );
   }
 
-  Widget _buildForm() {
+  Widget _buildForm(SilosOptions options) {
     return Form(
       key: _formKey,
       child: ListView(
         padding: EdgeInsets.all(DesignTokens.spaceM),
         children: [
-          // Sección: Servicio (solo en creación)
+          // Solo mostrar selectores en modo creación
           if (!widget.isEditMode) ...[
-            _buildSectionHeader('Servicio', Icons.directions_boat),
-            _buildServicioSelector(),
+            // Sección: BL
+            _buildSectionHeader('BL', Icons.description),
+            _buildBlSelector(options.bls),
             SizedBox(height: DesignTokens.spaceL),
 
-            // Sección: Producto
-            _buildSectionHeader('Producto', Icons.inventory_2),
-            _buildProductoSelector(),
+            // Sección: Distribución
+            _buildSectionHeader('Distribución / Bodega', Icons.warehouse),
+            _buildDistribucionSelector(),
+            SizedBox(height: DesignTokens.spaceL),
+
+            // Sección: Jornada
+            _buildSectionHeader('Jornada', Icons.schedule),
+            _buildJornadaSelector(),
             SizedBox(height: DesignTokens.spaceL),
           ],
 
-          // Sección: Número de Silo/Camión
-          _buildSectionHeader('Identificación', Icons.tag),
-          _buildNumeroSiloField(),
+          // Sección: N° Camión/Ticket
+          _buildSectionHeader('N° Camión / Ticket', Icons.tag),
+          _buildNumeroCamionField(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Fecha y hora
-          _buildSectionHeader('Fecha y Hora', Icons.schedule),
+          _buildSectionHeader('Fecha y Hora de Pesaje', Icons.access_time),
           _buildFechaHoraField(),
           SizedBox(height: DesignTokens.spaceL),
 
@@ -221,8 +254,45 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     );
   }
 
-  Widget _buildServicioSelector() {
-    if (_isLoadingServicios) {
+  Widget _buildBlSelector(List<OptionItem> bls) {
+    if (bls.isEmpty) {
+      return _buildWarningBox('No hay BLs disponibles para tu asistencia actual');
+    }
+
+    return DropdownButtonFormField<int>(
+      value: _selectedBlId,
+      decoration: InputDecoration(
+        labelText: 'BL *',
+        hintText: 'Seleccionar BL...',
+        prefixIcon: Icon(Icons.description, color: AppColors.primary, size: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        ),
+        filled: true,
+        fillColor: AppColors.surface,
+      ),
+      isExpanded: true,
+      items: bls.map((bl) {
+        return DropdownMenuItem<int>(
+          value: bl.id,
+          child: Text(
+            bl.label,
+            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }).toList(),
+      onChanged: _onBlChanged,
+      validator: (value) => value == null ? 'Selecciona un BL' : null,
+    );
+  }
+
+  Widget _buildDistribucionSelector() {
+    if (_selectedBlId == null) {
+      return _buildDisabledText('Selecciona un BL primero');
+    }
+
+    if (_isLoadingOptions) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(16),
@@ -231,35 +301,16 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       );
     }
 
-    if (_servicios.isEmpty) {
-      return Container(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          border: Border.all(color: AppColors.warning),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.warning_amber, color: AppColors.warning),
-            SizedBox(width: DesignTokens.spaceS),
-            Expanded(
-              child: Text(
-                'No hay servicios activos disponibles',
-                style: TextStyle(color: AppColors.warning),
-              ),
-            ),
-          ],
-        ),
-      );
+    if (_distribuciones.isEmpty) {
+      return _buildWarningBox('No hay distribuciones para este BL');
     }
 
     return DropdownButtonFormField<int>(
-      value: _selectedServicioId,
+      value: _selectedDistribucionId,
       decoration: InputDecoration(
-        labelText: 'Servicio *',
-        hintText: 'Seleccionar servicio...',
-        prefixIcon: Icon(Icons.directions_boat, color: AppColors.primary, size: 20),
+        labelText: 'Distribución / Bodega *',
+        hintText: 'Seleccionar distribución...',
+        prefixIcon: Icon(Icons.warehouse, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -267,53 +318,40 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         fillColor: AppColors.surface,
       ),
       isExpanded: true,
-      items: _servicios.map((servicio) {
+      items: _distribuciones.map((dist) {
         return DropdownMenuItem<int>(
-          value: servicio.id,
+          value: dist.id,
           child: Text(
-            '${servicio.codigo} - ${servicio.naveNombre ?? "Sin nave"}',
+            dist.label,
             style: TextStyle(fontSize: DesignTokens.fontSizeS),
             overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
-      onChanged: _onServicioChanged,
-      validator: (value) => value == null ? 'Selecciona un servicio' : null,
+      onChanged: (value) => setState(() => _selectedDistribucionId = value),
+      validator: (value) => value == null ? 'Selecciona una distribución' : null,
     );
   }
 
-  Widget _buildProductoSelector() {
-    if (_selectedServicioId == null) {
-      return Text(
-        'Selecciona un servicio primero',
-        style: TextStyle(
-          fontSize: DesignTokens.fontSizeS,
-          color: AppColors.textSecondary,
-          fontStyle: FontStyle.italic,
-        ),
-      );
+  Widget _buildJornadaSelector() {
+    if (_selectedBlId == null) {
+      return _buildDisabledText('Selecciona un BL primero');
     }
 
-    if (_productosDelServicio.isEmpty) {
-      return Container(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
-        decoration: BoxDecoration(
-          color: AppColors.warning.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        ),
-        child: Text(
-          'El servicio no tiene productos configurados',
-          style: TextStyle(color: AppColors.warning),
-        ),
-      );
+    if (_isLoadingOptions) {
+      return const SizedBox.shrink(); // Ya hay loading en distribución
+    }
+
+    if (_jornadas.isEmpty) {
+      return _buildWarningBox('No hay jornadas disponibles para esta nave');
     }
 
     return DropdownButtonFormField<int>(
-      value: _selectedProductoId,
+      value: _selectedJornadaId,
       decoration: InputDecoration(
-        labelText: 'Producto *',
-        hintText: 'Seleccionar producto...',
-        prefixIcon: Icon(Icons.inventory_2, color: AppColors.primary, size: 20),
+        labelText: 'Jornada *',
+        hintText: 'Seleccionar jornada...',
+        prefixIcon: Icon(Icons.schedule, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -321,25 +359,68 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         fillColor: AppColors.surface,
       ),
       isExpanded: true,
-      items: _productosDelServicio.map((producto) {
+      items: _jornadas.map((jornada) {
         return DropdownMenuItem<int>(
-          value: producto.id,
+          value: jornada.id,
           child: Text(
-            producto.producto,
+            jornada.label,
             style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
-      onChanged: (value) => setState(() => _selectedProductoId = value),
-      validator: (value) => value == null ? 'Selecciona un producto' : null,
+      onChanged: (value) => setState(() => _selectedJornadaId = value),
+      validator: (value) => value == null ? 'Selecciona una jornada' : null,
     );
   }
 
-  Widget _buildNumeroSiloField() {
+  Widget _buildDisabledText(String text) {
+    return Container(
+      padding: EdgeInsets.all(DesignTokens.spaceM),
+      decoration: BoxDecoration(
+        color: AppColors.neutral.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        border: Border.all(color: AppColors.neutral),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: DesignTokens.fontSizeS,
+          color: AppColors.textSecondary,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWarningBox(String text) {
+    return Container(
+      padding: EdgeInsets.all(DesignTokens.spaceM),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+          SizedBox(width: DesignTokens.spaceS),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(color: AppColors.warning, fontSize: DesignTokens.fontSizeS),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumeroCamionField() {
     return TextFormField(
-      controller: _numeroSiloController,
+      controller: _numeroCamionController,
       decoration: InputDecoration(
-        labelText: 'Número de Silo/Camión *',
+        labelText: 'N° Camión / Ticket *',
         hintText: 'Ej: 1, 2, 3...',
         prefixIcon: const Icon(Icons.tag),
         border: OutlineInputBorder(
@@ -512,14 +593,15 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       final service = ref.read(silosServiceProvider);
 
       final data = <String, dynamic>{
-        'n_camion': int.parse(_numeroSiloController.text),
+        'n_camion': int.parse(_numeroCamionController.text),
         'cantidad': double.parse(_pesoController.text),
         'fecha_pesaje': _fechaHora.toIso8601String(),
       };
 
       if (!widget.isEditMode) {
-        data['servicio'] = _selectedServicioId;
-        data['producto'] = _selectedProductoId;
+        data['distribucion'] = _selectedDistribucionId;
+        data['bl'] = _selectedBlId;
+        data['jornada'] = _selectedJornadaId;
       }
 
       if (_bagsController.text.isNotEmpty) {

@@ -3,6 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:stampcamera/providers/session_manager_provider.dart';
+import 'package:stampcamera/providers/presence_provider.dart';
+import 'package:stampcamera/services/presence_websocket_service.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -15,14 +17,33 @@ import '../services/storage_health_service.dart'; // Importa appSecureStorage
 
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
   (ref) {
-    final notifier = AuthNotifier();
+    final notifier = AuthNotifier(ref);
     HttpService().setAuthNotifier(notifier);
+
+    // Escuchar eventos de force_logout del WebSocket
+    ref.listen<AsyncValue<PresenceEvent>>(forceLogoutEventsProvider, (_, next) {
+      next.whenData((event) {
+        debugPrint('🚪 AuthProvider: Force logout recibido via WS - ${event.reason}');
+        notifier.logout(reason: event.reason ?? 'force_logout');
+      });
+    });
+
+    // Escuchar eventos de permisos actualizados
+    ref.listen<AsyncValue<PresenceEvent>>(permissionsUpdatedEventsProvider, (_, next) {
+      next.whenData((event) {
+        debugPrint('🔐 AuthProvider: Permisos actualizados via WS');
+        notifier.refreshUser();
+      });
+    });
+
     return notifier;
   },
 );
 
 class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
-  AuthNotifier() : super(const AsyncValue.loading()) {
+  final Ref _ref;
+
+  AuthNotifier(this._ref) : super(const AsyncValue.loading()) {
     _initializeAuth();
   }
 
@@ -93,6 +114,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
               errorMessage: null,
             ),
           );
+
+          // Conectar WebSocket de presencia
+          _ref.read(presenceProvider.notifier).connect();
         } else {
           state = AsyncValue.data(
             AuthState(
@@ -226,6 +250,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       state = AsyncValue.data(
         AuthState(status: AuthStatus.loggedIn, user: user),
       );
+
+      // Conectar WebSocket de presencia después de login exitoso
+      _ref.read(presenceProvider.notifier).connect();
     } catch (e) {
       if (_isUnauthorizedError(e)) {
         throw Exception('Sesión expirada');
@@ -292,9 +319,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
-  Future<void> logout([WidgetRef? ref]) async {
+  Future<void> logout({WidgetRef? ref, String? reason}) async {
+    // Desconectar WebSocket de presencia
+    await _ref.read(presenceProvider.notifier).disconnect();
+
     if (ref != null) {
       ref.read(sessionManagerProvider.notifier).clearSession(ref);
+    }
+
+    if (reason != null) {
+      debugPrint('🚪 AuthProvider: Logout por razón: $reason');
     }
 
     state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));

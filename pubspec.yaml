@@ -35,6 +35,7 @@ dependencies:
   in_app_update: ^4.2.3
   local_auth: ^2.3.0
   cached_network_image: ^3.4.1
+  web_socket_channel: ^3.0.2
 
 dev_dependencies:
   flutter_test:

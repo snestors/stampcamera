@@ -772,13 +772,21 @@ class SilosService implements BaseService<Silos> {
 
   @override
   Future<PaginatedResponse<Silos>> list({Map<String, dynamic>? queryParameters}) async {
-    final response = await _http.dio.get(endpoint, queryParameters: queryParameters);
+    // Ordenar por fecha descendente (más reciente primero)
+    final params = <String, dynamic>{
+      'ordering': '-fecha_pesaje',
+      ...?queryParameters,
+    };
+    final response = await _http.dio.get(endpoint, queryParameters: params);
     return PaginatedResponse.fromJson(response.data, fromJson);
   }
 
   @override
   Future<PaginatedResponse<Silos>> search(String query, {Map<String, dynamic>? filters}) async {
-    final params = <String, dynamic>{'search': query};
+    final params = <String, dynamic>{
+      'search': query,
+      'ordering': '-fecha_pesaje',  // Mantener ordenamiento en búsqueda
+    };
     if (filters != null) params.addAll(filters);
     final response = await _http.dio.get(endpoint, queryParameters: params);
     return PaginatedResponse.fromJson(response.data, fromJson);
@@ -871,6 +879,21 @@ class SilosService implements BaseService<Silos> {
       queryParameters: {'servicio_id': servicioId},
     );
     return PaginatedResponse.fromJson(response.data, Silos.fromJson);
+  }
+
+  /// Obtener opciones para el formulario de silos
+  /// [embarqueId] - ID de la nave para filtrar BLs (de asistencia activa)
+  /// [blId] - ID del BL para cargar distribuciones y jornadas
+  Future<SilosOptions> getFormOptions({int? embarqueId, int? blId}) async {
+    final queryParams = <String, dynamic>{};
+    if (embarqueId != null) queryParams['embarque_id'] = embarqueId;
+    if (blId != null) queryParams['bl_id'] = blId;
+
+    final response = await _http.dio.get(
+      '${endpoint}options_form/',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+    return SilosOptions.fromJson(response.data);
   }
 }
 

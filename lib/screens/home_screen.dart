@@ -181,7 +181,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// Grid de módulos basado en permisos del usuario
   Widget _buildModulesGrid(BuildContext context, dynamic user) {
-    final modules = user.availableModules;
+    final List<dynamic> allModules = user.availableModules;
+
+    // Filtrar solo módulos habilitados (ocultar los inactivos)
+    final modules = allModules.where((m) => m.isEnabled == true).toList();
 
     // Si el usuario no tiene módulos disponibles (clientes externos)
     if (modules.isEmpty) {
@@ -518,7 +521,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             size: AppButtonSize.small,
             onPressed: () {
               Navigator.pop(context);
-              ref.read(authProvider.notifier).logout(ref);
+              ref.read(authProvider.notifier).logout(ref: ref);
             },
           ),
         ],

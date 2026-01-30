@@ -320,7 +320,7 @@ final silosListProvider =
 class SilosNotifier extends BaseListProviderImpl<Silos> {
   @override
   SilosService get service => ref.read(silosServiceProvider);
-  // NO sobrescribir loadInitial - usar el del base que setea _nextUrl
+  // Ordenamiento se hace en SilosService.list()
 }
 
 /// Provider para lista de silos por servicio (legacy - mantener compatibilidad)
@@ -329,6 +329,35 @@ final silosProvider =
   final service = ref.watch(silosServiceProvider);
   final response = await service.getByServicio(servicioId);
   return response.results;
+});
+
+/// Parámetros para obtener opciones del formulario de silos
+class SilosFormOptionsParams {
+  final int? embarqueId;  // ID de la nave para filtrar BLs
+  final int? blId;        // ID del BL para cargar distribuciones y jornadas
+
+  const SilosFormOptionsParams({this.embarqueId, this.blId});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SilosFormOptionsParams &&
+          runtimeType == other.runtimeType &&
+          embarqueId == other.embarqueId &&
+          blId == other.blId;
+
+  @override
+  int get hashCode => embarqueId.hashCode ^ blId.hashCode;
+}
+
+/// Provider para opciones del formulario de silos
+final silosOptionsProvider =
+    FutureProvider.autoDispose.family<SilosOptions, SilosFormOptionsParams>((ref, params) async {
+  final service = ref.watch(silosServiceProvider);
+  return service.getFormOptions(
+    embarqueId: params.embarqueId,
+    blId: params.blId,
+  );
 });
 
 // ===========================================================================
