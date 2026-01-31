@@ -15,7 +15,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/status.dart' as ws_status;
 
 /// Eventos que el WebSocket puede enviar
 enum PresenceEventType {
@@ -176,7 +175,7 @@ class PresenceWebSocketService {
     _reconnectAttempts = 0;
 
     if (_channel != null) {
-      await _channel!.sink.close(ws_status.goingAway);
+      await _channel!.sink.close(1000); // Normal closure
       _channel = null;
     }
 

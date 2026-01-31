@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
+import 'package:stampcamera/providers/presence_provider.dart';
 import 'package:stampcamera/services/biometric_service.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
@@ -60,9 +61,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text(
-          'Aplicaciones',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Aplicaciones',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 8),
+            _buildWsIndicator(),
+          ],
         ),
         actions: [
           Container(
@@ -106,6 +114,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Indicador de conexión WebSocket
+  Widget _buildWsIndicator() {
+    final presenceState = ref.watch(presenceProvider);
+
+    final isConnected = presenceState.isConnected;
+    final isReconnecting = presenceState.isReconnecting;
+
+    // Debug log
+    debugPrint('🔵 WS Indicator: connected=$isConnected, reconnecting=$isReconnecting, state=${presenceState.connectionState}');
+
+    // Determinar color y mensaje según estado
+    final Color color;
+    final String message;
+    final bool shouldPulse;
+
+    if (isConnected) {
+      color = AppColors.success;
+      message = 'Conectado en tiempo real';
+      shouldPulse = true;
+    } else if (isReconnecting) {
+      color = Colors.orange;
+      message = 'Reconectando...';
+      shouldPulse = true;
+    } else {
+      color = Colors.red;
+      message = 'Sin conexión';
+      shouldPulse = false;
+    }
+
+    return Tooltip(
+      message: message,
+      child: shouldPulse
+          ? _PulsingDot(color: color, size: 10)
+          : _StaticDot(color: color, size: 10),
     );
   }
 
@@ -314,6 +359,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     switch (moduleId) {
       case 'camera':
+        if (cameras.isEmpty) {
+          _showNoCameraDialog(context);
+          return;
+        }
         context.push('/camera', extra: {'camera': cameras.first});
         break;
       case 'asistencia':
@@ -399,6 +448,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Navigator.pop(context);
               context.pushNamed('asistencia');
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Muestra diálogo indicando que no hay cámaras disponibles
+  void _showNoCameraDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.no_photography, color: Colors.red),
+            ),
+            const SizedBox(width: 12),
+            const Text('Sin cámara'),
+          ],
+        ),
+        content: const Text(
+          'No se detectaron cámaras disponibles en este dispositivo.',
+        ),
+        actions: [
+          AppButton.primary(
+            text: 'Entendido',
+            size: AppButtonSize.small,
+            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -1024,4 +1109,97 @@ class _ModuleConfig {
     required this.color,
     required this.subtitle,
   });
+}
+
+/// Punto estático para indicar desconexión
+class _StaticDot extends StatelessWidget {
+  final Color color;
+  final double size;
+
+  const _StaticDot({
+    required this.color,
+    this.size = 10,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.5),
+            blurRadius: size * 0.3,
+            spreadRadius: size * 0.1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Punto pulsante para indicar conexión activa
+class _PulsingDot extends StatefulWidget {
+  final Color color;
+  final double size;
+
+  const _PulsingDot({
+    required this.color,
+    this.size = 10,
+  });
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: widget.color.withValues(alpha: _animation.value),
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: _animation.value * 0.5),
+                blurRadius: widget.size * 0.5,
+                spreadRadius: widget.size * 0.2,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
