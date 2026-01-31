@@ -40,12 +40,6 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   int? _selectedDistribucionId;
   int? _selectedJornadaId;
 
-  // Datos cargados (distribuciones y jornadas se cargan al seleccionar BL)
-  List<OptionItem> _distribuciones = [];
-  List<OptionItem> _jornadas = [];
-
-  bool _isLoadingOptions = false;
-
   DateTime _fechaHora = DateTime.now();
   String? _fotoPath;
   String? _existingFotoUrl;
@@ -60,56 +54,13 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     }
   }
 
-  /// Cuando cambia el BL, cargar distribuciones y jornadas
-  Future<void> _onBlChanged(int? blId) async {
+  /// Cuando cambia el BL, limpiar selecciones dependientes
+  void _onBlChanged(int? blId) {
     setState(() {
       _selectedBlId = blId;
       _selectedDistribucionId = null;
       _selectedJornadaId = null;
-      _distribuciones = [];
-      _jornadas = [];
     });
-
-    if (blId != null) {
-      await _loadOptionsForBl(blId);
-    }
-  }
-
-  /// Cargar distribuciones y jornadas para un BL específico
-  /// Usa el mismo endpoint de ticket muelle
-  Future<void> _loadOptionsForBl(int blId) async {
-    setState(() => _isLoadingOptions = true);
-    try {
-      final service = ref.read(ticketMuelleServiceProvider);
-      // Obtener el servicio_id del BL seleccionado para cargar jornadas
-      final asistencia = ref.read(asistenciaActivaProvider).valueOrNull?.asistencia;
-      final embarqueId = asistencia?.nave?.id;
-
-      final options = await service.getFormOptions(
-        embarqueId: embarqueId,
-      );
-
-      if (mounted) {
-        // Filtrar distribuciones por el producto del BL seleccionado
-        final selectedBl = options.bls.where((bl) => bl.id == blId).firstOrNull;
-        final productoId = selectedBl?.productoId;
-
-        final filteredDistribuciones = productoId != null
-            ? options.distribuciones.where((d) => d.productoId == productoId).toList()
-            : options.distribuciones;
-
-        setState(() {
-          _distribuciones = filteredDistribuciones;
-          _jornadas = options.jornadas;
-          _isLoadingOptions = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoadingOptions = false);
-        AppSnackBar.error(context, 'Error al cargar opciones: $e');
-      }
-    }
   }
 
   Future<void> _loadSiloData() async {
@@ -206,14 +157,14 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
             _buildBlSelector(options.bls),
             SizedBox(height: DesignTokens.spaceL),
 
-            // Sección: Distribución
+            // Sección: Distribución (filtrada por BL)
             _buildSectionHeader('Distribución / Bodega', Icons.warehouse),
-            _buildDistribucionSelector(),
+            _buildDistribucionSelector(options),
             SizedBox(height: DesignTokens.spaceL),
 
-            // Sección: Jornada
+            // Sección: Jornada (de la nave del servicio)
             _buildSectionHeader('Jornada', Icons.schedule),
-            _buildJornadaSelector(),
+            _buildJornadaSelector(options),
             SizedBox(height: DesignTokens.spaceL),
           ],
 
@@ -303,21 +254,21 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     );
   }
 
-  Widget _buildDistribucionSelector() {
+  Widget _buildDistribucionSelector(TicketMuelleOptions options) {
     if (_selectedBlId == null) {
       return _buildDisabledText('Selecciona un BL primero');
     }
 
-    if (_isLoadingOptions) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-      );
-    }
+    // Obtener el productoId del BL seleccionado
+    final selectedBl = options.bls.where((bl) => bl.id == _selectedBlId).firstOrNull;
+    final productoId = selectedBl?.productoId;
 
-    if (_distribuciones.isEmpty) {
+    // Filtrar distribuciones por producto del BL (igual que ticket muelle)
+    final filteredDistribuciones = productoId != null
+        ? options.distribuciones.where((d) => d.productoId == productoId).toList()
+        : options.distribuciones;
+
+    if (filteredDistribuciones.isEmpty) {
       return _buildWarningBox('No hay distribuciones para este BL');
     }
 
@@ -334,7 +285,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         fillColor: AppColors.surface,
       ),
       isExpanded: true,
-      items: _distribuciones.map((dist) {
+      items: filteredDistribuciones.map((dist) {
         return DropdownMenuItem<int>(
           value: dist.id,
           child: Text(
@@ -349,16 +300,13 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     );
   }
 
-  Widget _buildJornadaSelector() {
+  Widget _buildJornadaSelector(TicketMuelleOptions options) {
     if (_selectedBlId == null) {
       return _buildDisabledText('Selecciona un BL primero');
     }
 
-    if (_isLoadingOptions) {
-      return const SizedBox.shrink(); // Ya hay loading en distribución
-    }
-
-    if (_jornadas.isEmpty) {
+    // Las jornadas vienen del options (de la nave del servicio)
+    if (options.jornadas.isEmpty) {
       return _buildWarningBox('No hay jornadas disponibles para esta nave');
     }
 
@@ -375,7 +323,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         fillColor: AppColors.surface,
       ),
       isExpanded: true,
-      items: _jornadas.map((jornada) {
+      items: options.jornadas.map((jornada) {
         return DropdownMenuItem<int>(
           value: jornada.id,
           child: Text(
