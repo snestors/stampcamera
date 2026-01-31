@@ -425,22 +425,18 @@ class Silos {
   }
 }
 
-/// Opciones para formularios
+/// Opciones para formularios (item simple)
 class OptionItem {
   final int id;
   final String label;
   final String? extra;
-  final int? productoId;  // Para relacionar BL con Distribución
-  final int? servicioId;  // Para obtener jornadas del servicio
-  final int? naveId;      // Para filtrar jornadas por nave
+  final int? productoId;
 
   const OptionItem({
     required this.id,
     required this.label,
     this.extra,
     this.productoId,
-    this.servicioId,
-    this.naveId,
   });
 
   factory OptionItem.fromJson(Map<String, dynamic> json) {
@@ -449,17 +445,46 @@ class OptionItem {
       label: json['label'] ?? '',
       extra: json['extra'] ?? json['placa'] ?? json['bl'] ?? json['bodega'],
       productoId: json['producto_id'],
-      servicioId: json['servicio_id'],
-      naveId: json['nave_id'],
+    );
+  }
+}
+
+/// BL con distribuciones y jornadas anidadas
+class BlOption {
+  final int id;
+  final String label;
+  final int? productoId;
+  final List<OptionItem> distribuciones;
+  final List<OptionItem> jornadas;
+
+  const BlOption({
+    required this.id,
+    required this.label,
+    this.productoId,
+    this.distribuciones = const [],
+    this.jornadas = const [],
+  });
+
+  factory BlOption.fromJson(Map<String, dynamic> json) {
+    return BlOption(
+      id: json['id'] ?? 0,
+      label: json['label'] ?? '',
+      productoId: json['producto_id'],
+      distribuciones: (json['distribuciones'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      jornadas: (json['jornadas'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }
 
 /// Opciones para crear ticket de muelle
 class TicketMuelleOptions {
-  final List<OptionItem> bls;
-  final List<OptionItem> distribuciones;
-  final List<OptionItem> jornadas;  // Para silos
+  final List<BlOption> bls;
   final List<OptionItem> placas;
   final List<OptionItem> placasTracto;
   final List<OptionItem> transportes;
@@ -467,8 +492,6 @@ class TicketMuelleOptions {
 
   const TicketMuelleOptions({
     this.bls = const [],
-    this.distribuciones = const [],
-    this.jornadas = const [],
     this.placas = const [],
     this.placasTracto = const [],
     this.transportes = const [],
@@ -478,15 +501,7 @@ class TicketMuelleOptions {
   factory TicketMuelleOptions.fromJson(Map<String, dynamic> json) {
     return TicketMuelleOptions(
       bls: (json['bls'] as List?)
-              ?.map((e) => OptionItem.fromJson(e))
-              .toList() ??
-          [],
-      distribuciones: (json['distribuciones'] as List?)
-              ?.map((e) => OptionItem.fromJson(e))
-              .toList() ??
-          [],
-      jornadas: (json['jornadas'] as List?)
-              ?.map((e) => OptionItem.fromJson(e))
+              ?.map((e) => BlOption.fromJson(e))
               .toList() ??
           [],
       placas: (json['placas'] as List?)

@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
-import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
@@ -110,12 +109,8 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       );
     }
 
-    // Obtener embarqueId de la asistencia activa para filtrar BLs
-    final asistenciaAsync = ref.watch(asistenciaActivaProvider);
-    final embarqueId = asistenciaAsync.valueOrNull?.asistencia?.nave?.id;
-
-    // Usar el mismo endpoint que ticket muelle (incluye jornadas)
-    final optionsParams = TicketFormOptionsParams(embarqueId: embarqueId);
+    // El backend obtiene la nave de la asistencia del usuario automáticamente
+    const optionsParams = TicketFormOptionsParams();
     final optionsAsync = ref.watch(ticketMuelleOptionsFlexProvider(optionsParams));
 
     return Scaffold(
@@ -221,7 +216,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     );
   }
 
-  Widget _buildBlSelector(List<OptionItem> bls) {
+  Widget _buildBlSelector(List<BlOption> bls) {
     if (bls.isEmpty) {
       return _buildWarningBox('No hay BLs disponibles para tu asistencia actual');
     }
@@ -254,21 +249,22 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     );
   }
 
+  /// Obtener el BL seleccionado
+  BlOption? _getSelectedBl(TicketMuelleOptions options) {
+    if (_selectedBlId == null) return null;
+    return options.bls.where((bl) => bl.id == _selectedBlId).firstOrNull;
+  }
+
   Widget _buildDistribucionSelector(TicketMuelleOptions options) {
     if (_selectedBlId == null) {
       return _buildDisabledText('Selecciona un BL primero');
     }
 
-    // Obtener el productoId del BL seleccionado
-    final selectedBl = options.bls.where((bl) => bl.id == _selectedBlId).firstOrNull;
-    final productoId = selectedBl?.productoId;
+    // Distribuciones vienen directamente del BL seleccionado
+    final selectedBl = _getSelectedBl(options);
+    final distribuciones = selectedBl?.distribuciones ?? [];
 
-    // Filtrar distribuciones por producto del BL (igual que ticket muelle)
-    final filteredDistribuciones = productoId != null
-        ? options.distribuciones.where((d) => d.productoId == productoId).toList()
-        : options.distribuciones;
-
-    if (filteredDistribuciones.isEmpty) {
+    if (distribuciones.isEmpty) {
       return _buildWarningBox('No hay distribuciones para este BL');
     }
 
@@ -285,7 +281,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         fillColor: AppColors.surface,
       ),
       isExpanded: true,
-      items: filteredDistribuciones.map((dist) {
+      items: distribuciones.map((dist) {
         return DropdownMenuItem<int>(
           value: dist.id,
           child: Text(
@@ -305,8 +301,11 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       return _buildDisabledText('Selecciona un BL primero');
     }
 
-    // Las jornadas vienen del options (de la nave del servicio)
-    if (options.jornadas.isEmpty) {
+    // Jornadas vienen directamente del BL seleccionado
+    final selectedBl = _getSelectedBl(options);
+    final jornadas = selectedBl?.jornadas ?? [];
+
+    if (jornadas.isEmpty) {
       return _buildWarningBox('No hay jornadas disponibles para esta nave');
     }
 
@@ -323,7 +322,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         fillColor: AppColors.surface,
       ),
       isExpanded: true,
-      items: options.jornadas.map((jornada) {
+      items: jornadas.map((jornada) {
         return DropdownMenuItem<int>(
           value: jornada.id,
           child: Text(

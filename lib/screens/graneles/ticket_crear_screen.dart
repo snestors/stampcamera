@@ -250,18 +250,13 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             ),
             SizedBox(height: DesignTokens.spaceM),
 
-            // Distribución (Bodega) - filtrada por el producto del BL seleccionado
+            // Distribución (Bodega) - viene anidada dentro del BL seleccionado
             Builder(builder: (context) {
-              // Obtener el productoId del BL seleccionado
+              // Obtener distribuciones del BL seleccionado
               final selectedBl = _selectedBlId != null
                   ? options.bls.where((bl) => bl.id == _selectedBlId).firstOrNull
                   : null;
-              final productoId = selectedBl?.productoId;
-
-              // Filtrar distribuciones por producto del BL
-              final filteredDistribuciones = productoId != null
-                  ? options.distribuciones.where((d) => d.productoId == productoId).toList()
-                  : options.distribuciones;
+              final distribuciones = selectedBl?.distribuciones ?? [];
 
               return _buildDropdown<int>(
                 label: 'Bodega *',
@@ -270,7 +265,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
                     : 'Seleccionar bodega',
                 icon: Icons.warehouse,
                 initialValue: _selectedDistribucionId,
-                items: filteredDistribuciones.map((e) => DropdownMenuItem(
+                items: distribuciones.map((e) => DropdownMenuItem(
                   value: e.id,
                   child: Text(e.label),
                 )).toList(),
