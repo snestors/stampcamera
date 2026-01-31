@@ -240,10 +240,24 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           child: Text(
             bl.label,
             style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
+      selectedItemBuilder: (context) {
+        return bls.map((bl) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              bl.label,
+              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }).toList();
+      },
       onChanged: _onBlChanged,
       validator: (value) => value == null ? 'Selecciona un BL' : null,
     );
@@ -287,10 +301,24 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           child: Text(
             dist.label,
             style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
+      selectedItemBuilder: (context) {
+        return distribuciones.map((dist) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              dist.label,
+              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }).toList();
+      },
       onChanged: (value) => setState(() => _selectedDistribucionId = value),
       validator: (value) => value == null ? 'Selecciona una distribución' : null,
     );
@@ -328,10 +356,24 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           child: Text(
             jornada.label,
             style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         );
       }).toList(),
+      selectedItemBuilder: (context) {
+        return jornadas.map((jornada) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              jornada.label,
+              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }).toList();
+      },
       onChanged: (value) => setState(() => _selectedJornadaId = value),
       validator: (value) => value == null ? 'Selecciona una jornada' : null,
     );
