@@ -615,7 +615,10 @@ class BalanzaService implements BaseService<Balanza> {
   Future<PaginatedResponse<Balanza>> getByServicio(int servicioId) async {
     final response = await _http.dio.get(
       endpoint,
-      queryParameters: {'servicio_id': servicioId},
+      queryParameters: {
+        'servicio_id': servicioId,
+        'ordering': '-create_at',  // Más recientes primero
+      },
     );
     return PaginatedResponse.fromJson(response.data, Balanza.fromJson);
   }
@@ -876,7 +879,10 @@ class SilosService implements BaseService<Silos> {
   Future<PaginatedResponse<Silos>> getByServicio(int servicioId) async {
     final response = await _http.dio.get(
       endpoint,
-      queryParameters: {'servicio_id': servicioId},
+      queryParameters: {
+        'servicio_id': servicioId,
+        'ordering': '-fecha_pesaje',  // Más recientes primero
+      },
     );
     return PaginatedResponse.fromJson(response.data, Silos.fromJson);
   }
