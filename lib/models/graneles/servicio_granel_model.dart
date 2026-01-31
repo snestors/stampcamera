@@ -459,6 +459,7 @@ class OptionItem {
 class TicketMuelleOptions {
   final List<OptionItem> bls;
   final List<OptionItem> distribuciones;
+  final List<OptionItem> jornadas;  // Para silos
   final List<OptionItem> placas;
   final List<OptionItem> placasTracto;
   final List<OptionItem> transportes;
@@ -467,6 +468,7 @@ class TicketMuelleOptions {
   const TicketMuelleOptions({
     this.bls = const [],
     this.distribuciones = const [],
+    this.jornadas = const [],
     this.placas = const [],
     this.placasTracto = const [],
     this.transportes = const [],
@@ -480,6 +482,10 @@ class TicketMuelleOptions {
               .toList() ??
           [],
       distribuciones: (json['distribuciones'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      jornadas: (json['jornadas'] as List?)
               ?.map((e) => OptionItem.fromJson(e))
               .toList() ??
           [],

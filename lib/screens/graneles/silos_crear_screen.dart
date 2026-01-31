@@ -76,14 +76,30 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   }
 
   /// Cargar distribuciones y jornadas para un BL específico
+  /// Usa el mismo endpoint de ticket muelle
   Future<void> _loadOptionsForBl(int blId) async {
     setState(() => _isLoadingOptions = true);
     try {
-      final service = ref.read(silosServiceProvider);
-      final options = await service.getFormOptions(blId: blId);
+      final service = ref.read(ticketMuelleServiceProvider);
+      // Obtener el servicio_id del BL seleccionado para cargar jornadas
+      final asistencia = ref.read(asistenciaActivaProvider).valueOrNull?.asistencia;
+      final embarqueId = asistencia?.nave?.id;
+
+      final options = await service.getFormOptions(
+        embarqueId: embarqueId,
+      );
+
       if (mounted) {
+        // Filtrar distribuciones por el producto del BL seleccionado
+        final selectedBl = options.bls.where((bl) => bl.id == blId).firstOrNull;
+        final productoId = selectedBl?.productoId;
+
+        final filteredDistribuciones = productoId != null
+            ? options.distribuciones.where((d) => d.productoId == productoId).toList()
+            : options.distribuciones;
+
         setState(() {
-          _distribuciones = options.distribuciones;
+          _distribuciones = filteredDistribuciones;
           _jornadas = options.jornadas;
           _isLoadingOptions = false;
         });
@@ -147,9 +163,9 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     final asistenciaAsync = ref.watch(asistenciaActivaProvider);
     final embarqueId = asistenciaAsync.valueOrNull?.asistencia?.nave?.id;
 
-    // Cargar BLs (solo inicial, sin bl_id)
-    final optionsParams = SilosFormOptionsParams(embarqueId: embarqueId);
-    final optionsAsync = ref.watch(silosOptionsProvider(optionsParams));
+    // Usar el mismo endpoint que ticket muelle (incluye jornadas)
+    final optionsParams = TicketFormOptionsParams(embarqueId: embarqueId);
+    final optionsAsync = ref.watch(ticketMuelleOptionsFlexProvider(optionsParams));
 
     return Scaffold(
       appBar: AppBar(
@@ -170,14 +186,14 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         ),
         error: (error, stackTrace) => ConnectionErrorScreen(
           error: error,
-          onRetry: () => ref.invalidate(silosOptionsProvider(optionsParams)),
+          onRetry: () => ref.invalidate(ticketMuelleOptionsFlexProvider(optionsParams)),
         ),
         data: (options) => _buildForm(options),
       ),
     );
   }
 
-  Widget _buildForm(SilosOptions options) {
+  Widget _buildForm(TicketMuelleOptions options) {
     return Form(
       key: _formKey,
       child: ListView(
