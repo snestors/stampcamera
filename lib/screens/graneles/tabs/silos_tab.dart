@@ -433,7 +433,7 @@ class _SiloCard extends ConsumerWidget {
                         SizedBox(width: DesignTokens.spaceXS),
                         Text(
                           silo.fechaHora != null
-                              ? dateTimeFormat.format(silo.fechaHora!)
+                              ? dateTimeFormat.format(silo.fechaHora!.toLocal())
                               : 'Sin fecha',
                           style: TextStyle(
                             fontSize: DesignTokens.fontSizeXS,

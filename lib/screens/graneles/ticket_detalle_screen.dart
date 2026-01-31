@@ -107,13 +107,13 @@ class _TicketDetalleContent extends StatelessWidget {
               _buildInfoRow(
                 'Inicio Descarga',
                 ticket.inicioDescarga != null
-                    ? dateTimeFormat.format(ticket.inicioDescarga!)
+                    ? dateTimeFormat.format(ticket.inicioDescarga!.toLocal())
                     : '-',
               ),
               _buildInfoRow(
                 'Fin Descarga',
                 ticket.finDescarga != null
-                    ? dateTimeFormat.format(ticket.finDescarga!)
+                    ? dateTimeFormat.format(ticket.finDescarga!.toLocal())
                     : '-',
               ),
               _buildInfoRow('Tiempo Cargío', ticket.tiempoCargio ?? '-'),
@@ -177,7 +177,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.balanzaData!.fechaEntradaBalanza != null
-                                ? dateTimeFormat.format(ticket.balanzaData!.fechaEntradaBalanza!)
+                                ? dateTimeFormat.format(ticket.balanzaData!.fechaEntradaBalanza!.toLocal())
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
@@ -194,7 +194,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.balanzaData!.fechaSalidaBalanza != null
-                                ? dateTimeFormat.format(ticket.balanzaData!.fechaSalidaBalanza!)
+                                ? dateTimeFormat.format(ticket.balanzaData!.fechaSalidaBalanza!.toLocal())
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
@@ -262,7 +262,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.almacenData!.fechaEntradaAlmacen != null
-                                ? dateTimeFormat.format(ticket.almacenData!.fechaEntradaAlmacen!)
+                                ? dateTimeFormat.format(ticket.almacenData!.fechaEntradaAlmacen!.toLocal())
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
@@ -276,7 +276,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.almacenData!.fechaSalidaAlmacen != null
-                                ? dateTimeFormat.format(ticket.almacenData!.fechaSalidaAlmacen!)
+                                ? dateTimeFormat.format(ticket.almacenData!.fechaSalidaAlmacen!.toLocal())
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),

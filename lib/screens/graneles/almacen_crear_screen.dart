@@ -453,7 +453,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
               SizedBox(width: DesignTokens.spaceXS),
               Expanded(
                 child: Text(
-                  'Debe ser posterior a salida balanza: ${dateFormat.format(_selectedBalanza!.fechaSalidaBalanza!)}',
+                  'Debe ser posterior a salida balanza: ${dateFormat.format(_selectedBalanza!.fechaSalidaBalanza!.toLocal())}',
                   style: TextStyle(
                     color: AppColors.error,
                     fontSize: DesignTokens.fontSizeXS,

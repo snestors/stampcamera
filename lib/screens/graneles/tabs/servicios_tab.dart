@@ -375,7 +375,7 @@ class _ServicioCard extends StatelessWidget {
                       SizedBox(width: 4),
                       Text(
                         servicio.fechaAtraque != null
-                            ? dateFormat.format(servicio.fechaAtraque!)
+                            ? dateFormat.format(servicio.fechaAtraque!.toLocal())
                             : 'Sin fecha',
                         style: TextStyle(
                           fontSize: DesignTokens.fontSizeXS,

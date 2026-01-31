@@ -480,7 +480,7 @@ class _BalanzaCard extends StatelessWidget {
                 Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
                 SizedBox(width: DesignTokens.spaceXS),
                 Text(
-                  'Entrada: ${balanza.fechaEntradaBalanza != null ? timeFormat.format(balanza.fechaEntradaBalanza!) : "-"}',
+                  'Entrada: ${balanza.fechaEntradaBalanza != null ? timeFormat.format(balanza.fechaEntradaBalanza!.toLocal()) : "-"}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,
@@ -488,7 +488,7 @@ class _BalanzaCard extends StatelessWidget {
                 ),
                 SizedBox(width: DesignTokens.spaceM),
                 Text(
-                  'Salida: ${balanza.fechaSalidaBalanza != null ? timeFormat.format(balanza.fechaSalidaBalanza!) : "-"}',
+                  'Salida: ${balanza.fechaSalidaBalanza != null ? timeFormat.format(balanza.fechaSalidaBalanza!.toLocal()) : "-"}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,

@@ -413,7 +413,7 @@ class _AlmacenCard extends StatelessWidget {
                 Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
                 SizedBox(width: DesignTokens.spaceXS),
                 Text(
-                  'Entrada: ${almacen.fechaEntradaAlmacen != null ? dateFormat.format(almacen.fechaEntradaAlmacen!) : "-"}',
+                  'Entrada: ${almacen.fechaEntradaAlmacen != null ? dateFormat.format(almacen.fechaEntradaAlmacen!.toLocal()) : "-"}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,
@@ -421,7 +421,7 @@ class _AlmacenCard extends StatelessWidget {
                 ),
                 SizedBox(width: DesignTokens.spaceM),
                 Text(
-                  'Salida: ${almacen.fechaSalidaAlmacen != null ? dateFormat.format(almacen.fechaSalidaAlmacen!) : "-"}',
+                  'Salida: ${almacen.fechaSalidaAlmacen != null ? dateFormat.format(almacen.fechaSalidaAlmacen!.toLocal()) : "-"}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,

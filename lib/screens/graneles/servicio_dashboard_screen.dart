@@ -233,7 +233,7 @@ class _DashboardContent extends StatelessWidget {
               if (servicio.fechaAtraque != null)
                 _HeaderChip(
                   icon: Icons.calendar_today,
-                  text: dateFormat.format(servicio.fechaAtraque!),
+                  text: dateFormat.format(servicio.fechaAtraque!.toLocal()),
                 ),
             ],
           ),

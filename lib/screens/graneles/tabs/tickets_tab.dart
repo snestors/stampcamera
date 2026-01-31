@@ -484,7 +484,7 @@ class _TicketCard extends StatelessWidget {
                   SizedBox(width: DesignTokens.spaceXS),
                   Text(
                     ticket.inicioDescarga != null
-                        ? '${timeFormat.format(ticket.inicioDescarga!)} - ${ticket.finDescarga != null ? timeFormat.format(ticket.finDescarga!) : "?"}'
+                        ? '${timeFormat.format(ticket.inicioDescarga!.toLocal())} - ${ticket.finDescarga != null ? timeFormat.format(ticket.finDescarga!.toLocal()) : "?"}'
                         : 'Sin horario',
                     style: TextStyle(
                       fontSize: DesignTokens.fontSizeS,
