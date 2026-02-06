@@ -87,6 +87,10 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     }
 
     return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.pop(),
+      ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -217,24 +221,30 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
 
   Widget _buildBody(ExplorerState state) {
     if (state.contenidoState == LoadingState.loading) {
-      return const AppLoadingState(message: 'Cargando contenido...');
+      return const Center(
+        child: AppLoadingState(message: 'Cargando contenido...'),
+      );
     }
 
     if (state.contenidoState == LoadingState.error) {
-      return AppErrorState(
-        message: state.errorMessage ?? 'Error al cargar',
-        onRetry: () {
-          ref.read(exploradorProvider.notifier)
-              .loadContenidoCarpeta(widget.carpetaId);
-        },
+      return Center(
+        child: AppErrorState(
+          message: state.errorMessage ?? 'Error al cargar',
+          onRetry: () {
+            ref.read(exploradorProvider.notifier)
+                .loadContenidoCarpeta(widget.carpetaId);
+          },
+        ),
       );
     }
 
     if (state.contenido == null) {
-      return const AppEmptyState(
-        icon: Icons.folder_off_outlined,
-        title: 'Sin contenido',
-        subtitle: 'No se pudo cargar la carpeta',
+      return const Center(
+        child: AppEmptyState(
+          icon: Icons.folder_off_outlined,
+          title: 'Sin contenido',
+          subtitle: 'No se pudo cargar la carpeta',
+        ),
       );
     }
 

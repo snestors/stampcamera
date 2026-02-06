@@ -27,9 +27,17 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(exploradorProvider.notifier).loadCarpetasRaiz();
-      // Notificar ruta al WebSocket
+      // Suscribir al canal 'casos' y notificar ruta
+      ref.read(appSocketProvider.notifier).subscribe('casos');
       ref.read(appSocketProvider.notifier).notifyRouteChange('/app/casos');
     });
+  }
+
+  @override
+  void dispose() {
+    // Des-suscribir del canal 'casos' al salir del módulo
+    ref.read(appSocketProvider.notifier).unsubscribe('casos');
+    super.dispose();
   }
 
   @override
@@ -119,15 +127,19 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
 
   Widget _buildBody(ExplorerState state) {
     if (state.carpetasState == LoadingState.loading) {
-      return const AppLoadingState(message: 'Cargando casos...');
+      return const Center(
+        child: AppLoadingState(message: 'Cargando casos...'),
+      );
     }
 
     if (state.carpetasState == LoadingState.error) {
-      return AppErrorState(
-        message: state.errorMessage ?? 'Error al cargar',
-        onRetry: () {
-          ref.read(exploradorProvider.notifier).loadCarpetasRaiz();
-        },
+      return Center(
+        child: AppErrorState(
+          message: state.errorMessage ?? 'Error al cargar',
+          onRetry: () {
+            ref.read(exploradorProvider.notifier).loadCarpetasRaiz();
+          },
+        ),
       );
     }
 
@@ -142,10 +154,12 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
 
   Widget _buildRubrosList(ExplorerState state) {
     if (state.rubros.isEmpty) {
-      return const AppEmptyState(
-        icon: Icons.folder_off_outlined,
-        title: 'Sin casos',
-        subtitle: 'No hay casos disponibles',
+      return const Center(
+        child: AppEmptyState(
+          icon: Icons.folder_off_outlined,
+          title: 'Sin casos',
+          subtitle: 'No hay casos disponibles',
+        ),
       );
     }
 
@@ -173,10 +187,12 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
     final carpetas = state.carpetasDelRubro;
 
     if (carpetas.isEmpty) {
-      return AppEmptyState(
-        icon: Icons.folder_open_outlined,
-        title: 'Sin carpetas',
-        subtitle: 'No hay carpetas en ${state.selectedRubro}',
+      return Center(
+        child: AppEmptyState(
+          icon: Icons.folder_open_outlined,
+          title: 'Sin carpetas',
+          subtitle: 'No hay carpetas en ${state.selectedRubro}',
+        ),
       );
     }
 

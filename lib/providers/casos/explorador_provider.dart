@@ -189,7 +189,18 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
 
   void _listenWebSocket() {
     final service = _ref.read(appSocketServiceProvider);
-    _wsSub = service.eventStream.listen(_handleWsEvent);
+    _wsSub = service.eventStream.listen(
+      _handleWsEvent,
+      onError: (e) => debugPrint('ExploradorProvider WS error: $e'),
+    );
+
+    // Escuchar reconexiones para re-suscribir carpeta actual
+    service.connectionStateStream.listen((wsState) {
+      if (wsState == WsConnectionState.connected && state.currentCarpetaId != null) {
+        final nombre = _findCarpetaName(state.currentCarpetaId!);
+        service.sendCambiarCarpeta(state.currentCarpetaId!, nombre ?? '');
+      }
+    });
   }
 
   // ─── Carga de datos ──────────────────────────────────────────────────
