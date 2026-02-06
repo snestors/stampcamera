@@ -37,7 +37,7 @@ class CasosService {
         .toList();
   }
 
-  /// Obtener contenido completo de una carpeta
+  /// Obtener contenido directo de una carpeta (hijos inmediatos)
   Future<CarpetaContenidoResponse> getContenidoCarpeta(
     int carpetaId, {
     bool showDeleted = false,
@@ -46,7 +46,7 @@ class CasosService {
     if (showDeleted) queryParams['show_deleted'] = 'true';
 
     final response = await _http.dio.get(
-      '$_basePath/carpetas/$carpetaId/contenido-completo/',
+      '$_basePath/carpetas/$carpetaId/contenido/',
       queryParameters: queryParams,
     );
 

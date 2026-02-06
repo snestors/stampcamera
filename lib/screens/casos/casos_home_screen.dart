@@ -27,17 +27,8 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(exploradorProvider.notifier).loadCarpetasRaiz();
-      // Suscribir al canal 'casos' y notificar ruta
-      ref.read(appSocketProvider.notifier).subscribe('casos');
       ref.read(appSocketProvider.notifier).notifyRouteChange('/app/casos');
     });
-  }
-
-  @override
-  void dispose() {
-    // Des-suscribir del canal 'casos' al salir del módulo
-    ref.read(appSocketProvider.notifier).unsubscribe('casos');
-    super.dispose();
   }
 
   @override

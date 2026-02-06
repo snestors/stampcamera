@@ -207,6 +207,9 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
 
   /// Cargar carpetas raíz y agrupar por rubro
   Future<void> loadCarpetasRaiz() async {
+    // Suscribir al canal 'casos' para recibir eventos WebSocket
+    _ref.read(appSocketProvider.notifier).subscribe('casos');
+
     state = state.copyWith(carpetasState: LoadingState.loading, clearError: true);
 
     try {
