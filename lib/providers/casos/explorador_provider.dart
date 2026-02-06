@@ -592,10 +592,8 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   // ─── WebSocket Events ────────────────────────────────────────────────
 
   void _handleWsEvent(AppSocketEvent event) {
-    // Ignorar eventos propios
-    if (event.actorId != null && event.actorId == _currentUserId) return;
-
     switch (event.type) {
+      // ── Presencia (filtrar eventos propios) ──
       case 'usuario_conectado':
       case 'usuario_desconectado':
       case 'usuario_cambio_carpeta':
@@ -604,32 +602,40 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
         break;
 
       case 'usuario_cambio_seleccion':
+        if (event.actorId == _currentUserId) break; // Ignorar propios
         _updateUsuarioSeleccion(event);
         break;
 
+      // ── Eventos específicos del explorador (de ws_events.py) ──
       case 'archivo_creado':
+        if (event.actorId == _currentUserId) break;
         _handleRemoteArchivoCreado(event);
         break;
 
       case 'archivo_eliminado':
+        if (event.actorId == _currentUserId) break;
         _handleRemoteArchivoEliminado(event);
         break;
 
       case 'archivo_movido':
+        if (event.actorId == _currentUserId) break;
         _handleRemoteArchivoMovido(event);
         break;
 
       case 'carpeta_creada':
+        if (event.actorId == _currentUserId) break;
         _handleRemoteCarpetaCreada(event);
         break;
 
       case 'carpeta_eliminada':
+        if (event.actorId == _currentUserId) break;
         _handleRemoteCarpetaEliminada(event);
         break;
 
+      // ── data_changed de signals (NUNCA filtrar por actor: puede ser
+      //    el mismo usuario desde otro dispositivo/navegador) ──
       case 'data_changed':
         if (event.model == 'archivo' || event.model == 'carpeta') {
-          // Refrescar contenido actual
           if (state.currentCarpetaId != null) {
             loadContenidoCarpeta(state.currentCarpetaId!);
           }

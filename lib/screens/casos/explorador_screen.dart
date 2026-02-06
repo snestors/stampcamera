@@ -278,12 +278,17 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                   ...subcarpetas.map((c) => _CarpetaItem(
                         carpeta: c,
                         isSelected: state.selectedItems.containsKey(c.id),
-                        onTap: () {
+                        onTap: () async {
                           if (state.hasSelection) {
                             ref.read(exploradorProvider.notifier)
                                 .toggleSelection(c.id, 'carpeta');
                           } else {
-                            context.push('/casos/explorador/${c.id}');
+                            await context.push('/casos/explorador/${c.id}');
+                            // Al volver, recargar el contenido de esta carpeta
+                            if (mounted) {
+                              ref.read(exploradorProvider.notifier)
+                                  .loadContenidoCarpeta(widget.carpetaId);
+                            }
                           }
                         },
                         onLongPress: () {
