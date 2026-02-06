@@ -2,7 +2,7 @@
 // CASOS SERVICE - API REST para Casos y Documentos
 // =============================================================================
 //
-// Endpoints: /api/v1/casos/
+// Endpoints: /api/casos-documentos/
 // Maneja: Carpetas, Archivos, Historial, Upload, Mover, Eliminar, Restaurar
 // =============================================================================
 
@@ -17,7 +17,7 @@ class CasosService {
   CasosService._internal();
 
   final _http = HttpService();
-  static const String _basePath = 'api/v1/casos';
+  static const String _basePath = 'api/casos-documentos';
 
   // ─── Carpetas ──────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ class CasosService {
     if (showDeleted) queryParams['show_deleted'] = 'true';
 
     final response = await _http.dio.get(
-      '$_basePath/carpetas/$carpetaId/contenido_completo/',
+      '$_basePath/carpetas/$carpetaId/contenido-completo/',
       queryParameters: queryParams,
     );
 
@@ -86,7 +86,7 @@ class CasosService {
     required int destinoId,
   }) async {
     final response = await _http.dio.post(
-      '$_basePath/carpetas/mover_multiples/',
+      '$_basePath/carpetas/mover-multiple/',
       data: {
         'carpeta_ids': carpetaIds,
         'destino_id': destinoId,
@@ -127,7 +127,7 @@ class CasosService {
     }
 
     final response = await _http.dio.post(
-      '$_basePath/archivos/upload_multiple/',
+      '$_basePath/archivos/upload-multiple/',
       data: formData,
       onSendProgress: onProgress != null
           ? (sent, total) {
@@ -159,7 +159,7 @@ class CasosService {
     required int carpetaDestinoId,
   }) async {
     final response = await _http.dio.post(
-      '$_basePath/archivos/mover_multiples/',
+      '$_basePath/archivos/mover-multiple/',
       data: {
         'archivo_ids': archivoIds,
         'carpeta_destino_id': carpetaDestinoId,
@@ -174,7 +174,7 @@ class CasosService {
     List<int> carpetaIds = const [],
   }) async {
     final response = await _http.dio.post<List<int>>(
-      '$_basePath/archivos/download_zip/',
+      '$_basePath/archivos/download-selection-zip/',
       data: {
         'archivo_ids': archivoIds,
         'carpeta_ids': carpetaIds,
