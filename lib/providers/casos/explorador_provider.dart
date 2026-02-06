@@ -174,6 +174,7 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   final CasosService _service = CasosService();
   StreamSubscription<AppSocketEvent>? _wsSub;
   int? _currentUserId;
+  Timer? _dataChangedDebounce;
 
   ExploradorNotifier(this._ref) : super(const ExplorerState()) {
     _initUserId();
@@ -632,16 +633,101 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
         _handleRemoteCarpetaEliminada(event);
         break;
 
-      // ── data_changed de signals (NUNCA filtrar por actor: puede ser
-      //    el mismo usuario desde otro dispositivo/navegador) ──
+      // ── data_changed de signals ──
+      // Procesar el fragmento del cambio sin recargar todo
       case 'data_changed':
-        if (event.model == 'archivo' || event.model == 'carpeta') {
-          if (state.currentCarpetaId != null) {
-            loadContenidoCarpeta(state.currentCarpetaId!);
-          }
-        }
+        _handleDataChanged(event);
         break;
     }
+  }
+
+  /// Procesa eventos data_changed de forma inteligente:
+  /// - Deletes: quita del estado local (0 API calls)
+  /// - Creates/Updates: solo si es relevante, debounce + reload
+  void _handleDataChanged(AppSocketEvent event) {
+    final action = event.action;
+    final model = event.model;
+    final data = event.data;
+    if (data == null || state.contenido == null) return;
+
+    final itemId = data['id'] as int?;
+    if (itemId == null) return;
+
+    if (model == 'archivo') {
+      final carpetaId = data['carpeta_id'] as int?;
+
+      if (action == 'deleted') {
+        // Hard delete: quitar del estado directamente, 0 API calls
+        _removeArchivoFromState(itemId);
+        return;
+      }
+
+      // created/updated: solo relevante si pertenece a la carpeta actual
+      if (carpetaId != state.currentCarpetaId) return;
+
+    } else if (model == 'carpeta') {
+      final parentId = data['parent_id'] as int?;
+
+      if (action == 'deleted') {
+        _removeCarpetaFromState(itemId);
+        return;
+      }
+
+      // created/updated: solo relevante si es hija de la carpeta actual
+      if (parentId != state.currentCarpetaId) return;
+
+    } else {
+      return; // Modelo no relevante (caso, documento, etc.)
+    }
+
+    // Para creates/updates relevantes: debounced reload (1s)
+    // Si suben 10 fotos, solo recarga UNA vez al final
+    _dataChangedDebounce?.cancel();
+    _dataChangedDebounce = Timer(const Duration(seconds: 1), () {
+      if (state.currentCarpetaId != null) {
+        loadContenidoCarpeta(state.currentCarpetaId!);
+      }
+    });
+  }
+
+  /// Quitar archivo del estado local sin API call
+  void _removeArchivoFromState(int archivoId) {
+    if (state.contenido == null) return;
+    final archivos = state.contenido!.archivos
+        .where((a) => a.id != archivoId)
+        .toList();
+    if (archivos.length == state.contenido!.archivos.length) return;
+
+    state = state.copyWith(
+      contenido: CarpetaContenidoResponse(
+        carpetaPrincipal: state.contenido!.carpetaPrincipal,
+        caso: state.contenido!.caso,
+        subcarpetas: state.contenido!.subcarpetas,
+        archivos: archivos,
+        totalCarpetas: state.contenido!.totalCarpetas,
+        totalArchivos: archivos.length,
+      ),
+    );
+  }
+
+  /// Quitar carpeta del estado local sin API call
+  void _removeCarpetaFromState(int carpetaId) {
+    if (state.contenido == null) return;
+    final subcarpetas = state.contenido!.subcarpetas
+        .where((c) => c.id != carpetaId)
+        .toList();
+    if (subcarpetas.length == state.contenido!.subcarpetas.length) return;
+
+    state = state.copyWith(
+      contenido: CarpetaContenidoResponse(
+        carpetaPrincipal: state.contenido!.carpetaPrincipal,
+        caso: state.contenido!.caso,
+        subcarpetas: subcarpetas,
+        archivos: state.contenido!.archivos,
+        totalCarpetas: subcarpetas.length,
+        totalArchivos: state.contenido!.totalArchivos,
+      ),
+    );
   }
 
   void _updateUsuariosConectados(AppSocketEvent event) {
@@ -808,6 +894,7 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   @override
   void dispose() {
     _wsSub?.cancel();
+    _dataChangedDebounce?.cancel();
     super.dispose();
   }
 }

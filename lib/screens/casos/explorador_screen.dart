@@ -24,6 +24,7 @@ import 'package:stampcamera/providers/app_socket_provider.dart';
 import 'package:stampcamera/providers/casos/explorador_provider.dart';
 import 'package:stampcamera/screens/casos/casos_multi_camera_screen.dart';
 import 'package:stampcamera/utils/image_processor.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ExploradorScreen extends ConsumerStatefulWidget {
@@ -773,12 +774,23 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
   }
 
   void _openArchivo(Archivo archivo) {
-    if (archivo.archivoUrl != null) {
-      launchUrl(
-        Uri.parse(archivo.archivoUrl!),
-        mode: LaunchMode.externalApplication,
+    if (archivo.archivoUrl == null) return;
+
+    // Imágenes: abrir visor fullscreen con zoom
+    if (archivo.esImagen) {
+      FullscreenImageViewer.open(
+        context,
+        imageUrl: archivo.archivoUrl!,
+        title: archivo.nombre,
       );
+      return;
     }
+
+    // Otros archivos: abrir en app externa
+    launchUrl(
+      Uri.parse(archivo.archivoUrl!),
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   void _showUsuariosDialog(ExplorerState state) {
