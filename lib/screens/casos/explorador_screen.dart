@@ -16,10 +16,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/casos/explorador_models.dart';
 import 'package:stampcamera/providers/app_socket_provider.dart';
 import 'package:stampcamera/providers/casos/explorador_provider.dart';
+import 'package:stampcamera/screens/casos/casos_multi_camera_screen.dart';
+import 'package:stampcamera/utils/image_processor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ExploradorScreen extends ConsumerStatefulWidget {
@@ -362,9 +366,9 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
               ),
               SizedBox(width: DesignTokens.spaceM),
               AppButton.primary(
-                text: 'Subir archivos',
-                icon: Icons.upload_file,
-                onPressed: () => _pickAndUploadFiles(),
+                text: 'Agregar',
+                icon: Icons.add,
+                onPressed: () => _showAddContentSheet(),
                 size: AppButtonSize.small,
               ),
             ],
@@ -416,7 +420,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     if (state.hasSelection || _isUploading) return null;
 
     return FloatingActionButton(
-      onPressed: () => _pickAndUploadFiles(),
+      onPressed: () => _showAddContentSheet(),
       backgroundColor: AppColors.primary,
       child: const Icon(Icons.add, color: Colors.white),
     );
@@ -473,7 +477,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
         _showCrearCarpetaDialog();
         break;
       case 'subir_archivos':
-        _pickAndUploadFiles();
+        _showAddContentSheet();
         break;
       case 'pegar':
         ref.read(exploradorProvider.notifier).pegar();
@@ -532,7 +536,148 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     );
   }
 
-  Future<void> _pickAndUploadFiles() async {
+  // ─── Add Content Sheet ──────────────────────────────────────────────
+
+  void _showAddContentSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Agregar contenido',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.camera_alt, color: AppColors.primary),
+              ),
+              title: const Text('Tomar fotos'),
+              subtitle: const Text('Captura fotos con la camara'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _takePhotosAndUpload();
+              },
+            ),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.photo_library, color: Colors.purple),
+              ),
+              title: const Text('Elegir fotos'),
+              subtitle: const Text('Selecciona de tu galeria'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickPhotosAndUpload();
+              },
+            ),
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.attach_file, color: Colors.blueGrey),
+              ),
+              title: const Text('Seleccionar archivos'),
+              subtitle: const Text('PDF, documentos, etc.'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickFilesAndUpload();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Tomar fotos con camara ───────────────────────────────────────
+
+  Future<void> _takePhotosAndUpload() async {
+    final photos = await Navigator.of(context).push<List<File>>(
+      MaterialPageRoute(builder: (_) => const CasosMultiCameraScreen()),
+    );
+
+    if (photos == null || photos.isEmpty) return;
+    await _uploadFiles(photos);
+  }
+
+  // ─── Elegir fotos de galeria ──────────────────────────────────────
+
+  Future<void> _pickPhotosAndUpload() async {
+    try {
+      final picker = ImagePicker();
+      final images = await picker.pickMultiImage(imageQuality: 100);
+
+      if (images.isEmpty) return;
+
+      // Mostrar progreso de procesamiento
+      if (mounted) {
+        AppSnackBar.info(context, 'Procesando ${images.length} foto(s)...');
+      }
+
+      final files = <File>[];
+      for (final xfile in images) {
+        final processedPath = await processImageWithWatermark(
+          xfile.path,
+          config: WatermarkPresets.gallery,
+          autoGPS: false,
+        );
+        files.add(File(processedPath));
+      }
+
+      if (files.isEmpty) return;
+      await _uploadFiles(files);
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, 'Error al seleccionar fotos');
+      }
+    }
+  }
+
+  // ─── Seleccionar archivos (file picker) ───────────────────────────
+
+  Future<void> _pickFilesAndUpload() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
@@ -547,7 +692,18 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
           .toList();
 
       if (files.isEmpty) return;
+      await _uploadFiles(files);
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.error(context, 'Error al seleccionar archivos');
+      }
+    }
+  }
 
+  // ─── Upload compartido ────────────────────────────────────────────
+
+  Future<void> _uploadFiles(List<File> files) async {
+    try {
       setState(() {
         _isUploading = true;
         _uploadProgress = 0;
