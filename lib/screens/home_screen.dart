@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
-import 'package:stampcamera/providers/presence_provider.dart';
+import 'package:stampcamera/providers/app_socket_provider.dart';
 import 'package:stampcamera/services/biometric_service.dart';
 
 import '../main.dart'; // Para acceder a `cameras`
@@ -119,13 +119,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// Indicador de conexión WebSocket
   Widget _buildWsIndicator() {
-    final presenceState = ref.watch(presenceProvider);
+    final socketState = ref.watch(appSocketProvider);
 
-    final isConnected = presenceState.isConnected;
-    final isReconnecting = presenceState.isReconnecting;
-
-    // Debug log
-    debugPrint('🔵 WS Indicator: connected=$isConnected, reconnecting=$isReconnecting, state=${presenceState.connectionState}');
+    final isConnected = socketState.isConnected;
+    final isReconnecting = socketState.isReconnecting;
 
     // Determinar color y mensaje según estado
     final Color color;
@@ -340,6 +337,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: AppColors.warning,
           subtitle: 'Gestión de graneles',
         );
+      case 'casos':
+        return _ModuleConfig(
+          icon: Icons.folder_shared,
+          color: AppColors.info,
+          subtitle: 'Casos y documentos',
+        );
       default:
         return _ModuleConfig(
           icon: Icons.apps,
@@ -373,6 +376,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         break;
       case 'granos':
         context.push('/graneles');
+        break;
+      case 'casos':
+        context.push('/casos');
         break;
       default:
         _showComingSoonDialog(context);

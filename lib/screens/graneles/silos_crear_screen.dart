@@ -222,7 +222,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     }
 
     return DropdownButtonFormField<int>(
-      value: _selectedBlId,
+      initialValue: _selectedBlId,
       decoration: InputDecoration(
         labelText: 'BL *',
         hintText: 'Seleccionar BL...',
@@ -283,7 +283,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     }
 
     return DropdownButtonFormField<int>(
-      value: _selectedDistribucionId,
+      initialValue: _selectedDistribucionId,
       decoration: InputDecoration(
         labelText: 'Distribución / Bodega *',
         hintText: 'Seleccionar distribución...',
@@ -338,7 +338,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     }
 
     return DropdownButtonFormField<int>(
-      value: _selectedJornadaId,
+      initialValue: _selectedJornadaId,
       decoration: InputDecoration(
         labelText: 'Jornada *',
         hintText: 'Seleccionar jornada...',

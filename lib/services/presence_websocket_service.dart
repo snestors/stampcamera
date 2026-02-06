@@ -112,7 +112,6 @@ class PresenceWebSocketService {
   Timer? _heartbeatTimer;
   Timer? _reconnectTimer;
   String? _accessToken;
-  String? _currentRoute;
   int _reconnectAttempts = 0;
 
   WebSocketConnectionState _connectionState = WebSocketConnectionState.disconnected;
@@ -190,7 +189,6 @@ class PresenceWebSocketService {
 
   /// Enviar cambio de ruta
   void sendRouteChange(String route) {
-    _currentRoute = route;
     _send({'type': 'route_change', 'route': route});
   }
 

@@ -279,6 +279,17 @@ class UserModel {
       isSuperuser ||
       groups.any((g) => ['GRANOS', 'GRANELES', 'COORDINACION GRANELES'].contains(g));
 
+  /// Usuario tiene acceso al módulo de casos y documentos
+  /// Solo superusers y coordinadores
+  bool get hasCasosAccess =>
+      isSuperuser ||
+      groups.any((g) => [
+        'CASOS Y DOCUMENTOS',
+        'COORDINACION AUTOS',
+        'COORDINACION GRANELES',
+        'ADMINISTRACION',
+      ].contains(g));
+
   /// Usuario tiene acceso a asistencia
   bool get hasAsistenciaAccess =>
       isSuperuser || !isCliente;
@@ -335,6 +346,15 @@ class UserModel {
         id: 'granos',
         name: 'Granos',
         icon: 'agriculture',
+      ));
+    }
+
+    // Casos - Superusers y coordinadores
+    if (hasCasosAccess) {
+      modules.add(const ModuleAccess(
+        id: 'casos',
+        name: 'Casos',
+        icon: 'folder',
       ));
     }
 

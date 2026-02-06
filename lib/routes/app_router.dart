@@ -25,6 +25,8 @@ import 'package:stampcamera/screens/graneles/silos_crear_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 import 'package:stampcamera/screens/device_registration_screen.dart';
+import 'package:stampcamera/screens/casos/casos_home_screen.dart';
+import 'package:stampcamera/screens/casos/explorador_screen.dart';
 
 import '../providers/auth_provider.dart';
 import '../providers/device_provider.dart';
@@ -260,6 +262,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final siloIdString = state.pathParameters['siloId']!;
               final siloId = int.parse(siloIdString);
               return SilosCrearScreen.edit(siloId: siloId);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/casos',
+        name: 'casos',
+        builder: (context, state) => const CasosHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'explorador/:carpetaId',
+            builder: (context, state) {
+              final carpetaIdString = state.pathParameters['carpetaId']!;
+              final carpetaId = int.parse(carpetaIdString);
+              return ExploradorScreen(carpetaId: carpetaId);
             },
           ),
         ],
