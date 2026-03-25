@@ -84,12 +84,12 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
         );
 
         state = state.copyWith(mode: themeMode);
-        print('✅ Tema cargado: ${themeMode.name}');
+        debugPrint('✅ Tema cargado: ${themeMode.name}');
       } else {
-        print('📱 Primer uso - tema light por defecto');
+        debugPrint('📱 Primer uso - tema light por defecto');
       }
     } catch (e) {
-      print('❌ Error cargando tema: $e');
+      debugPrint('❌ Error cargando tema: $e');
     }
   }
 
@@ -100,9 +100,9 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
       await prefs.setString(_themeKey, newMode.name);
 
       state = state.copyWith(mode: newMode);
-      print('✅ Tema cambiado a: ${newMode.name}');
+      debugPrint('✅ Tema cambiado a: ${newMode.name}');
     } catch (e) {
-      print('❌ Error guardando tema: $e');
+      debugPrint('❌ Error guardando tema: $e');
     }
   }
 

@@ -1,6 +1,7 @@
 // lib/services/background_queue_service.dart - OPTIMIZADO (reemplaza el actual)
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/providers/autos/queue_state_provider.dart';
 import 'package:stampcamera/services/registro_vin_service.dart';
@@ -27,7 +28,7 @@ class BackgroundQueueService {
   void start() {
     if (_timer?.isActive == true) return;
 
-    print('🚀 BackgroundQueueService iniciado');
+    debugPrint('🚀 BackgroundQueueService iniciado');
     // ✅ OPTIMIZACIÓN: Empezar con 30s en lugar de 15s
     _scheduleNextRun(const Duration(seconds: 30));
   }
@@ -36,7 +37,7 @@ class BackgroundQueueService {
   void stop() {
     _timer?.cancel();
     _timer = null;
-    print('🛑 BackgroundQueueService detenido');
+    debugPrint('🛑 BackgroundQueueService detenido');
   }
 
   /// Programar la próxima ejecución
@@ -48,19 +49,19 @@ class BackgroundQueueService {
   /// ✅ OPTIMIZACIÓN: Usar el provider unificado en lugar de múltiples llamadas
   Future<void> _processQueue() async {
     if (_isProcessing) {
-      print('⏳ Ya hay procesamiento en curso, saltando...');
+      debugPrint('⏳ Ya hay procesamiento en curso, saltando...');
       // ✅ OPTIMIZACIÓN: Delay más inteligente
       _scheduleNextRun(const Duration(seconds: 15));
       return;
     }
 
     _isProcessing = true;
-    print('🔄 Iniciando procesamiento de cola...');
+    debugPrint('🔄 Iniciando procesamiento de cola...');
 
     try {
       // ✅ VERIFICAR CONECTIVIDAD ANTES
       if (!await _hasInternetConnection()) {
-        print('📡 Sin conexión a internet, saltando procesamiento');
+        debugPrint('📡 Sin conexión a internet, saltando procesamiento');
         _scheduleNextRun(const Duration(seconds: 30));
         return;
       }
@@ -80,14 +81,14 @@ class BackgroundQueueService {
       }
 
       if (pendingCount == 0) {
-        print('✅ No hay registros pendientes');
+        debugPrint('✅ No hay registros pendientes');
         _failureCount = 0;
         // ✅ OPTIMIZACIÓN: Interval más espaciado cuando no hay trabajo
         _scheduleNextRun(const Duration(seconds: 60));
         return;
       }
 
-      print('📋 Procesando $pendingCount registro(s) pendiente(s)...');
+      debugPrint('📋 Procesando $pendingCount registro(s) pendiente(s)...');
 
       // ✅ Procesar la cola
       await _registroService.processPendingQueue();
@@ -97,18 +98,18 @@ class BackgroundQueueService {
         _container!.read(queueStateProvider.notifier).refreshState();
       }
 
-      print('✅ Cola procesada exitosamente');
+      debugPrint('✅ Cola procesada exitosamente');
       _failureCount = 0;
 
       // ✅ OPTIMIZACIÓN: Interval más frecuente cuando hay trabajo exitoso
       _scheduleNextRun(const Duration(seconds: 30));
     } catch (e) {
-      print('❌ Error procesando cola: $e');
+      debugPrint('❌ Error procesando cola: $e');
       _failureCount++;
 
       // ✅ OPTIMIZACIÓN: Backoff más agresivo para evitar spam
       final backoffDelay = _calculateBackoffDelay();
-      print(
+      debugPrint(
         '⏰ Reintentando en ${backoffDelay.inSeconds} segundos (fallo #$_failureCount)',
       );
       _scheduleNextRun(backoffDelay);
@@ -123,7 +124,7 @@ class BackgroundQueueService {
       final connectivityResult = await Connectivity().checkConnectivity();
       return !connectivityResult.contains(ConnectivityResult.none);
     } catch (e) {
-      print('Error verificando conectividad: $e');
+      debugPrint('Error verificando conectividad: $e');
       return false;
     }
   }
@@ -145,11 +146,11 @@ class BackgroundQueueService {
   /// Forzar procesamiento inmediato
   Future<void> forceProcess() async {
     if (_isProcessing) {
-      print('⏳ Ya hay procesamiento en curso');
+      debugPrint('⏳ Ya hay procesamiento en curso');
       return;
     }
 
-    print('🔄 Procesamiento forzado solicitado');
+    debugPrint('🔄 Procesamiento forzado solicitado');
     await _processQueue();
   }
 

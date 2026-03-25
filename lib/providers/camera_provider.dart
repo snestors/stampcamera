@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/utils/image_processor.dart';
@@ -66,7 +67,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
       await _loadImages();
       state = state.copyWith(isReady: true);
     } catch (e) {
-      print('❌ Error inicializando cámara: $e');
+      debugPrint('❌ Error inicializando cámara: $e');
     }
   }
 
@@ -124,8 +125,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
         lastCapturedPath: processedPath,
       );
     } catch (e) {
-      // ignore: avoid_print
-      print('❌ Error al procesar en segundo plano: $e');
+      debugPrint('❌ Error al procesar en segundo plano: $e');
       state = state.copyWith(
         processingCount: (state.processingCount - 1).clamp(0, 100),
       );
@@ -149,7 +149,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
       // Procesar en background SIN esperar (permite tomar más fotos)
       _processInBackground(picture.path);
     } catch (e) {
-      print('❌ Error al tomar foto: $e');
+      debugPrint('❌ Error al tomar foto: $e');
     } finally {
       _isCapturing = false;
     }
@@ -189,7 +189,7 @@ class CameraNotifier extends StateNotifier<CameraState> {
       await _controller!.setFlashMode(newMode);
       state = state.copyWith(flashMode: newMode);
     } catch (e) {
-      print('❌ Error al cambiar flash: $e');
+      debugPrint('❌ Error al cambiar flash: $e');
     }
   }
 

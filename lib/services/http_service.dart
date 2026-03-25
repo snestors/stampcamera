@@ -203,7 +203,7 @@ class HttpService {
 
   /// Manejar dispositivo no autorizado - limpiar todo y forzar re-registro
   Future<void> _handleDeviceUnauthorized() async {
-    print('🚫 HttpService: Dispositivo no autorizado - limpiando registro');
+    debugPrint('🚫 HttpService: Dispositivo no autorizado - limpiando registro');
 
     // Limpiar tokens de auth
     await storage.delete(key: 'access');
@@ -312,7 +312,7 @@ class HttpService {
     await storage.delete(key: 'access');
     await storage.delete(key: 'refresh');
     await storage.delete(key: 'user_data');
-    print('🗑️ HttpService: Solo limpiando datos de auth (preservando biometría)');
+    debugPrint('🗑️ HttpService: Solo limpiando datos de auth (preservando biometría)');
     _authNotifier?.logout();
   }
 
@@ -567,6 +567,6 @@ class HttpService {
     await storage.delete(key: 'access');
     await storage.delete(key: 'refresh'); 
     await storage.delete(key: 'user_data');
-    print('🗑️ HttpService: Logout - Solo limpiando datos de auth (preservando biometría)');
+    debugPrint('🗑️ HttpService: Logout - Solo limpiando datos de auth (preservando biometría)');
   }
 }

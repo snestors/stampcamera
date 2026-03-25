@@ -1,4 +1,5 @@
 // providers/autos/contenedor_provider.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/base_provider_imp.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
@@ -91,7 +92,7 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
         precinto1: precinto1,
         precinto2: precinto2,
       );
-      print('Contenedor actualizado: $updatedContenedor');
+      debugPrint('Contenedor actualizado: $updatedContenedor');
 
       // Actualizar en la lista
       final current = state.value ?? [];

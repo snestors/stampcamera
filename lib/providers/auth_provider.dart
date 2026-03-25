@@ -164,7 +164,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   }
 
   Future<void> login(String username, String password) async {
-    print('🔐 AuthProvider: Iniciando login para: $username');
+    debugPrint('🔐 AuthProvider: Iniciando login para: $username');
 
     if (username.trim().isEmpty || password.trim().isEmpty) {
       state = AsyncValue.data(
@@ -196,9 +196,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
       await _fetchUserAndSetState();
 
-      print('✅ Login exitoso para: ${username.trim()}');
+      debugPrint('✅ Login exitoso para: ${username.trim()}');
     } catch (e) {
-      print('❌ AuthProvider: Error en login: $e');
+      debugPrint('❌ AuthProvider: Error en login: $e');
 
       final errorMessage = _handleGenericError(e);
 
@@ -340,7 +340,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       await _storage.delete(key: 'user_data');
       await _clearPersistedUserData();
 
-      print(
+      debugPrint(
         '🗑️ AuthProvider: Solo limpiando datos de autenticación (manteniendo biometría)',
       );
     } catch (e) {
@@ -348,7 +348,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       await _storage.delete(key: 'access');
       await _storage.delete(key: 'refresh');
       await _storage.delete(key: 'user_data');
-      print('❌ AuthProvider: Error en logout, usando fallback');
+      debugPrint('❌ AuthProvider: Error en logout, usando fallback');
     }
   }
 

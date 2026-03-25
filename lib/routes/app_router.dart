@@ -74,16 +74,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'inventario/nave/:naveId',
             builder: (context, state) {
-              final naveIdString = state.pathParameters['naveId']!;
-              final naveId = int.parse(naveIdString);
+              final naveId = int.tryParse(state.pathParameters['naveId'] ?? '') ?? 0;
+              if (naveId == 0) return const HomeScreen();
               return InventarioDetalleNaveScreen(naveId: naveId);
             },
           ),
           GoRoute(
             path: 'inventario/detalle/:infId',
             builder: (context, state) {
-              final infIdString = state.pathParameters['infId']!;
-              final infId = int.parse(infIdString);
+              final infId = int.tryParse(state.pathParameters['infId'] ?? '') ?? 0;
+              if (infId == 0) return const HomeScreen();
               return InventarioDetalleScreen(informacionUnidadId: infId);
             },
           ),
@@ -106,7 +106,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               state,
               DanoForm(
                 vin: state.pathParameters['vin']!,
-                danoId: int.parse(state.pathParameters['danoId']!),
+                danoId: int.tryParse(state.pathParameters['danoId'] ?? '') ?? 0,
               ),
             ),
           ),
@@ -180,8 +180,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'servicio/:servicioId/dashboard',
             name: 'servicio-dashboard',
             builder: (context, state) {
-              final servicioIdString = state.pathParameters['servicioId']!;
-              final servicioId = int.parse(servicioIdString);
+              final servicioId = int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
+              if (servicioId == 0) return const HomeScreen();
               return ServicioDashboardScreen(servicioId: servicioId);
             },
           ),
@@ -197,16 +197,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'ticket/crear/:servicioId',
             builder: (context, state) {
-              final servicioIdString = state.pathParameters['servicioId']!;
-              final servicioId = int.parse(servicioIdString);
+              final servicioId = int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
+              if (servicioId == 0) return const HomeScreen();
               return TicketCrearScreen(servicioId: servicioId);
             },
           ),
           GoRoute(
             path: 'ticket/editar/:ticketId',
             builder: (context, state) {
-              final ticketIdString = state.pathParameters['ticketId']!;
-              final ticketId = int.parse(ticketIdString);
+              final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
+              if (ticketId == 0) return const HomeScreen();
               return TicketCrearScreen.edit(ticketId: ticketId);
             },
           ),
@@ -214,8 +214,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'ticket/:ticketId',
             builder: (context, state) {
-              final ticketIdString = state.pathParameters['ticketId']!;
-              final ticketId = int.parse(ticketIdString);
+              final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
+              if (ticketId == 0) return const HomeScreen();
               return TicketDetalleScreen(ticketId: ticketId);
             },
           ),
@@ -229,8 +229,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'balanza/editar/:balanzaId',
             builder: (context, state) {
-              final balanzaIdString = state.pathParameters['balanzaId']!;
-              final balanzaId = int.parse(balanzaIdString);
+              final balanzaId = int.tryParse(state.pathParameters['balanzaId'] ?? '') ?? 0;
+              if (balanzaId == 0) return const HomeScreen();
               return BalanzaCrearScreen.edit(balanzaId: balanzaId);
             },
           ),
@@ -244,8 +244,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'almacen/editar/:almacenId',
             builder: (context, state) {
-              final almacenIdString = state.pathParameters['almacenId']!;
-              final almacenId = int.parse(almacenIdString);
+              final almacenId = int.tryParse(state.pathParameters['almacenId'] ?? '') ?? 0;
+              if (almacenId == 0) return const HomeScreen();
               return AlmacenCrearScreen.edit(almacenId: almacenId);
             },
           ),
@@ -259,8 +259,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'silos/editar/:siloId',
             builder: (context, state) {
-              final siloIdString = state.pathParameters['siloId']!;
-              final siloId = int.parse(siloIdString);
+              final siloId = int.tryParse(state.pathParameters['siloId'] ?? '') ?? 0;
+              if (siloId == 0) return const HomeScreen();
               return SilosCrearScreen.edit(siloId: siloId);
             },
           ),
@@ -274,8 +274,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'explorador/:carpetaId',
             builder: (context, state) {
-              final carpetaIdString = state.pathParameters['carpetaId']!;
-              final carpetaId = int.parse(carpetaIdString);
+              final carpetaId = int.tryParse(state.pathParameters['carpetaId'] ?? '') ?? 0;
+              if (carpetaId == 0) return const HomeScreen();
               return ExploradorScreen(carpetaId: carpetaId);
             },
           ),
@@ -285,7 +285,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/camera',
         name: 'camera',
         builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
+          final extra = state.extra as Map<String, dynamic>? ?? {};
           final camera = extra['camera'] as CameraDescription;
           return CameraScreen(camera: camera);
         },
@@ -294,7 +294,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'fullscreen',
             name: 'fullscreen',
             builder: (context, state) {
-              final extra = state.extra as Map<String, dynamic>;
+              final extra = state.extra as Map<String, dynamic>? ?? {};
               final camera = extra['camera'] as CameraDescription;
               final index = extra['index'] as int;
               return FullscreenImage(camera: camera, initialIndex: index);
@@ -304,7 +304,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'gallery',
             name: 'gallery',
             builder: (context, state) {
-              final extra = state.extra as Map<String, dynamic>;
+              final extra = state.extra as Map<String, dynamic>? ?? {};
               final camera = extra['camera'] as CameraDescription;
               return GallerySelectorScreen(camera: camera);
             },

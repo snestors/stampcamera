@@ -15,6 +15,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -119,6 +120,46 @@ class AppSocketService {
       _notificationController.stream;
   Stream<AppSocketEvent> get onDataChanged => _dataChangedController.stream;
 
+  // ─── Ticket WS ─────────────────────────────────────────────────────
+
+  static const String _ticketUrl =
+      'https://www.aygajustadores.com/api/v1/ws/ticket/';
+
+  /// Solicita un ticket single-use para autenticación WS.
+  /// El ticket expira en 30 segundos y se consume al conectar.
+  /// Retorna null si falla (el caller debe usar fallback con token directo).
+  Future<String?> _fetchWsTicket(String accessToken) async {
+    try {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 10);
+
+      final request = await client.postUrl(Uri.parse(_ticketUrl));
+      request.headers.set('Authorization', 'Bearer $accessToken');
+      request.headers.set('Content-Type', 'application/json');
+
+      final response = await request.close();
+      final body = await response.transform(utf8.decoder).join();
+
+      client.close(force: false);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(body) as Map<String, dynamic>;
+        final ticket = data['ticket'] as String?;
+        if (ticket != null && ticket.isNotEmpty) {
+          debugPrint('WS: Ticket obtenido correctamente');
+          return ticket;
+        }
+      } else if (response.statusCode == 401) {
+        debugPrint('WS: Token expirado al solicitar ticket (401)');
+      } else {
+        debugPrint('WS: Ticket request falló: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('WS: Error solicitando ticket: $e');
+    }
+    return null;
+  }
+
   // ─── Conexión ────────────────────────────────────────────────────────
 
   Future<void> connect(String accessToken) async {
@@ -131,8 +172,18 @@ class AppSocketService {
     _setConnectionState(WsConnectionState.connecting);
 
     try {
-      final uri = Uri.parse('$_wsBaseUrl?token=$accessToken');
-      debugPrint('WS: Conectando a ws/app/...');
+      // 1. Intentar obtener ticket single-use (preferido)
+      final ticket = await _fetchWsTicket(accessToken);
+
+      Uri uri;
+      if (ticket != null) {
+        uri = Uri.parse('$_wsBaseUrl?ticket=$ticket');
+        debugPrint('WS: Conectando con ticket...');
+      } else {
+        // Fallback: usar token directo (deprecado, funciona durante transición)
+        uri = Uri.parse('$_wsBaseUrl?token=$accessToken');
+        debugPrint('WS: Conectando con token directo (fallback)...');
+      }
 
       _channel = WebSocketChannel.connect(uri);
 

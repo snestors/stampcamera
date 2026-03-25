@@ -7,7 +7,7 @@ import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/screens/autos/contenedores/contenedores_tab.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_screen.dart';
-import 'package:stampcamera/widgets/pedeteo/queue_badget.dart';
+import 'package:stampcamera/widgets/pedeteo/queue_badge.dart';
 import 'registro_general/registro_screen.dart';
 
 /// Configuración de un tab dentro del módulo Autos

@@ -1,4 +1,5 @@
 // lib/providers/autos/queue_state_provider.dart - OPTIMIZADO (reemplaza el actual)
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/services/registro_vin_service.dart';
 
@@ -67,7 +68,7 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
       final records = await _service.getPendingRecordsList();
       state = QueueState.fromRecords(records);
     } catch (e) {
-      print('Error loading initial queue state: $e');
+      debugPrint('Error loading initial queue state: $e');
     }
   }
 
@@ -77,7 +78,7 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
       final records = await _service.getPendingRecordsList();
       state = QueueState.fromRecords(records);
     } catch (e) {
-      print('Error refreshing queue state: $e');
+      debugPrint('Error refreshing queue state: $e');
     }
   }
 
@@ -87,7 +88,7 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
       await _service.processPendingQueue();
       await refreshState(); // Actualizar después de procesar
     } catch (e) {
-      print('Error processing queue: $e');
+      debugPrint('Error processing queue: $e');
       rethrow;
     }
   }
@@ -98,7 +99,7 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
       await _service.clearCompleted();
       await refreshState();
     } catch (e) {
-      print('Error clearing completed: $e');
+      debugPrint('Error clearing completed: $e');
       rethrow;
     }
   }
@@ -109,7 +110,7 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
       await _service.clearFailedRecords();
       await refreshState();
     } catch (e) {
-      print('Error clearing failed: $e');
+      debugPrint('Error clearing failed: $e');
       rethrow;
     }
   }
@@ -120,7 +121,7 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
       await _service.retrySpecificRecord(recordId);
       await refreshState();
     } catch (e) {
-      print('Error retrying record: $e');
+      debugPrint('Error retrying record: $e');
       rethrow;
     }
   }
@@ -131,7 +132,7 @@ class QueueStateNotifier extends StateNotifier<QueueState> {
       await _service.deleteSpecificRecord(recordId);
       await refreshState();
     } catch (e) {
-      print('Error deleting record: $e');
+      debugPrint('Error deleting record: $e');
       rethrow;
     }
   }

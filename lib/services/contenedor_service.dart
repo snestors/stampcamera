@@ -1,4 +1,5 @@
 // services/autos/contenedor_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:stampcamera/core/base_service_imp.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:dio/dio.dart';
@@ -110,7 +111,7 @@ class ContenedorService extends BaseServiceImpl<ContenedorModel> {
       'precinto1': precinto1?.isEmpty == true ? null : precinto1,
       'precinto2': precinto2?.isEmpty == true ? null : precinto2,
     };
-    print("ContenedorService.updateContenedor: $data");
+    debugPrint("ContenedorService.updateContenedor: $data");
     return await partialUpdate(id, data);
   }
 
@@ -140,7 +141,7 @@ class ContenedorService extends BaseServiceImpl<ContenedorModel> {
       throw Exception('No se especificaron campos para limpiar');
     }
 
-    print("ContenedorService.clearContenedorFields: $data");
+    debugPrint("ContenedorService.clearContenedorFields: $data");
     return await partialUpdate(id, data);
   }
 

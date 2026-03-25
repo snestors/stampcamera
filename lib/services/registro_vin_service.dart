@@ -1,5 +1,6 @@
 // services/registro_vin_service.dart
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:stampcamera/models/autos/registro_vin_options.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/services/http_service.dart';
@@ -92,7 +93,7 @@ class RegistroVinService {
 
         // Verificar si es error de duplicado - tratar como éxito
         if (_isDuplicateError(errorData)) {
-          print('⚠️ VIN $vin ya existe - tratando como éxito');
+          debugPrint('⚠️ VIN $vin ya existe - tratando como éxito');
           // Lanzar excepción especial para indicar duplicado (no es un error real)
           throw DuplicateRecordException(vin);
         }
@@ -198,13 +199,13 @@ extension OfflineCapability on RegistroVinService {
         // Si se envía exitosamente, marcar como completado
         await _markAsCompleted(vin);
       } catch (e) {
-        print('No se pudo enviar inmediatamente, se guardó en cola: $e');
+        debugPrint('No se pudo enviar inmediatamente, se guardó en cola: $e');
         // No importa, ya está guardado localmente
       }
 
       return true;
     } catch (e) {
-      print('Error al guardar registro offline: $e');
+      debugPrint('Error al guardar registro offline: $e');
       return false;
     }
   }
@@ -271,7 +272,7 @@ extension OfflineCapability on RegistroVinService {
   Future<int> getPendingCount() async {
     final prefs = await SharedPreferences.getInstance();
     final existingJson = prefs.getString('pending_registros') ?? '[]';
-    print(existingJson);
+    debugPrint(existingJson);
     final registros = List<Map<String, dynamic>>.from(jsonDecode(existingJson));
 
     return registros.where((r) => r['status'] == 'pending').length;
@@ -283,16 +284,16 @@ extension OfflineCapability on RegistroVinService {
     final existingJson = prefs.getString('pending_registros') ?? '[]';
     final registros = List<Map<String, dynamic>>.from(jsonDecode(existingJson));
 
-    print('📊 Total registros: ${registros.length}');
+    debugPrint('📊 Total registros: ${registros.length}');
 
     final pending = registros
         .where((r) => r['status'] == 'pending' && (r['retry_count'] ?? 0) < 3)
         .toList();
 
-    print('📋 Registros para procesar: ${pending.length}');
+    debugPrint('📋 Registros para procesar: ${pending.length}');
 
     for (var registro in pending) {
-      print(
+      debugPrint(
         '🔄 Procesando: ${registro['vin']} - Retry: ${registro['retry_count']}',
       );
 
@@ -311,23 +312,23 @@ extension OfflineCapability on RegistroVinService {
         // Marcar como completado
         registro['status'] = 'completed';
         registro['completed_at'] = DateTime.now().toIso8601String();
-        print('✅ ${registro['vin']} completado');
+        debugPrint('✅ ${registro['vin']} completado');
       } on DuplicateRecordException {
         // Duplicado = ya existe en el servidor = éxito
         registro['status'] = 'completed';
         registro['completed_at'] = DateTime.now().toIso8601String();
-        print('✅ ${registro['vin']} completado (ya existía en servidor)');
+        debugPrint('✅ ${registro['vin']} completado (ya existía en servidor)');
       } catch (e) {
         // Incrementar retry count
         registro['retry_count'] = (registro['retry_count'] ?? 0) + 1;
-        print(
+        debugPrint(
           '❌ ${registro['vin']} falló. Nuevo retry_count: ${registro['retry_count']}',
         );
 
         if (registro['retry_count'] >= 3) {
           registro['status'] = 'failed';
           registro['error'] = e.toString();
-          print('🚫 ${registro['vin']} marcado como failed');
+          debugPrint('🚫 ${registro['vin']} marcado como failed');
         }
       }
     }
@@ -366,7 +367,7 @@ extension OfflineCapability on RegistroVinService {
 
       return registros;
     } catch (e) {
-      print('Error al obtener lista de registros: $e');
+      debugPrint('Error al obtener lista de registros: $e');
       return [];
     }
   }
@@ -407,7 +408,7 @@ extension OfflineCapability on RegistroVinService {
       registros[recordIndex]['status'] = 'completed';
       registros[recordIndex]['completed_at'] = DateTime.now().toIso8601String();
       registros[recordIndex]['error'] = null;
-      print('✅ ${registro['vin']} completado (ya existía en servidor)');
+      debugPrint('✅ ${registro['vin']} completado (ya existía en servidor)');
     } catch (e) {
       // Si falla, incrementar retry count y actualizar error
       registros[recordIndex]['retry_count'] =
@@ -436,7 +437,7 @@ extension OfflineCapability on RegistroVinService {
     final notFailed = registros.where((r) => r['status'] != 'failed').toList();
 
     await prefs.setString('pending_registros', jsonEncode(notFailed));
-    print('✅ Registros fallidos eliminados');
+    debugPrint('✅ Registros fallidos eliminados');
   }
 
   /// ✅ NUEVO MÉTODO: Eliminar un registro específico
@@ -449,6 +450,6 @@ extension OfflineCapability on RegistroVinService {
     final filtered = registros.where((r) => r['id'] != recordId).toList();
 
     await prefs.setString('pending_registros', jsonEncode(filtered));
-    print('✅ Registro $recordId eliminado');
+    debugPrint('✅ Registro $recordId eliminado');
   }
 }
