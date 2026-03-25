@@ -109,22 +109,19 @@ class CasosService {
 
   // ─── Archivos ──────────────────────────────────────────────────────────
 
-  /// Subir múltiples archivos a una carpeta
-  Future<UploadMultipleResponse> uploadArchivos({
+  /// Subir un archivo individual a una carpeta
+  Future<Archivo> uploadArchivoIndividual({
     required int carpetaId,
-    required List<File> archivos,
+    required File archivo,
     void Function(double)? onProgress,
   }) async {
+    final fileName = archivo.path.split(Platform.pathSeparator).last;
     final formData = FormData();
     formData.fields.add(MapEntry('carpeta', carpetaId.toString()));
-
-    for (final file in archivos) {
-      final fileName = file.path.split(Platform.pathSeparator).last;
-      formData.files.add(MapEntry(
-        'archivos',
-        await MultipartFile.fromFile(file.path, filename: fileName),
-      ));
-    }
+    formData.files.add(MapEntry(
+      'archivos',
+      await MultipartFile.fromFile(archivo.path, filename: fileName),
+    ));
 
     final response = await _http.dio.post(
       '$_basePath/archivos/upload-multiple/',
@@ -136,8 +133,16 @@ class CasosService {
           : null,
     );
 
-    return UploadMultipleResponse.fromJson(
-        response.data as Map<String, dynamic>);
+    final data = response.data as Map<String, dynamic>;
+    final creados = data['creados'] as List;
+    if (creados.isEmpty) {
+      final errores = data['errores'] as List?;
+      final msg = errores?.isNotEmpty == true
+          ? (errores![0] as Map)['error'] ?? 'Error al subir'
+          : 'Error al subir archivo';
+      throw Exception(msg);
+    }
+    return Archivo.fromJson(creados[0] as Map<String, dynamic>);
   }
 
   /// Eliminar archivo (soft delete)

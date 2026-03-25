@@ -4,7 +4,7 @@ import 'package:stampcamera/models/asistencia/asistencia_model.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/session_manager_provider.dart';
 import 'package:stampcamera/services/http_service.dart';
-import 'package:stampcamera/utils/gps_utils.dart';
+import 'package:stampcamera/core/helpers/gps_utils.dart';
 
 enum AsistenciaStatus { idle, entradaLoading, salidaLoading, error }
 

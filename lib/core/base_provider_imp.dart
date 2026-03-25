@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import 'package:stampcamera/utils/debouncer.dart';
+import 'package:stampcamera/core/helpers/debouncer.dart';
 import 'package:stampcamera/core/base_provider.dart';
 import 'package:stampcamera/core/base_service.dart';
 import 'package:stampcamera/core/has_id.dart';
@@ -46,6 +46,19 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
   // INICIALIZACIÓN
   // ============================================================================
 
+  // TODO: Evaluar si keepAlive() es necesario para TODOS los providers.
+  // Actualmente TODOS los que extienden BaseListProviderImpl se mantienen vivos,
+  // lo que evita re-fetches innecesarios pero consume memoria.
+  // Candidatos a autoDispose (no necesitan keepAlive):
+  //   - Providers de detalle (detalleRegistroProvider, inventarioDetalleProvider)
+  //   - Providers usados en una sola pantalla
+  // Providers que SÍ necesitan keepAlive:
+  //   - registroGeneralProvider, contenedorProvider (listas principales)
+  //   - inventarioBaseProvider (lista principal inventario)
+  //   - serviciosGranelesProvider (lista principal graneles)
+  // NO se cambió porque remover keepAlive puede causar que providers se destruyan
+  // al navegar entre pantallas, perdiendo datos cargados y forzando re-fetches.
+  // Requiere pruebas exhaustivas pantalla por pantalla.
   @override
   Future<List<T>> build() async {
     ref.keepAlive();

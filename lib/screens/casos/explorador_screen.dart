@@ -37,9 +37,6 @@ class ExploradorScreen extends ConsumerStatefulWidget {
 }
 
 class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
-  double _uploadProgress = 0;
-  bool _isUploading = false;
-
   @override
   void initState() {
     super.initState();
@@ -260,7 +257,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     // Upload progress
     return Column(
       children: [
-        if (_isUploading) _buildUploadProgress(),
+        if (state.isUploading) _buildUploadQueueProgress(state),
         Expanded(
           child: RefreshIndicator(
             onRefresh: () => ref
@@ -394,9 +391,16 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     );
   }
 
-  Widget _buildUploadProgress() {
+  Widget _buildUploadQueueProgress(ExplorerState state) {
+    final completed = state.uploadsCompleted;
+    final total = state.uploadsTotal;
+    final failed = state.uploadsFailed;
+
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceM,
+        vertical: DesignTokens.spaceS,
+      ),
       color: AppColors.info.withValues(alpha: 0.1),
       child: Row(
         children: [
@@ -411,7 +415,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Subiendo archivos...',
+                  'Subiendo $completed/$total archivo${total != 1 ? 's' : ''}${failed > 0 ? ' ($failed error${failed != 1 ? 'es' : ''})' : ''}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w500,
@@ -419,12 +423,23 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                 ),
                 SizedBox(height: 4),
                 LinearProgressIndicator(
-                  value: _uploadProgress,
+                  value: state.uploadTotalProgress,
                   backgroundColor: AppColors.neutral,
                 ),
               ],
             ),
           ),
+          if (failed > 0) ...[
+            SizedBox(width: DesignTokens.spaceS),
+            IconButton(
+              icon: const Icon(Icons.refresh, size: 20),
+              onPressed: () =>
+                  ref.read(exploradorProvider.notifier).retryFailedUploads(),
+              tooltip: 'Reintentar fallidos',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
+          ],
         ],
       ),
     );
@@ -433,7 +448,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
   // ─── FAB ─────────────────────────────────────────────────────────────
 
   Widget? _buildFAB(ExplorerState state) {
-    if (state.hasSelection || _isUploading) return null;
+    if (state.hasSelection) return null;
 
     return FloatingActionButton(
       onPressed: () => _showAddContentSheet(),
@@ -655,7 +670,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     );
 
     if (photos == null || photos.isEmpty) return;
-    await _uploadFiles(photos);
+    _uploadFiles(photos);
   }
 
   // ─── Elegir fotos de galeria ──────────────────────────────────────
@@ -683,7 +698,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
       }
 
       if (files.isEmpty) return;
-      await _uploadFiles(files);
+      _uploadFiles(files);
     } catch (e) {
       if (mounted) {
         AppSnackBar.error(context, 'Error al seleccionar fotos');
@@ -708,7 +723,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
           .toList();
 
       if (files.isEmpty) return;
-      await _uploadFiles(files);
+      _uploadFiles(files);
     } catch (e) {
       if (mounted) {
         AppSnackBar.error(context, 'Error al seleccionar archivos');
@@ -718,40 +733,13 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
 
   // ─── Upload compartido ────────────────────────────────────────────
 
-  Future<void> _uploadFiles(List<File> files) async {
-    try {
-      setState(() {
-        _isUploading = true;
-        _uploadProgress = 0;
-      });
-
-      final response = await ref.read(exploradorProvider.notifier).uploadArchivos(
-        files,
-        onProgress: (progress) {
-          setState(() => _uploadProgress = progress);
-        },
+  void _uploadFiles(List<File> files) {
+    ref.read(exploradorProvider.notifier).addToUploadQueue(files);
+    if (mounted) {
+      AppSnackBar.info(
+        context,
+        '${files.length} archivo${files.length != 1 ? 's' : ''} en cola de subida',
       );
-
-      setState(() => _isUploading = false);
-
-      if (response != null && mounted) {
-        if (response.totalErrores > 0) {
-          AppSnackBar.warning(
-            context,
-            '${response.totalCreados} subido(s), ${response.totalErrores} error(es)',
-          );
-        } else {
-          AppSnackBar.success(
-            context,
-            '${response.totalCreados} archivo(s) subido(s)',
-          );
-        }
-      }
-    } catch (e) {
-      setState(() => _isUploading = false);
-      if (mounted) {
-        AppSnackBar.error(context, 'Error al subir archivos');
-      }
     }
   }
 

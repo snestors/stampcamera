@@ -5,7 +5,7 @@ import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/screens/autos/inventario/simple_add_image_modal.dart';
-import 'package:stampcamera/utils/debouncer.dart';
+import 'package:stampcamera/core/helpers/debouncer.dart';
 import 'package:stampcamera/widgets/autos/detalle_imagen_preview.dart';
 
 class ImagenesTabWidget extends ConsumerStatefulWidget {

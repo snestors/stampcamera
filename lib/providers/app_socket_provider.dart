@@ -2,7 +2,7 @@
 // APP SOCKET PROVIDER - Provider Riverpod para WebSocket Unificado
 // =============================================================================
 //
-// Reemplaza presence_provider.dart integrando el AppSocketService con Riverpod.
+// Reemplaza el legacy presence_provider (eliminado en Fase 3) integrando el AppSocketService con Riverpod.
 // Mantiene compatibilidad con los streams existentes de force_logout,
 // permissions_updated y asistencia_changed.
 // =============================================================================

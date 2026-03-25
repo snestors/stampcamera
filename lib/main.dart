@@ -7,7 +7,7 @@ import 'package:stampcamera/services/background_queue_service.dart';
 import 'package:stampcamera/services/offline_sync_handler.dart';
 import 'package:stampcamera/services/storage_health_service.dart';
 import 'package:stampcamera/services/update_service.dart';
-import 'package:stampcamera/theme/app_theme.dart';
+import 'package:stampcamera/core/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 import 'routes/app_router.dart';

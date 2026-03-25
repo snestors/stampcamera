@@ -8,6 +8,15 @@ import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 
+// TODO: Migrar parámetros WidgetRef → Ref para permitir uso desde providers/servicios.
+// Actualmente no es posible porque en Riverpod 2.x, WidgetRef y Ref son tipos
+// independientes (no hay herencia entre ellos). Los callers (auth_provider.logout,
+// asistencias_provider.marcarEntrada/marcarSalida) pasan WidgetRef desde widgets.
+// Opciones para migrar:
+// 1. Usar ref.invalidate() directamente desde los providers que necesitan limpiar
+//    (eliminar SessionManager como intermediario)
+// 2. En Riverpod 3.x, evaluar si los tipos se unifican
+// 3. Crear un wrapper/typedef que acepte ambos tipos
 class SessionManager extends StateNotifier<String?> {
   SessionManager() : super(null);
 

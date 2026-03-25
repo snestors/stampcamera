@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:stampcamera/theme/app_theme.dart';
+import 'package:stampcamera/core/theme/app_theme.dart';
 
 /// 🎨 ENUMS PARA MANEJO DE TEMA
 enum AppThemeMode { light, dark, system }

@@ -52,7 +52,7 @@ import 'package:stampcamera/screens/casos/explorador_screen.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/device_provider.dart';
 import 'package:stampcamera/models/auth_state.dart';
-import 'package:stampcamera/utils/go_router_refresh_stream.dart';
+import 'package:stampcamera/routes/go_router_refresh_stream.dart';
 import 'package:stampcamera/screens/splash_screen.dart';
 import 'package:stampcamera/screens/login_screen.dart';
 import 'package:stampcamera/screens/home_screen.dart';

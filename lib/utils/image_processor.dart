@@ -1,3 +1,8 @@
+// TODO: Mover a core/helpers/image_processor.dart — no se movió en Fase 3 porque
+// tiene 6+ imports activos (main.dart, camera_service.dart, camera_config.dart,
+// scanner_widget.dart, reusable_camera_card.dart, camera_provider.dart, etc.)
+// y camera_config.dart hace re-export. Requiere actualizar todos los imports
+// y verificar que el re-export en camera_config.dart no rompa dependencias transitivas.
 // utils/image_processor.dart (VERSIÓN ULTRA-OPTIMIZADA CON CANVAS NATIVO)
 import 'dart:io';
 import 'dart:ui' as ui;
