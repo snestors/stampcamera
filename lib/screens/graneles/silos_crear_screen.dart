@@ -600,7 +600,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       final data = <String, dynamic>{
         'n_camion': int.parse(_numeroCamionController.text),
         'cantidad': double.parse(_pesoController.text),
-        'fecha_pesaje': _fechaHora.toIso8601String(),
+        'fecha_pesaje': _fechaHora.toUtc().toIso8601String(),
       };
 
       if (!widget.isEditMode) {

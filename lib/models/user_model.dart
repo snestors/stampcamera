@@ -275,20 +275,20 @@ class UserModel {
       groups.any((g) => ['GESTORES COORDINACION AUTOS', 'COORDINACION AUTOS'].contains(g));
 
   /// Usuario tiene acceso al módulo de graneles
-  bool get hasGranosAccess =>
+  bool get hasGranelesAccess =>
       isSuperuser ||
-      groups.any((g) => ['GRANOS', 'GRANELES', 'COORDINACION GRANELES'].contains(g));
+      groups.any((g) => ['GRANELES', 'COORDINACION GRANELES', 'GESTORES', 'INSPECTOR', 'CLIENTE_GRANOS'].contains(g));
 
   /// Usuario tiene acceso al módulo de casos y documentos
-  /// Solo superusers y coordinadores
-  bool get hasCasosAccess =>
-      isSuperuser ||
-      groups.any((g) => [
-        'CASOS Y DOCUMENTOS',
-        'COORDINACION AUTOS',
-        'COORDINACION GRANELES',
-        'ADMINISTRACION',
-      ].contains(g));
+  /// TODO: Temporalmente oculto hasta completar módulo React
+  bool get hasCasosAccess => false;
+      // isSuperuser ||
+      // groups.any((g) => [
+      //   'CASOS Y DOCUMENTOS',
+      //   'COORDINACION AUTOS',
+      //   'COORDINACION GRANELES',
+      //   'ADMINISTRACION',
+      // ].contains(g));
 
   /// Usuario tiene acceso a asistencia
   bool get hasAsistenciaAccess =>
@@ -340,11 +340,11 @@ class UserModel {
       ));
     }
 
-    // Granos - Solo usuarios con grupo GRANOS o superuser
-    if (hasGranosAccess) {
+    // Graneles - usuarios con grupo GRANELES, COORDINACION GRANELES, etc.
+    if (hasGranelesAccess) {
       modules.add(const ModuleAccess(
-        id: 'granos',
-        name: 'Granos',
+        id: 'graneles',
+        name: 'Graneles',
         icon: 'agriculture',
       ));
     }

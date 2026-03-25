@@ -307,4 +307,20 @@ class DateFormatters {
   static DateTime endOfMonth(DateTime date) {
     return DateTime(date.year, date.month + 1, 0, 23, 59, 59, 999);
   }
+
+  // ============================================================================
+  // API - FECHAS PARA ENVIAR AL BACKEND
+  // ============================================================================
+
+  /// Convierte DateTime a ISO 8601 con timezone UTC para enviar al backend.
+  /// Garantiza que el backend (Django USE_TZ=True) reciba la hora correcta
+  /// independientemente del timezone del dispositivo.
+  static String toApiIso(DateTime date) {
+    return date.toUtc().toIso8601String();
+  }
+
+  /// Convierte DateTime nullable a ISO 8601 UTC, o retorna null.
+  static String? toApiIsoOrNull(DateTime? date) {
+    return date?.toUtc().toIso8601String();
+  }
 }

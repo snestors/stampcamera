@@ -363,7 +363,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   }
 
   String _handleGenericError(dynamic error) {
-    if (error.runtimeType.toString().contains('Dio')) {
+    if (error is DioException) {
       final response = _getResponseFromError(error);
       final errorType = _getErrorTypeFromError(error);
 
@@ -416,7 +416,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
   bool _isUnauthorizedError(dynamic error) {
     try {
-      if (error.runtimeType.toString().contains('Dio')) {
+      if (error is DioException) {
         final response = _getResponseFromError(error);
         return response?.statusCode == 401;
       }
@@ -428,7 +428,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
   bool _isConnectionError(dynamic error) {
     try {
-      if (error.runtimeType.toString().contains('Dio')) {
+      if (error is DioException) {
         final errorType = _getErrorTypeFromError(error);
         final errorString = error.toString().toLowerCase();
 

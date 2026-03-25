@@ -63,6 +63,8 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
   Widget build(BuildContext context) {
     final ticketsAsync = ref.watch(ticketsMuelleProvider);
     final notifier = ref.read(ticketsMuelleProvider.notifier);
+    final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
+    final canAdd = permissionsAsync.valueOrNull?.muelle.canAdd ?? false;
     // Usar el estado del filtro del notifier (server-side)
     final filterPendientes = notifier.filterSinBalanza;
 
@@ -99,19 +101,21 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
           Expanded(child: _buildResultsList(ticketsAsync, notifier, filterPendientes)),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToCreateTicket(),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          'Nuevo Ticket',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: DesignTokens.fontSizeS,
-          ),
-        ),
-      ),
+      floatingActionButton: canAdd
+          ? FloatingActionButton.extended(
+              onPressed: () => _navigateToCreateTicket(),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: Text(
+                'Nuevo Ticket',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: DesignTokens.fontSizeS,
+                ),
+              ),
+            )
+          : null,
     );
   }
 

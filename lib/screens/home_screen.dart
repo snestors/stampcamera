@@ -331,7 +331,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: AppColors.accent,
           subtitle: 'Gestión de vehículos',
         );
-      case 'granos':
+      case 'graneles':
         return _ModuleConfig(
           icon: Icons.directions_boat,
           color: AppColors.warning,
@@ -374,7 +374,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 'autos':
         context.push('/autos');
         break;
-      case 'granos':
+      case 'graneles':
         context.push('/graneles');
         break;
       case 'casos':
