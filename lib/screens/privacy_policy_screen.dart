@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
+import 'package:stampcamera/routes/app_router.dart' show markPrivacyPolicyAccepted;
 
 class PrivacyAcceptanceScreen extends StatefulWidget {
   const PrivacyAcceptanceScreen({super.key});
@@ -38,6 +39,7 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('privacy_policy_accepted', true);
     await prefs.setString('privacy_policy_version', '1.0');
+    markPrivacyPolicyAccepted(); // Update in-memory cache
 
     if (!mounted) return;
     context.go('/login');

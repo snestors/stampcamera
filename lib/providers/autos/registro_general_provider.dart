@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/base_provider_imp.dart';
 import 'package:stampcamera/utils/error_parse.dart';
-import '../../models/autos/registro_general_model.dart';
-import '../../services/autos/registro_general_service.dart';
+import 'package:stampcamera/models/autos/registro_general_model.dart';
+import 'package:stampcamera/services/autos/registro_general_service.dart';
 
 // ============================================================================
 // PROVIDER DEL SERVICIO

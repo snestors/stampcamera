@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
-import '../../providers/camera_provider.dart';
+import 'package:stampcamera/providers/camera_provider.dart';
 
 class FullscreenImage extends ConsumerStatefulWidget {
   final int initialIndex;

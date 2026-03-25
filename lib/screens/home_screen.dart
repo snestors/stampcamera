@@ -6,7 +6,7 @@ import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/app_socket_provider.dart';
 import 'package:stampcamera/services/biometric_service.dart';
 
-import '../main.dart'; // Para acceder a `cameras`
+import 'package:stampcamera/main.dart'; // Para acceder a `cameras`
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

@@ -4,6 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stampcamera/screens/autos/autos_screen.dart';
+
+// ---------------------------------------------------------------------------
+// Cache for privacy_policy_accepted to avoid SharedPreferences I/O on every
+// navigation redirect.
+// ---------------------------------------------------------------------------
+class _PrivacyCache {
+  static bool? _accepted;
+
+  static Future<bool> get accepted async {
+    if (_accepted != null) return _accepted!;
+    final prefs = await SharedPreferences.getInstance();
+    _accepted = prefs.getBool('privacy_policy_accepted') ?? false;
+    return _accepted!;
+  }
+
+  /// Call after the user accepts the privacy policy to update the cache.
+  static void markAccepted() => _accepted = true;
+}
+
+/// Global helper so the privacy screen can update the cache after acceptance.
+void markPrivacyPolicyAccepted() => _PrivacyCache.markAccepted();
 import 'package:stampcamera/screens/autos/contenedores/contenedor_form.dart';
 import 'package:stampcamera/widgets/autos/forms/dano_form.dart';
 import 'package:stampcamera/widgets/autos/forms/registro_vin_forms.dart';
@@ -28,13 +49,13 @@ import 'package:stampcamera/screens/device_registration_screen.dart';
 import 'package:stampcamera/screens/casos/casos_home_screen.dart';
 import 'package:stampcamera/screens/casos/explorador_screen.dart';
 
-import '../providers/auth_provider.dart';
-import '../providers/device_provider.dart';
-import '../models/auth_state.dart';
-import '../utils/go_router_refresh_stream.dart';
-import '../screens/splash_screen.dart';
-import '../screens/login_screen.dart';
-import '../screens/home_screen.dart';
+import 'package:stampcamera/providers/auth_provider.dart';
+import 'package:stampcamera/providers/device_provider.dart';
+import 'package:stampcamera/models/auth_state.dart';
+import 'package:stampcamera/utils/go_router_refresh_stream.dart';
+import 'package:stampcamera/screens/splash_screen.dart';
+import 'package:stampcamera/screens/login_screen.dart';
+import 'package:stampcamera/screens/home_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -313,9 +334,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) async {
-      // 🔥 1. VERIFICAR POLÍTICA PRIMERO
-      final prefs = await SharedPreferences.getInstance();
-      final privacyAccepted = prefs.getBool('privacy_policy_accepted') ?? false;
+      // 1. VERIFICAR POLÍTICA PRIMERO (cached — no I/O after first read)
+      final privacyAccepted = await _PrivacyCache.accepted;
 
       // Si no ha aceptado la política y no está en /privacy, redirigir
       if (!privacyAccepted && state.fullPath != '/privacy') {

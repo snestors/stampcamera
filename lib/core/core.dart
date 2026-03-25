@@ -2,6 +2,9 @@
 // 🎯 CORE SYSTEM - PUNTO DE ENTRADA UNIFICADO
 // ============================================================================
 
+// Base abstractions
+export 'has_id.dart';
+
 // Tema y diseño
 export 'theme/app_colors.dart';
 export 'theme/design_tokens.dart';

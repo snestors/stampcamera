@@ -1,5 +1,7 @@
 // models/autos/contenedor_model.dart
-class ContenedorModel {
+import 'package:stampcamera/core/has_id.dart';
+
+class ContenedorModel with HasId {
   final int id;
   final String nContenedor;
   final NaveDescargaModel naveDescarga; // ✅ CAMBIO: Ahora es un objeto

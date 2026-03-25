@@ -5,7 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
-import '../../providers/camera_provider.dart';
+import 'package:stampcamera/providers/camera_provider.dart';
 
 class GallerySelectorScreen extends ConsumerStatefulWidget {
   final CameraDescription camera;

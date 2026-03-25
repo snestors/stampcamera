@@ -4,9 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:stampcamera/models/autos/registro_vin_options.dart';
-import '../../models/autos/detalle_registro_model.dart';
-import '../../services/autos/detalle_registro_service.dart';
-import '../../services/offline_first_queue.dart';
+import 'package:stampcamera/models/autos/detalle_registro_model.dart';
+import 'package:stampcamera/services/autos/detalle_registro_service.dart';
+import 'package:stampcamera/services/offline_first_queue.dart';
 
 // ============================================================================
 // PROVIDER DEL SERVICIO

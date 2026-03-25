@@ -225,16 +225,17 @@ class PedeteoStateNotifier extends StateNotifier<PedeteoState> {
   }
 
   // ============================================================================
-  // MÉTODOS DE GUARDADO - MANTENER TUS DOS VERSIONES EXACTAS
+  // MÉTODOS DE GUARDADO
   // ============================================================================
 
-  /// ✅ MÉTODO ORIGINAL: Espera respuesta del servidor - MANTENER IGUAL
-  Future<void> saveRegistro() async {
+  /// Validates required fields and extracts form data for registro creation.
+  /// Returns null and sets error state if validation fails.
+  Future<_RegistroData?> _prepareRegistroData() async {
     if (state.selectedVin == null || state.capturedImagePath == null) {
       state = state.copyWith(
         errorMessage: 'Faltan datos requeridos: VIN y foto son obligatorios',
       );
-      return;
+      return null;
     }
 
     state = state.copyWith(
@@ -243,120 +244,82 @@ class PedeteoStateNotifier extends StateNotifier<PedeteoState> {
       clearSuccess: true,
     );
 
+    final options = await ref.read(pedeteoOptionsProvider.future);
+
+    final condicion =
+        state.formData['condicion'] ?? options.initialValues['condicion'];
+    final zonaInspeccion =
+        state.formData['zona_inspeccion'] ??
+        options.initialValues['zona_inspeccion'];
+    final bloque =
+        state.formData['bloque'] ?? options.initialValues['bloque'];
+
+    if (condicion == null || (condicion is String && condicion.isEmpty)) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Error: Debe seleccionar una condición',
+      );
+      return null;
+    }
+
+    if (zonaInspeccion == null) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Error: Debe seleccionar una zona de inspección',
+      );
+      return null;
+    }
+
+    return _RegistroData(
+      vin: state.selectedVin!.vin,
+      condicion: condicion.toString(),
+      zonaInspeccion: zonaInspeccion as int,
+      fotoPath: state.capturedImagePath!,
+      bloqueId: bloque as int?,
+    );
+  }
+
+  /// Guarda registro esperando respuesta del servidor.
+  Future<void> saveRegistro() async {
+    final data = await _prepareRegistroData();
+    if (data == null) return;
+
     try {
       final service = ref.read(registroVinServiceProvider);
-      final options = await ref.read(pedeteoOptionsProvider.future);
-
-      // Usar valores del formulario o fallback a initialValues
-      final condicion =
-          state.formData['condicion'] ?? options.initialValues['condicion'];
-      final zonaInspeccion =
-          state.formData['zona_inspeccion'] ??
-          options.initialValues['zona_inspeccion'];
-      final bloque =
-          state.formData['bloque'] ?? options.initialValues['bloque'];
-
-      // VALIDACIÓN: Verificar que los campos requeridos estén disponibles
-      if (condicion == null || (condicion is String && condicion.isEmpty)) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Error: Debe seleccionar una condición',
-        );
-        return;
-      }
-
-      if (zonaInspeccion == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Error: Debe seleccionar una zona de inspección',
-        );
-        return;
-      }
-
-      // Llamar al servicio original (espera respuesta del servidor)
       await service.createRegistro(
-        vin: state.selectedVin!.vin,
-        condicion: condicion.toString(),
-        zonaInspeccion: zonaInspeccion as int,
-        fotoPath: state.capturedImagePath!,
-        bloqueId: bloque as int?,
+        vin: data.vin,
+        condicion: data.condicion,
+        zonaInspeccion: data.zonaInspeccion,
+        fotoPath: data.fotoPath,
+        bloqueId: data.bloqueId,
       );
 
-      // Si todo sale bien, limpiar el formulario
       resetForm();
     } catch (e) {
-      // Manejo simplificado - el servicio ya envía mensajes limpios
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
       state = state.copyWith(isLoading: false, errorMessage: errorMessage);
     }
   }
 
-  /// ✅ MÉTODO OFFLINE-FIRST - MANTENER IGUAL
+  /// Guarda registro con estrategia offline-first.
   Future<void> saveRegistroOfflineFirst() async {
-    if (state.selectedVin == null || state.capturedImagePath == null) {
-      state = state.copyWith(
-        errorMessage: 'Faltan datos requeridos: VIN y foto son obligatorios',
-      );
-      return;
-    }
-
-    state = state.copyWith(
-      isLoading: true,
-      clearError: true,
-      clearSuccess: true,
-    );
+    final data = await _prepareRegistroData();
+    if (data == null) return;
 
     try {
       final service = ref.read(registroVinServiceProvider);
-      final options = await ref.read(pedeteoOptionsProvider.future);
-
-      // Usar valores del formulario o fallback a initialValues
-      final condicion =
-          state.formData['condicion'] ?? options.initialValues['condicion'];
-      final zonaInspeccion =
-          state.formData['zona_inspeccion'] ??
-          options.initialValues['zona_inspeccion'];
-      final bloque =
-          state.formData['bloque'] ?? options.initialValues['bloque'];
-
-      // VALIDACIÓN: Verificar que los campos requeridos estén disponibles
-      if (condicion == null || (condicion is String && condicion.isEmpty)) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Error: Debe seleccionar una condición',
-        );
-        return;
-      }
-
-      if (zonaInspeccion == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'Error: Debe seleccionar una zona de inspección',
-        );
-        return;
-      }
-
-      // ✅ LLAMAR AL MÉTODO OFFLINE-FIRST
       final success = await service.createRegistroOfflineFirst(
-        vin: state.selectedVin!.vin,
-        condicion: condicion.toString(),
-        zonaInspeccion: zonaInspeccion as int,
-        fotoPath: state.capturedImagePath!,
-        bloqueId: bloque as int?,
+        vin: data.vin,
+        condicion: data.condicion,
+        zonaInspeccion: data.zonaInspeccion,
+        fotoPath: data.fotoPath,
+        bloqueId: data.bloqueId,
       );
 
       if (success) {
-        // ✅ ACTUALIZAR INDICADORES EN TIEMPO REAL
-        final vin = state.selectedVin!.vin;
-
-        // Agregar VIN al set de pedeteados de esta sesión
         final currentSet = ref.read(pedeteadosEnSesionProvider);
-        ref.read(pedeteadosEnSesionProvider.notifier).state = {...currentSet, vin};
-
-        // Incrementar contador del día
+        ref.read(pedeteadosEnSesionProvider.notifier).state = {...currentSet, data.vin};
         ref.read(pedeteosHoyCountProvider.notifier).state++;
-
-        // Refrescar cola
         ref.read(queueStateProvider.notifier).refreshState();
 
         state = state.copyWith(
@@ -364,7 +327,6 @@ class PedeteoStateNotifier extends StateNotifier<PedeteoState> {
           successMessage: '✅ Registro guardado exitosamente',
         );
 
-        // Auto-limpiar formulario después de 1 segundo
         Future.delayed(const Duration(milliseconds: 1000), () {
           if (mounted) resetForm();
         });
@@ -433,3 +395,23 @@ final pedeteoFieldPermissionsProvider = Provider<Map<String, FieldPermission>>((
   final optionsAsync = ref.watch(pedeteoOptionsProvider);
   return optionsAsync.value?.fieldPermissions ?? {};
 });
+
+// ============================================================================
+// HELPER: Validated registro data for save methods
+// ============================================================================
+
+class _RegistroData {
+  final String vin;
+  final String condicion;
+  final int zonaInspeccion;
+  final String fotoPath;
+  final int? bloqueId;
+
+  const _RegistroData({
+    required this.vin,
+    required this.condicion,
+    required this.zonaInspeccion,
+    required this.fotoPath,
+    this.bloqueId,
+  });
+}

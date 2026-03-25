@@ -8,12 +8,12 @@ import 'package:stampcamera/services/app_socket_service.dart';
 import 'dart:async';
 import 'dart:convert';
 
-import '../models/user_model.dart';
-import '../models/auth_state.dart';
-import '../services/http_service.dart';
-import '../services/device_service.dart';
-import '../services/biometric_service.dart';
-import '../services/storage_health_service.dart'; // Importa appSecureStorage
+import 'package:stampcamera/models/user_model.dart';
+import 'package:stampcamera/models/auth_state.dart';
+import 'package:stampcamera/services/http_service.dart';
+import 'package:stampcamera/services/device_service.dart';
+import 'package:stampcamera/services/biometric_service.dart';
+import 'package:stampcamera/services/storage_health_service.dart'; // Importa appSecureStorage
 
 final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<AuthState>>(
   (ref) {

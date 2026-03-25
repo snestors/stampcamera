@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import '../utils/debouncer.dart';
-import 'base_provider.dart';
-import 'base_service.dart';
+import 'package:stampcamera/utils/debouncer.dart';
+import 'package:stampcamera/core/base_provider.dart';
+import 'package:stampcamera/core/base_service.dart';
+import 'package:stampcamera/core/has_id.dart';
 
 /// Implementación base para providers de listas paginadas
 abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
@@ -273,8 +274,7 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
       // Actualizar en la lista actual
       final current = state.value ?? [];
       final updatedList = current.map((item) {
-        // Asumir que todos los modelos tienen un campo 'id'
-        if ((item as dynamic).id == id) {
+        if (item is HasId && item.id == id) {
           return updatedItem;
         }
         return item;
@@ -296,7 +296,7 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
       // Remover de la lista actual
       final current = state.value ?? [];
       final filteredList = current.where((item) {
-        return (item as dynamic).id != id;
+        return item is! HasId || item.id != id;
       }).toList();
 
       state = AsyncValue.data(filteredList);

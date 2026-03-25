@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stampcamera/core/core.dart';
-import '../models/auth_state.dart';
-import '../providers/auth_provider.dart';
-import '../providers/device_provider.dart';
-import '../services/device_service.dart';
-import '../services/biometric_service.dart';
+import 'package:stampcamera/models/auth_state.dart';
+import 'package:stampcamera/providers/auth_provider.dart';
+import 'package:stampcamera/providers/device_provider.dart';
+import 'package:stampcamera/services/device_service.dart';
+import 'package:stampcamera/services/biometric_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});

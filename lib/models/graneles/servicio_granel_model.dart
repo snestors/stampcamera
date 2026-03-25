@@ -2,6 +2,8 @@
 // MODELOS DE GRANELES
 // =============================================================================
 
+import 'package:stampcamera/core/has_id.dart';
+
 /// Helper para parsear double desde string o número (el backend puede devolver ambos)
 double _parseDouble(dynamic value) {
   if (value == null) return 0.0;
@@ -33,7 +35,7 @@ class ProductoGranel {
 }
 
 /// Servicio de granel (descarga de nave)
-class ServicioGranel {
+class ServicioGranel with HasId {
   final int id;
   final String codigo;
   final String? naveNombre;
@@ -197,7 +199,7 @@ class AlmacenResumen {
 }
 
 /// Ticket de muelle
-class TicketMuelle {
+class TicketMuelle with HasId {
   final int id;
   final String numeroTicket;
   final String? placaStr;
@@ -299,7 +301,7 @@ class TicketMuelle {
 }
 
 /// Registro de balanza
-class Balanza {
+class Balanza with HasId {
   final int id;
   final int? servicioId;
   final String? servicioCodigo;
@@ -391,7 +393,7 @@ class Balanza {
 }
 
 /// Registro de silos
-class Silos {
+class Silos with HasId {
   final int id;
   final int? numeroSilo;  // n_camion en el modelo Django
   final String? productoNombre;
@@ -907,7 +909,7 @@ class SilosOptions {
 }
 
 /// Registro de almacén
-class AlmacenGranel {
+class AlmacenGranel with HasId {
   final int id;
   final String? guia;
   final String? ticketNumero;

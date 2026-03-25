@@ -77,6 +77,9 @@ class ExplorerState {
   // Navegación (breadcrumbs)
   final List<BreadcrumbItem> breadcrumbs;
 
+  // Upload queue
+  final List<UploadQueueItem> uploadQueue;
+
   const ExplorerState({
     this.selectedRubro,
     this.currentCarpetaId,
@@ -93,6 +96,7 @@ class ExplorerState {
     this.showDeleted = false,
     this.usuariosConectados = const [],
     this.breadcrumbs = const [],
+    this.uploadQueue = const [],
   });
 
   ExplorerState copyWith({
@@ -116,6 +120,7 @@ class ExplorerState {
     bool? showDeleted,
     List<UsuarioConectado>? usuariosConectados,
     List<BreadcrumbItem>? breadcrumbs,
+    List<UploadQueueItem>? uploadQueue,
   }) {
     return ExplorerState(
       selectedRubro:
@@ -136,12 +141,27 @@ class ExplorerState {
       showDeleted: showDeleted ?? this.showDeleted,
       usuariosConectados: usuariosConectados ?? this.usuariosConectados,
       breadcrumbs: breadcrumbs ?? this.breadcrumbs,
+      uploadQueue: uploadQueue ?? this.uploadQueue,
     );
   }
 
   bool get isAtRoot => currentCarpetaId == null;
   bool get hasSelection => selectedItems.isNotEmpty;
   bool get hasClipboard => clipboard != null && !clipboard!.isEmpty;
+
+  // Upload queue getters
+  bool get isUploading => uploadQueue.any((i) =>
+      i.status == UploadStatus.pending || i.status == UploadStatus.uploading);
+  int get uploadsTotal => uploadQueue.length;
+  int get uploadsCompleted =>
+      uploadQueue.where((i) => i.status == UploadStatus.completed).length;
+  int get uploadsFailed =>
+      uploadQueue.where((i) => i.status == UploadStatus.error).length;
+  double get uploadTotalProgress {
+    if (uploadQueue.isEmpty) return 0;
+    return uploadQueue.map((i) => i.progress).reduce((a, b) => a + b) /
+        uploadQueue.length;
+  }
 
   /// Carpetas del rubro seleccionado
   List<Carpeta> get carpetasDelRubro {
@@ -174,7 +194,11 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   final CasosService _service = CasosService();
   StreamSubscription<AppSocketEvent>? _wsSub;
   int? _currentUserId;
-  Timer? _dataChangedDebounce;
+
+  // Upload queue
+  static const int _maxConcurrentUploads = 15;
+  int _activeUploads = 0;
+  final Map<String, File> _queuedFiles = {};
 
   ExploradorNotifier(this._ref) : super(const ExplorerState()) {
     _initUserId();
@@ -430,13 +454,9 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
       if (state.contenido != null) {
         final newSubcarpetas = [...state.contenido!.subcarpetas, carpeta];
         state = state.copyWith(
-          contenido: CarpetaContenidoResponse(
-            carpetaPrincipal: state.contenido!.carpetaPrincipal,
-            caso: state.contenido!.caso,
+          contenido: state.contenido!.copyWith(
             subcarpetas: newSubcarpetas,
-            archivos: state.contenido!.archivos,
             totalCarpetas: newSubcarpetas.length,
-            totalArchivos: state.contenido!.totalArchivos,
           ),
         );
       }
@@ -449,102 +469,186 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
     }
   }
 
-  Future<UploadMultipleResponse?> uploadArchivos(List<File> archivos,
-      {void Function(double)? onProgress}) async {
-    if (state.currentCarpetaId == null) return null;
+  // ─── Upload Queue ───────────────────────────────────────────────────
+
+  /// Agregar archivos a la cola de upload (max 15 simultáneos)
+  void addToUploadQueue(List<File> files) {
+    if (state.currentCarpetaId == null) return;
+
+    final newItems = <UploadQueueItem>[];
+    for (final file in files) {
+      final id =
+          '${DateTime.now().microsecondsSinceEpoch}_${file.path.hashCode}';
+      final fileName = file.path.split(Platform.pathSeparator).last;
+      _queuedFiles[id] = file;
+      newItems.add(UploadQueueItem(
+        id: id,
+        fileName: fileName,
+        carpetaId: state.currentCarpetaId!,
+      ));
+    }
+
+    state = state.copyWith(
+      uploadQueue: [...state.uploadQueue, ...newItems],
+    );
+
+    _processUploadQueue();
+  }
+
+  void _processUploadQueue() {
+    final pending =
+        state.uploadQueue.where((i) => i.status == UploadStatus.pending);
+    for (final item in pending) {
+      if (_activeUploads >= _maxConcurrentUploads) break;
+      _uploadSingleFile(item);
+    }
+  }
+
+  Future<void> _uploadSingleFile(UploadQueueItem item) async {
+    _activeUploads++;
+    _updateQueueItem(item.id, status: UploadStatus.uploading);
+
+    final file = _queuedFiles[item.id];
+    if (file == null) {
+      _activeUploads--;
+      _updateQueueItem(item.id,
+          status: UploadStatus.error, error: 'Archivo no encontrado');
+      _processUploadQueue();
+      return;
+    }
 
     try {
-      // Optimistic: agregar archivos temporales
-      final tempArchivos = archivos
-          .map((f) => Archivo.temporary(
-                f.path.split(Platform.pathSeparator).last,
-                state.currentCarpetaId!,
-              ))
-          .toList();
-
-      if (state.contenido != null) {
-        state = state.copyWith(
-          contenido: CarpetaContenidoResponse(
-            carpetaPrincipal: state.contenido!.carpetaPrincipal,
-            caso: state.contenido!.caso,
-            subcarpetas: state.contenido!.subcarpetas,
-            archivos: [...state.contenido!.archivos, ...tempArchivos],
-            totalCarpetas: state.contenido!.totalCarpetas,
-            totalArchivos:
-                state.contenido!.totalArchivos + tempArchivos.length,
-          ),
-        );
-      }
-
-      final response = await _service.uploadArchivos(
-        carpetaId: state.currentCarpetaId!,
-        archivos: archivos,
-        onProgress: onProgress,
+      final archivo = await _service.uploadArchivoIndividual(
+        carpetaId: item.carpetaId,
+        archivo: file,
+        onProgress: (p) => _updateQueueItem(item.id, progress: p),
       );
 
-      // Reemplazar temporales con reales
-      if (state.contenido != null) {
-        final realArchivos = state.contenido!.archivos
-            .where((a) => !a.isTemporary)
-            .toList()
-          ..addAll(response.creados);
+      _updateQueueItem(item.id,
+          status: UploadStatus.completed, progress: 1.0);
+      _queuedFiles.remove(item.id);
 
-        state = state.copyWith(
-          contenido: CarpetaContenidoResponse(
-            carpetaPrincipal: state.contenido!.carpetaPrincipal,
-            caso: state.contenido!.caso,
-            subcarpetas: state.contenido!.subcarpetas,
-            archivos: realArchivos,
-            totalCarpetas: state.contenido!.totalCarpetas,
-            totalArchivos: realArchivos.length,
-          ),
-        );
-      }
-
-      return response;
+      // Agregar al estado (duplicate check con WS)
+      _addArchivoToStateIfNew(archivo);
     } catch (e) {
-      debugPrint('Error subiendo archivos: $e');
-      // Revertir temporales
-      if (state.contenido != null) {
-        state = state.copyWith(
-          contenido: CarpetaContenidoResponse(
-            carpetaPrincipal: state.contenido!.carpetaPrincipal,
-            caso: state.contenido!.caso,
-            subcarpetas: state.contenido!.subcarpetas,
-            archivos:
-                state.contenido!.archivos.where((a) => !a.isTemporary).toList(),
-            totalCarpetas: state.contenido!.totalCarpetas,
-            totalArchivos: state.contenido!.archivos
-                .where((a) => !a.isTemporary)
-                .length,
-          ),
-        );
-      }
-      state = state.copyWith(errorMessage: 'Error al subir archivos');
-      return null;
+      debugPrint('Error subiendo ${item.fileName}: $e');
+      _updateQueueItem(item.id,
+          status: UploadStatus.error, error: 'Error al subir');
+    } finally {
+      _activeUploads--;
+      _processUploadQueue();
+      _scheduleQueueCleanup();
     }
+  }
+
+  void _updateQueueItem(String id,
+      {UploadStatus? status, double? progress, String? error}) {
+    state = state.copyWith(
+      uploadQueue: state.uploadQueue.map((i) {
+        if (i.id == id) {
+          return i.copyWith(status: status, progress: progress, error: error);
+        }
+        return i;
+      }).toList(),
+    );
+  }
+
+  void _addArchivoToStateIfNew(Archivo archivo) {
+    if (state.contenido == null) return;
+    if (state.contenido!.archivos.any((a) => a.id == archivo.id)) return;
+
+    final archivos = [...state.contenido!.archivos, archivo];
+    state = state.copyWith(
+      contenido: state.contenido!.copyWith(
+        archivos: archivos,
+        totalArchivos: archivos.length,
+      ),
+    );
+  }
+
+  void _scheduleQueueCleanup() {
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      final queue = state.uploadQueue
+          .where((i) => i.status != UploadStatus.completed)
+          .toList();
+      if (queue.length != state.uploadQueue.length) {
+        state = state.copyWith(uploadQueue: queue);
+      }
+    });
+  }
+
+  void retryFailedUploads() {
+    state = state.copyWith(
+      uploadQueue: state.uploadQueue.map((i) {
+        if (i.status == UploadStatus.error) {
+          return i.copyWith(
+              status: UploadStatus.pending, progress: 0, clearError: true);
+        }
+        return i;
+      }).toList(),
+    );
+    _processUploadQueue();
+  }
+
+  void cancelUploadQueue() {
+    _queuedFiles.clear();
+    _activeUploads = 0;
+    state = state.copyWith(uploadQueue: []);
   }
 
   Future<void> eliminarSeleccion() async {
     if (!state.hasSelection) return;
 
+    final itemsToDelete = Map<int, String>.from(state.selectedItems);
+
+    // Optimistic: quitar del estado inmediatamente
+    if (state.contenido != null) {
+      final archivosIds = itemsToDelete.entries
+          .where((e) => e.value == 'archivo')
+          .map((e) => e.key)
+          .toSet();
+      final carpetasIds = itemsToDelete.entries
+          .where((e) => e.value == 'carpeta')
+          .map((e) => e.key)
+          .toSet();
+
+      final archivos = state.contenido!.archivos
+          .where((a) => !archivosIds.contains(a.id))
+          .toList();
+      final subcarpetas = state.contenido!.subcarpetas
+          .where((c) => !carpetasIds.contains(c.id))
+          .toList();
+
+      state = state.copyWith(
+        selectedItems: {},
+        contenido: state.contenido!.copyWith(
+          subcarpetas: subcarpetas,
+          archivos: archivos,
+          totalCarpetas: subcarpetas.length,
+          totalArchivos: archivos.length,
+        ),
+      );
+    } else {
+      state = state.copyWith(selectedItems: {});
+    }
+
+    // Ejecutar deletes en backend (WS notificará a otros usuarios)
     try {
-      for (final entry in state.selectedItems.entries) {
+      for (final entry in itemsToDelete.entries) {
         if (entry.value == 'archivo') {
           await _service.eliminarArchivo(entry.key);
         } else {
           await _service.eliminarCarpeta(entry.key);
         }
       }
-
-      state = state.copyWith(selectedItems: {});
-
-      if (state.currentCarpetaId != null) {
-        await loadContenidoCarpeta(state.currentCarpetaId!);
-      }
     } catch (e) {
       debugPrint('Error eliminando: $e');
       state = state.copyWith(errorMessage: 'Error al eliminar');
+      // Recargar para estado correcto
+      if (state.currentCarpetaId != null) {
+        await loadContenidoCarpeta(state.currentCarpetaId!);
+      }
     }
   }
 
@@ -591,10 +695,16 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   }
 
   // ─── WebSocket Events ────────────────────────────────────────────────
+  //
+  // Arquitectura: el backend emite a grupo específico app_casos_carpeta_{id}.
+  // Solo recibimos eventos de la carpeta a la que estamos suscritos.
+  // No filtramos por actor → soporta sync cross-device (web ↔ phone).
+  // Usamos duplicate check por ID para evitar dobles en creates.
+  //
 
   void _handleWsEvent(AppSocketEvent event) {
     switch (event.type) {
-      // ── Presencia (filtrar eventos propios) ──
+      // ── Presencia ──
       case 'usuario_conectado':
       case 'usuario_desconectado':
       case 'usuario_cambio_carpeta':
@@ -603,129 +713,141 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
         break;
 
       case 'usuario_cambio_seleccion':
-        if (event.actorId == _currentUserId) break; // Ignorar propios
+        if (event.actorId == _currentUserId) break;
         _updateUsuarioSeleccion(event);
         break;
 
-      // ── Eventos específicos del explorador (de ws_events.py) ──
+      // ── Eventos de carpeta específica (0 API calls) ──
       case 'archivo_creado':
-        if (event.actorId == _currentUserId) break;
-        _handleRemoteArchivoCreado(event);
+        _handleArchivoCreado(event);
         break;
 
       case 'archivo_eliminado':
-        if (event.actorId == _currentUserId) break;
-        _handleRemoteArchivoEliminado(event);
+        _handleArchivoEliminado(event);
         break;
 
       case 'archivo_movido':
-        if (event.actorId == _currentUserId) break;
-        _handleRemoteArchivoMovido(event);
+        _handleArchivoMovido(event);
         break;
 
       case 'carpeta_creada':
-        if (event.actorId == _currentUserId) break;
-        _handleRemoteCarpetaCreada(event);
+        _handleCarpetaCreada(event);
         break;
 
       case 'carpeta_eliminada':
-        if (event.actorId == _currentUserId) break;
-        _handleRemoteCarpetaEliminada(event);
+        _handleCarpetaEliminada(event);
         break;
 
-      // ── data_changed de signals ──
-      // Procesar el fragmento del cambio sin recargar todo
+      // data_changed legacy: ignorar (backend ya emite eventos específicos)
       case 'data_changed':
-        _handleDataChanged(event);
         break;
     }
   }
 
-  /// Procesa eventos data_changed de forma inteligente:
-  /// - Deletes: quita del estado local (0 API calls)
-  /// - Creates/Updates: solo si es relevante, debounce + reload
-  void _handleDataChanged(AppSocketEvent event) {
-    final action = event.action;
-    final model = event.model;
-    final data = event.data;
+  /// Archivo creado: agregar al estado si no existe (duplicate check)
+  void _handleArchivoCreado(AppSocketEvent event) {
+    final data = event.raw['data'] as Map<String, dynamic>?;
     if (data == null || state.contenido == null) return;
 
-    final itemId = data['id'] as int?;
-    if (itemId == null) return;
+    final archivoId = data['id'] as int?;
+    if (archivoId == null) return;
 
-    if (model == 'archivo') {
-      final carpetaId = data['carpeta_id'] as int?;
+    // Evitar duplicados (ej: upload propio ya agregó optimísticamente)
+    if (state.contenido!.archivos.any((a) => a.id == archivoId)) return;
 
-      if (action == 'deleted') {
-        // Hard delete: quitar del estado directamente, 0 API calls
-        _removeArchivoFromState(itemId);
-        return;
-      }
-
-      // created/updated: solo relevante si pertenece a la carpeta actual
-      if (carpetaId != state.currentCarpetaId) return;
-
-    } else if (model == 'carpeta') {
-      final parentId = data['parent_id'] as int?;
-
-      if (action == 'deleted') {
-        _removeCarpetaFromState(itemId);
-        return;
-      }
-
-      // created/updated: solo relevante si es hija de la carpeta actual
-      if (parentId != state.currentCarpetaId) return;
-
-    } else {
-      return; // Modelo no relevante (caso, documento, etc.)
-    }
-
-    // Para creates/updates relevantes: debounced reload (1s)
-    // Si suben 10 fotos, solo recarga UNA vez al final
-    _dataChangedDebounce?.cancel();
-    _dataChangedDebounce = Timer(const Duration(seconds: 1), () {
-      if (state.currentCarpetaId != null) {
-        loadContenidoCarpeta(state.currentCarpetaId!);
-      }
-    });
-  }
-
-  /// Quitar archivo del estado local sin API call
-  void _removeArchivoFromState(int archivoId) {
-    if (state.contenido == null) return;
+    final archivo = Archivo.fromJson(data);
+    // Quitar temporales del mismo nombre (optimistic placeholders)
     final archivos = state.contenido!.archivos
-        .where((a) => a.id != archivoId)
-        .toList();
-    if (archivos.length == state.contenido!.archivos.length) return;
+        .where((a) => !a.isTemporary)
+        .toList()
+      ..add(archivo);
 
     state = state.copyWith(
-      contenido: CarpetaContenidoResponse(
-        carpetaPrincipal: state.contenido!.carpetaPrincipal,
-        caso: state.contenido!.caso,
-        subcarpetas: state.contenido!.subcarpetas,
+      contenido: state.contenido!.copyWith(
         archivos: archivos,
-        totalCarpetas: state.contenido!.totalCarpetas,
         totalArchivos: archivos.length,
       ),
     );
   }
 
-  /// Quitar carpeta del estado local sin API call
-  void _removeCarpetaFromState(int carpetaId) {
-    if (state.contenido == null) return;
-    final subcarpetas = state.contenido!.subcarpetas
-        .where((c) => c.id != carpetaId)
-        .toList();
+  /// Archivo eliminado: quitar del estado por ID (idempotente)
+  void _handleArchivoEliminado(AppSocketEvent event) {
+    final data = event.raw['data'] as Map<String, dynamic>?;
+    if (data == null || state.contenido == null) return;
+
+    final archivoId = data['id'] as int?;
+    if (archivoId == null) return;
+
+    final archivos =
+        state.contenido!.archivos.where((a) => a.id != archivoId).toList();
+    if (archivos.length == state.contenido!.archivos.length) return;
+
+    state = state.copyWith(
+      contenido: state.contenido!.copyWith(
+        archivos: archivos,
+        totalArchivos: archivos.length,
+      ),
+    );
+  }
+
+  /// Archivo movido: quitar si salió de esta carpeta
+  void _handleArchivoMovido(AppSocketEvent event) {
+    final data = event.raw['data'] as Map<String, dynamic>?;
+    if (data == null || state.contenido == null) return;
+
+    final archivoId = data['id'] as int?;
+    if (archivoId == null) return;
+
+    // Si el archivo se movió FUERA de esta carpeta, remover
+    final archivos =
+        state.contenido!.archivos.where((a) => a.id != archivoId).toList();
+    if (archivos.length != state.contenido!.archivos.length) {
+      state = state.copyWith(
+        contenido: state.contenido!.copyWith(
+          archivos: archivos,
+          totalArchivos: archivos.length,
+        ),
+      );
+    }
+  }
+
+  /// Carpeta creada: agregar al estado si no existe (duplicate check)
+  void _handleCarpetaCreada(AppSocketEvent event) {
+    final data = event.raw['data'] as Map<String, dynamic>?;
+    if (data == null || state.contenido == null) return;
+
+    final carpetaId = data['id'] as int?;
+    if (carpetaId == null) return;
+
+    // Evitar duplicados
+    if (state.contenido!.subcarpetas.any((c) => c.id == carpetaId)) return;
+
+    final carpeta = Carpeta.fromJson(data);
+    final subcarpetas = [...state.contenido!.subcarpetas, carpeta];
+    state = state.copyWith(
+      contenido: state.contenido!.copyWith(
+        subcarpetas: subcarpetas,
+        totalCarpetas: subcarpetas.length,
+      ),
+    );
+  }
+
+  /// Carpeta eliminada: quitar del estado por ID (idempotente)
+  void _handleCarpetaEliminada(AppSocketEvent event) {
+    final data = event.raw['data'] as Map<String, dynamic>?;
+    if (data == null || state.contenido == null) return;
+
+    final carpetaId = data['id'] as int?;
+    if (carpetaId == null) return;
+
+    final subcarpetas =
+        state.contenido!.subcarpetas.where((c) => c.id != carpetaId).toList();
     if (subcarpetas.length == state.contenido!.subcarpetas.length) return;
 
     state = state.copyWith(
-      contenido: CarpetaContenidoResponse(
-        carpetaPrincipal: state.contenido!.carpetaPrincipal,
-        caso: state.contenido!.caso,
+      contenido: state.contenido!.copyWith(
         subcarpetas: subcarpetas,
-        archivos: state.contenido!.archivos,
         totalCarpetas: subcarpetas.length,
-        totalArchivos: state.contenido!.totalArchivos,
       ),
     );
   }
@@ -765,92 +887,6 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
     }).toList();
 
     state = state.copyWith(usuariosConectados: updated);
-  }
-
-  void _handleRemoteArchivoCreado(AppSocketEvent event) {
-    final data = event.raw['data'] as Map<String, dynamic>?;
-    if (data == null || state.contenido == null) return;
-
-    final archivo = Archivo.fromJson(data);
-    if (archivo.carpeta == state.currentCarpetaId) {
-      final archivos = [...state.contenido!.archivos, archivo];
-      state = state.copyWith(
-        contenido: CarpetaContenidoResponse(
-          carpetaPrincipal: state.contenido!.carpetaPrincipal,
-          caso: state.contenido!.caso,
-          subcarpetas: state.contenido!.subcarpetas,
-          archivos: archivos,
-          totalCarpetas: state.contenido!.totalCarpetas,
-          totalArchivos: archivos.length,
-        ),
-      );
-    }
-  }
-
-  void _handleRemoteArchivoEliminado(AppSocketEvent event) {
-    final data = event.raw['data'] as Map<String, dynamic>?;
-    if (data == null || state.contenido == null) return;
-
-    final archivoId = data['id'] as int;
-    final archivos =
-        state.contenido!.archivos.where((a) => a.id != archivoId).toList();
-    state = state.copyWith(
-      contenido: CarpetaContenidoResponse(
-        carpetaPrincipal: state.contenido!.carpetaPrincipal,
-        caso: state.contenido!.caso,
-        subcarpetas: state.contenido!.subcarpetas,
-        archivos: archivos,
-        totalCarpetas: state.contenido!.totalCarpetas,
-        totalArchivos: archivos.length,
-      ),
-    );
-  }
-
-  void _handleRemoteArchivoMovido(AppSocketEvent event) {
-    // Refrescar carpeta actual para reflejar cambio
-    if (state.currentCarpetaId != null) {
-      loadContenidoCarpeta(state.currentCarpetaId!);
-    }
-  }
-
-  void _handleRemoteCarpetaCreada(AppSocketEvent event) {
-    final data = event.raw['data'] as Map<String, dynamic>?;
-    if (data == null || state.contenido == null) return;
-
-    final parentId = data['parent_id'] as int? ?? data['parent'] as int?;
-    if (parentId == state.currentCarpetaId) {
-      final carpeta = Carpeta.fromJson(data);
-      final subcarpetas = [...state.contenido!.subcarpetas, carpeta];
-      state = state.copyWith(
-        contenido: CarpetaContenidoResponse(
-          carpetaPrincipal: state.contenido!.carpetaPrincipal,
-          caso: state.contenido!.caso,
-          subcarpetas: subcarpetas,
-          archivos: state.contenido!.archivos,
-          totalCarpetas: subcarpetas.length,
-          totalArchivos: state.contenido!.totalArchivos,
-        ),
-      );
-    }
-  }
-
-  void _handleRemoteCarpetaEliminada(AppSocketEvent event) {
-    final data = event.raw['data'] as Map<String, dynamic>?;
-    if (data == null || state.contenido == null) return;
-
-    final carpetaId = data['id'] as int;
-    final subcarpetas =
-        state.contenido!.subcarpetas.where((c) => c.id != carpetaId).toList();
-    state = state.copyWith(
-      contenido: CarpetaContenidoResponse(
-        carpetaPrincipal: state.contenido!.carpetaPrincipal,
-        caso: state.contenido!.caso,
-        subcarpetas: subcarpetas,
-        archivos: state.contenido!.archivos,
-        totalCarpetas: subcarpetas.length,
-        totalArchivos: state.contenido!.totalArchivos,
-      ),
-    );
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────
@@ -894,7 +930,6 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   @override
   void dispose() {
     _wsSub?.cancel();
-    _dataChangedDebounce?.cancel();
     super.dispose();
   }
 }

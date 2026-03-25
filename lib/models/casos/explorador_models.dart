@@ -169,7 +169,7 @@ class Carpeta {
       id: json['id'] as int,
       nombre: json['nombre'] as String? ?? '',
       tipo: parseTipoCarpeta(json['tipo'] as String?),
-      parent: json['parent'] as int?,
+      parent: json['parent'] as int? ?? json['parent_id'] as int?,
       caso: json['caso'] as int?,
       casoInfo: json['caso_info'] != null
           ? CasoSimple.fromJson(json['caso_info'] as Map<String, dynamic>)
@@ -262,7 +262,7 @@ class Archivo {
   factory Archivo.fromJson(Map<String, dynamic> json) {
     return Archivo(
       id: json['id'] as int,
-      carpeta: json['carpeta'] as int? ?? 0,
+      carpeta: json['carpeta'] as int? ?? json['carpeta_id'] as int? ?? 0,
       documento: json['documento'] as int?,
       nombre: json['nombre'] as String? ?? '',
       archivo: json['archivo'] as String? ?? '',
@@ -341,6 +341,25 @@ class CarpetaContenidoResponse {
           .toList(),
       totalCarpetas: json['total_carpetas'] as int? ?? 0,
       totalArchivos: json['total_archivos'] as int? ?? 0,
+    );
+  }
+
+  CarpetaContenidoResponse copyWith({
+    Carpeta? carpetaPrincipal,
+    CasoSimple? caso,
+    bool clearCaso = false,
+    List<Carpeta>? subcarpetas,
+    List<Archivo>? archivos,
+    int? totalCarpetas,
+    int? totalArchivos,
+  }) {
+    return CarpetaContenidoResponse(
+      carpetaPrincipal: carpetaPrincipal ?? this.carpetaPrincipal,
+      caso: clearCaso ? null : (caso ?? this.caso),
+      subcarpetas: subcarpetas ?? this.subcarpetas,
+      archivos: archivos ?? this.archivos,
+      totalCarpetas: totalCarpetas ?? this.totalCarpetas,
+      totalArchivos: totalArchivos ?? this.totalArchivos,
     );
   }
 }
@@ -483,4 +502,42 @@ class RubroGroup {
     required this.count,
     required this.carpetas,
   });
+}
+
+// ─── Upload Queue ─────────────────────────────────────────────────────
+
+enum UploadStatus { pending, uploading, completed, error }
+
+class UploadQueueItem {
+  final String id;
+  final String fileName;
+  final int carpetaId;
+  final UploadStatus status;
+  final double progress;
+  final String? error;
+
+  const UploadQueueItem({
+    required this.id,
+    required this.fileName,
+    required this.carpetaId,
+    this.status = UploadStatus.pending,
+    this.progress = 0,
+    this.error,
+  });
+
+  UploadQueueItem copyWith({
+    UploadStatus? status,
+    double? progress,
+    String? error,
+    bool clearError = false,
+  }) {
+    return UploadQueueItem(
+      id: id,
+      fileName: fileName,
+      carpetaId: carpetaId,
+      status: status ?? this.status,
+      progress: progress ?? this.progress,
+      error: clearError ? null : (error ?? this.error),
+    );
+  }
 }

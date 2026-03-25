@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
-import '../providers/device_provider.dart';
+import 'package:stampcamera/providers/device_provider.dart';
 
 class DeviceRegistrationScreen extends ConsumerStatefulWidget {
   const DeviceRegistrationScreen({super.key});

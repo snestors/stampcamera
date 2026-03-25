@@ -29,6 +29,16 @@ final inventarioBaseProvider =
       InventarioBaseNotifier.new,
     );
 
+// TODO(refactor): InventarioBaseNotifier duplicates search/pagination from
+// BaseListProviderImpl. Migration was deferred because:
+//   1. InventarioNave uses naveDescargaId (not `id`), so BaseListProviderImpl's
+//      CRUD methods (updateItem, deleteItem) would fail at runtime.
+//   2. Domain-specific filter methods (searchByFilters, filterSinInventario,
+//      filterConInventario) have no equivalent in BaseListProviderImpl.
+//   3. The simpler _nextUrl handling here differs from BaseListProviderImpl's
+//      separate _searchNextUrl pattern.
+// To safely migrate, either add a `listWithFilters` equivalent to
+// BaseListProviderImpl or extract search/pagination into a shared mixin.
 class InventarioBaseNotifier extends AsyncNotifier<List<InventarioNave>> {
   late final InventarioBaseService _service;
 
