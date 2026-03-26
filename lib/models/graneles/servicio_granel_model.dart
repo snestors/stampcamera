@@ -470,12 +470,14 @@ class OptionItem {
   }
 }
 
-/// BL con distribuciones y jornadas anidadas
+/// BL con distribuciones, distribuciones almacén, permisos y jornadas anidadas
 class BlOption {
   final int id;
   final String label;
   final int? productoId;
   final List<OptionItem> distribuciones;
+  final List<OptionItem> distribucionesAlmacen;
+  final List<OptionItem> permisos;
   final List<OptionItem> jornadas;
 
   const BlOption({
@@ -483,6 +485,8 @@ class BlOption {
     required this.label,
     this.productoId,
     this.distribuciones = const [],
+    this.distribucionesAlmacen = const [],
+    this.permisos = const [],
     this.jornadas = const [],
   });
 
@@ -492,6 +496,14 @@ class BlOption {
       label: json['label'] ?? '',
       productoId: json['producto_id'],
       distribuciones: (json['distribuciones'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      distribucionesAlmacen: (json['distribuciones_almacen'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      permisos: (json['permisos'] as List?)
               ?.map((e) => OptionItem.fromJson(e))
               .toList() ??
           [],

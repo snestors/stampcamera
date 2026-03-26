@@ -117,9 +117,8 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
   String? _existingBalanzaFoto1Url;
   String? _existingBalanzaFoto2Url;
 
-  // Opciones cargadas del BL para balanza (distribuciones_almacen, permisos)
-  BalanzaOptions? _balanzaOptions;
-  bool _isLoadingBalanzaOptions = false;
+  // Nota: distribuciones_almacen y permisos vienen anidados en cada BlOption
+  // desde TicketMuelleOptions, no necesitan carga separada.
 
   // =========================================================================
   // PASO 3: ALMACEN — State
@@ -267,11 +266,6 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         _currentStep = 0;
       }
 
-      // Cargar opciones de balanza si hay servicio
-      if (_effectiveServicioId != null) {
-        _loadBalanzaOptions(_effectiveServicioId!);
-      }
-
       setState(() => _isLoadingTicket = false);
     } catch (e) {
       if (mounted) {
@@ -281,24 +275,8 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
     }
   }
 
-  /// Cargar opciones de balanza (distribuciones_almacen, permisos) del servicio
-  Future<void> _loadBalanzaOptions(int servicioId) async {
-    setState(() => _isLoadingBalanzaOptions = true);
-    try {
-      final service = ref.read(balanzaServiceProvider);
-      final options = await service.getFormOptions(servicioId);
-      if (mounted) {
-        setState(() {
-          _balanzaOptions = options;
-          _isLoadingBalanzaOptions = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoadingBalanzaOptions = false);
-      }
-    }
-  }
+  // distribuciones_almacen y permisos ahora vienen anidados en cada BlOption
+  // desde options_form/, no necesitan carga separada.
 
   // =========================================================================
   // VALIDACIONES
@@ -694,7 +672,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       case 1:
         return _buildBalanzaStep(options);
       case 2:
-        return _buildAlmacenStep();
+        return _buildAlmacenStep(options);
       default:
         return const SizedBox.shrink();
     }
@@ -746,13 +724,6 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               _selectedDistribucionAlmacenId = null;
               _selectedPermisoId = null;
             });
-            // Cargar opciones de balanza del servicio del BL
-            if (value != null) {
-              final bl = options.bls.where((b) => b.id == value).firstOrNull;
-              if (bl != null && bl.productoId != null && _effectiveServicioId != null) {
-                _loadBalanzaOptions(_effectiveServicioId!);
-              }
-            }
           },
           validator: (value) => value == null ? 'Seleccione un BL' : null,
         ),
@@ -856,8 +827,12 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
   // =========================================================================
 
   Widget _buildBalanzaStep(TicketMuelleOptions options) {
-    final distribuciones = _balanzaOptions?.distribucionesAlmacen ?? [];
-    final permisos = _balanzaOptions?.permisos ?? [];
+    // Obtener distribuciones_almacen y permisos del BL seleccionado
+    final selectedBl = _selectedBlId != null
+        ? options.bls.where((bl) => bl.id == _selectedBlId).firstOrNull
+        : null;
+    final distribuciones = selectedBl?.distribucionesAlmacen ?? [];
+    final permisos = selectedBl?.permisos ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -883,9 +858,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         AppSectionHeader(icon: Icons.warehouse, title: 'Distribucion y Seguridad'),
         SizedBox(height: DesignTokens.spaceS),
 
-        if (_isLoadingBalanzaOptions)
-          const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator(color: AppColors.primary)))
-        else ...[
+        ...[
           // Almacen destino
           if (distribuciones.isNotEmpty) ...[
             Builder(builder: (_) {
@@ -912,9 +885,15 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               );
             }),
             SizedBox(height: DesignTokens.spaceM),
-          ] else if (_selectedBlId != null) ...[
+          ] else if (_selectedBlId == null) ...[
             Text(
               'Seleccione un BL en el paso 1 para cargar los almacenes',
+              style: TextStyle(fontSize: DesignTokens.fontSizeS, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+            ),
+            SizedBox(height: DesignTokens.spaceM),
+          ] else ...[
+            Text(
+              'No hay almacenes configurados para el BL seleccionado',
               style: TextStyle(fontSize: DesignTokens.fontSizeS, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
             ),
             SizedBox(height: DesignTokens.spaceM),
@@ -1037,10 +1016,13 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
   // PASO 3: ALMACEN
   // =========================================================================
 
-  Widget _buildAlmacenStep() {
-    // Info almacen destino (solo lectura, del paso 2)
+  Widget _buildAlmacenStep(TicketMuelleOptions options) {
+    // Info almacen destino (solo lectura, del paso 2) — del BL seleccionado
+    final selectedBl = _selectedBlId != null
+        ? options.bls.where((bl) => bl.id == _selectedBlId).firstOrNull
+        : null;
     final almacenLabel = _selectedDistribucionAlmacenId != null
-        ? _balanzaOptions?.distribucionesAlmacen
+        ? (selectedBl?.distribucionesAlmacen ?? [])
             .where((d) => d.id == _selectedDistribucionAlmacenId)
             .firstOrNull?.label
         : null;
