@@ -477,3 +477,71 @@ final granelesFormProvider =
   final service = ref.watch(ticketMuelleServiceProvider);
   return GranelesFormNotifier(service);
 });
+
+// ===========================================================================
+// PARALIZACIONES - PROVIDER CON PAGINACION Y BUSQUEDA
+// ===========================================================================
+
+final paralizacionesServiceProvider = Provider<ParalizacionesService>((ref) {
+  return ParalizacionesService();
+});
+
+/// Provider principal para paralizaciones con paginacion
+final paralizacionesListProvider =
+    AsyncNotifierProvider<ParalizacionesNotifier, List<Paralizacion>>(
+  ParalizacionesNotifier.new,
+);
+
+/// Notifier para paralizaciones - implementa BaseListProviderImpl
+class ParalizacionesNotifier extends BaseListProviderImpl<Paralizacion> {
+  @override
+  ParalizacionesService get service => ref.read(paralizacionesServiceProvider);
+}
+
+/// Provider para opciones del formulario de paralizaciones
+final paralizacionOptionsProvider =
+    FutureProvider.autoDispose.family<ParalizacionOptions, int?>((ref, servicioId) async {
+  final service = ref.watch(paralizacionesServiceProvider);
+  return service.getFormOptions(servicioId: servicioId);
+});
+
+/// Provider para detalle de una paralizacion
+final paralizacionDetalleProvider =
+    FutureProvider.autoDispose.family<Paralizacion, int>((ref, id) async {
+  final service = ref.watch(paralizacionesServiceProvider);
+  return service.retrieve(id);
+});
+
+// ===========================================================================
+// CONTROL HUMEDAD/TEMPERATURA - PROVIDER CON PAGINACION Y BUSQUEDA
+// ===========================================================================
+
+final controlHumedadServiceProvider = Provider<ControlHumedadService>((ref) {
+  return ControlHumedadService();
+});
+
+/// Provider principal para control humedad con paginacion
+final controlHumedadListProvider =
+    AsyncNotifierProvider<ControlHumedadNotifier, List<ControlHumedad>>(
+  ControlHumedadNotifier.new,
+);
+
+/// Notifier para control humedad - implementa BaseListProviderImpl
+class ControlHumedadNotifier extends BaseListProviderImpl<ControlHumedad> {
+  @override
+  ControlHumedadService get service => ref.read(controlHumedadServiceProvider);
+}
+
+/// Provider para opciones del formulario de control humedad
+final controlHumedadOptionsProvider =
+    FutureProvider.autoDispose.family<ControlHumedadOptions, int?>((ref, servicioId) async {
+  final service = ref.watch(controlHumedadServiceProvider);
+  return service.getFormOptions(servicioId: servicioId);
+});
+
+/// Provider para detalle de un control humedad
+final controlHumedadDetalleProvider =
+    FutureProvider.autoDispose.family<ControlHumedad, int>((ref, id) async {
+  final service = ref.watch(controlHumedadServiceProvider);
+  return service.retrieve(id);
+});

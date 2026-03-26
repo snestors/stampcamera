@@ -21,6 +21,8 @@ import 'package:stampcamera/screens/graneles/ticket_detalle_screen.dart';
 // Formularios viejos eliminados — usar viaje_form_screen.dart
 import 'package:stampcamera/screens/graneles/silos_crear_screen.dart';
 import 'package:stampcamera/screens/graneles/viaje_form_screen.dart';
+import 'package:stampcamera/screens/graneles/paralizacion_form_screen.dart';
+import 'package:stampcamera/screens/graneles/control_humedad_form_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 import 'package:stampcamera/screens/device_registration_screen.dart';
@@ -244,6 +246,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final siloId = int.tryParse(state.pathParameters['siloId'] ?? '') ?? 0;
               if (siloId == 0) return const HomeScreen();
               return SilosCrearScreen.edit(siloId: siloId);
+            },
+          ),
+          // Rutas de Paralizaciones
+          GoRoute(
+            path: 'paralizacion/crear',
+            builder: (context, state) {
+              return const ParalizacionFormScreen();
+            },
+          ),
+          GoRoute(
+            path: 'paralizacion/editar/:paralizacionId',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['paralizacionId'] ?? '') ?? 0;
+              if (id == 0) return const HomeScreen();
+              return ParalizacionFormScreen.edit(paralizacionId: id);
+            },
+          ),
+          // Rutas de Control Humedad/Temperatura
+          GoRoute(
+            path: 'control-humedad/crear',
+            builder: (context, state) {
+              return const ControlHumedadFormScreen();
+            },
+          ),
+          GoRoute(
+            path: 'control-humedad/editar/:controlId',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['controlId'] ?? '') ?? 0;
+              if (id == 0) return const HomeScreen();
+              return ControlHumedadFormScreen.edit(controlId: id);
             },
           ),
         ],

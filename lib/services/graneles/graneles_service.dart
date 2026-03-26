@@ -1107,3 +1107,326 @@ class AlmacenService implements BaseService<AlmacenGranel> {
     return AlmacenGranel.fromJson(response.data);
   }
 }
+
+// =============================================================================
+// SERVICIO DE PARALIZACIONES (implementa BaseService para paginación)
+// =============================================================================
+
+class ParalizacionesService implements BaseService<Paralizacion> {
+  final HttpService _http;
+
+  ParalizacionesService([HttpService? http]) : _http = http ?? HttpService();
+
+  @override
+  String get endpoint => '/api/v1/graneles/paralizaciones/';
+
+  @override
+  Paralizacion Function(Map<String, dynamic>) get fromJson => Paralizacion.fromJson;
+
+  @override
+  Future<PaginatedResponse<Paralizacion>> list({Map<String, dynamic>? queryParameters}) async {
+    final response = await _http.dio.get(endpoint, queryParameters: queryParameters);
+    return PaginatedResponse.fromJson(response.data, fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<Paralizacion>> search(String query, {Map<String, dynamic>? filters}) async {
+    final params = <String, dynamic>{'search': query};
+    if (filters != null) params.addAll(filters);
+    final response = await _http.dio.get(endpoint, queryParameters: params);
+    return PaginatedResponse.fromJson(response.data, fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<Paralizacion>> loadMore(String url) async {
+    final uri = Uri.parse(url);
+    final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
+    final response = await _http.dio.get(path);
+    return PaginatedResponse.fromJson(response.data, fromJson);
+  }
+
+  @override
+  Future<Paralizacion> retrieve(int id) async {
+    final response = await _http.dio.get('$endpoint$id/');
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<Paralizacion> create(Map<String, dynamic> data) async {
+    final response = await _http.dio.post(endpoint, data: data);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<Paralizacion> update(int id, Map<String, dynamic> data) async {
+    final response = await _http.dio.put('$endpoint$id/', data: data);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<Paralizacion> partialUpdate(int id, Map<String, dynamic> data) async {
+    final response = await _http.dio.patch('$endpoint$id/', data: data);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<void> delete(int id) async {
+    await _http.dio.delete('$endpoint$id/');
+  }
+
+  @override
+  Future<Map<String, dynamic>> executeAction(String action, {int? id, Map<String, dynamic>? data}) async {
+    final url = id != null ? '$endpoint$id/$action/' : '$endpoint$action/';
+    final response = await _http.dio.post(url, data: data);
+    return response.data;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getAction(String action, {Map<String, dynamic>? queryParameters}) async {
+    final response = await _http.dio.get('$endpoint$action/', queryParameters: queryParameters);
+    return response.data;
+  }
+
+  @override
+  Future<Paralizacion> createWithFiles(Map<String, dynamic> data, Map<String, String> filePaths) async {
+    final formData = FormData.fromMap(data);
+    for (final entry in filePaths.entries) {
+      formData.files.add(MapEntry(entry.key, await MultipartFile.fromFile(entry.value)));
+    }
+    final response = await _http.dio.post(endpoint, data: formData);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<Paralizacion> updateWithFiles(int id, Map<String, dynamic> data, Map<String, String> filePaths) async {
+    final formData = FormData.fromMap(data);
+    for (final entry in filePaths.entries) {
+      formData.files.add(MapEntry(entry.key, await MultipartFile.fromFile(entry.value)));
+    }
+    final response = await _http.dio.patch('$endpoint$id/', data: formData);
+    return fromJson(response.data);
+  }
+
+  // ===========================================================================
+  // METODOS ESPECIFICOS
+  // ===========================================================================
+
+  /// Obtener opciones para formulario
+  Future<ParalizacionOptions> getFormOptions({int? servicioId}) async {
+    final queryParams = <String, dynamic>{};
+    if (servicioId != null) queryParams['servicio_id'] = servicioId;
+    final response = await _http.dio.get(
+      '${endpoint}options_form/',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+    return ParalizacionOptions.fromJson(response.data);
+  }
+}
+
+// =============================================================================
+// SERVICIO DE CONTROL HUMEDAD/TEMPERATURA (implementa BaseService para paginación)
+// =============================================================================
+
+class ControlHumedadService implements BaseService<ControlHumedad> {
+  final HttpService _http;
+
+  ControlHumedadService([HttpService? http]) : _http = http ?? HttpService();
+
+  @override
+  String get endpoint => '/api/v1/graneles/control-humedad/';
+
+  @override
+  ControlHumedad Function(Map<String, dynamic>) get fromJson => ControlHumedad.fromJson;
+
+  @override
+  Future<PaginatedResponse<ControlHumedad>> list({Map<String, dynamic>? queryParameters}) async {
+    final response = await _http.dio.get(endpoint, queryParameters: queryParameters);
+    return PaginatedResponse.fromJson(response.data, fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<ControlHumedad>> search(String query, {Map<String, dynamic>? filters}) async {
+    final params = <String, dynamic>{'search': query};
+    if (filters != null) params.addAll(filters);
+    final response = await _http.dio.get(endpoint, queryParameters: params);
+    return PaginatedResponse.fromJson(response.data, fromJson);
+  }
+
+  @override
+  Future<PaginatedResponse<ControlHumedad>> loadMore(String url) async {
+    final uri = Uri.parse(url);
+    final path = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
+    final response = await _http.dio.get(path);
+    return PaginatedResponse.fromJson(response.data, fromJson);
+  }
+
+  @override
+  Future<ControlHumedad> retrieve(int id) async {
+    final response = await _http.dio.get('$endpoint$id/');
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<ControlHumedad> create(Map<String, dynamic> data) async {
+    final response = await _http.dio.post(endpoint, data: data);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<ControlHumedad> update(int id, Map<String, dynamic> data) async {
+    final response = await _http.dio.put('$endpoint$id/', data: data);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<ControlHumedad> partialUpdate(int id, Map<String, dynamic> data) async {
+    final response = await _http.dio.patch('$endpoint$id/', data: data);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<void> delete(int id) async {
+    await _http.dio.delete('$endpoint$id/');
+  }
+
+  @override
+  Future<Map<String, dynamic>> executeAction(String action, {int? id, Map<String, dynamic>? data}) async {
+    final url = id != null ? '$endpoint$id/$action/' : '$endpoint$action/';
+    final response = await _http.dio.post(url, data: data);
+    return response.data;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getAction(String action, {Map<String, dynamic>? queryParameters}) async {
+    final response = await _http.dio.get('$endpoint$action/', queryParameters: queryParameters);
+    return response.data;
+  }
+
+  @override
+  Future<ControlHumedad> createWithFiles(Map<String, dynamic> data, Map<String, String> filePaths) async {
+    final formData = FormData.fromMap(data);
+    for (final entry in filePaths.entries) {
+      formData.files.add(MapEntry(entry.key, await MultipartFile.fromFile(entry.value)));
+    }
+    final response = await _http.dio.post(endpoint, data: formData);
+    return fromJson(response.data);
+  }
+
+  @override
+  Future<ControlHumedad> updateWithFiles(int id, Map<String, dynamic> data, Map<String, String> filePaths) async {
+    final formData = FormData.fromMap(data);
+    for (final entry in filePaths.entries) {
+      formData.files.add(MapEntry(entry.key, await MultipartFile.fromFile(entry.value)));
+    }
+    final response = await _http.dio.patch('$endpoint$id/', data: formData);
+    return fromJson(response.data);
+  }
+
+  // ===========================================================================
+  // METODOS ESPECIFICOS
+  // ===========================================================================
+
+  /// Obtener opciones para formulario (distribuciones y jornadas)
+  Future<ControlHumedadOptions> getFormOptions({int? servicioId}) async {
+    final queryParams = <String, dynamic>{};
+    if (servicioId != null) queryParams['servicio_id'] = servicioId;
+    final response = await _http.dio.get(
+      '${endpoint}options_form/',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+    return ControlHumedadOptions.fromJson(response.data);
+  }
+
+  /// Crear con fotos (FormData multipart)
+  Future<ControlHumedad> createControlHumedad({
+    required int servicioId,
+    required int distribucionId,
+    required int jornadaId,
+    required DateTime horaMuestra,
+    required double temperatura,
+    required double humedad,
+    String? observaciones,
+    File? fotoTemperatura,
+    File? fotoHumedad,
+    File? fotoExtra,
+  }) async {
+    final formData = FormData.fromMap({
+      'servicio': servicioId,
+      'distribucion': distribucionId,
+      'jornada': jornadaId,
+      'hora_muestra': horaMuestra.toIso8601String(),
+      'temperatura': temperatura,
+      'humedad': humedad,
+      if (observaciones != null) 'observaciones': observaciones,
+      if (fotoTemperatura != null)
+        'foto_temperatura': await MultipartFile.fromFile(
+          fotoTemperatura.path,
+          filename: 'temp_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+      if (fotoHumedad != null)
+        'foto_humedad': await MultipartFile.fromFile(
+          fotoHumedad.path,
+          filename: 'hum_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+      if (fotoExtra != null)
+        'foto_extra': await MultipartFile.fromFile(
+          fotoExtra.path,
+          filename: 'extra_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+    });
+
+    final response = await _http.dio.post(endpoint, data: formData);
+    return ControlHumedad.fromJson(response.data);
+  }
+
+  /// Actualizar con fotos (FormData multipart)
+  Future<ControlHumedad> updateControlHumedad({
+    required int controlId,
+    int? servicioId,
+    int? distribucionId,
+    int? jornadaId,
+    DateTime? horaMuestra,
+    double? temperatura,
+    double? humedad,
+    String? observaciones,
+    File? fotoTemperatura,
+    File? fotoHumedad,
+    File? fotoExtra,
+  }) async {
+    final Map<String, dynamic> data = {};
+
+    if (servicioId != null) data['servicio'] = servicioId;
+    if (distribucionId != null) data['distribucion'] = distribucionId;
+    if (jornadaId != null) data['jornada'] = jornadaId;
+    if (horaMuestra != null) data['hora_muestra'] = horaMuestra.toIso8601String();
+    if (temperatura != null) data['temperatura'] = temperatura;
+    if (humedad != null) data['humedad'] = humedad;
+    if (observaciones != null) data['observaciones'] = observaciones;
+
+    if (fotoTemperatura != null || fotoHumedad != null || fotoExtra != null) {
+      final formData = FormData.fromMap({
+        ...data,
+        if (fotoTemperatura != null)
+          'foto_temperatura': await MultipartFile.fromFile(
+            fotoTemperatura.path,
+            filename: 'temp_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+        if (fotoHumedad != null)
+          'foto_humedad': await MultipartFile.fromFile(
+            fotoHumedad.path,
+            filename: 'hum_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+        if (fotoExtra != null)
+          'foto_extra': await MultipartFile.fromFile(
+            fotoExtra.path,
+            filename: 'extra_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+      });
+      final response = await _http.dio.patch('$endpoint$controlId/', data: formData);
+      return ControlHumedad.fromJson(response.data);
+    }
+
+    final response = await _http.dio.patch('$endpoint$controlId/', data: data);
+    return ControlHumedad.fromJson(response.data);
+  }
+}

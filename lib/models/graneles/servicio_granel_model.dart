@@ -1002,3 +1002,194 @@ class AlmacenGranel with HasId {
     );
   }
 }
+
+// =============================================================================
+// MODELO DE PARALIZACIÓN
+// =============================================================================
+
+class Paralizacion with HasId {
+  final int id;
+  final int? servicioId;
+  final String? servicioCodigo;
+  final String? naveNombre;
+  final String? consignatarioNombre;
+  final String bodega;
+  final String? motivoStr;
+  final int? motivoId;
+  final DateTime? inicio;
+  final DateTime? fin;
+  final String? duracion;
+  final String? jornadaStr;
+  final String? observacion;
+  final String? createByNombre;
+  final DateTime? createAt;
+
+  const Paralizacion({
+    required this.id,
+    this.servicioId,
+    this.servicioCodigo,
+    this.naveNombre,
+    this.consignatarioNombre,
+    required this.bodega,
+    this.motivoStr,
+    this.motivoId,
+    this.inicio,
+    this.fin,
+    this.duracion,
+    this.jornadaStr,
+    this.observacion,
+    this.createByNombre,
+    this.createAt,
+  });
+
+  factory Paralizacion.fromJson(Map<String, dynamic> json) {
+    return Paralizacion(
+      id: json['id'] ?? 0,
+      servicioId: json['servicio_id'],
+      servicioCodigo: json['servicio_codigo'],
+      naveNombre: json['nave_nombre'],
+      consignatarioNombre: json['consignatario_nombre'],
+      bodega: json['bodega'] ?? '',
+      motivoStr: json['motivo_str'],
+      motivoId: json['motivo'] is int ? json['motivo'] : json['motivo_id'],
+      inicio: json['inicio'] != null ? DateTime.tryParse(json['inicio'].toString()) : null,
+      fin: json['fin'] != null ? DateTime.tryParse(json['fin'].toString()) : null,
+      duracion: json['duracion'],
+      jornadaStr: json['jornada_str'],
+      observacion: json['observacion'],
+      createByNombre: json['create_by_nombre'],
+      createAt: json['create_at'] != null ? DateTime.tryParse(json['create_at'].toString()) : null,
+    );
+  }
+}
+
+/// Opciones para formulario de paralizaciones
+class ParalizacionOptions {
+  final List<OptionItem> motivos;
+  final List<String> bodegas;
+  final List<OptionItem> servicios;
+
+  const ParalizacionOptions({
+    this.motivos = const [],
+    this.bodegas = const [],
+    this.servicios = const [],
+  });
+
+  factory ParalizacionOptions.fromJson(Map<String, dynamic> json) {
+    return ParalizacionOptions(
+      motivos: (json['motivos'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      bodegas: (json['bodegas'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      servicios: (json['servicios'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+// =============================================================================
+// MODELO DE CONTROL HUMEDAD / TEMPERATURA
+// =============================================================================
+
+class ControlHumedad with HasId {
+  final int id;
+  final int? servicioId;
+  final String? servicioCodigo;
+  final String? naveNombre;
+  final String? consignatarioNombre;
+  final String? distribucionStr;
+  final int? distribucionId;
+  final String? jornadaStr;
+  final int? jornadaId;
+  final DateTime? horaMuestra;
+  final double? temperatura;
+  final double? humedad;
+  final String? observaciones;
+  final String? fotoTemperaturaUrl;
+  final String? fotoHumedadUrl;
+  final String? fotoExtraUrl;
+  final String? createByNombre;
+  final DateTime? createAt;
+
+  const ControlHumedad({
+    required this.id,
+    this.servicioId,
+    this.servicioCodigo,
+    this.naveNombre,
+    this.consignatarioNombre,
+    this.distribucionStr,
+    this.distribucionId,
+    this.jornadaStr,
+    this.jornadaId,
+    this.horaMuestra,
+    this.temperatura,
+    this.humedad,
+    this.observaciones,
+    this.fotoTemperaturaUrl,
+    this.fotoHumedadUrl,
+    this.fotoExtraUrl,
+    this.createByNombre,
+    this.createAt,
+  });
+
+  factory ControlHumedad.fromJson(Map<String, dynamic> json) {
+    return ControlHumedad(
+      id: json['id'] ?? 0,
+      servicioId: json['servicio_id'],
+      servicioCodigo: json['servicio_codigo'],
+      naveNombre: json['nave_nombre'],
+      consignatarioNombre: json['consignatario_nombre'],
+      distribucionStr: json['distribucion_str'],
+      distribucionId: json['distribucion'] is int ? json['distribucion'] : json['distribucion_id'],
+      jornadaStr: json['jornada_str'],
+      jornadaId: json['jornada'] is int ? json['jornada'] : json['jornada_id'],
+      horaMuestra: json['hora_muestra'] != null
+          ? DateTime.tryParse(json['hora_muestra'].toString())
+          : null,
+      temperatura: json['temperatura'] != null ? _parseDouble(json['temperatura']) : null,
+      humedad: json['humedad'] != null ? _parseDouble(json['humedad']) : null,
+      observaciones: json['observaciones'],
+      fotoTemperaturaUrl: json['foto_temperatura_url'],
+      fotoHumedadUrl: json['foto_humedad_url'],
+      fotoExtraUrl: json['foto_extra_url'],
+      createByNombre: json['create_by_nombre'],
+      createAt: json['create_at'] != null ? DateTime.tryParse(json['create_at'].toString()) : null,
+    );
+  }
+}
+
+/// Opciones para formulario de control humedad
+class ControlHumedadOptions {
+  final List<OptionItem> distribuciones;
+  final List<OptionItem> jornadas;
+  final List<OptionItem> servicios;
+
+  const ControlHumedadOptions({
+    this.distribuciones = const [],
+    this.jornadas = const [],
+    this.servicios = const [],
+  });
+
+  factory ControlHumedadOptions.fromJson(Map<String, dynamic> json) {
+    return ControlHumedadOptions(
+      distribuciones: (json['distribuciones'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      jornadas: (json['jornadas'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+      servicios: (json['servicios'] as List?)
+              ?.map((e) => OptionItem.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
