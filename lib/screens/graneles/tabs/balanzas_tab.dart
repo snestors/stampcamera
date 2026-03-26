@@ -232,56 +232,39 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
       icon = Icons.scale_outlined;
     }
 
+    Widget? action;
+    if (isSearching) {
+      action = AppButton.secondary(
+        text: 'Limpiar búsqueda',
+        icon: Icons.clear,
+        onPressed: () {
+          _searchController.clear();
+          notifier.clearSearch();
+        },
+      );
+    } else if (filterPendientes) {
+      action = AppButton.secondary(
+        text: 'Ver todas',
+        icon: Icons.list,
+        onPressed: () {
+          ref.read(balanzasListProvider.notifier).setFilterSinAlmacen(false);
+        },
+      );
+    } else if (canAdd) {
+      action = AppButton.primary(
+        text: 'Crear primera balanza',
+        icon: Icons.add,
+        onPressed: () => context.push('/graneles/balanza/crear'),
+      );
+    }
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 64,
-            color: filterPendientes && !isSearching ? AppColors.success : Colors.grey[400],
-          ),
-          SizedBox(height: DesignTokens.spaceM),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          SizedBox(height: DesignTokens.spaceS),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
-          ),
-          SizedBox(height: DesignTokens.spaceL),
-          if (isSearching) ...[
-            AppButton.secondary(
-              text: 'Limpiar búsqueda',
-              icon: Icons.clear,
-              onPressed: () {
-                _searchController.clear();
-                notifier.clearSearch();
-              },
-            ),
-          ] else if (filterPendientes) ...[
-            AppButton.secondary(
-              text: 'Ver todas',
-              icon: Icons.list,
-              onPressed: () {
-                // Usar filtro server-side
-                ref.read(balanzasListProvider.notifier).setFilterSinAlmacen(false);
-              },
-            ),
-          ] else if (canAdd) ...[
-            // Solo mostrar botón crear si tiene permiso
-            AppButton.primary(
-              text: 'Crear primera balanza',
-              icon: Icons.add,
-              onPressed: () => context.push('/graneles/balanza/crear'),
-            ),
-          ],
-        ],
+      child: AppEmptyState(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        color: filterPendientes && !isSearching ? AppColors.success : null,
+        action: action,
       ),
     );
   }
@@ -303,15 +286,9 @@ class _BalanzaCard extends StatelessWidget {
     final timeFormat = DateFormat('HH:mm');
     final numberFormat = NumberFormat('#,##0.000', 'es_PE');
 
-    return Card(
+    return AppCard.elevated(
       margin: EdgeInsets.zero,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Info del servicio (código)
@@ -514,7 +491,6 @@ class _BalanzaCard extends StatelessWidget {
             ],
           ],
         ),
-      ),
     );
   }
 

@@ -211,7 +211,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
                 Icon(
                   Icons.lock_outline,
                   size: 64,
-                  color: Colors.grey.shade400,
+                  color: AppColors.textLight,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -219,7 +219,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade600,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -227,7 +227,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
                   'No tienes permisos para ver este módulo.\nContacta a tu coordinador.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.grey.shade500,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],

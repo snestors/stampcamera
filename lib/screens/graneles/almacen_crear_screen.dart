@@ -117,12 +117,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingAlmacen = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar almacén: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, 'Error al cargar almacén: $e');
       }
     }
   }
@@ -225,28 +220,33 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
         children: [
           // Sección: Balanza (solo en creación)
           if (!widget.isEditMode) ...[
-            _buildSectionHeader('Balanza', Icons.scale),
+            AppSectionHeader(icon: Icons.scale, title: 'Balanza'),
+            SizedBox(height: DesignTokens.spaceS),
             _buildBalanzaSearch(),
             SizedBox(height: DesignTokens.spaceL),
           ],
 
           // Sección: Tiempos
-          _buildSectionHeader('Tiempos de Almacén', Icons.access_time),
+          AppSectionHeader(icon: Icons.access_time, title: 'Tiempos de Almacén'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildDateTimeFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Pesos
-          _buildSectionHeader('Pesos (TM)', Icons.scale),
+          AppSectionHeader(icon: Icons.scale, title: 'Pesos (TM)'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildWeightFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Fotos
-          _buildSectionHeader('Fotos', Icons.camera_alt),
+          AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildPhotoFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Observaciones
-          _buildSectionHeader('Observaciones', Icons.notes),
+          AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildObservacionesField(),
           SizedBox(height: DesignTokens.spaceXL),
 
@@ -254,26 +254,6 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
           _buildSubmitButton(),
           // SafeArea inferior + espacio adicional
           SizedBox(height: DesignTokens.spaceL + MediaQuery.of(context).padding.bottom),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          SizedBox(width: DesignTokens.spaceS),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: DesignTokens.fontSizeM,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
         ],
       ),
     );
@@ -765,13 +745,9 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
     if (!widget.isEditMode && _selectedBalanza != null) {
       final salidaBalanza = _selectedBalanza!.fechaSalidaBalanza;
       if (salidaBalanza != null && _fechaEntradaAlmacen.isBefore(salidaBalanza)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'La entrada a almacén debe ser posterior a la salida de balanza (${DateFormat('dd/MM/yyyy HH:mm').format(salidaBalanza)})',
-            ),
-            backgroundColor: AppColors.error,
-          ),
+        AppSnackBar.error(
+          context,
+          'La entrada a almacén debe ser posterior a la salida de balanza (${DateFormat('dd/MM/yyyy HH:mm').format(salidaBalanza)})',
         );
         return;
       }
@@ -779,12 +755,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
 
     // Validar que entrada sea anterior a salida de almacén
     if (_fechaEntradaAlmacen.isAfter(_fechaSalidaAlmacen)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La fecha de entrada debe ser anterior a la de salida'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, 'La fecha de entrada debe ser anterior a la de salida');
       return;
     }
 
@@ -827,25 +798,18 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
       ref.invalidate(almacenListProvider);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.isEditMode
-                ? 'Almacén actualizado correctamente'
-                : 'Almacén creado correctamente'),
-            backgroundColor: AppColors.success,
-          ),
+        AppSnackBar.success(
+          context,
+          widget.isEditMode
+              ? 'Almacén actualizado correctamente'
+              : 'Almacén creado correctamente',
         );
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, 'Error: $e');
       }
     }
   }

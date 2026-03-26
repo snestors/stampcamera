@@ -148,69 +148,57 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           // Solo mostrar selectores en modo creación
           if (!widget.isEditMode) ...[
             // Sección: BL
-            _buildSectionHeader('BL', Icons.description),
+            AppSectionHeader(icon: Icons.description, title: 'BL'),
+            SizedBox(height: DesignTokens.spaceS),
             _buildBlSelector(options.bls),
             SizedBox(height: DesignTokens.spaceL),
 
             // Sección: Distribución (filtrada por BL)
-            _buildSectionHeader('Distribución / Bodega', Icons.warehouse),
+            AppSectionHeader(icon: Icons.warehouse, title: 'Distribución / Bodega'),
+            SizedBox(height: DesignTokens.spaceS),
             _buildDistribucionSelector(options),
             SizedBox(height: DesignTokens.spaceL),
 
             // Sección: Jornada (de la nave del servicio)
-            _buildSectionHeader('Jornada', Icons.schedule),
+            AppSectionHeader(icon: Icons.schedule, title: 'Jornada'),
+            SizedBox(height: DesignTokens.spaceS),
             _buildJornadaSelector(options),
             SizedBox(height: DesignTokens.spaceL),
           ],
 
           // Sección: N° Camión/Ticket
-          _buildSectionHeader('N° Camión / Ticket', Icons.tag),
+          AppSectionHeader(icon: Icons.tag, title: 'N° Camión / Ticket'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildNumeroCamionField(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Fecha y hora
-          _buildSectionHeader('Fecha y Hora de Pesaje', Icons.access_time),
+          AppSectionHeader(icon: Icons.access_time, title: 'Fecha y Hora de Pesaje'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildFechaHoraField(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Pesos
-          _buildSectionHeader('Peso y Cantidad', Icons.scale),
+          AppSectionHeader(icon: Icons.scale, title: 'Peso y Cantidad'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildWeightFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Foto
-          _buildSectionHeader('Foto', Icons.camera_alt),
+          AppSectionHeader(icon: Icons.camera_alt, title: 'Foto'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildPhotoField(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Observaciones
-          _buildSectionHeader('Observaciones', Icons.notes),
+          AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildObservacionesField(),
           SizedBox(height: DesignTokens.spaceXL),
 
           // Botón de guardar
           _buildSubmitButton(),
           SizedBox(height: DesignTokens.spaceL + MediaQuery.of(context).padding.bottom),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          SizedBox(width: DesignTokens.spaceS),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: DesignTokens.fontSizeM,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
         ],
       ),
     );

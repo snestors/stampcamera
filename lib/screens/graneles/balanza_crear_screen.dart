@@ -126,12 +126,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingBalanza = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar balanza: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, 'Error al cargar balanza: $e');
       }
     }
   }
@@ -194,12 +189,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingOptions = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar opciones: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, 'Error al cargar opciones: $e');
       }
     }
   }
@@ -307,45 +297,53 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
         children: [
           // Sección: Ticket (solo en creación)
           if (!widget.isEditMode) ...[
-            _buildSectionHeader('Ticket de Muelle', Icons.receipt),
+            AppSectionHeader(icon: Icons.receipt, title: 'Ticket de Muelle'),
+            SizedBox(height: DesignTokens.spaceS),
             _buildTicketSearch(),
             SizedBox(height: DesignTokens.spaceL),
           ],
 
           // Sección: Guía
-          _buildSectionHeader('Información de Guía', Icons.description),
+          AppSectionHeader(icon: Icons.description, title: 'Información de Guía'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildGuiaField(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Distribución, Precinto y Permiso
-          _buildSectionHeader('Distribución y Seguridad', Icons.warehouse),
+          AppSectionHeader(icon: Icons.warehouse, title: 'Distribución y Seguridad'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildDistribucionAlmacenSelector(),
           SizedBox(height: DesignTokens.spaceM),
           _buildPrecintoPermisoFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Entrada (fecha + balanza)
-          _buildSectionHeader('Entrada', Icons.login),
+          AppSectionHeader(icon: Icons.login, title: 'Entrada'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildEntradaFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Salida (fecha + balanza)
-          _buildSectionHeader('Salida', Icons.logout),
+          AppSectionHeader(icon: Icons.logout, title: 'Salida'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildSalidaFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Pesos
-          _buildSectionHeader('Pesos (TM)', Icons.scale),
+          AppSectionHeader(icon: Icons.scale, title: 'Pesos (TM)'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildWeightFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Fotos
-          _buildSectionHeader('Fotos', Icons.camera_alt),
+          AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildPhotoFields(),
           SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Observaciones
-          _buildSectionHeader('Observaciones', Icons.notes),
+          AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+          SizedBox(height: DesignTokens.spaceS),
           _buildObservacionesField(),
           SizedBox(height: DesignTokens.spaceXL),
 
@@ -353,26 +351,6 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
           _buildSubmitButton(),
           // SafeArea inferior + espacio adicional
           SizedBox(height: DesignTokens.spaceL + MediaQuery.of(context).padding.bottom),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          SizedBox(width: DesignTokens.spaceS),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: DesignTokens.fontSizeM,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
         ],
       ),
     );
@@ -1315,44 +1293,24 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
 
     // Validar tiempos
     if (_hasTimeError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La fecha de salida debe ser mayor que la de entrada'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, 'La fecha de salida debe ser mayor que la de entrada');
       return;
     }
 
     // Validar pesos (bruto > tara)
     if (_hasPesoError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El peso bruto debe ser mayor que el peso tara'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, 'El peso bruto debe ser mayor que el peso tara');
       return;
     }
 
     // Validar peso neto = bruto - tara
     if (_hasPesoNetoError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('El peso neto debe ser $_expectedPesoNeto (bruto - tara)'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, 'El peso neto debe ser $_expectedPesoNeto (bruto - tara)');
       return;
     }
 
     if (!widget.isEditMode && _foto1Path == null && _existingFoto1Url == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('La foto 1 es requerida'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, 'La foto 1 es requerida');
       return;
     }
 
@@ -1413,13 +1371,11 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
       ref.invalidate(balanzasListProvider);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.isEditMode
-                ? 'Balanza actualizada correctamente'
-                : 'Balanza creada correctamente'),
-            backgroundColor: AppColors.success,
-          ),
+        AppSnackBar.success(
+          context,
+          widget.isEditMode
+              ? 'Balanza actualizada correctamente'
+              : 'Balanza creada correctamente',
         );
         context.pop();
       }
@@ -1428,13 +1384,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
         setState(() => _isSubmitting = false);
         // Parsear errores de validación del backend
         final errorMessage = _parseBackendError(e.toString());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: AppColors.error,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        AppSnackBar.error(context, errorMessage, duration: const Duration(seconds: 4));
       }
     }
   }

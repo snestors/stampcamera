@@ -112,12 +112,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingTicket = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar ticket: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppSnackBar.error(context, 'Error al cargar ticket: $e');
       }
     }
   }
@@ -202,7 +197,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Número de ticket
-            _buildSectionTitle('Datos del Ticket', Icons.receipt),
+            AppSectionHeader(icon: Icons.receipt, title: 'Datos del Ticket'),
             SizedBox(height: DesignTokens.spaceS),
             TextFormField(
               controller: _numeroTicketController,
@@ -278,7 +273,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             SizedBox(height: DesignTokens.spaceL),
 
             // Vehículo y Transporte
-            _buildSectionTitle('Vehículo y Transporte', Icons.local_shipping),
+            AppSectionHeader(icon: Icons.local_shipping, title: 'Vehículo y Transporte'),
             SizedBox(height: DesignTokens.spaceS),
             _buildAsyncSearchField(
               label: 'Placa',
@@ -308,7 +303,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             SizedBox(height: DesignTokens.spaceL),
 
             // Tiempos
-            _buildSectionTitle('Tiempos de Descarga', Icons.access_time),
+            AppSectionHeader(icon: Icons.access_time, title: 'Tiempos de Descarga'),
             SizedBox(height: DesignTokens.spaceS),
             Row(
               children: [
@@ -345,7 +340,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             SizedBox(height: DesignTokens.spaceL),
 
             // Observaciones
-            _buildSectionTitle('Observaciones', Icons.notes),
+            AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
             SizedBox(height: DesignTokens.spaceS),
             TextFormField(
               controller: _observacionesController,
@@ -416,23 +411,6 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppColors.primary),
-        SizedBox(width: DesignTokens.spaceS),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: DesignTokens.fontSizeM,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-      ],
     );
   }
 
@@ -585,7 +563,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             margin: EdgeInsets.only(top: DesignTokens.spaceXS),
             constraints: const BoxConstraints(maxHeight: 200),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               border: Border.all(color: AppColors.neutral),
               boxShadow: [
@@ -723,24 +701,14 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
 
     // Validar tiempo antes de enviar
     if (_inicioDescarga.isAfter(_finDescarga) || _inicioDescarga.isAtSameMomentAs(_finDescarga)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('El fin de cargío debe ser mayor que el inicio'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, 'El fin de cargío debe ser mayor que el inicio');
       return;
     }
 
     // En modo edición, solo validamos campos opcionales si fueron modificados
     // En modo creación, BL y Distribución son requeridos
     if (!widget.isEditMode && (_selectedBlId == null || _selectedDistribucionId == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor complete los campos requeridos'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppSnackBar.error(context, 'Por favor complete los campos requeridos');
       return;
     }
 
@@ -783,13 +751,11 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.isEditMode
-                ? 'Ticket actualizado correctamente'
-                : 'Ticket creado correctamente'),
-            backgroundColor: AppColors.success,
-          ),
+        AppSnackBar.success(
+          context,
+          widget.isEditMode
+              ? 'Ticket actualizado correctamente'
+              : 'Ticket creado correctamente',
         );
         context.pop();
       }
@@ -797,13 +763,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
       if (mounted) {
         // Parsear errores de validación del backend
         final errorMessage = _parseBackendError(e);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: AppColors.error,
-            duration: const Duration(seconds: 5),
-          ),
-        );
+        AppSnackBar.error(context, errorMessage, duration: const Duration(seconds: 5));
       }
     } finally {
       if (mounted) {

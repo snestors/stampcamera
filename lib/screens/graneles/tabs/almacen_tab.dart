@@ -186,47 +186,26 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
     final isSearching = _searchController.text.isNotEmpty;
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isSearching ? Icons.search_off : Icons.warehouse_outlined,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          SizedBox(height: DesignTokens.spaceM),
-          Text(
-            isSearching ? 'Sin resultados' : 'No hay registros de almacén',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          SizedBox(height: DesignTokens.spaceS),
-          Text(
-            isSearching
-                ? 'No se encontraron registros que coincidan con "${_searchController.text}"'
-                : 'Aún no hay registros de almacén',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
-          ),
-          SizedBox(height: DesignTokens.spaceL),
-          if (isSearching) ...[
-            AppButton.secondary(
-              text: 'Limpiar búsqueda',
-              icon: Icons.clear,
-              onPressed: () {
-                _searchController.clear();
-                notifier.clearSearch();
-              },
-            ),
-          ] else ...[
-            AppButton.primary(
-              text: 'Crear primer registro',
-              icon: Icons.add,
-              onPressed: () => context.push('/graneles/almacen/crear'),
-            ),
-          ],
-        ],
+      child: AppEmptyState(
+        icon: isSearching ? Icons.search_off : Icons.warehouse_outlined,
+        title: isSearching ? 'Sin resultados' : 'No hay registros de almacén',
+        subtitle: isSearching
+            ? 'No se encontraron registros que coincidan con "${_searchController.text}"'
+            : 'Aún no hay registros de almacén',
+        action: isSearching
+            ? AppButton.secondary(
+                text: 'Limpiar búsqueda',
+                icon: Icons.clear,
+                onPressed: () {
+                  _searchController.clear();
+                  notifier.clearSearch();
+                },
+              )
+            : AppButton.primary(
+                text: 'Crear primer registro',
+                icon: Icons.add,
+                onPressed: () => context.push('/graneles/almacen/crear'),
+              ),
       ),
     );
   }
@@ -247,15 +226,9 @@ class _AlmacenCard extends StatelessWidget {
     final dateFormat = DateFormat('dd/MM HH:mm');
     final numberFormat = NumberFormat('#,##0.000', 'es_PE');
 
-    return Card(
+    return AppCard.elevated(
       margin: EdgeInsets.zero,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Info del servicio
@@ -447,7 +420,6 @@ class _AlmacenCard extends StatelessWidget {
             ],
           ],
         ),
-      ),
     );
   }
 

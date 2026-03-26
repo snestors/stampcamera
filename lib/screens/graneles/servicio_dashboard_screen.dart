@@ -310,7 +310,7 @@ class _DashboardContent extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         boxShadow: [
           BoxShadow(
@@ -361,7 +361,7 @@ class _DashboardContent extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         boxShadow: [
           BoxShadow(
@@ -440,7 +440,7 @@ class _DashboardContent extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         boxShadow: [
           BoxShadow(
@@ -534,7 +534,7 @@ class _DashboardContent extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         boxShadow: [
           BoxShadow(
@@ -698,7 +698,7 @@ class _KpiCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         border: Border.all(color: color.withValues(alpha: 0.2)),
         boxShadow: [
@@ -997,7 +997,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
     return Container(
       margin: EdgeInsets.only(bottom: DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         boxShadow: [
           BoxShadow(

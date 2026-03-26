@@ -430,7 +430,7 @@ class _TicketDetalleContent extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         boxShadow: [
           BoxShadow(
@@ -476,7 +476,7 @@ class _TicketDetalleContent extends StatelessWidget {
   Widget _buildEmptySection(String title, IconData icon, String message) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         boxShadow: [
           BoxShadow(

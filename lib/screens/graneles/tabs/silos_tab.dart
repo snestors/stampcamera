@@ -192,41 +192,22 @@ class _SilosTabState extends ConsumerState<SilosTab> {
     final isSearching = _searchController.text.isNotEmpty;
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isSearching ? Icons.search_off : Icons.storage_outlined,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          SizedBox(height: DesignTokens.spaceM),
-          Text(
-            isSearching ? 'Sin resultados' : 'No hay registros de silos',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          SizedBox(height: DesignTokens.spaceS),
-          Text(
-            isSearching
-                ? 'No se encontraron silos que coincidan con "${_searchController.text}"'
-                : 'Aún no hay registros de silos',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
-          ),
-          SizedBox(height: DesignTokens.spaceL),
-          if (isSearching) ...[
-            AppButton.secondary(
-              text: 'Limpiar búsqueda',
-              icon: Icons.clear,
-              onPressed: () {
-                _searchController.clear();
-                notifier.clearSearch();
-              },
-            ),
-          ],
-        ],
+      child: AppEmptyState(
+        icon: isSearching ? Icons.search_off : Icons.storage_outlined,
+        title: isSearching ? 'Sin resultados' : 'No hay registros de silos',
+        subtitle: isSearching
+            ? 'No se encontraron silos que coincidan con "${_searchController.text}"'
+            : 'Aún no hay registros de silos',
+        action: isSearching
+            ? AppButton.secondary(
+                text: 'Limpiar búsqueda',
+                icon: Icons.clear,
+                onPressed: () {
+                  _searchController.clear();
+                  notifier.clearSearch();
+                },
+              )
+            : null,
       ),
     );
   }
@@ -248,18 +229,10 @@ class _SiloCard extends ConsumerWidget {
     final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
     final canEdit = permissionsAsync.valueOrNull?.silos.canEdit ?? false;
 
-    return Card(
+    return AppCard.elevated(
       margin: EdgeInsets.zero,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-      ),
-      child: InkWell(
-        onTap: canEdit ? () => context.push('/graneles/silos/editar/${silo.id}') : null,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        child: Padding(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
-          child: Row(
+      onTap: canEdit ? () => context.push('/graneles/silos/editar/${silo.id}') : null,
+      child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Foto (si existe)
@@ -447,8 +420,6 @@ class _SiloCard extends ConsumerWidget {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 }

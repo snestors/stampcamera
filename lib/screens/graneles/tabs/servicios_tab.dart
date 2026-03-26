@@ -167,41 +167,22 @@ class _ServiciosTabState extends ConsumerState<ServiciosTab> {
     final isSearching = _searchController.text.isNotEmpty;
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isSearching ? Icons.search_off : Icons.directions_boat_outlined,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          SizedBox(height: DesignTokens.spaceM),
-          Text(
-            isSearching ? 'Sin resultados' : 'No hay servicios disponibles',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          SizedBox(height: DesignTokens.spaceS),
-          Text(
-            isSearching
-                ? 'No se encontraron servicios que coincidan con "${_searchController.text}"'
-                : 'Marca asistencia en una nave de graneles',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
-          ),
-          SizedBox(height: DesignTokens.spaceL),
-          if (isSearching) ...[
-            AppButton.secondary(
-              text: 'Limpiar búsqueda',
-              icon: Icons.clear,
-              onPressed: () {
-                _searchController.clear();
-                notifier.clearSearch();
-              },
-            ),
-          ],
-        ],
+      child: AppEmptyState(
+        icon: isSearching ? Icons.search_off : Icons.directions_boat_outlined,
+        title: isSearching ? 'Sin resultados' : 'No hay servicios disponibles',
+        subtitle: isSearching
+            ? 'No se encontraron servicios que coincidan con "${_searchController.text}"'
+            : 'Marca asistencia en una nave de graneles',
+        action: isSearching
+            ? AppButton.secondary(
+                text: 'Limpiar búsqueda',
+                icon: Icons.clear,
+                onPressed: () {
+                  _searchController.clear();
+                  notifier.clearSearch();
+                },
+              )
+            : null,
       ),
     );
   }
@@ -224,23 +205,14 @@ class _ServicioCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd/MM/yyyy');
 
-    return Card(
+    return AppCard.outlined(
       margin: EdgeInsets.zero,
-      elevation: 1,
-      shadowColor: Colors.black26,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        side: BorderSide(
-          color: servicio.cierreServicio
-              ? AppColors.success.withValues(alpha: 0.3)
-              : AppColors.primary.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        child: Column(
+      borderColor: servicio.cierreServicio
+          ? AppColors.success.withValues(alpha: 0.3)
+          : AppColors.primary.withValues(alpha: 0.2),
+      padding: EdgeInsets.zero,
+      onTap: onTap,
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header con color de fondo
@@ -299,7 +271,7 @@ class _ServicioCard extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                     ),
                     child: Row(
@@ -431,7 +403,6 @@ class _ServicioCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

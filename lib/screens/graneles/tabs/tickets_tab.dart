@@ -224,55 +224,39 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
       icon = Icons.receipt_long_outlined;
     }
 
+    Widget? action;
+    if (isSearching) {
+      action = AppButton.secondary(
+        text: 'Limpiar búsqueda',
+        icon: Icons.clear,
+        onPressed: () {
+          _searchController.clear();
+          notifier.clearSearch();
+        },
+      );
+    } else if (filterPendientes) {
+      action = AppButton.secondary(
+        text: 'Ver todos',
+        icon: Icons.list,
+        onPressed: () {
+          ref.read(ticketsMuelleProvider.notifier).setFilterSinBalanza(false);
+        },
+      );
+    } else {
+      action = AppButton.primary(
+        text: 'Crear primer ticket',
+        icon: Icons.add,
+        onPressed: () => _navigateToCreateTicket(),
+      );
+    }
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 64,
-            color: filterPendientes && !isSearching ? AppColors.success : Colors.grey[400],
-          ),
-          SizedBox(height: DesignTokens.spaceM),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          SizedBox(height: DesignTokens.spaceS),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
-          ),
-          SizedBox(height: DesignTokens.spaceL),
-          if (isSearching) ...[
-            AppButton.secondary(
-              text: 'Limpiar búsqueda',
-              icon: Icons.clear,
-              onPressed: () {
-                _searchController.clear();
-                notifier.clearSearch();
-              },
-            ),
-          ] else if (filterPendientes) ...[
-            AppButton.secondary(
-              text: 'Ver todos',
-              icon: Icons.list,
-              onPressed: () {
-                // Usar filtro server-side
-                ref.read(ticketsMuelleProvider.notifier).setFilterSinBalanza(false);
-              },
-            ),
-          ] else ...[
-            AppButton.primary(
-              text: 'Crear primer ticket',
-              icon: Icons.add,
-              onPressed: () => _navigateToCreateTicket(),
-            ),
-          ],
-        ],
+      child: AppEmptyState(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        color: filterPendientes && !isSearching ? AppColors.success : null,
+        action: action,
       ),
     );
   }
@@ -310,17 +294,10 @@ class _TicketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('HH:mm');
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-        child: Padding(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
-          child: Column(
+    return AppCard.elevated(
+      margin: EdgeInsets.zero,
+      onTap: onTap,
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Servicio info (código y nave)
@@ -535,8 +512,6 @@ class _TicketCard extends StatelessWidget {
               ],
             ],
           ),
-        ),
-      ),
     );
   }
 
