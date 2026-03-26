@@ -1,27 +1,55 @@
 // ============================================================================
 // 📅 FORMATEADORES DE FECHA Y HORA CENTRALIZADOS
+// Todas las fechas se muestran en America/Lima (-05:00) independientemente
+// del timezone del dispositivo.
 // ============================================================================
 
 import 'package:intl/intl.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
+
+/// Timezone fijo America/Lima para toda la app
+late final tz.Location _limaTz;
+bool _tzInitialized = false;
+
+/// Inicializar timezone — llamar una vez en main.dart
+void initTimezone() {
+  if (_tzInitialized) return;
+  tz_data.initializeTimeZones();
+  _limaTz = tz.getLocation('America/Lima');
+  _tzInitialized = true;
+}
+
+/// Convierte cualquier DateTime a America/Lima
+tz.TZDateTime toLima(DateTime dt) {
+  if (!_tzInitialized) initTimezone();
+  return tz.TZDateTime.from(dt, _limaTz);
+}
+
+/// DateTime.now() en Lima
+tz.TZDateTime nowLima() {
+  if (!_tzInitialized) initTimezone();
+  return tz.TZDateTime.now(_limaTz);
+}
 
 class DateFormatters {
   // ============================================================================
   // FORMATTERS ESTÁNDAR
   // ============================================================================
   
-  /// Formato de fecha completa: "28/06/2025 15:30"
+  /// Formato de fecha completa: "28/06/2025 15:30" (siempre en Lima)
   static String toFullFormat(DateTime date) {
-    return DateFormat('dd/MM/yyyy HH:mm').format(date);
+    return DateFormat('dd/MM/yyyy HH:mm').format(toLima(date));
   }
-  
-  /// Formato de fecha: "28/06/2025"
+
+  /// Formato de fecha: "28/06/2025" (siempre en Lima)
   static String toDateFormat(DateTime date) {
-    return DateFormat('dd/MM/yyyy').format(date);
+    return DateFormat('dd/MM/yyyy').format(toLima(date));
   }
-  
-  /// Formato de hora: "15:30"
+
+  /// Formato de hora: "15:30" (siempre en Lima)
   static String toTimeFormat(DateTime date) {
-    return DateFormat('HH:mm').format(date);
+    return DateFormat('HH:mm').format(toLima(date));
   }
   
   /// Formato de hora con AM/PM: "3:30 PM"
@@ -50,17 +78,17 @@ class DateFormatters {
   
   /// Fecha y hora actual en formato completo
   static String formattedNow() {
-    return toFullFormat(DateTime.now());
+    return toFullFormat(nowLima());
   }
-  
+
   /// Solo fecha actual
   static String dateNow() {
-    return toDateFormat(DateTime.now());
+    return toDateFormat(nowLima());
   }
-  
+
   /// Solo hora actual
   static String timeNow() {
-    return toTimeFormat(DateTime.now());
+    return toTimeFormat(nowLima());
   }
   
   // ============================================================================
@@ -69,7 +97,7 @@ class DateFormatters {
   
   /// Formato relativo: "Hace 5 minutos", "Ayer", "Hoy", etc.
   static String toRelativeFormat(DateTime date) {
-    final now = DateTime.now();
+    final now = nowLima();
     final difference = now.difference(date);
     
     if (difference.inDays == 0) {
@@ -93,7 +121,7 @@ class DateFormatters {
   
   /// Formato para mostrar en listas: "Hoy 15:30", "Ayer 14:20", "28/06 16:45"
   static String toListFormat(DateTime date) {
-    final now = DateTime.now();
+    final now = nowLima();
     final difference = now.difference(date);
     
     if (difference.inDays == 0) {
@@ -176,7 +204,7 @@ class DateFormatters {
   /// Parsear hora desde string "15:30"
   static DateTime? parseTimeFormat(String timeString) {
     try {
-      final today = DateTime.now();
+      final today = nowLima();
       final time = DateFormat('HH:mm').parse(timeString);
       return DateTime(today.year, today.month, today.day, time.hour, time.minute);
     } catch (e) {
@@ -209,13 +237,13 @@ class DateFormatters {
   
   /// Verificar si una fecha es hoy
   static bool isToday(DateTime date) {
-    final now = DateTime.now();
+    final now = nowLima();
     return date.year == now.year && date.month == now.month && date.day == now.day;
   }
   
   /// Verificar si una fecha es ayer
   static bool isYesterday(DateTime date) {
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    final yesterday = nowLima().subtract(const Duration(days: 1));
     return date.year == yesterday.year && 
            date.month == yesterday.month && 
            date.day == yesterday.day;
@@ -223,17 +251,17 @@ class DateFormatters {
   
   /// Verificar si una fecha es en el futuro
   static bool isFuture(DateTime date) {
-    return date.isAfter(DateTime.now());
+    return date.isAfter(nowLima());
   }
   
   /// Verificar si una fecha es en el pasado
   static bool isPast(DateTime date) {
-    return date.isBefore(DateTime.now());
+    return date.isBefore(nowLima());
   }
   
   /// Verificar si una fecha está en la semana actual
   static bool isThisWeek(DateTime date) {
-    final now = DateTime.now();
+    final now = nowLima();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     final endOfWeek = startOfWeek.add(const Duration(days: 7));
     
@@ -242,7 +270,7 @@ class DateFormatters {
   
   /// Verificar si una fecha está en el mes actual
   static bool isThisMonth(DateTime date) {
-    final now = DateTime.now();
+    final now = nowLima();
     return date.year == now.year && date.month == now.month;
   }
   
@@ -252,7 +280,7 @@ class DateFormatters {
   
   /// Calcular edad en años
   static int calculateAge(DateTime birthDate) {
-    final now = DateTime.now();
+    final now = nowLima();
     int age = now.year - birthDate.year;
     
     if (now.month < birthDate.month || 
@@ -312,15 +340,15 @@ class DateFormatters {
   // API - FECHAS PARA ENVIAR AL BACKEND
   // ============================================================================
 
-  /// Convierte DateTime a ISO 8601 con timezone UTC para enviar al backend.
-  /// Garantiza que el backend (Django USE_TZ=True) reciba la hora correcta
-  /// independientemente del timezone del dispositivo.
+  /// Convierte DateTime a ISO 8601 para enviar al backend.
+  /// Envía hora local naive — Django (TIME_ZONE='America/Lima') la interpreta
+  /// como hora Lima automáticamente.
   static String toApiIso(DateTime date) {
-    return date.toUtc().toIso8601String();
+    return date.toIso8601String();
   }
 
-  /// Convierte DateTime nullable a ISO 8601 UTC, o retorna null.
+  /// Convierte DateTime nullable a ISO 8601, o retorna null.
   static String? toApiIsoOrNull(DateTime? date) {
-    return date?.toUtc().toIso8601String();
+    return date?.toIso8601String();
   }
 }

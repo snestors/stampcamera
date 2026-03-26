@@ -1,6 +1,7 @@
 // =============================================================================
 // MODELOS DEL EXPLORADOR DE ARCHIVOS - Casos y Documentos
 // =============================================================================
+import 'package:stampcamera/core/helpers/formatters/date_formatters.dart';
 
 // ─── Enums ─────────────────────────────────────────────────────────────
 
@@ -186,9 +187,9 @@ class Carpeta {
       rutaCompleta: json['ruta_completa'] as String? ?? '',
       esRaiz: json['es_raiz'] as bool? ?? false,
       createdAt: DateTime.parse(
-          json['created_at'] as String? ?? DateTime.now().toIso8601String()),
+          json['created_at'] as String? ?? nowLima().toIso8601String()),
       updatedAt: DateTime.parse(
-          json['updated_at'] as String? ?? DateTime.now().toIso8601String()),
+          json['updated_at'] as String? ?? nowLima().toIso8601String()),
       createdBy: json['created_by'] as int?,
       createdByName: json['created_by_name'] as String?,
       isDeleted: json['is_deleted'] as bool? ?? false,
@@ -279,9 +280,9 @@ class Archivo {
       esPdf: json['es_pdf'] as bool? ?? false,
       extension: json['extension'] as String? ?? '',
       createdAt: DateTime.parse(
-          json['created_at'] as String? ?? DateTime.now().toIso8601String()),
+          json['created_at'] as String? ?? nowLima().toIso8601String()),
       updatedAt: DateTime.parse(
-          json['updated_at'] as String? ?? DateTime.now().toIso8601String()),
+          json['updated_at'] as String? ?? nowLima().toIso8601String()),
       createdBy: json['created_by'] as int?,
       createdByName: json['created_by_name'] as String?,
       isDeleted: json['is_deleted'] as bool? ?? false,

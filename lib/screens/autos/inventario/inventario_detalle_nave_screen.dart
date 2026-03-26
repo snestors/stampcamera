@@ -861,10 +861,13 @@ class _InventarioDetalleNaveScreenState
 
           // Footer con fecha
           const SizedBox(height: 12),
-          Text(
-            'Generado: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year} ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
-            style: TextStyle(fontSize: 8, color: Colors.grey.shade600),
-          ),
+          Builder(builder: (_) {
+            final ahora = nowLima();
+            return Text(
+              'Generado: ${ahora.day}/${ahora.month}/${ahora.year} ${ahora.hour}:${ahora.minute.toString().padLeft(2, '0')}',
+              style: TextStyle(fontSize: 8, color: Colors.grey.shade600),
+            );
+          }),
         ],
       ),
     );

@@ -62,8 +62,8 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
   int? _selectedDistribucionId;
   int? _selectedPlacaId;
   int? _selectedTransporteId;
-  DateTime _inicioDescarga = DateTime.now();
-  DateTime _finDescarga = DateTime.now();
+  DateTime _inicioDescarga = nowLima();
+  DateTime _finDescarga = nowLima();
   String? _fotoPath;  // Path de foto local (nueva)
   String? _existingFotoUrl;  // URL de foto existente (edición)
   bool _isSubmitting = false;
@@ -87,8 +87,8 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
         setState(() {
           _numeroTicketController.text = ticket.numeroTicket;
           _observacionesController.text = ticket.observaciones ?? '';
-          _inicioDescarga = ticket.inicioDescarga ?? DateTime.now();
-          _finDescarga = ticket.finDescarga ?? DateTime.now();
+          _inicioDescarga = ticket.inicioDescarga ?? nowLima();
+          _finDescarga = ticket.finDescarga ?? nowLima();
           _existingFotoUrl = ticket.fotoUrl;
           _effectiveServicioId = ticket.servicioId;
 
@@ -614,8 +614,8 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
         final date = await showDatePicker(
           context: context,
           initialDate: value,
-          firstDate: DateTime.now().subtract(const Duration(days: 30)),
-          lastDate: DateTime.now().add(const Duration(days: 1)),
+          firstDate: nowLima().subtract(const Duration(days: 30)),
+          lastDate: nowLima().add(const Duration(days: 1)),
         );
         if (date != null && mounted) {
           final time = await showTimePicker(

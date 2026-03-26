@@ -24,7 +24,7 @@ class ReportePedeteoScreen extends ConsumerStatefulWidget {
 }
 
 class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = nowLima();
   final _dateFormat = DateFormat('yyyy-MM-dd');
 
   @override
@@ -472,7 +472,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: nowLima(),
     );
 
     if (picked != null && picked != _selectedDate) {

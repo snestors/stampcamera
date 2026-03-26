@@ -8,6 +8,7 @@ import 'package:stampcamera/services/http_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
+import 'package:stampcamera/core/helpers/formatters/date_formatters.dart';
 
 /// Excepción especial para registros duplicados - NO es un error real
 class DuplicateRecordException implements Exception {
@@ -234,7 +235,7 @@ extension OfflineCapability on RegistroVinService {
       'fila': fila,
       'posicion': posicion,
       'contenedor_id': contenedorId,
-      'created_at': DateTime.now().toIso8601String(),
+      'created_at': nowLima().toIso8601String(),
       'status': 'pending', // pending, completed, failed
       'retry_count': 0,
     };
@@ -260,7 +261,7 @@ extension OfflineCapability on RegistroVinService {
     for (var registro in registros) {
       if (registro['vin'] == vin && registro['status'] == 'pending') {
         registro['status'] = 'completed';
-        registro['completed_at'] = DateTime.now().toIso8601String();
+        registro['completed_at'] = nowLima().toIso8601String();
         break;
       }
     }
@@ -311,12 +312,12 @@ extension OfflineCapability on RegistroVinService {
 
         // Marcar como completado
         registro['status'] = 'completed';
-        registro['completed_at'] = DateTime.now().toIso8601String();
+        registro['completed_at'] = nowLima().toIso8601String();
         debugPrint('✅ ${registro['vin']} completado');
       } on DuplicateRecordException {
         // Duplicado = ya existe en el servidor = éxito
         registro['status'] = 'completed';
-        registro['completed_at'] = DateTime.now().toIso8601String();
+        registro['completed_at'] = nowLima().toIso8601String();
         debugPrint('✅ ${registro['vin']} completado (ya existía en servidor)');
       } catch (e) {
         // Incrementar retry count
@@ -401,12 +402,12 @@ extension OfflineCapability on RegistroVinService {
 
       // Si se envía exitosamente, marcar como completado
       registros[recordIndex]['status'] = 'completed';
-      registros[recordIndex]['completed_at'] = DateTime.now().toIso8601String();
+      registros[recordIndex]['completed_at'] = nowLima().toIso8601String();
       registros[recordIndex]['error'] = null;
     } on DuplicateRecordException {
       // Duplicado = ya existe en el servidor = éxito
       registros[recordIndex]['status'] = 'completed';
-      registros[recordIndex]['completed_at'] = DateTime.now().toIso8601String();
+      registros[recordIndex]['completed_at'] = nowLima().toIso8601String();
       registros[recordIndex]['error'] = null;
       debugPrint('✅ ${registro['vin']} completado (ya existía en servidor)');
     } catch (e) {

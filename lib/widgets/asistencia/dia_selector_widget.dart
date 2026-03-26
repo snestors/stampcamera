@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:stampcamera/core/helpers/formatters/date_formatters.dart';
 
 typedef OnFechaSeleccionada = void Function(DateTime fecha);
 
@@ -24,7 +25,7 @@ class _DiaSelectorWidgetState extends State<DiaSelectorWidget> {
   @override
   void initState() {
     super.initState();
-    final hoy = DateTime.now();
+    final hoy = nowLima();
     dias = List.generate(30, (i) => hoy.subtract(Duration(days: 28 - i)));
 
     // Asegurar que el día actual esté centrado al iniciar
@@ -79,7 +80,7 @@ class _DiaSelectorWidgetState extends State<DiaSelectorWidget> {
             itemBuilder: (context, index) {
               final dia = dias[index];
               final esSeleccionado = isSameDay(widget.fechaSeleccionada, dia);
-              final isToday = isSameDay(dia, DateTime.now());
+              final isToday = isSameDay(dia, nowLima());
 
               return GestureDetector(
                 onTap: () => widget.onSeleccionar(dia),

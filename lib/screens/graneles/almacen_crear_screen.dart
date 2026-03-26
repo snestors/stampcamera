@@ -43,8 +43,8 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
   bool _isSearchingBalanzas = false;
   Timer? _searchDebounce;
 
-  DateTime _fechaEntradaAlmacen = DateTime.now();
-  DateTime _fechaSalidaAlmacen = DateTime.now();
+  DateTime _fechaEntradaAlmacen = nowLima();
+  DateTime _fechaSalidaAlmacen = nowLima();
   String? _foto1Path;
   String? _foto2Path;
   String? _existingFoto1Url;
@@ -108,8 +108,8 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
           _pesoNetoController.text = almacen.pesoNeto.toStringAsFixed(3);
           _bagsController.text = almacen.bags?.toString() ?? '';
           _observacionesController.text = almacen.observaciones ?? '';
-          _fechaEntradaAlmacen = almacen.fechaEntradaAlmacen ?? DateTime.now();
-          _fechaSalidaAlmacen = almacen.fechaSalidaAlmacen ?? DateTime.now();
+          _fechaEntradaAlmacen = almacen.fechaEntradaAlmacen ?? nowLima();
+          _fechaSalidaAlmacen = almacen.fechaSalidaAlmacen ?? nowLima();
           _existingFoto1Url = almacen.foto1Url;
           _isLoadingAlmacen = false;
         });
@@ -433,7 +433,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
               SizedBox(width: DesignTokens.spaceXS),
               Expanded(
                 child: Text(
-                  'Debe ser posterior a salida balanza: ${dateFormat.format(_selectedBalanza!.fechaSalidaBalanza!.toLocal())}',
+                  'Debe ser posterior a salida balanza: ${dateFormat.format(toLima(_selectedBalanza!.fechaSalidaBalanza!))}',
                   style: TextStyle(
                     color: AppColors.error,
                     fontSize: DesignTokens.fontSizeXS,
@@ -509,7 +509,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: nowLima().add(const Duration(days: 1)),
     );
 
     if (date != null && mounted) {

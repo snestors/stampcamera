@@ -39,7 +39,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   int? _selectedDistribucionId;
   int? _selectedJornadaId;
 
-  DateTime _fechaHora = DateTime.now();
+  DateTime _fechaHora = nowLima();
   String? _fotoPath;
   String? _existingFotoUrl;
   bool _isSubmitting = false;
@@ -71,7 +71,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           _numeroCamionController.text = silo.numeroSilo?.toString() ?? '';
           _pesoController.text = silo.peso?.toStringAsFixed(3) ?? '';
           _bagsController.text = silo.bags?.toString() ?? '';
-          _fechaHora = silo.fechaHora ?? DateTime.now();
+          _fechaHora = silo.fechaHora ?? nowLima();
           _existingFotoUrl = silo.fotoUrl;
           _isLoadingSilo = false;
         });
@@ -461,7 +461,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       context: context,
       initialDate: _fechaHora,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: nowLima().add(const Duration(days: 1)),
     );
 
     if (date != null && mounted) {
@@ -588,7 +588,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       final data = <String, dynamic>{
         'n_camion': int.parse(_numeroCamionController.text),
         'cantidad': double.parse(_pesoController.text),
-        'fecha_pesaje': _fechaHora.toUtc().toIso8601String(),
+        'fecha_pesaje': _fechaHora.toIso8601String(),
       };
 
       if (!widget.isEditMode) {

@@ -60,15 +60,15 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
   int? _selectedDistribucionAlmacenId;
   int? _selectedPrecintoId;
   int? _selectedPermisoId;
-  DateTime _fechaEntradaBalanza = DateTime.now();
-  DateTime _fechaSalidaBalanza = DateTime.now();
+  DateTime _fechaEntradaBalanza = nowLima();
+  DateTime _fechaSalidaBalanza = nowLima();
   String? _foto1Path;
   String? _foto2Path;
   String? _existingFoto1Url;
   String? _existingFoto2Url;
   bool _isSubmitting = false;
   bool _isLoadingBalanza = false;
-  final DateTime _fechaEnvioWp = DateTime.now();
+  final DateTime _fechaEnvioWp = nowLima();
 
   @override
   void initState() {
@@ -101,8 +101,8 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
           _balanzaEntradaController.text = balanza.balanzaEntrada ?? '';
           _balanzaSalidaController.text = balanza.balanzaSalida ?? '';
           _observacionesController.text = balanza.observaciones ?? '';
-          _fechaEntradaBalanza = balanza.fechaEntradaBalanza ?? DateTime.now();
-          _fechaSalidaBalanza = balanza.fechaSalidaBalanza ?? DateTime.now();
+          _fechaEntradaBalanza = balanza.fechaEntradaBalanza ?? nowLima();
+          _fechaSalidaBalanza = balanza.fechaSalidaBalanza ?? nowLima();
           _existingFoto1Url = balanza.foto1Url;
           _existingFoto2Url = balanza.foto2Url;
           // Setear IDs para edición
@@ -778,7 +778,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
       context: context,
       initialDate: initialDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: nowLima().add(const Duration(days: 1)),
     );
 
     if (date != null && mounted) {
