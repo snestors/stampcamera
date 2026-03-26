@@ -1563,11 +1563,22 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
   // SUBMIT — Enviar todo al backend
   // =========================================================================
 
+  // Helpers de validación de pesos
+  bool _pesoBrutoMayorTara(TextEditingController bruto, TextEditingController tara) {
+    final b = double.tryParse(bruto.text) ?? 0;
+    final t = double.tryParse(tara.text) ?? 0;
+    if (b <= 0 || t <= 0) return true; // no validar si no hay datos
+    return b > t;
+  }
+
   /// Recolecta todos los errores de validación por paso
+  /// Replica EXACTAMENTE las validaciones del frontend React (ViajeForm)
   Map<String, List<String>> _validateAll() {
     final errors = <String, List<String>>{};
 
-    // ── MUELLE (siempre requerido) ──
+    // ══════════════════════════════════════════════════════════════════
+    // MUELLE (siempre requerido)
+    // ══════════════════════════════════════════════════════════════════
     final muelleErrors = <String>[];
     if (_numeroTicketController.text.trim().isEmpty) muelleErrors.add('N° Ticket es requerido');
     if (_selectedBlId == null) muelleErrors.add('Debe seleccionar un BL');
@@ -1577,23 +1588,74 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
     }
     if (muelleErrors.isNotEmpty) errors['Muelle'] = muelleErrors;
 
-    // ── BALANZA (solo si tiene datos) ──
+    // ══════════════════════════════════════════════════════════════════
+    // BALANZA (solo si tiene datos ingresados)
+    // ══════════════════════════════════════════════════════════════════
     if (_hasBalanzaData) {
       final balanzaErrors = <String>[];
-      if (_hasBalanzaTimeError) balanzaErrors.add('Salida debe ser posterior a entrada');
-      if (_hasPesoNetoError(_balanzaPesoBrutoController, _balanzaPesoTaraController, _balanzaPesoNetoController)) {
-        balanzaErrors.add('Peso neto no coincide con bruto - tara');
+
+      // Required si hay datos de balanza
+      if (_guiaController.text.trim().isEmpty) balanzaErrors.add('Guía es requerida');
+      if (_balanzaPesoBrutoController.text.trim().isEmpty) balanzaErrors.add('Peso Bruto es requerido');
+      if (_balanzaPesoTaraController.text.trim().isEmpty) balanzaErrors.add('Peso Tara es requerido');
+      if (_balanzaPesoNetoController.text.trim().isEmpty) balanzaErrors.add('Peso Neto es requerido');
+      if (_balanzaFoto1Path == null && _existingBalanzaFoto1Url == null) balanzaErrors.add('Foto 1 es requerida');
+
+      // Cronología: Entrada balanza < Inicio cargío
+      if (_fechaEntradaBalanza.isAfter(_inicioDescarga)) {
+        balanzaErrors.add('Entrada balanza debe ser anterior a Inicio de cargío');
       }
+      // Salida balanza > Entrada balanza
+      if (_hasBalanzaTimeError) {
+        balanzaErrors.add('Salida balanza debe ser posterior a Entrada balanza');
+      }
+      // Salida balanza > Fin cargío
+      if (_fechaSalidaBalanza.isBefore(_finDescarga) || _fechaSalidaBalanza.isAtSameMomentAs(_finDescarga)) {
+        balanzaErrors.add('Salida balanza debe ser posterior a Fin de cargío');
+      }
+
+      // Peso bruto > tara
+      if (!_pesoBrutoMayorTara(_balanzaPesoBrutoController, _balanzaPesoTaraController)) {
+        balanzaErrors.add('Peso Bruto debe ser mayor que Tara');
+      }
+      // Peso neto = bruto - tara (± 0.001)
+      if (_hasPesoNetoError(_balanzaPesoBrutoController, _balanzaPesoTaraController, _balanzaPesoNetoController)) {
+        balanzaErrors.add('Peso Neto no coincide con Bruto - Tara');
+      }
+
       if (balanzaErrors.isNotEmpty) errors['Balanza'] = balanzaErrors;
     }
 
-    // ── ALMACÉN (solo si tiene datos) ──
+    // ══════════════════════════════════════════════════════════════════
+    // ALMACÉN (solo si tiene datos ingresados)
+    // ══════════════════════════════════════════════════════════════════
     if (_hasAlmacenData) {
       final almacenErrors = <String>[];
-      if (_hasAlmacenTimeError) almacenErrors.add('Salida debe ser posterior a entrada');
-      if (_hasPesoNetoError(_almacenPesoBrutoController, _almacenPesoTaraController, _almacenPesoNetoController)) {
-        almacenErrors.add('Peso neto no coincide con bruto - tara');
+
+      // Required si hay datos de almacén
+      if (_almacenPesoBrutoController.text.trim().isEmpty) almacenErrors.add('Peso Bruto es requerido');
+      if (_almacenPesoTaraController.text.trim().isEmpty) almacenErrors.add('Peso Tara es requerido');
+      if (_almacenPesoNetoController.text.trim().isEmpty) almacenErrors.add('Peso Neto es requerido');
+      if (_almacenFoto1Path == null && _existingAlmacenFoto1Url == null) almacenErrors.add('Foto 1 es requerida');
+
+      // Cronología: Entrada almacén > Salida balanza
+      if (_hasBalanzaData && _fechaEntradaAlmacen.isBefore(_fechaSalidaBalanza)) {
+        almacenErrors.add('Entrada almacén debe ser posterior a Salida balanza');
       }
+      // Salida almacén > Entrada almacén
+      if (_hasAlmacenTimeError) {
+        almacenErrors.add('Salida almacén debe ser posterior a Entrada almacén');
+      }
+
+      // Peso bruto > tara
+      if (!_pesoBrutoMayorTara(_almacenPesoBrutoController, _almacenPesoTaraController)) {
+        almacenErrors.add('Peso Bruto debe ser mayor que Tara');
+      }
+      // Peso neto = bruto - tara (± 0.001)
+      if (_hasPesoNetoError(_almacenPesoBrutoController, _almacenPesoTaraController, _almacenPesoNetoController)) {
+        almacenErrors.add('Peso Neto no coincide con Bruto - Tara');
+      }
+
       if (almacenErrors.isNotEmpty) errors['Almacén'] = almacenErrors;
     }
 
