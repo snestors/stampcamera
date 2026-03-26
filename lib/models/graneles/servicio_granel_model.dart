@@ -111,6 +111,11 @@ class BalanzaResumen {
   final String? permiso;
   final String? observaciones;
   final String? foto1Url;
+  final String? foto2Url;
+  // IDs para edicion
+  final int? distribucionAlmacenId;
+  final int? precintoId;
+  final int? permisoId;
 
   const BalanzaResumen({
     required this.id,
@@ -128,6 +133,10 @@ class BalanzaResumen {
     this.permiso,
     this.observaciones,
     this.foto1Url,
+    this.foto2Url,
+    this.distribucionAlmacenId,
+    this.precintoId,
+    this.permisoId,
   });
 
   factory BalanzaResumen.fromJson(Map<String, dynamic> json) {
@@ -151,6 +160,10 @@ class BalanzaResumen {
       permiso: json['permiso_str']?.toString() ?? json['permiso']?.toString(),
       observaciones: json['observaciones']?.toString(),
       foto1Url: json['foto1_url']?.toString(),
+      foto2Url: json['foto2_url']?.toString(),
+      distribucionAlmacenId: json['distribucion_almacen'],
+      precintoId: json['precinto'] is int ? json['precinto'] : null,
+      permisoId: json['permiso'] is int ? json['permiso'] : null,
     );
   }
 }
@@ -166,6 +179,7 @@ class AlmacenResumen {
   final DateTime? fechaSalidaAlmacen;
   final String? observaciones;
   final String? foto1Url;
+  final String? foto2Url;
 
   const AlmacenResumen({
     required this.id,
@@ -177,6 +191,7 @@ class AlmacenResumen {
     this.fechaSalidaAlmacen,
     this.observaciones,
     this.foto1Url,
+    this.foto2Url,
   });
 
   factory AlmacenResumen.fromJson(Map<String, dynamic> json) {
@@ -194,6 +209,7 @@ class AlmacenResumen {
           : null,
       observaciones: json['observaciones']?.toString(),
       foto1Url: json['foto1_url']?.toString(),
+      foto2Url: json['foto2_url']?.toString(),
     );
   }
 }
@@ -209,6 +225,7 @@ class TicketMuelle with HasId {
   final DateTime? inicioDescarga;
   final DateTime? finDescarga;
   final String? tiempoCargio;
+  final String? estado; // pendiente_balanza, pendiente_almacen, completo
   final bool tieneBalanza;
   final String? fotoUrl;
   final String? observaciones;
@@ -241,6 +258,7 @@ class TicketMuelle with HasId {
     this.inicioDescarga,
     this.finDescarga,
     this.tiempoCargio,
+    this.estado,
     this.tieneBalanza = false,
     this.fotoUrl,
     this.observaciones,
@@ -275,7 +293,8 @@ class TicketMuelle with HasId {
           ? DateTime.tryParse(json['fin_descarga'])
           : null,
       tiempoCargio: json['tiempo_cargio'],
-      tieneBalanza: json['tiene_balanza'] ?? false,
+      estado: json['estado']?.toString(),
+      tieneBalanza: json['tiene_balanza'] ?? (json['estado'] != 'pendiente_balanza'),
       fotoUrl: json['foto_url'],
       observaciones: json['observaciones'],
       transporteNombre: json['transporte_nombre'],

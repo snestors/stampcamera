@@ -89,7 +89,7 @@ class _TicketDetalleContent extends StatelessWidget {
               context: context,
               photoUrl: ticket.fotoUrl,
               canEdit: permissions.muelle.canEdit,
-              onEdit: () => context.push('/graneles/ticket/editar/${ticket.id}'),
+              onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}'),
             ),
             children: [
               _buildInfoRow('Número Ticket', ticket.numeroTicket),
@@ -147,7 +147,7 @@ class _TicketDetalleContent extends StatelessWidget {
                 context: context,
                 photoUrl: ticket.balanzaData!.foto1Url,
                 canEdit: permissions.balanza.canEdit,
-                onEdit: () => context.push('/graneles/balanza/editar/${ticket.balanzaData!.id}'),
+                onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}'),
               ),
               children: [
                 _buildInfoRow('Guia', ticket.balanzaData!.guia),
@@ -232,7 +232,7 @@ class _TicketDetalleContent extends StatelessWidget {
               message: 'Sin registro de balanza',
               actionLabel: 'Agregar Balanza',
               canAdd: permissions.balanza.canAdd,
-              onAdd: () => context.push('/graneles/balanza/crear'),
+              onAdd: () => context.push('/graneles/balanza/crear?ticket_id=${ticket.id}'),
             ),
             SizedBox(height: DesignTokens.spaceM),
           ],
@@ -249,7 +249,7 @@ class _TicketDetalleContent extends StatelessWidget {
                 context: context,
                 photoUrl: ticket.almacenData!.foto1Url,
                 canEdit: permissions.almacen.canEdit,
-                onEdit: () => context.push('/graneles/almacen/editar/${ticket.almacenData!.id}'),
+                onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}'),
               ),
               children: [
                 // Pesos
@@ -260,6 +260,52 @@ class _TicketDetalleContent extends StatelessWidget {
                   ticket.almacenData!.pesoNeto,
                   ticket.almacenData!.bags,
                 ),
+                // Diferencia peso neto: puerto vs almacén
+                if (ticket.balanzaData != null) ...[
+                  SizedBox(height: DesignTokens.spaceS),
+                  Builder(builder: (context) {
+                    final pesoPuerto = ticket.balanzaData!.pesoNeto;
+                    final pesoAlmacen = ticket.almacenData!.pesoNeto;
+                    final diferencia = pesoAlmacen - pesoPuerto;
+                    final isPositive = diferencia >= 0;
+                    return Container(
+                      padding: EdgeInsets.all(DesignTokens.spaceS),
+                      decoration: BoxDecoration(
+                        color: (isPositive ? AppColors.success : AppColors.error).withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                        border: Border.all(
+                          color: (isPositive ? AppColors.success : AppColors.error).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isPositive ? Icons.arrow_upward : Icons.arrow_downward,
+                            size: 16,
+                            color: isPositive ? AppColors.success : AppColors.error,
+                          ),
+                          SizedBox(width: DesignTokens.spaceXS),
+                          Text(
+                            'Diferencia: ${isPositive ? "+" : ""}${numberFormat.format(diferencia)} TM',
+                            style: TextStyle(
+                              fontSize: DesignTokens.fontSizeS,
+                              fontWeight: FontWeight.w600,
+                              color: isPositive ? AppColors.success : AppColors.error,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Puerto: ${numberFormat.format(pesoPuerto)}',
+                            style: TextStyle(
+                              fontSize: DesignTokens.fontSizeXS,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
                 const Divider(),
                 // Tiempos
                 Row(
@@ -319,7 +365,7 @@ class _TicketDetalleContent extends StatelessWidget {
               message: 'Sin registro de almacen',
               actionLabel: 'Agregar Almacen',
               canAdd: permissions.almacen.canAdd,
-              onAdd: () => context.push('/graneles/almacen/crear'),
+              onAdd: () => context.push('/graneles/almacen/crear?balanza_id=${ticket.balanzaData!.id}'),
             ),
           ],
           // Si no tiene balanza, no mostrar seccion de almacen (primero necesita balanza)

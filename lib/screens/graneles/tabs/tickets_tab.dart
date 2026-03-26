@@ -396,8 +396,8 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
   }
 
   void _navigateToCreateTicket() {
-    // Navegar directamente a crear ticket - el formulario mostrara BLs de naves en operacion
-    context.push('/graneles/ticket/crear');
+    // Navegar al formulario unificado de viaje (3 pasos)
+    context.push('/graneles/viaje/crear');
   }
 }
 
@@ -507,15 +507,25 @@ class _TicketCard extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: ticket.tieneBalanza
+                      color: ticket.estado == 'completo'
                           ? AppColors.success.withValues(alpha: 0.1)
-                          : AppColors.warning.withValues(alpha: 0.1),
+                          : ticket.estado == 'pendiente_almacen'
+                              ? AppColors.info.withValues(alpha: 0.1)
+                              : AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                     ),
                     child: Text(
-                      ticket.tieneBalanza ? 'Con Balanza' : 'Sin Balanza',
+                      ticket.estado == 'completo'
+                          ? 'Completo'
+                          : ticket.estado == 'pendiente_almacen'
+                              ? 'Pend. Almacén'
+                              : 'Pend. Balanza',
                       style: TextStyle(
-                        color: ticket.tieneBalanza ? AppColors.success : AppColors.warning,
+                        color: ticket.estado == 'completo'
+                            ? AppColors.success
+                            : ticket.estado == 'pendiente_almacen'
+                                ? AppColors.info
+                                : AppColors.warning,
                         fontWeight: FontWeight.w600,
                         fontSize: DesignTokens.fontSizeXS,
                       ),

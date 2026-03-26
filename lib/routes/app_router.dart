@@ -22,6 +22,7 @@ import 'package:stampcamera/screens/graneles/ticket_crear_screen.dart';
 import 'package:stampcamera/screens/graneles/balanza_crear_screen.dart';
 import 'package:stampcamera/screens/graneles/almacen_crear_screen.dart';
 import 'package:stampcamera/screens/graneles/silos_crear_screen.dart';
+import 'package:stampcamera/screens/graneles/viaje_form_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 import 'package:stampcamera/screens/device_registration_screen.dart';
@@ -203,6 +204,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               return ServicioDashboardScreen(servicioId: servicioId);
             },
           ),
+          // Viaje unificado (3 pasos: muelle + balanza + almacén)
+          GoRoute(
+            path: 'viaje/crear',
+            builder: (context, state) {
+              final servicioId = int.tryParse(state.uri.queryParameters['servicio_id'] ?? '');
+              return servicioId != null
+                  ? ViajeFormScreen(servicioId: servicioId)
+                  : const ViajeFormScreen();
+            },
+          ),
+          GoRoute(
+            path: 'viaje/editar/:ticketId',
+            builder: (context, state) {
+              final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
+              if (ticketId == 0) return const HomeScreen();
+              return ViajeFormScreen.edit(ticketId: ticketId);
+            },
+          ),
           // IMPORTANTE: Rutas específicas deben ir ANTES de las rutas con parámetros genéricos
           // Ruta sin servicioId - muestra BLs de todas las naves en operación
           GoRoute(
@@ -241,7 +260,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'balanza/crear',
             builder: (context, state) {
-              return const BalanzaCrearScreen();
+              final ticketId = int.tryParse(state.uri.queryParameters['ticket_id'] ?? '');
+              return BalanzaCrearScreen(preselectedTicketId: ticketId);
             },
           ),
           GoRoute(
@@ -256,7 +276,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'almacen/crear',
             builder: (context, state) {
-              return const AlmacenCrearScreen();
+              final balanzaId = int.tryParse(state.uri.queryParameters['balanza_id'] ?? '');
+              return AlmacenCrearScreen(preselectedBalanzaId: balanzaId);
             },
           ),
           GoRoute(
