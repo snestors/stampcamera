@@ -9,6 +9,8 @@ import 'package:stampcamera/services/graneles/graneles_service.dart';
 import 'package:stampcamera/screens/graneles/tabs/servicios_tab.dart';
 import 'package:stampcamera/screens/graneles/tabs/tickets_tab.dart';
 import 'package:stampcamera/screens/graneles/tabs/silos_tab.dart';
+import 'package:stampcamera/screens/graneles/tabs/paralizaciones_tab.dart';
+import 'package:stampcamera/screens/graneles/tabs/control_temperatura_tab.dart';
 
 /// Definición de tab con su configuración
 class _TabConfig {
@@ -60,6 +62,18 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
       label: 'Silos',
       icon: Icons.storage,
       tab: SilosTab(),
+    ),
+    _TabConfig(
+      key: 'paralizaciones',
+      label: 'Paraliz.',
+      icon: Icons.pause_circle,
+      tab: ParalizacionesTab(),
+    ),
+    _TabConfig(
+      key: 'control_humedad',
+      label: 'Ctrl Temp.',
+      icon: Icons.thermostat,
+      tab: ControlTemperaturaTab(),
     ),
   ];
 

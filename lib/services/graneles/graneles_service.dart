@@ -426,6 +426,8 @@ class UserGranelesPermissions {
   final TabPermission balanza;
   final TabPermission almacen;
   final TabPermission silos;
+  final TabPermission paralizaciones;
+  final TabPermission controlHumedad;
 
   UserGranelesPermissions({
     required this.isSuperuser,
@@ -439,6 +441,8 @@ class UserGranelesPermissions {
     required this.balanza,
     required this.almacen,
     required this.silos,
+    required this.paralizaciones,
+    required this.controlHumedad,
   });
 
   factory UserGranelesPermissions.fromJson(Map<String, dynamic> json) {
@@ -455,6 +459,8 @@ class UserGranelesPermissions {
       balanza: TabPermission.fromJson(tabs['balanza'] ?? {}),
       almacen: TabPermission.fromJson(tabs['almacen'] ?? {}),
       silos: TabPermission.fromJson(tabs['silos'] ?? {}),
+      paralizaciones: TabPermission.fromJson(tabs['paralizaciones'] ?? {}),
+      controlHumedad: TabPermission.fromJson(tabs['control_humedad'] ?? {}),
     );
   }
 
@@ -472,6 +478,8 @@ class UserGranelesPermissions {
     balanza: TabPermission(visible: true, canAdd: false, canEdit: false),
     almacen: TabPermission(visible: true, canAdd: false, canEdit: false),
     silos: TabPermission(visible: true, canAdd: false, canEdit: false),
+    paralizaciones: TabPermission(visible: true, canAdd: false, canEdit: false),
+    controlHumedad: TabPermission(visible: true, canAdd: false, canEdit: false),
   );
 
   /// Lista de tabs visibles (en orden)
@@ -482,6 +490,8 @@ class UserGranelesPermissions {
     if (balanza.visible) tabs.add('balanza');
     if (almacen.visible) tabs.add('almacen');
     if (silos.visible) tabs.add('silos');
+    if (paralizaciones.visible) tabs.add('paralizaciones');
+    if (controlHumedad.visible) tabs.add('control_humedad');
     return tabs;
   }
 

@@ -30,7 +30,9 @@ class SilosCrearScreen extends ConsumerStatefulWidget {
 class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   final _formKey = GlobalKey<FormState>();
   final _numeroCamionController = TextEditingController();
-  final _pesoController = TextEditingController();
+  final _pesoBrutoController = TextEditingController();
+  final _pesoTaraController = TextEditingController();
+  final _pesoNetoController = TextEditingController();
   final _bagsController = TextEditingController();
   final _observacionesController = TextEditingController();
 
@@ -69,7 +71,9 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       if (mounted) {
         setState(() {
           _numeroCamionController.text = silo.numeroSilo?.toString() ?? '';
-          _pesoController.text = silo.peso?.toStringAsFixed(3) ?? '';
+          _pesoBrutoController.text = silo.pesoBruto?.toStringAsFixed(3) ?? '';
+          _pesoTaraController.text = silo.pesoTara?.toStringAsFixed(3) ?? '';
+          _pesoNetoController.text = silo.peso?.toStringAsFixed(3) ?? '';
           _bagsController.text = silo.bags?.toString() ?? '';
           _fechaHora = silo.fechaHora != null ? toLima(silo.fechaHora!) : nowLima();
           _existingFotoUrl = silo.fotoUrl;
@@ -87,7 +91,9 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   @override
   void dispose() {
     _numeroCamionController.dispose();
-    _pesoController.dispose();
+    _pesoBrutoController.dispose();
+    _pesoTaraController.dispose();
+    _pesoNetoController.dispose();
     _bagsController.dispose();
     _observacionesController.dispose();
     super.dispose();
@@ -487,51 +493,139 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     }
   }
 
+  /// Calcula peso neto automáticamente cuando cambian bruto o tara
+  void _calcularPesoNeto() {
+    final bruto = double.tryParse(_pesoBrutoController.text);
+    final tara = double.tryParse(_pesoTaraController.text);
+    if (bruto != null && tara != null && bruto > tara) {
+      final neto = bruto - tara;
+      _pesoNetoController.text = neto.toStringAsFixed(3);
+    }
+  }
+
   Widget _buildWeightFields() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          flex: 2,
-          child: TextFormField(
-            controller: _pesoController,
-            decoration: InputDecoration(
-              labelText: 'Peso (TM) *',
-              hintText: '0.000',
-              suffixText: 'TM',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        // Fila 1: Peso Bruto y Peso Tara
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _pesoBrutoController,
+                decoration: InputDecoration(
+                  labelText: 'P. Bruto (TM) *',
+                  hintText: '0.000',
+                  suffixText: 'TM',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                ],
+                onChanged: (_) => _calcularPesoNeto(),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Requerido';
+                  final num = double.tryParse(value);
+                  if (num == null || num <= 0) return 'Invalido';
+                  return null;
+                },
               ),
-              filled: true,
-              fillColor: AppColors.surface,
             ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
-            ],
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) return 'Requerido';
-              final num = double.tryParse(value);
-              if (num == null || num <= 0) return 'Inválido';
-              return null;
-            },
-          ),
+            SizedBox(width: DesignTokens.spaceS),
+            Expanded(
+              child: TextFormField(
+                controller: _pesoTaraController,
+                decoration: InputDecoration(
+                  labelText: 'P. Tara (TM) *',
+                  hintText: '0.000',
+                  suffixText: 'TM',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                ],
+                onChanged: (_) => _calcularPesoNeto(),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Requerido';
+                  final num = double.tryParse(value);
+                  if (num == null || num < 0) return 'Invalido';
+                  // Validar que bruto > tara
+                  final bruto = double.tryParse(_pesoBrutoController.text);
+                  if (bruto != null && num >= bruto) {
+                    return 'Debe ser menor que bruto';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
         ),
-        SizedBox(width: DesignTokens.spaceS),
-        Expanded(
-          child: TextFormField(
-            controller: _bagsController,
-            decoration: InputDecoration(
-              labelText: 'Bags',
-              hintText: 'Opcional',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        SizedBox(height: DesignTokens.spaceS),
+
+        // Fila 2: Peso Neto y Bags
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _pesoNetoController,
+                decoration: InputDecoration(
+                  labelText: 'P. Neto (TM) *',
+                  hintText: '0.000',
+                  suffixText: 'TM',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
+                ],
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Requerido';
+                  final neto = double.tryParse(value);
+                  if (neto == null || neto <= 0) return 'Invalido';
+                  // Validar que neto = bruto - tara (con tolerancia ± 0.001)
+                  final bruto = double.tryParse(_pesoBrutoController.text);
+                  final tara = double.tryParse(_pesoTaraController.text);
+                  if (bruto != null && tara != null) {
+                    final expected = bruto - tara;
+                    if ((neto - expected).abs() > 0.001) {
+                      return 'Debe ser bruto - tara';
+                    }
+                  }
+                  return null;
+                },
               ),
-              filled: true,
-              fillColor: AppColors.surface,
             ),
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
+            SizedBox(width: DesignTokens.spaceS),
+            Expanded(
+              child: TextFormField(
+                controller: _bagsController,
+                decoration: InputDecoration(
+                  labelText: 'Bags',
+                  hintText: 'Opcional',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surface,
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -587,7 +681,9 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
 
       final data = <String, dynamic>{
         'n_camion': int.parse(_numeroCamionController.text),
-        'cantidad': double.parse(_pesoController.text),
+        'peso_bruto': double.parse(_pesoBrutoController.text),
+        'peso_tara': double.parse(_pesoTaraController.text),
+        'cantidad': double.parse(_pesoNetoController.text),
         'fecha_pesaje': _fechaHora.toIso8601String(),
       };
 

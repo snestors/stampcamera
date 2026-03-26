@@ -416,7 +416,9 @@ class Silos with HasId {
   final int id;
   final int? numeroSilo;  // n_camion en el modelo Django
   final String? productoNombre;
-  final double? peso;  // cantidad en el modelo Django
+  final double? peso;  // cantidad (peso neto) en el modelo Django
+  final double? pesoBruto;  // peso_bruto en el modelo Django
+  final double? pesoTara;   // peso_tara en el modelo Django
   final int? bags;
   final DateTime? fechaHora;  // fecha_pesaje en el modelo Django
   final String? fotoUrl;
@@ -426,6 +428,8 @@ class Silos with HasId {
     this.numeroSilo,
     this.productoNombre,
     this.peso,
+    this.pesoBruto,
+    this.pesoTara,
     this.bags,
     this.fechaHora,
     this.fotoUrl,
@@ -437,6 +441,8 @@ class Silos with HasId {
       numeroSilo: json['numero_silo'],
       productoNombre: json['producto_nombre'],
       peso: json['peso'] != null ? _parseDouble(json['peso']) : null,
+      pesoBruto: json['peso_bruto'] != null ? _parseDouble(json['peso_bruto']) : null,
+      pesoTara: json['peso_tara'] != null ? _parseDouble(json['peso_tara']) : null,
       bags: json['bags'],
       fechaHora: json['fecha_hora'] != null
           ? DateTime.tryParse(json['fecha_hora'])
