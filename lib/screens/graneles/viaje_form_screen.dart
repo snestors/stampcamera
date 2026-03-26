@@ -1821,6 +1821,11 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       ref.invalidate(ticketsMuelleProvider);
 
       if (mounted) {
+        // Invalidar providers para que el detalle y la lista se refresquen
+        if (_editTicketId != null) {
+          ref.invalidate(ticketMuelleDetalleProvider(_editTicketId!));
+        }
+        ref.invalidate(ticketsMuelleProvider);
         AppSnackBar.success(context, widget.isEditMode ? 'Viaje actualizado correctamente' : 'Viaje creado correctamente');
         context.pop();
       }
