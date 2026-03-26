@@ -1563,55 +1563,116 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
   // SUBMIT — Enviar todo al backend
   // =========================================================================
 
-  Future<void> _submitForm() async {
-    // Validar paso 1 (muelle) siempre requerido
-    if (_numeroTicketController.text.trim().isEmpty) {
-      AppSnackBar.error(context, 'El numero de ticket es requerido');
-      setState(() => _currentStep = 0);
-      return;
-    }
-    if (_selectedBlId == null) {
-      AppSnackBar.error(context, 'Debe seleccionar un BL');
-      setState(() => _currentStep = 0);
-      return;
-    }
-    if (_hasMuelleTimeError) {
-      AppSnackBar.error(context, 'El fin de cargio debe ser mayor que el inicio');
-      setState(() => _currentStep = 0);
-      return;
-    }
+  /// Recolecta todos los errores de validación por paso
+  Map<String, List<String>> _validateAll() {
+    final errors = <String, List<String>>{};
+
+    // ── MUELLE (siempre requerido) ──
+    final muelleErrors = <String>[];
+    if (_numeroTicketController.text.trim().isEmpty) muelleErrors.add('N° Ticket es requerido');
+    if (_selectedBlId == null) muelleErrors.add('Debe seleccionar un BL');
+    if (_hasMuelleTimeError) muelleErrors.add('Fin de cargío debe ser posterior al inicio');
     if (!widget.isEditMode && _muelleFotoPath == null && _existingMuelleFotoUrl == null) {
-      AppSnackBar.error(context, 'La foto del ticket es requerida');
-      setState(() => _currentStep = 0);
-      return;
+      muelleErrors.add('La foto es requerida');
     }
+    if (muelleErrors.isNotEmpty) errors['Muelle'] = muelleErrors;
 
-    // Validar balanza si tiene datos
+    // ── BALANZA (solo si tiene datos) ──
     if (_hasBalanzaData) {
-      if (_hasBalanzaTimeError) {
-        AppSnackBar.error(context, 'Balanza: la fecha de salida debe ser mayor que la de entrada');
-        setState(() => _currentStep = 1);
-        return;
-      }
+      final balanzaErrors = <String>[];
+      if (_hasBalanzaTimeError) balanzaErrors.add('Salida debe ser posterior a entrada');
       if (_hasPesoNetoError(_balanzaPesoBrutoController, _balanzaPesoTaraController, _balanzaPesoNetoController)) {
-        AppSnackBar.error(context, 'Balanza: el peso neto no coincide con bruto - tara');
-        setState(() => _currentStep = 1);
-        return;
+        balanzaErrors.add('Peso neto no coincide con bruto - tara');
       }
+      if (balanzaErrors.isNotEmpty) errors['Balanza'] = balanzaErrors;
     }
 
-    // Validar almacen si tiene datos
+    // ── ALMACÉN (solo si tiene datos) ──
     if (_hasAlmacenData) {
-      if (_hasAlmacenTimeError) {
-        AppSnackBar.error(context, 'Almacen: la entrada debe ser anterior a la salida');
-        setState(() => _currentStep = 2);
-        return;
-      }
+      final almacenErrors = <String>[];
+      if (_hasAlmacenTimeError) almacenErrors.add('Salida debe ser posterior a entrada');
       if (_hasPesoNetoError(_almacenPesoBrutoController, _almacenPesoTaraController, _almacenPesoNetoController)) {
-        AppSnackBar.error(context, 'Almacen: el peso neto no coincide con bruto - tara');
-        setState(() => _currentStep = 2);
-        return;
+        almacenErrors.add('Peso neto no coincide con bruto - tara');
       }
+      if (almacenErrors.isNotEmpty) errors['Almacén'] = almacenErrors;
+    }
+
+    return errors;
+  }
+
+  /// Muestra diálogo con errores de validación agrupados por paso
+  void _showValidationDialog(Map<String, List<String>> errors) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusL)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 28),
+            SizedBox(width: DesignTokens.spaceS),
+            const Text('Campos pendientes', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Corrige los siguientes errores antes de guardar:',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: DesignTokens.fontSizeS),
+            ),
+            SizedBox(height: DesignTokens.spaceM),
+            ...errors.entries.map((entry) => Padding(
+              padding: EdgeInsets.only(bottom: DesignTokens.spaceM),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.key,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                      fontSize: DesignTokens.fontSizeS,
+                    ),
+                  ),
+                  SizedBox(height: DesignTokens.spaceXS),
+                  ...entry.value.map((msg) => Padding(
+                    padding: EdgeInsets.only(left: DesignTokens.spaceM, bottom: 2),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.circle, size: 6, color: AppColors.error),
+                        SizedBox(width: DesignTokens.spaceS),
+                        Expanded(
+                          child: Text(msg, style: TextStyle(fontSize: DesignTokens.fontSizeS)),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+              ),
+            )),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Entendido', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitForm() async {
+    final errors = _validateAll();
+    if (errors.isNotEmpty) {
+      _showValidationDialog(errors);
+      // Navegar al primer paso con error
+      final firstErrorStep = errors.keys.first;
+      final stepIndex = firstErrorStep == 'Muelle' ? 0 : firstErrorStep == 'Balanza' ? 1 : 2;
+      setState(() => _currentStep = stepIndex);
+      return;
     }
 
     setState(() => _isSubmitting = true);
