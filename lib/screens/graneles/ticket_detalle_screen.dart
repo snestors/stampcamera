@@ -28,7 +28,7 @@ class TicketDetalleScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         title: Text(
-          'Resumen Ticket',
+          'Resumen del Viaje',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeL,
@@ -136,7 +136,7 @@ class _TicketDetalleContent extends StatelessWidget {
           SizedBox(height: DesignTokens.spaceM),
 
           // =============================================
-          // SECCIÓN: BALANZA
+          // SECCION: BALANZA
           // =============================================
           if (ticket.balanzaData != null) ...[
             _buildSection(
@@ -150,9 +150,9 @@ class _TicketDetalleContent extends StatelessWidget {
                 onEdit: () => context.push('/graneles/balanza/editar/${ticket.balanzaData!.id}'),
               ),
               children: [
-                _buildInfoRow('Guía', ticket.balanzaData!.guia),
+                _buildInfoRow('Guia', ticket.balanzaData!.guia),
                 if (ticket.balanzaData!.almacen != null)
-                  _buildInfoRow('Almacén Destino', ticket.balanzaData!.almacen!),
+                  _buildInfoRow('Almacen Destino', ticket.balanzaData!.almacen!),
                 if (ticket.balanzaData!.precinto != null)
                   _buildInfoRow('Precinto', ticket.balanzaData!.precinto!),
                 if (ticket.balanzaData!.permiso != null)
@@ -224,17 +224,26 @@ class _TicketDetalleContent extends StatelessWidget {
             ),
             SizedBox(height: DesignTokens.spaceM),
           ] else ...[
-            _buildEmptySection('Balanza', Icons.scale, 'Sin registro de balanza'),
+            // Sin balanza -> mostrar boton para agregar
+            _buildEmptySectionWithAction(
+              context: context,
+              title: 'Balanza',
+              icon: Icons.scale,
+              message: 'Sin registro de balanza',
+              actionLabel: 'Agregar Balanza',
+              canAdd: permissions.balanza.canAdd,
+              onAdd: () => context.push('/graneles/balanza/crear'),
+            ),
             SizedBox(height: DesignTokens.spaceM),
           ],
 
           // =============================================
-          // SECCIÓN: ALMACÉN
+          // SECCION: ALMACEN
           // =============================================
           if (ticket.almacenData != null) ...[
             _buildSection(
               context: context,
-              title: 'Almacén',
+              title: 'Almacen',
               icon: Icons.warehouse,
               trailing: _buildSectionActions(
                 context: context,
@@ -301,9 +310,19 @@ class _TicketDetalleContent extends StatelessWidget {
                 ],
               ],
             ),
-          ] else ...[
-            _buildEmptySection('Almacén', Icons.warehouse, 'Sin registro de almacén'),
+          ] else if (ticket.balanzaData != null) ...[
+            // Tiene balanza pero no almacen -> mostrar boton para agregar almacen
+            _buildEmptySectionWithAction(
+              context: context,
+              title: 'Almacen',
+              icon: Icons.warehouse,
+              message: 'Sin registro de almacen',
+              actionLabel: 'Agregar Almacen',
+              canAdd: permissions.almacen.canAdd,
+              onAdd: () => context.push('/graneles/almacen/crear'),
+            ),
           ],
+          // Si no tiene balanza, no mostrar seccion de almacen (primero necesita balanza)
           SizedBox(height: DesignTokens.spaceL),
         ],
       ),
@@ -340,7 +359,7 @@ class _TicketDetalleContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ticket #${ticket.numeroTicket}',
+                  'Viaje #${ticket.numeroTicket}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeXL,
                     fontWeight: FontWeight.bold,
@@ -473,7 +492,15 @@ class _TicketDetalleContent extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptySection(String title, IconData icon, String message) {
+  Widget _buildEmptySectionWithAction({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required String message,
+    required String actionLabel,
+    required bool canAdd,
+    required VoidCallback onAdd,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -488,27 +515,42 @@ class _TicketDetalleContent extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.all(DesignTokens.spaceM),
-        child: Row(
+        child: Column(
           children: [
-            Icon(icon, size: 20, color: AppColors.textSecondary),
-            SizedBox(width: DesignTokens.spaceS),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeM,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSecondary,
-              ),
+            Row(
+              children: [
+                Icon(icon, size: 20, color: AppColors.textSecondary),
+                SizedBox(width: DesignTokens.spaceS),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeM,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeS,
+                    color: AppColors.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeS,
-                color: AppColors.textSecondary,
-                fontStyle: FontStyle.italic,
+            if (canAdd) ...[
+              SizedBox(height: DesignTokens.spaceM),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton.primary(
+                  text: actionLabel,
+                  icon: Icons.add,
+                  onPressed: onAdd,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

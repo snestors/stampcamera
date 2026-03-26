@@ -94,7 +94,7 @@ final ticketsMuelleProvider =
 /// Notifier para tickets de muelle - implementa BaseListProviderImpl
 class TicketMuelleNotifier extends BaseListProviderImpl<TicketMuelle> {
   int? _servicioId;
-  bool _filterSinBalanza = false;
+  String? _filterEstado;
 
   @override
   TicketMuelleService get service => ref.read(ticketMuelleServiceProvider);
@@ -110,22 +110,35 @@ class TicketMuelleNotifier extends BaseListProviderImpl<TicketMuelle> {
   /// Obtener el servicio ID actual
   int? get servicioId => _servicioId;
 
-  /// Estado actual del filtro sin balanza
-  bool get filterSinBalanza => _filterSinBalanza;
+  /// Estado actual del filtro
+  String? get filterEstado => _filterEstado;
 
-  /// Filtrar por tickets sin balanza (server-side)
-  void setFilterSinBalanza(bool value) {
-    if (_filterSinBalanza == value) return;
-    _filterSinBalanza = value;
+  /// Mantener retrocompatibilidad con filterSinBalanza
+  bool get filterSinBalanza => _filterEstado == 'pendiente_balanza';
+
+  /// Filtrar por estado del viaje (server-side)
+  /// Valores posibles: null (todos), 'pendiente_balanza', 'pendiente_almacen', 'completo'
+  void setFilterEstado(String? estado) {
+    if (_filterEstado == estado) return;
+    _filterEstado = estado;
     _reloadWithCurrentFilters();
   }
 
-  /// Recargar con los filtros actuales (usa listWithFilters que SÍ setea _searchNextUrl)
+  /// Mantener retrocompatibilidad
+  void setFilterSinBalanza(bool value) {
+    setFilterEstado(value ? 'pendiente_balanza' : null);
+  }
+
+  /// Recargar con los filtros actuales (usa listWithFilters que SI setea _searchNextUrl)
   void _reloadWithCurrentFilters() {
-    if (_filterSinBalanza) {
+    if (_filterEstado == 'pendiente_balanza') {
       listWithFilters({'sin_balanza': 'true'});
+    } else if (_filterEstado == 'pendiente_almacen') {
+      listWithFilters({'estado': 'pendiente_almacen'});
+    } else if (_filterEstado == 'completo') {
+      listWithFilters({'estado': 'completo'});
     } else {
-      // Limpiar filtro y recargar normal (esto llama al loadInitial del base)
+      // Sin filtro - recargar normal
       clearSearch();
     }
   }

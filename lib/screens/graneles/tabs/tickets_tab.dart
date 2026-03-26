@@ -1,5 +1,5 @@
 // =============================================================================
-// TAB DE TICKETS DE MUELLE - TODOS LOS TICKETS CON BÚSQUEDA E INFINITE SCROLL
+// TAB DE VIAJES (TICKETS DE MUELLE) - CON FILTROS DE ESTADO Y BÚSQUEDA
 // =============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +12,14 @@ import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
+/// Tipos de filtro disponibles para Viajes
+enum ViajeFilterType {
+  todos,
+  pendienteBalanza,
+  pendienteAlmacen,
+  completos,
+}
+
 class TicketsTab extends ConsumerStatefulWidget {
   const TicketsTab({super.key});
 
@@ -23,6 +31,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _searchFocusNode = FocusNode();
+  ViajeFilterType _currentFilter = ViajeFilterType.todos;
 
   @override
   void initState() {
@@ -65,14 +74,12 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
     final notifier = ref.read(ticketsMuelleProvider.notifier);
     final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
     final canAdd = permissionsAsync.valueOrNull?.muelle.canAdd ?? false;
-    // Usar el estado del filtro del notifier (server-side)
-    final filterPendientes = notifier.filterSinBalanza;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          // Barra de búsqueda
+          // Barra de busqueda
           SearchBarWidget(
             controller: _searchController,
             focusNode: _searchFocusNode,
@@ -80,7 +87,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
             showScannerButton: false,
             onChanged: (value) {
               if (value.trim().isEmpty) {
-                notifier.clearSearch();
+                _applyCurrentFilter(notifier);
               } else {
                 notifier.debouncedSearch(value);
               }
@@ -92,13 +99,16 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               }
             },
             onClear: () {
-              notifier.clearSearch();
+              _applyCurrentFilter(notifier);
               _searchFocusNode.unfocus();
             },
           ),
 
-          // Lista de tickets
-          Expanded(child: _buildResultsList(ticketsAsync, notifier, filterPendientes)),
+          // Filtros de estado (chips horizontales)
+          _buildFilterChips(notifier),
+
+          // Lista de viajes
+          Expanded(child: _buildResultsList(ticketsAsync, notifier)),
         ],
       ),
       floatingActionButton: canAdd
@@ -107,7 +117,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
               label: Text(
-                'Nuevo Ticket',
+                'Nuevo Viaje',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -119,10 +129,115 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
     );
   }
 
+  // ===========================================================================
+  // FILTER CHIPS
+  // ===========================================================================
+
+  Widget _buildFilterChips(TicketMuelleNotifier notifier) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: DesignTokens.spaceS,
+        vertical: DesignTokens.spaceXS,
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildFilterChip(
+              label: 'Todos',
+              isSelected: _currentFilter == ViajeFilterType.todos,
+              onSelected: () => _onFilterChanged(ViajeFilterType.todos, notifier),
+            ),
+            SizedBox(width: DesignTokens.spaceXS),
+            _buildFilterChip(
+              label: 'Pend. Balanza',
+              isSelected: _currentFilter == ViajeFilterType.pendienteBalanza,
+              onSelected: () => _onFilterChanged(ViajeFilterType.pendienteBalanza, notifier),
+              color: AppColors.warning,
+            ),
+            SizedBox(width: DesignTokens.spaceXS),
+            _buildFilterChip(
+              label: 'Pend. Almacen',
+              isSelected: _currentFilter == ViajeFilterType.pendienteAlmacen,
+              onSelected: () => _onFilterChanged(ViajeFilterType.pendienteAlmacen, notifier),
+              color: AppColors.accent,
+            ),
+            SizedBox(width: DesignTokens.spaceXS),
+            _buildFilterChip(
+              label: 'Completos',
+              isSelected: _currentFilter == ViajeFilterType.completos,
+              onSelected: () => _onFilterChanged(ViajeFilterType.completos, notifier),
+              color: AppColors.success,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onSelected,
+    Color? color,
+  }) {
+    final chipColor = color ?? AppColors.primary;
+    return FilterChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: DesignTokens.fontSizeXS,
+          color: isSelected ? Colors.white : chipColor,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+      selected: isSelected,
+      onSelected: (_) => onSelected(),
+      backgroundColor: chipColor.withValues(alpha: 0.1),
+      selectedColor: chipColor,
+      checkmarkColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+        side: BorderSide(
+          color: isSelected ? chipColor : chipColor.withValues(alpha: 0.3),
+        ),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceXS),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
+  void _onFilterChanged(ViajeFilterType filter, TicketMuelleNotifier notifier) {
+    setState(() => _currentFilter = filter);
+    _searchController.clear();
+    _applyCurrentFilter(notifier);
+  }
+
+  void _applyCurrentFilter(TicketMuelleNotifier notifier) {
+    switch (_currentFilter) {
+      case ViajeFilterType.todos:
+        notifier.setFilterEstado(null);
+        break;
+      case ViajeFilterType.pendienteBalanza:
+        notifier.setFilterEstado('pendiente_balanza');
+        break;
+      case ViajeFilterType.pendienteAlmacen:
+        notifier.setFilterEstado('pendiente_almacen');
+        break;
+      case ViajeFilterType.completos:
+        notifier.setFilterEstado('completo');
+        break;
+    }
+  }
+
+  // ===========================================================================
+  // LISTA
+  // ===========================================================================
+
   Widget _buildResultsList(
     AsyncValue<List<TicketMuelle>> ticketsAsync,
     TicketMuelleNotifier notifier,
-    bool filterPendientes,
   ) {
     return ticketsAsync.when(
       loading: () => const Center(
@@ -136,8 +251,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
         onRetry: () => notifier.refresh(),
       ),
       data: (tickets) {
-        // Ya no se filtra client-side - el filtro es server-side
-        return _buildDataState(tickets, notifier, filterPendientes);
+        return _buildDataState(tickets, notifier);
       },
     );
   }
@@ -145,10 +259,9 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
   Widget _buildDataState(
     List<TicketMuelle> tickets,
     TicketMuelleNotifier notifier,
-    bool filterPendientes,
   ) {
     if (tickets.isEmpty) {
-      return _buildEmptyState(notifier, filterPendientes);
+      return _buildEmptyState(notifier);
     }
 
     // Con filtro server-side, el infinite scroll funciona con o sin filtro
@@ -186,11 +299,11 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               children: [
                 if (notifier.isLoadingMore) ...[
                   AppLoadingState.circular(
-                    message: 'Cargando más tickets...',
+                    message: 'Cargando mas viajes...',
                   ),
                 ] else ...[
                   AppButton.ghost(
-                    text: 'Cargar más',
+                    text: 'Cargar mas',
                     icon: Icons.expand_more,
                     onPressed: () => notifier.loadMore(),
                   ),
@@ -203,7 +316,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
     );
   }
 
-  Widget _buildEmptyState(TicketMuelleNotifier notifier, bool filterPendientes) {
+  Widget _buildEmptyState(TicketMuelleNotifier notifier) {
     final isSearching = _searchController.text.isNotEmpty;
 
     String title;
@@ -212,39 +325,47 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
 
     if (isSearching) {
       title = 'Sin resultados';
-      subtitle = 'No se encontraron tickets que coincidan con "${_searchController.text}"';
+      subtitle = 'No se encontraron viajes que coincidan con "${_searchController.text}"';
       icon = Icons.search_off;
-    } else if (filterPendientes) {
+    } else if (_currentFilter == ViajeFilterType.pendienteBalanza) {
       title = 'Sin pendientes';
-      subtitle = 'Todos los tickets tienen balanza asignada';
+      subtitle = 'Todos los viajes tienen balanza asignada';
       icon = Icons.check_circle_outline;
+    } else if (_currentFilter == ViajeFilterType.pendienteAlmacen) {
+      title = 'Sin pendientes';
+      subtitle = 'Todos los viajes con balanza tienen almacen asignado';
+      icon = Icons.check_circle_outline;
+    } else if (_currentFilter == ViajeFilterType.completos) {
+      title = 'Sin viajes completos';
+      subtitle = 'Aun no hay viajes con balanza y almacen registrados';
+      icon = Icons.hourglass_empty;
     } else {
-      title = 'No hay tickets registrados';
-      subtitle = 'Aún no hay tickets de muelle registrados';
+      title = 'No hay viajes registrados';
+      subtitle = 'Aun no hay viajes de muelle registrados';
       icon = Icons.receipt_long_outlined;
     }
 
     Widget? action;
     if (isSearching) {
       action = AppButton.secondary(
-        text: 'Limpiar búsqueda',
+        text: 'Limpiar busqueda',
         icon: Icons.clear,
         onPressed: () {
           _searchController.clear();
-          notifier.clearSearch();
+          _applyCurrentFilter(notifier);
         },
       );
-    } else if (filterPendientes) {
+    } else if (_currentFilter != ViajeFilterType.todos) {
       action = AppButton.secondary(
         text: 'Ver todos',
         icon: Icons.list,
         onPressed: () {
-          ref.read(ticketsMuelleProvider.notifier).setFilterSinBalanza(false);
+          _onFilterChanged(ViajeFilterType.todos, notifier);
         },
       );
     } else {
       action = AppButton.primary(
-        text: 'Crear primer ticket',
+        text: 'Crear primer viaje',
         icon: Icons.add,
         onPressed: () => _navigateToCreateTicket(),
       );
@@ -255,7 +376,12 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
         icon: icon,
         title: title,
         subtitle: subtitle,
-        color: filterPendientes && !isSearching ? AppColors.success : null,
+        color: (_currentFilter == ViajeFilterType.pendienteBalanza ||
+                _currentFilter == ViajeFilterType.pendienteAlmacen ||
+                _currentFilter == ViajeFilterType.completos) &&
+                !isSearching
+            ? AppColors.success
+            : null,
         action: action,
       ),
     );
@@ -270,7 +396,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
   }
 
   void _navigateToCreateTicket() {
-    // Navegar directamente a crear ticket - el formulario mostrará BLs de naves en operación
+    // Navegar directamente a crear ticket - el formulario mostrara BLs de naves en operacion
     context.push('/graneles/ticket/crear');
   }
 }
@@ -300,7 +426,7 @@ class _TicketCard extends StatelessWidget {
       child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Servicio info (código y nave)
+              // Servicio info (codigo y nave)
               if (ticket.servicioCodigo != null) ...[
                 Row(
                   children: [
@@ -322,7 +448,7 @@ class _TicketCard extends StatelessWidget {
                 SizedBox(height: DesignTokens.spaceS),
               ],
 
-              // Header con número de ticket y botones
+              // Header con numero de ticket y botones
               Row(
                 children: [
                   Container(
@@ -351,7 +477,7 @@ class _TicketCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  // Botón foto
+                  // Boton foto
                   if (ticket.fotoUrl != null)
                     IconButton(
                       onPressed: () => _showPhotoDialog(context, ticket.fotoUrl!),
@@ -361,18 +487,18 @@ class _TicketCard extends StatelessWidget {
                       padding: EdgeInsets.all(DesignTokens.spaceXS),
                     ),
                   SizedBox(width: DesignTokens.spaceXS),
-                  // Botón editar
+                  // Boton editar
                   IconButton(
                     onPressed: onEdit,
                     icon: Icon(Icons.edit, size: 20, color: AppColors.primary),
-                    tooltip: 'Editar ticket',
+                    tooltip: 'Editar viaje',
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.all(DesignTokens.spaceXS),
                   ),
                 ],
               ),
               SizedBox(height: DesignTokens.spaceXS),
-              // Status badges (balanza y almacén)
+              // Status badges (balanza y almacen)
               Row(
                 children: [
                   Container(

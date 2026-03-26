@@ -8,8 +8,6 @@ import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/services/graneles/graneles_service.dart';
 import 'package:stampcamera/screens/graneles/tabs/servicios_tab.dart';
 import 'package:stampcamera/screens/graneles/tabs/tickets_tab.dart';
-import 'package:stampcamera/screens/graneles/tabs/balanzas_tab.dart';
-import 'package:stampcamera/screens/graneles/tabs/almacen_tab.dart';
 import 'package:stampcamera/screens/graneles/tabs/silos_tab.dart';
 
 /// Definición de tab con su configuración
@@ -42,6 +40,8 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
   int _currentTabIndex = 0;
 
   /// Configuración completa de todos los tabs
+  /// Balanza y Almacén se quitaron como tabs separados — ahora se gestionan
+  /// desde el detalle de cada viaje (inline).
   static const List<_TabConfig> _allTabs = [
     _TabConfig(
       key: 'servicios',
@@ -51,21 +51,9 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
     ),
     _TabConfig(
       key: 'muelle',
-      label: 'Tickets',
+      label: 'Viajes',
       icon: Icons.receipt_long,
       tab: TicketsTab(),
-    ),
-    _TabConfig(
-      key: 'balanza',
-      label: 'Balanzas',
-      icon: Icons.scale,
-      tab: BalanzasTab(),
-    ),
-    _TabConfig(
-      key: 'almacen',
-      label: 'Almacén',
-      icon: Icons.warehouse,
-      tab: AlmacenTab(),
     ),
     _TabConfig(
       key: 'silos',
@@ -107,44 +95,6 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
         _currentTabIndex = _tabController!.index;
       });
     }
-  }
-
-  /// Obtener el key del tab actual
-  String? get _currentTabKey {
-    if (_visibleTabs.isEmpty || _currentTabIndex >= _visibleTabs.length) {
-      return null;
-    }
-    return _visibleTabs[_currentTabIndex].key;
-  }
-
-  /// Verificar si el tab actual tiene filtro de pendientes
-  bool get _showPendingFilter {
-    final key = _currentTabKey;
-    return key == 'muelle' || key == 'balanza';
-  }
-
-  /// Obtener estado del filtro actual
-  bool get _isPendingFilterActive {
-    final key = _currentTabKey;
-    if (key == 'muelle') {
-      return ref.read(ticketsMuelleProvider.notifier).filterSinBalanza;
-    } else if (key == 'balanza') {
-      return ref.read(balanzasListProvider.notifier).filterSinAlmacen;
-    }
-    return false;
-  }
-
-  /// Toggle filtro de pendientes
-  void _togglePendingFilter() {
-    final key = _currentTabKey;
-    if (key == 'muelle') {
-      final notifier = ref.read(ticketsMuelleProvider.notifier);
-      notifier.setFilterSinBalanza(!notifier.filterSinBalanza);
-    } else if (key == 'balanza') {
-      final notifier = ref.read(balanzasListProvider.notifier);
-      notifier.setFilterSinAlmacen(!notifier.filterSinAlmacen);
-    }
-    setState(() {}); // Refresh UI
   }
 
   @override
@@ -271,22 +221,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
             ],
           ],
         ),
-        actions: [
-          // Botón de filtro pendientes (solo en tabs de tickets y balanzas)
-          if (_showPendingFilter)
-            IconButton(
-              onPressed: _togglePendingFilter,
-              icon: Icon(
-                _isPendingFilterActive
-                    ? Icons.filter_alt
-                    : Icons.filter_alt_outlined,
-                color: _isPendingFilterActive ? Colors.amber : Colors.white,
-              ),
-              tooltip: _isPendingFilterActive
-                  ? 'Mostrando solo pendientes'
-                  : 'Filtrar pendientes',
-            ),
-        ],
+        actions: const [],
       ),
       body: TabBarView(
         controller: _tabController,
