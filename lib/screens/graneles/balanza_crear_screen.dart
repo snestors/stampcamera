@@ -101,8 +101,8 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
           _balanzaEntradaController.text = balanza.balanzaEntrada ?? '';
           _balanzaSalidaController.text = balanza.balanzaSalida ?? '';
           _observacionesController.text = balanza.observaciones ?? '';
-          _fechaEntradaBalanza = balanza.fechaEntradaBalanza ?? nowLima();
-          _fechaSalidaBalanza = balanza.fechaSalidaBalanza ?? nowLima();
+          _fechaEntradaBalanza = balanza.fechaEntradaBalanza != null ? toLima(balanza.fechaEntradaBalanza!) : nowLima();
+          _fechaSalidaBalanza = balanza.fechaSalidaBalanza != null ? toLima(balanza.fechaSalidaBalanza!) : nowLima();
           _existingFoto1Url = balanza.foto1Url;
           _existingFoto2Url = balanza.foto2Url;
           // Setear IDs para edición
@@ -628,7 +628,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
                 ),
               ),
               child: Text(
-                dateFormat.format(_fechaEntradaBalanza),
+                dateFormat.format(toLima(_fechaEntradaBalanza)),
                 style: TextStyle(fontSize: DesignTokens.fontSizeS),
               ),
             ),
@@ -710,7 +710,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
                     ),
                   ),
                   child: Text(
-                    dateFormat.format(_fechaSalidaBalanza),
+                    dateFormat.format(toLima(_fechaSalidaBalanza)),
                     style: TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       color: _hasTimeError ? AppColors.error : null,
@@ -784,7 +784,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
     if (date != null && mounted) {
       final time = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(initialDate),
+        initialTime: TimeOfDay.fromDateTime(toLima(initialDate)),
         initialEntryMode: TimePickerEntryMode.input, // Modo texto, sin dial
         builder: (context, child) {
           return MediaQuery(
@@ -795,7 +795,7 @@ class _BalanzaCrearScreenState extends ConsumerState<BalanzaCrearScreen> {
       );
 
       if (time != null && mounted) {
-        final dateTime = DateTime(
+        final dateTime = makeLima(
           date.year, date.month, date.day, time.hour, time.minute,
         );
         setState(() {

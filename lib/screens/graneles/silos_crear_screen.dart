@@ -71,7 +71,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           _numeroCamionController.text = silo.numeroSilo?.toString() ?? '';
           _pesoController.text = silo.peso?.toStringAsFixed(3) ?? '';
           _bagsController.text = silo.bags?.toString() ?? '';
-          _fechaHora = silo.fechaHora ?? nowLima();
+          _fechaHora = silo.fechaHora != null ? toLima(silo.fechaHora!) : nowLima();
           _existingFotoUrl = silo.fotoUrl;
           _isLoadingSilo = false;
         });
@@ -449,7 +449,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           fillColor: AppColors.surface,
         ),
         child: Text(
-          dateFormat.format(_fechaHora),
+          dateFormat.format(toLima(_fechaHora)),
           style: TextStyle(fontSize: DesignTokens.fontSizeS),
         ),
       ),
@@ -467,7 +467,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     if (date != null && mounted) {
       final time = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(_fechaHora),
+        initialTime: TimeOfDay.fromDateTime(toLima(_fechaHora)),
         initialEntryMode: TimePickerEntryMode.input,
         builder: (context, child) {
           return MediaQuery(
@@ -479,7 +479,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
 
       if (time != null && mounted) {
         setState(() {
-          _fechaHora = DateTime(
+          _fechaHora = makeLima(
             date.year, date.month, date.day, time.hour, time.minute,
           );
         });

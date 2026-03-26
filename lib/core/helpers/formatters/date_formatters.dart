@@ -26,6 +26,13 @@ tz.TZDateTime toLima(DateTime dt) {
   return tz.TZDateTime.from(dt, _limaTz);
 }
 
+/// Crea un DateTime en zona Lima con componentes específicos
+/// Uso: después de date/time pickers para combinar fecha+hora en Lima
+tz.TZDateTime makeLima(int year, int month, int day, [int hour = 0, int minute = 0]) {
+  if (!_tzInitialized) initTimezone();
+  return tz.TZDateTime(_limaTz, year, month, day, hour, minute);
+}
+
 /// DateTime.now() en Lima
 tz.TZDateTime nowLima() {
   if (!_tzInitialized) initTimezone();

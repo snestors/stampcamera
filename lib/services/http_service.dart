@@ -46,7 +46,8 @@ class HttpService {
   late Dio dio;
   final storage = appSecureStorage; // Usar instancia global compartida
 
-  static const baseUrl = 'https://www.aygajustadores.com/';
+  // TODO: Cambiar a producción antes de release
+  static const baseUrl = 'http://10.0.2.2:8000/';
   static const tokenEndpoint = 'token/';
   static const refreshEndpoint = 'api/v1/token/refresh/';
 

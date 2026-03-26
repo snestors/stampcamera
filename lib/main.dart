@@ -10,6 +10,7 @@ import 'package:stampcamera/services/update_service.dart';
 import 'package:stampcamera/core/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:stampcamera/utils/image_processor.dart';
+import 'package:stampcamera/core/helpers/formatters/date_formatters.dart';
 import 'routes/app_router.dart';
 
 late List<CameraDescription> cameras;
@@ -18,6 +19,9 @@ late ProviderContainer _providerContainer;
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Inicializar timezone America/Lima para toda la app
+  initTimezone();
 
   // IMPORTANTE: Verificar salud del storage ANTES de cualquier otra operacion
   // Esto soluciona el problema de corrupcion al cambiar entre debug y release

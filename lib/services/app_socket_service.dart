@@ -86,7 +86,8 @@ enum WsConnectionState {
 
 /// Servicio WebSocket unificado
 class AppSocketService {
-  static const String _wsBaseUrl = 'wss://www.aygajustadores.com/ws/app/';
+  // TODO: Cambiar a producción antes de release
+  static const String _wsBaseUrl = 'ws://10.0.2.2:8000/ws/app/';
   static const Duration _heartbeatInterval = Duration(seconds: 30);
   static const Duration _reconnectBaseDelay = Duration(seconds: 5);
   static const int _maxReconnectAttempts = 5;
@@ -122,8 +123,9 @@ class AppSocketService {
 
   // ─── Ticket WS ─────────────────────────────────────────────────────
 
+  // TODO: Cambiar a producción antes de release
   static const String _ticketUrl =
-      'https://www.aygajustadores.com/api/v1/ws/ticket/';
+      'http://10.0.2.2:8000/api/v1/ws/ticket/';
 
   /// Solicita un ticket single-use para autenticación WS.
   /// El ticket expira en 30 segundos y se consume al conectar.

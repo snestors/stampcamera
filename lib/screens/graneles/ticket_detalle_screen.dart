@@ -1,7 +1,6 @@
 // =============================================================================
 // PANTALLA DE DETALLE DE TICKET MUELLE - RESUMEN COMPLETO
 // =============================================================================
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +10,7 @@ import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/services/graneles/graneles_service.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
+import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 
 class TicketDetalleScreen extends ConsumerWidget {
   final int ticketId;
@@ -107,13 +107,13 @@ class _TicketDetalleContent extends StatelessWidget {
               _buildInfoRow(
                 'Inicio Descarga',
                 ticket.inicioDescarga != null
-                    ? dateTimeFormat.format(ticket.inicioDescarga!.toLocal())
+                    ? dateTimeFormat.format(toLima(ticket.inicioDescarga!))
                     : '-',
               ),
               _buildInfoRow(
                 'Fin Descarga',
                 ticket.finDescarga != null
-                    ? dateTimeFormat.format(ticket.finDescarga!.toLocal())
+                    ? dateTimeFormat.format(toLima(ticket.finDescarga!))
                     : '-',
               ),
               _buildInfoRow('Tiempo Cargío', ticket.tiempoCargio ?? '-'),
@@ -177,7 +177,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.balanzaData!.fechaEntradaBalanza != null
-                                ? dateTimeFormat.format(ticket.balanzaData!.fechaEntradaBalanza!.toLocal())
+                                ? dateTimeFormat.format(toLima(ticket.balanzaData!.fechaEntradaBalanza!))
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
@@ -194,7 +194,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.balanzaData!.fechaSalidaBalanza != null
-                                ? dateTimeFormat.format(ticket.balanzaData!.fechaSalidaBalanza!.toLocal())
+                                ? dateTimeFormat.format(toLima(ticket.balanzaData!.fechaSalidaBalanza!))
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
@@ -262,7 +262,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.almacenData!.fechaEntradaAlmacen != null
-                                ? dateTimeFormat.format(ticket.almacenData!.fechaEntradaAlmacen!.toLocal())
+                                ? dateTimeFormat.format(toLima(ticket.almacenData!.fechaEntradaAlmacen!))
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
@@ -276,7 +276,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.almacenData!.fechaSalidaAlmacen != null
-                                ? dateTimeFormat.format(ticket.almacenData!.fechaSalidaAlmacen!.toLocal())
+                                ? dateTimeFormat.format(toLima(ticket.almacenData!.fechaSalidaAlmacen!))
                                 : '-',
                             style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
@@ -362,8 +362,8 @@ class _TicketDetalleContent extends StatelessWidget {
           Column(
             children: [
               _buildStatusBadge(
-                ticket.tieneBalanza ? 'BALANZA' : 'SIN BAL.',
-                ticket.tieneBalanza ? AppColors.success : AppColors.warning,
+                ticket.balanzaData != null ? 'BALANZA' : 'SIN BAL.',
+                ticket.balanzaData != null ? AppColors.success : AppColors.warning,
               ),
               SizedBox(height: DesignTokens.spaceXS),
               _buildStatusBadge(
@@ -668,74 +668,7 @@ class _PhotoButton extends StatelessWidget {
   }
 
   static void _showPhotoDialog(BuildContext context, String url) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        insetPadding: EdgeInsets.all(DesignTokens.spaceM),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
-              child: Row(
-                children: [
-                  Icon(Icons.photo_camera, color: AppColors.primary),
-                  SizedBox(width: DesignTokens.spaceS),
-                  Text(
-                    'Fotografía',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: DesignTokens.fontSizeM,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ),
-            // Photo
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(DesignTokens.radiusL),
-                bottomRight: Radius.circular(DesignTokens.radiusL),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: url,
-                fit: BoxFit.contain,
-                placeholder: (context, url) => Container(
-                  height: 300,
-                  color: AppColors.surface,
-                  child: const Center(child: CircularProgressIndicator()),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  height: 200,
-                  color: AppColors.surface,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.broken_image, size: 48, color: AppColors.textSecondary),
-                      SizedBox(height: DesignTokens.spaceS),
-                      Text(
-                        'No se pudo cargar la imagen',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: DesignTokens.fontSizeS),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    FullscreenImageViewer.open(context, imageUrl: url);
   }
 }
+

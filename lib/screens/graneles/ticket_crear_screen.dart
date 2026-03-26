@@ -87,8 +87,8 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
         setState(() {
           _numeroTicketController.text = ticket.numeroTicket;
           _observacionesController.text = ticket.observaciones ?? '';
-          _inicioDescarga = ticket.inicioDescarga ?? nowLima();
-          _finDescarga = ticket.finDescarga ?? nowLima();
+          _inicioDescarga = ticket.inicioDescarga != null ? toLima(ticket.inicioDescarga!) : nowLima();
+          _finDescarga = ticket.finDescarga != null ? toLima(ticket.finDescarga!) : nowLima();
           _existingFotoUrl = ticket.fotoUrl;
           _effectiveServicioId = ticket.servicioId;
 
@@ -630,7 +630,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             },
           );
           if (time != null) {
-            onChanged(DateTime(
+            onChanged(makeLima(
               date.year,
               date.month,
               date.day,
@@ -640,7 +640,10 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
           }
         }
       },
-      child: Container(
+      child: Builder(
+        builder: (context) {
+        final display = toLima(value);
+        return Container(
         padding: EdgeInsets.all(DesignTokens.spaceM),
         decoration: BoxDecoration(
           color: hasError ? AppColors.error.withValues(alpha: 0.05) : AppColors.surface,
@@ -666,7 +669,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
                 Icon(Icons.calendar_today, size: 16, color: hasError ? AppColors.error : AppColors.primary),
                 SizedBox(width: DesignTokens.spaceS),
                 Text(
-                  '${value.day}/${value.month}/${value.year}',
+                  '${display.day}/${display.month}/${display.year}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
@@ -681,7 +684,7 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
                 Icon(Icons.access_time, size: 16, color: hasError ? AppColors.error : AppColors.primary),
                 SizedBox(width: DesignTokens.spaceS),
                 Text(
-                  '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}',
+                  '${display.hour.toString().padLeft(2, '0')}:${display.minute.toString().padLeft(2, '0')}',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
@@ -692,6 +695,8 @@ class _TicketCrearScreenState extends ConsumerState<TicketCrearScreen> {
             ),
           ],
         ),
+      );
+        },
       ),
     );
   }

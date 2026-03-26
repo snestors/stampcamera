@@ -133,24 +133,24 @@ class BalanzaResumen {
   factory BalanzaResumen.fromJson(Map<String, dynamic> json) {
     return BalanzaResumen(
       id: json['id'] ?? 0,
-      guia: json['guia'] ?? '',
+      guia: json['guia']?.toString() ?? '',
       pesoBruto: _parseDouble(json['peso_bruto']),
       pesoTara: _parseDouble(json['peso_tara']),
       pesoNeto: _parseDouble(json['peso_neto']),
       bags: json['bags'],
-      fechaEntradaBalanza: json['fecha_entrada_balanza'] != null
-          ? DateTime.tryParse(json['fecha_entrada_balanza'])
+      fechaEntradaBalanza: (json['fecha_entrada'] ?? json['fecha_entrada_balanza']) != null
+          ? DateTime.tryParse((json['fecha_entrada'] ?? json['fecha_entrada_balanza']).toString())
           : null,
-      fechaSalidaBalanza: json['fecha_salida_balanza'] != null
-          ? DateTime.tryParse(json['fecha_salida_balanza'])
+      fechaSalidaBalanza: (json['fecha_salida'] ?? json['fecha_salida_balanza']) != null
+          ? DateTime.tryParse((json['fecha_salida'] ?? json['fecha_salida_balanza']).toString())
           : null,
-      balanzaEntrada: json['balanza_entrada'],
-      balanzaSalida: json['balanza_salida'],
-      almacen: json['almacen'],
-      precinto: json['precinto'],
-      permiso: json['permiso'],
-      observaciones: json['observaciones'],
-      foto1Url: json['foto1_url'],
+      balanzaEntrada: json['balanza_entrada']?.toString(),
+      balanzaSalida: json['balanza_salida']?.toString(),
+      almacen: json['almacen_nombre']?.toString() ?? json['almacen']?.toString(),
+      precinto: json['precinto_str']?.toString() ?? json['precinto']?.toString(),
+      permiso: json['permiso_str']?.toString() ?? json['permiso']?.toString(),
+      observaciones: json['observaciones']?.toString(),
+      foto1Url: json['foto1_url']?.toString(),
     );
   }
 }
@@ -186,14 +186,14 @@ class AlmacenResumen {
       pesoTara: _parseDouble(json['peso_tara']),
       pesoNeto: _parseDouble(json['peso_neto']),
       bags: json['bags'],
-      fechaEntradaAlmacen: json['fecha_entrada_almacen'] != null
-          ? DateTime.tryParse(json['fecha_entrada_almacen'])
+      fechaEntradaAlmacen: (json['fecha_entrada'] ?? json['fecha_entrada_almacen']) != null
+          ? DateTime.tryParse((json['fecha_entrada'] ?? json['fecha_entrada_almacen']).toString())
           : null,
-      fechaSalidaAlmacen: json['fecha_salida_almacen'] != null
-          ? DateTime.tryParse(json['fecha_salida_almacen'])
+      fechaSalidaAlmacen: (json['fecha_salida'] ?? json['fecha_salida_almacen']) != null
+          ? DateTime.tryParse((json['fecha_salida'] ?? json['fecha_salida_almacen']).toString())
           : null,
-      observaciones: json['observaciones'],
-      foto1Url: json['foto1_url'],
+      observaciones: json['observaciones']?.toString(),
+      foto1Url: json['foto1_url']?.toString(),
     );
   }
 }
@@ -290,11 +290,11 @@ class TicketMuelle with HasId {
       placaTractoId: json['placa_tracto'],
       transporteId: json['transporte'],
       choferId: json['chofer'],
-      balanzaData: json['balanza_data'] != null
-          ? BalanzaResumen.fromJson(json['balanza_data'])
+      balanzaData: (json['balanza'] ?? json['balanza_data']) != null
+          ? BalanzaResumen.fromJson(json['balanza'] ?? json['balanza_data'])
           : null,
-      almacenData: json['almacen_data'] != null
-          ? AlmacenResumen.fromJson(json['almacen_data'])
+      almacenData: (json['almacen'] ?? json['almacen_data']) != null
+          ? AlmacenResumen.fromJson(json['almacen'] ?? json['almacen_data'])
           : null,
     );
   }
@@ -362,7 +362,7 @@ class Balanza with HasId {
       id: json['id'] ?? 0,
       servicioId: json['servicio_id'],
       servicioCodigo: json['servicio_codigo'],
-      guia: json['guia'] ?? '',
+      guia: json['guia']?.toString() ?? '',
       ticketNumero: json['ticket_numero'],
       placaStr: json['placa_str'],
       almacen: json['almacen'],
@@ -370,11 +370,11 @@ class Balanza with HasId {
       pesoTara: _parseDouble(json['peso_tara']),
       pesoNeto: _parseDouble(json['peso_neto']),
       bags: json['bags'],
-      fechaEntradaBalanza: json['fecha_entrada_balanza'] != null
-          ? DateTime.tryParse(json['fecha_entrada_balanza'])
+      fechaEntradaBalanza: (json['fecha_entrada'] ?? json['fecha_entrada_balanza']) != null
+          ? DateTime.tryParse((json['fecha_entrada'] ?? json['fecha_entrada_balanza']).toString())
           : null,
-      fechaSalidaBalanza: json['fecha_salida_balanza'] != null
-          ? DateTime.tryParse(json['fecha_salida_balanza'])
+      fechaSalidaBalanza: (json['fecha_salida'] ?? json['fecha_salida_balanza']) != null
+          ? DateTime.tryParse((json['fecha_salida'] ?? json['fecha_salida_balanza']).toString())
           : null,
       foto1Url: json['foto1_url'],
       foto2Url: json['foto2_url'],
@@ -950,11 +950,11 @@ class AlmacenGranel with HasId {
       placaStr: json['placa_str'],
       almacenNombre: json['almacen_nombre'],
       servicioCodigo: json['servicio_codigo'],
-      fechaEntradaAlmacen: json['fecha_entrada_almacen'] != null
-          ? DateTime.tryParse(json['fecha_entrada_almacen'])
+      fechaEntradaAlmacen: (json['fecha_entrada'] ?? json['fecha_entrada_almacen']) != null
+          ? DateTime.tryParse((json['fecha_entrada'] ?? json['fecha_entrada_almacen']).toString())
           : null,
-      fechaSalidaAlmacen: json['fecha_salida_almacen'] != null
-          ? DateTime.tryParse(json['fecha_salida_almacen'])
+      fechaSalidaAlmacen: (json['fecha_salida'] ?? json['fecha_salida_almacen']) != null
+          ? DateTime.tryParse((json['fecha_salida'] ?? json['fecha_salida_almacen']).toString())
           : null,
       pesoBruto: _parseDouble(json['peso_bruto']),
       pesoTara: _parseDouble(json['peso_tara']),

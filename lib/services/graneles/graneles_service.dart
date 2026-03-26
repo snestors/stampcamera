@@ -208,8 +208,8 @@ class TicketMuelleService implements BaseService<TicketMuelle> {
       'distribucion': distribucionId,
       if (placaId != null) 'placa': placaId,
       if (transporteId != null) 'transporte': transporteId,
-      'inicio_descarga': inicioDescarga.toUtc().toIso8601String(),
-      'fin_descarga': finDescarga.toUtc().toIso8601String(),
+      'inicio_descarga': inicioDescarga.toIso8601String(),
+      'fin_descarga': finDescarga.toIso8601String(),
       if (observaciones != null) 'observaciones': observaciones,
       if (foto != null)
         'foto': await MultipartFile.fromFile(
@@ -242,8 +242,8 @@ class TicketMuelleService implements BaseService<TicketMuelle> {
     if (distribucionId != null) data['distribucion'] = distribucionId;
     if (placaId != null) data['placa'] = placaId;
     if (transporteId != null) data['transporte'] = transporteId;
-    if (inicioDescarga != null) data['inicio_descarga'] = inicioDescarga.toUtc().toIso8601String();
-    if (finDescarga != null) data['fin_descarga'] = finDescarga.toUtc().toIso8601String();
+    if (inicioDescarga != null) data['inicio_descarga'] = inicioDescarga.toIso8601String();
+    if (finDescarga != null) data['fin_descarga'] = finDescarga.toIso8601String();
     if (observaciones != null) data['observaciones'] = observaciones;
 
     if (foto != null) {
@@ -673,15 +673,15 @@ class BalanzaService implements BaseService<Balanza> {
       'distribucion_almacen': distribucionAlmacenId,
       if (precintoId != null) 'precinto': precintoId,
       if (permisoId != null) 'permiso': permisoId,
-      'fecha_entrada_balanza': fechaEntradaBalanza.toUtc().toIso8601String(),
-      'fecha_salida_balanza': fechaSalidaBalanza.toUtc().toIso8601String(),
+      'fecha_entrada_balanza': fechaEntradaBalanza.toIso8601String(),
+      'fecha_salida_balanza': fechaSalidaBalanza.toIso8601String(),
       if (balanzaEntrada != null) 'balanza_entrada': balanzaEntrada,
       if (balanzaSalida != null) 'balanza_salida': balanzaSalida,
       'peso_bruto': pesoBruto,
       'peso_tara': pesoTara,
       'peso_neto': pesoNeto,
       if (bags != null) 'bags': bags,
-      'fecha_envio_wp': fechaEnvioWp.toUtc().toIso8601String(),
+      'fecha_envio_wp': fechaEnvioWp.toIso8601String(),
       if (observaciones != null) 'observaciones': observaciones,
       if (foto1 != null)
         'foto1': await MultipartFile.fromFile(
@@ -725,15 +725,15 @@ class BalanzaService implements BaseService<Balanza> {
     if (distribucionAlmacenId != null) data['distribucion_almacen'] = distribucionAlmacenId;
     if (precintoId != null) data['precinto'] = precintoId;
     if (permisoId != null) data['permiso'] = permisoId;
-    if (fechaEntradaBalanza != null) data['fecha_entrada_balanza'] = fechaEntradaBalanza.toUtc().toIso8601String();
-    if (fechaSalidaBalanza != null) data['fecha_salida_balanza'] = fechaSalidaBalanza.toUtc().toIso8601String();
+    if (fechaEntradaBalanza != null) data['fecha_entrada_balanza'] = fechaEntradaBalanza.toIso8601String();
+    if (fechaSalidaBalanza != null) data['fecha_salida_balanza'] = fechaSalidaBalanza.toIso8601String();
     if (balanzaEntrada != null) data['balanza_entrada'] = balanzaEntrada;
     if (balanzaSalida != null) data['balanza_salida'] = balanzaSalida;
     if (pesoBruto != null) data['peso_bruto'] = pesoBruto;
     if (pesoTara != null) data['peso_tara'] = pesoTara;
     if (pesoNeto != null) data['peso_neto'] = pesoNeto;
     if (bags != null) data['bags'] = bags;
-    if (fechaEnvioWp != null) data['fecha_envio_wp'] = fechaEnvioWp.toUtc().toIso8601String();
+    if (fechaEnvioWp != null) data['fecha_envio_wp'] = fechaEnvioWp.toIso8601String();
     if (observaciones != null) data['observaciones'] = observaciones;
 
     if (foto1 != null || foto2 != null) {
@@ -1029,8 +1029,8 @@ class AlmacenService implements BaseService<AlmacenGranel> {
   }) async {
     final formData = FormData.fromMap({
       'balanza': balanzaId,
-      'fecha_entrada_almacen': fechaEntradaAlmacen.toUtc().toIso8601String(),
-      'fecha_salida_almacen': fechaSalidaAlmacen.toUtc().toIso8601String(),
+      'fecha_entrada_almacen': fechaEntradaAlmacen.toIso8601String(),
+      'fecha_salida_almacen': fechaSalidaAlmacen.toIso8601String(),
       'peso_bruto': pesoBruto,
       'peso_tara': pesoTara,
       'peso_neto': pesoNeto,
@@ -1067,8 +1067,8 @@ class AlmacenService implements BaseService<AlmacenGranel> {
   }) async {
     final Map<String, dynamic> data = {};
 
-    if (fechaEntradaAlmacen != null) data['fecha_entrada_almacen'] = fechaEntradaAlmacen.toUtc().toIso8601String();
-    if (fechaSalidaAlmacen != null) data['fecha_salida_almacen'] = fechaSalidaAlmacen.toUtc().toIso8601String();
+    if (fechaEntradaAlmacen != null) data['fecha_entrada_almacen'] = fechaEntradaAlmacen.toIso8601String();
+    if (fechaSalidaAlmacen != null) data['fecha_salida_almacen'] = fechaSalidaAlmacen.toIso8601String();
     if (pesoBruto != null) data['peso_bruto'] = pesoBruto;
     if (pesoTara != null) data['peso_tara'] = pesoTara;
     if (pesoNeto != null) data['peso_neto'] = pesoNeto;

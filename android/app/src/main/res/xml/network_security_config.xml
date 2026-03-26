@@ -14,4 +14,9 @@
             <certificates src="system"/>
         </trust-anchors>
     </domain-config>
+
+    <!-- Dev local: permitir HTTP al emulador Android -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain>10.0.2.2</domain>
+    </domain-config>
 </network-security-config>

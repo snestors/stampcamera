@@ -108,8 +108,8 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
           _pesoNetoController.text = almacen.pesoNeto.toStringAsFixed(3);
           _bagsController.text = almacen.bags?.toString() ?? '';
           _observacionesController.text = almacen.observaciones ?? '';
-          _fechaEntradaAlmacen = almacen.fechaEntradaAlmacen ?? nowLima();
-          _fechaSalidaAlmacen = almacen.fechaSalidaAlmacen ?? nowLima();
+          _fechaEntradaAlmacen = almacen.fechaEntradaAlmacen != null ? toLima(almacen.fechaEntradaAlmacen!) : nowLima();
+          _fechaSalidaAlmacen = almacen.fechaSalidaAlmacen != null ? toLima(almacen.fechaSalidaAlmacen!) : nowLima();
           _existingFoto1Url = almacen.foto1Url;
           _isLoadingAlmacen = false;
         });
@@ -416,7 +416,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
                   : AppColors.surface,
             ),
             child: Text(
-              dateFormat.format(_fechaEntradaAlmacen),
+              dateFormat.format(toLima(_fechaEntradaAlmacen)),
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: hasEntradaError ? AppColors.error : null,
@@ -471,7 +471,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
                   : AppColors.surface,
             ),
             child: Text(
-              dateFormat.format(_fechaSalidaAlmacen),
+              dateFormat.format(toLima(_fechaSalidaAlmacen)),
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: _hasEntradaDespuesSalidaError ? AppColors.error : null,
@@ -515,7 +515,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
     if (date != null && mounted) {
       final time = await showTimePicker(
         context: context,
-        initialTime: TimeOfDay.fromDateTime(initialDate),
+        initialTime: TimeOfDay.fromDateTime(toLima(initialDate)),
         initialEntryMode: TimePickerEntryMode.input, // Modo texto, sin dial
         builder: (context, child) {
           return MediaQuery(
@@ -526,7 +526,7 @@ class _AlmacenCrearScreenState extends ConsumerState<AlmacenCrearScreen> {
       );
 
       if (time != null && mounted) {
-        final dateTime = DateTime(
+        final dateTime = makeLima(
           date.year, date.month, date.day, time.hour, time.minute,
         );
         setState(() {
