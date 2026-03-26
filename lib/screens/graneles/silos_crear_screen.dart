@@ -493,16 +493,6 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     }
   }
 
-  /// Calcula peso neto automáticamente cuando cambian bruto o tara
-  void _calcularPesoNeto() {
-    final bruto = double.tryParse(_pesoBrutoController.text);
-    final tara = double.tryParse(_pesoTaraController.text);
-    if (bruto != null && tara != null && bruto > tara) {
-      final neto = bruto - tara;
-      _pesoNetoController.text = neto.toStringAsFixed(3);
-    }
-  }
-
   Widget _buildWeightFields() {
     return Column(
       children: [
@@ -526,7 +516,6 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
-                onChanged: (_) => _calcularPesoNeto(),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) return 'Requerido';
                   final num = double.tryParse(value);
@@ -553,7 +542,6 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}')),
                 ],
-                onChanged: (_) => _calcularPesoNeto(),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) return 'Requerido';
                   final num = double.tryParse(value);
