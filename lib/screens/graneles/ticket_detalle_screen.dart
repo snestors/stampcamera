@@ -89,7 +89,7 @@ class _TicketDetalleContent extends StatelessWidget {
               context: context,
               photoUrl: ticket.fotoUrl,
               canEdit: permissions.muelle.canEdit,
-              onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}'),
+              onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}?step=1'),
             ),
             children: [
               _buildInfoRow('Número Ticket', ticket.numeroTicket),
@@ -147,7 +147,7 @@ class _TicketDetalleContent extends StatelessWidget {
                 context: context,
                 photoUrl: ticket.balanzaData!.foto1Url,
                 canEdit: permissions.balanza.canEdit,
-                onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}'),
+                onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}?step=2'),
               ),
               children: [
                 _buildInfoRow('Guia', ticket.balanzaData!.guia),
@@ -232,7 +232,7 @@ class _TicketDetalleContent extends StatelessWidget {
               message: 'Sin registro de balanza',
               actionLabel: 'Agregar Balanza',
               canAdd: permissions.balanza.canAdd,
-              onAdd: () => context.push('/graneles/balanza/crear?ticket_id=${ticket.id}'),
+              onAdd: () => context.push('/graneles/viaje/editar/${ticket.id}?step=2'),
             ),
             SizedBox(height: DesignTokens.spaceM),
           ],
@@ -249,7 +249,7 @@ class _TicketDetalleContent extends StatelessWidget {
                 context: context,
                 photoUrl: ticket.almacenData!.foto1Url,
                 canEdit: permissions.almacen.canEdit,
-                onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}'),
+                onEdit: () => context.push('/graneles/viaje/editar/${ticket.id}?step=3'),
               ),
               children: [
                 // Pesos
@@ -365,7 +365,7 @@ class _TicketDetalleContent extends StatelessWidget {
               message: 'Sin registro de almacen',
               actionLabel: 'Agregar Almacen',
               canAdd: permissions.almacen.canAdd,
-              onAdd: () => context.push('/graneles/almacen/crear?balanza_id=${ticket.balanzaData!.id}'),
+              onAdd: () => context.push('/graneles/viaje/editar/${ticket.id}?step=3'),
             ),
           ],
           // Si no tiene balanza, no mostrar seccion de almacen (primero necesita balanza)

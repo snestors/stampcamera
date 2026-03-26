@@ -18,9 +18,7 @@ import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
 import 'package:stampcamera/screens/graneles/graneles_screen.dart';
 import 'package:stampcamera/screens/graneles/servicio_dashboard_screen.dart';
 import 'package:stampcamera/screens/graneles/ticket_detalle_screen.dart';
-import 'package:stampcamera/screens/graneles/ticket_crear_screen.dart';
-import 'package:stampcamera/screens/graneles/balanza_crear_screen.dart';
-import 'package:stampcamera/screens/graneles/almacen_crear_screen.dart';
+// Formularios viejos eliminados — usar viaje_form_screen.dart
 import 'package:stampcamera/screens/graneles/silos_crear_screen.dart';
 import 'package:stampcamera/screens/graneles/viaje_form_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
@@ -219,73 +217,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
               if (ticketId == 0) return const HomeScreen();
-              return ViajeFormScreen.edit(ticketId: ticketId);
+              final step = int.tryParse(state.uri.queryParameters['step'] ?? '');
+              return ViajeFormScreen.edit(ticketId: ticketId, initialStep: step);
             },
           ),
           // IMPORTANTE: Rutas específicas deben ir ANTES de las rutas con parámetros genéricos
-          // Ruta sin servicioId - muestra BLs de todas las naves en operación
-          GoRoute(
-            path: 'ticket/crear',
-            builder: (context, state) {
-              return const TicketCrearScreen();
-            },
-          ),
-          // Ruta con servicioId - para compatibilidad con navegación desde servicio específico
-          GoRoute(
-            path: 'ticket/crear/:servicioId',
-            builder: (context, state) {
-              final servicioId = int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
-              if (servicioId == 0) return const HomeScreen();
-              return TicketCrearScreen(servicioId: servicioId);
-            },
-          ),
-          GoRoute(
-            path: 'ticket/editar/:ticketId',
-            builder: (context, state) {
-              final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
-              if (ticketId == 0) return const HomeScreen();
-              return TicketCrearScreen.edit(ticketId: ticketId);
-            },
-          ),
-          // Ruta genérica de ticket al final
+          // Detalle de ticket/viaje
           GoRoute(
             path: 'ticket/:ticketId',
             builder: (context, state) {
               final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
               if (ticketId == 0) return const HomeScreen();
               return TicketDetalleScreen(ticketId: ticketId);
-            },
-          ),
-          // Rutas de Balanza
-          GoRoute(
-            path: 'balanza/crear',
-            builder: (context, state) {
-              final ticketId = int.tryParse(state.uri.queryParameters['ticket_id'] ?? '');
-              return BalanzaCrearScreen(preselectedTicketId: ticketId);
-            },
-          ),
-          GoRoute(
-            path: 'balanza/editar/:balanzaId',
-            builder: (context, state) {
-              final balanzaId = int.tryParse(state.pathParameters['balanzaId'] ?? '') ?? 0;
-              if (balanzaId == 0) return const HomeScreen();
-              return BalanzaCrearScreen.edit(balanzaId: balanzaId);
-            },
-          ),
-          // Rutas de Almacén
-          GoRoute(
-            path: 'almacen/crear',
-            builder: (context, state) {
-              final balanzaId = int.tryParse(state.uri.queryParameters['balanza_id'] ?? '');
-              return AlmacenCrearScreen(preselectedBalanzaId: balanzaId);
-            },
-          ),
-          GoRoute(
-            path: 'almacen/editar/:almacenId',
-            builder: (context, state) {
-              final almacenId = int.tryParse(state.pathParameters['almacenId'] ?? '') ?? 0;
-              if (almacenId == 0) return const HomeScreen();
-              return AlmacenCrearScreen.edit(almacenId: almacenId);
             },
           ),
           // Rutas de Silos

@@ -26,14 +26,16 @@ class ViajeFormScreen extends ConsumerStatefulWidget {
   final int? servicioId;
   final int? ticketId;
   final bool isEditMode;
+  final int? initialStep; // 1=muelle, 2=balanza, 3=almacén
 
   /// Crear nuevo viaje (opcionalmente con servicio preseleccionado)
   const ViajeFormScreen({super.key, this.servicioId})
       : ticketId = null,
-        isEditMode = false;
+        isEditMode = false,
+        initialStep = null;
 
-  /// Editar viaje existente
-  const ViajeFormScreen.edit({super.key, required this.ticketId})
+  /// Editar viaje existente (opcionalmente abrir en paso específico)
+  const ViajeFormScreen.edit({super.key, required this.ticketId, this.initialStep})
       : servicioId = null,
         isEditMode = true;
 
@@ -254,8 +256,10 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         _existingAlmacenFoto2Url = a.foto2Url;
       }
 
-      // Determinar paso inicial segun estado
-      if (ticket.estado == 'pendiente_almacen') {
+      // Determinar paso inicial: prioridad al parámetro, luego estado
+      if (widget.initialStep != null) {
+        _currentStep = (widget.initialStep! - 1).clamp(0, 2);
+      } else if (ticket.estado == 'pendiente_almacen') {
         _currentStep = 2;
       } else if (ticket.estado == 'pendiente_balanza') {
         _currentStep = 1;
