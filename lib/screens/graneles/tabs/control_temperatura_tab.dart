@@ -214,6 +214,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
     final dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm');
     final permissionsAsync = ref.read(userGranelesPermissionsProvider);
     final canEdit = permissionsAsync.valueOrNull?.controlHumedad.canEdit ?? false;
+    final canDelete = permissionsAsync.valueOrNull?.controlHumedad.canDelete ?? false;
 
     showModalBottomSheet(
       context: context,
@@ -336,19 +337,32 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
                   ),
               ],
 
-              // Boton editar
-              if (canEdit) ...[
+              // Botones editar / eliminar
+              if (canEdit || canDelete) ...[
                 SizedBox(height: DesignTokens.spaceL),
-                SizedBox(
-                  width: double.infinity,
-                  child: AppButton.primary(
-                    text: 'Editar',
-                    icon: Icons.edit,
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      context.push('/graneles/control-humedad/editar/${c.id}');
-                    },
-                  ),
+                Row(
+                  children: [
+                    if (canEdit)
+                      Expanded(
+                        child: AppButton.primary(
+                          text: 'Editar',
+                          icon: Icons.edit,
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            context.push('/graneles/control-humedad/editar/${c.id}');
+                          },
+                        ),
+                      ),
+                    if (canEdit && canDelete) SizedBox(width: DesignTokens.spaceS),
+                    if (canDelete)
+                      Expanded(
+                        child: AppButton.error(
+                          text: 'Eliminar',
+                          icon: Icons.delete_outline,
+                          onPressed: () => _confirmDelete(ctx, c),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ],
@@ -384,6 +398,36 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
           ),
         ),
       ],
+    );
+  }
+
+  void _confirmDelete(BuildContext ctx, ControlHumedad c) {
+    showDialog(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
+        title: const Text('Eliminar registro'),
+        content: const Text('¿Estás seguro de que deseas eliminar este registro de control de temperatura y humedad?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogCtx);
+              Navigator.pop(ctx);
+              try {
+                await ref.read(controlHumedadListProvider.notifier).deleteItem(c.id);
+                if (mounted) AppSnackBar.success(context, 'Registro eliminado');
+              } catch (e) {
+                if (mounted) AppSnackBar.error(context, 'Error al eliminar: $e');
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
     );
   }
 
