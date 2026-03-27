@@ -1045,7 +1045,7 @@ class Paralizacion with HasId {
   factory Paralizacion.fromJson(Map<String, dynamic> json) {
     return Paralizacion(
       id: json['id'] ?? 0,
-      servicioId: json['servicio_id'],
+      servicioId: json['servicio'] ?? json['servicio_id'],
       servicioCodigo: json['servicio_codigo'],
       naveNombre: json['nave_nombre'],
       consignatarioNombre: json['consignatario_nombre'],
@@ -1141,7 +1141,7 @@ class ControlHumedad with HasId {
   factory ControlHumedad.fromJson(Map<String, dynamic> json) {
     return ControlHumedad(
       id: json['id'] ?? 0,
-      servicioId: json['servicio_id'],
+      servicioId: json['servicio'] ?? json['servicio_id'],
       servicioCodigo: json['servicio_codigo'],
       naveNombre: json['nave_nombre'],
       consignatarioNombre: json['consignatario_nombre'],
