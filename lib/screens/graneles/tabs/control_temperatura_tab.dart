@@ -306,11 +306,11 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
                   runSpacing: DesignTokens.spaceS,
                   children: [
                     if (c.fotoTemperaturaUrl != null)
-                      _photoThumb(context, c.fotoTemperaturaUrl!, 'Temperatura'),
+                      _photoThumb(context, c.fotoTemperaturaUrl!, c.fotoTemperaturaFullUrl ?? c.fotoTemperaturaUrl!, 'Temperatura'),
                     if (c.fotoHumedadUrl != null)
-                      _photoThumb(context, c.fotoHumedadUrl!, 'Humedad'),
+                      _photoThumb(context, c.fotoHumedadUrl!, c.fotoHumedadFullUrl ?? c.fotoHumedadUrl!, 'Humedad'),
                     if (c.fotoExtraUrl != null)
-                      _photoThumb(context, c.fotoExtraUrl!, 'Extra'),
+                      _photoThumb(context, c.fotoExtraUrl!, c.fotoExtraFullUrl ?? c.fotoExtraUrl!, 'Extra'),
                   ],
                 ),
               ],
@@ -387,13 +387,13 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
     );
   }
 
-  Widget _photoThumb(BuildContext context, String url, String title) {
+  Widget _photoThumb(BuildContext context, String thumbUrl, String fullUrl, String title) {
     return GestureDetector(
-      onTap: () => FullscreenImageViewer.open(context, imageUrl: url, title: title),
+      onTap: () => FullscreenImageViewer.open(context, imageUrl: fullUrl, title: title),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(DesignTokens.radiusS),
         child: CachedNetworkImage(
-          imageUrl: url,
+          imageUrl: thumbUrl,
           width: 80,
           height: 80,
           fit: BoxFit.cover,

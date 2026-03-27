@@ -1111,9 +1111,12 @@ class ControlHumedad with HasId {
   final double? temperatura;
   final double? humedad;
   final String? observaciones;
-  final String? fotoTemperaturaUrl;
-  final String? fotoHumedadUrl;
-  final String? fotoExtraUrl;
+  final String? fotoTemperaturaUrl;     // thumbnail
+  final String? fotoTemperaturaFullUrl; // original
+  final String? fotoHumedadUrl;         // thumbnail
+  final String? fotoHumedadFullUrl;     // original
+  final String? fotoExtraUrl;           // thumbnail
+  final String? fotoExtraFullUrl;       // original
   final String? createByNombre;
   final DateTime? createAt;
 
@@ -1132,8 +1135,11 @@ class ControlHumedad with HasId {
     this.humedad,
     this.observaciones,
     this.fotoTemperaturaUrl,
+    this.fotoTemperaturaFullUrl,
     this.fotoHumedadUrl,
+    this.fotoHumedadFullUrl,
     this.fotoExtraUrl,
+    this.fotoExtraFullUrl,
     this.createByNombre,
     this.createAt,
   });
@@ -1156,8 +1162,11 @@ class ControlHumedad with HasId {
       humedad: json['humedad'] != null ? _parseDouble(json['humedad']) : null,
       observaciones: json['observaciones'],
       fotoTemperaturaUrl: json['foto_temperatura_url'],
+      fotoTemperaturaFullUrl: json['foto_temperatura_full_url'] ?? json['foto_temperatura_url'],
       fotoHumedadUrl: json['foto_humedad_url'],
+      fotoHumedadFullUrl: json['foto_humedad_full_url'] ?? json['foto_humedad_url'],
       fotoExtraUrl: json['foto_extra_url'],
+      fotoExtraFullUrl: json['foto_extra_full_url'] ?? json['foto_extra_url'],
       createByNombre: json['create_by_nombre'],
       createAt: json['create_at'] != null ? DateTime.tryParse(json['create_at'].toString()) : null,
     );
