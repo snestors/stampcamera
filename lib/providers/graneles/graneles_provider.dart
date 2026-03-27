@@ -71,7 +71,7 @@ final servicioDashboardProvider =
 /// Provider para permisos del usuario en módulo graneles
 /// Cachea los permisos para evitar llamadas repetidas
 final userGranelesPermissionsProvider =
-    FutureProvider<UserGranelesPermissions>((ref) async {
+    FutureProvider.autoDispose<UserGranelesPermissions>((ref) async {
   final service = ref.watch(serviciosGranelesServiceProvider);
   try {
     return await service.getUserPermissions();

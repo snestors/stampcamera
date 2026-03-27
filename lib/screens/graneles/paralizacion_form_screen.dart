@@ -317,8 +317,15 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
         final time = await showTimePicker(
           context: context,
           initialTime: value != null
-              ? TimeOfDay.fromDateTime(value)
-              : TimeOfDay.now(),
+              ? TimeOfDay.fromDateTime(toLima(value))
+              : TimeOfDay.fromDateTime(nowLima()),
+          initialEntryMode: TimePickerEntryMode.input,
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+              child: child!,
+            );
+          },
         );
         if (time == null) return;
 
