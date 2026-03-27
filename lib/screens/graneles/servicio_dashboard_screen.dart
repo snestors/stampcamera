@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
@@ -84,6 +85,10 @@ class _DashboardContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Boton Jornadas
+                  _buildJornadasButton(context),
+                  SizedBox(height: DesignTokens.spaceL),
+
                   // KPIs principales
                   _buildKpisGrid(),
                   SizedBox(height: DesignTokens.spaceL),
@@ -618,6 +623,82 @@ class _DashboardContent extends StatelessWidget {
                   intFormat: intFormat,
                 )),
         ],
+      ),
+    );
+  }
+
+  Widget _buildJornadasButton(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        context.push('/graneles/servicio/${dashboard.servicio.id}/jornadas');
+      },
+      borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(DesignTokens.spaceM),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.secondary,
+              AppColors.secondary.withValues(alpha: 0.85),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.secondary.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+              ),
+              child: const Icon(
+                Icons.table_chart_outlined,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            SizedBox(width: DesignTokens.spaceM),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Resumen por Jornadas',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Descarga y despacho por bodega/almacen',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white70,
+              size: 16,
+            ),
+          ],
+        ),
       ),
     );
   }

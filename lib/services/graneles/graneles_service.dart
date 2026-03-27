@@ -380,6 +380,26 @@ class ServiciosGranelesService implements BaseService<ServicioGranel> {
     final response = await _http.dio.get('${endpoint}user_permissions/');
     return UserGranelesPermissions.fromJson(response.data);
   }
+
+  /// Obtener resumen de jornadas (tabla pivote descarga/despacho)
+  Future<ResumenJornadas> getResumenJornadas(
+    int servicioId, {
+    String? producto,
+    String? tipoOperacion,
+  }) async {
+    final queryParams = <String, dynamic>{};
+    if (producto != null && producto.isNotEmpty) {
+      queryParams['producto'] = producto;
+    }
+    if (tipoOperacion != null && tipoOperacion.isNotEmpty) {
+      queryParams['tipo_operacion'] = tipoOperacion;
+    }
+    final response = await _http.dio.get(
+      '$endpoint$servicioId/resumen_jornadas/',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+    return ResumenJornadas.fromJson(response.data);
+  }
 }
 
 // =============================================================================

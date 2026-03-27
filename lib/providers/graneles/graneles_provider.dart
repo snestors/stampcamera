@@ -545,3 +545,44 @@ final controlHumedadDetalleProvider =
   final service = ref.watch(controlHumedadServiceProvider);
   return service.retrieve(id);
 });
+
+// ===========================================================================
+// RESUMEN DE JORNADAS
+// ===========================================================================
+
+/// Parametros para el provider de resumen de jornadas
+class ResumenJornadasParams {
+  final int servicioId;
+  final String? producto;
+  final String? tipoOperacion;
+
+  const ResumenJornadasParams({
+    required this.servicioId,
+    this.producto,
+    this.tipoOperacion,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ResumenJornadasParams &&
+          runtimeType == other.runtimeType &&
+          servicioId == other.servicioId &&
+          producto == other.producto &&
+          tipoOperacion == other.tipoOperacion;
+
+  @override
+  int get hashCode =>
+      servicioId.hashCode ^ producto.hashCode ^ tipoOperacion.hashCode;
+}
+
+/// Provider para resumen de jornadas con filtros
+final resumenJornadasProvider =
+    FutureProvider.autoDispose.family<ResumenJornadas, ResumenJornadasParams>((ref, params) async {
+  final service = ref.watch(serviciosGranelesServiceProvider);
+  return service.getResumenJornadas(
+    params.servicioId,
+    producto: params.producto,
+    tipoOperacion: params.tipoOperacion,
+  );
+});

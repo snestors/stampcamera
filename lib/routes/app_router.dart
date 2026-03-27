@@ -16,6 +16,7 @@ import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
 import 'package:stampcamera/screens/camara/gallery_selector_screen.dart';
 import 'package:stampcamera/screens/graneles/graneles_screen.dart';
+import 'package:stampcamera/screens/graneles/jornadas_screen.dart';
 import 'package:stampcamera/screens/graneles/servicio_dashboard_screen.dart';
 import 'package:stampcamera/screens/graneles/ticket_detalle_screen.dart';
 // Formularios viejos eliminados — usar viaje_form_screen.dart
@@ -202,6 +203,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final servicioId = int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
               if (servicioId == 0) return const HomeScreen();
               return ServicioDashboardScreen(servicioId: servicioId);
+            },
+          ),
+          GoRoute(
+            path: 'servicio/:servicioId/jornadas',
+            name: 'servicio-jornadas',
+            builder: (context, state) {
+              final servicioId = int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
+              if (servicioId == 0) return const HomeScreen();
+              return JornadasScreen(servicioId: servicioId);
             },
           ),
           // Viaje unificado (3 pasos: muelle + balanza + almacén)

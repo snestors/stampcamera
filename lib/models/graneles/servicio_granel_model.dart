@@ -1202,3 +1202,366 @@ class ControlHumedadOptions {
     );
   }
 }
+
+// =============================================================================
+// RESUMEN DE JORNADAS (tabla pivote descarga/despacho)
+// =============================================================================
+
+/// Cabecera de bodega en resumen de jornadas
+class JornadaCabeceraBodega {
+  final String bodega;
+  final String producto;
+  final double pesoManifestado;
+  final int bagsManifestados;
+
+  const JornadaCabeceraBodega({
+    required this.bodega,
+    required this.producto,
+    this.pesoManifestado = 0,
+    this.bagsManifestados = 0,
+  });
+
+  factory JornadaCabeceraBodega.fromJson(Map<String, dynamic> json) {
+    return JornadaCabeceraBodega(
+      bodega: json['bodega'] ?? '',
+      producto: json['producto'] ?? '',
+      pesoManifestado: _parseDouble(json['peso_manifestado']),
+      bagsManifestados: json['bags_manifestados'] ?? 0,
+    );
+  }
+}
+
+/// Cabecera de almacen en resumen de jornadas
+class JornadaCabeceraAlmacen {
+  final String almacen;
+  final String producto;
+  final double pesoManifestado;
+  final int bagsManifestados;
+
+  const JornadaCabeceraAlmacen({
+    required this.almacen,
+    required this.producto,
+    this.pesoManifestado = 0,
+    this.bagsManifestados = 0,
+  });
+
+  factory JornadaCabeceraAlmacen.fromJson(Map<String, dynamic> json) {
+    return JornadaCabeceraAlmacen(
+      almacen: json['almacen'] ?? '',
+      producto: json['producto'] ?? '',
+      pesoManifestado: _parseDouble(json['peso_manifestado']),
+      bagsManifestados: json['bags_manifestados'] ?? 0,
+    );
+  }
+}
+
+/// Producto por bodega dentro de una jornada
+class JornadaProductoBodega {
+  final String bodega;
+  final String producto;
+  final int viajesMuelle;
+  final int viajesSilos;
+  final double peso;
+  final double pesoSilos;
+  final int bags;
+
+  const JornadaProductoBodega({
+    required this.bodega,
+    required this.producto,
+    this.viajesMuelle = 0,
+    this.viajesSilos = 0,
+    this.peso = 0,
+    this.pesoSilos = 0,
+    this.bags = 0,
+  });
+
+  factory JornadaProductoBodega.fromJson(Map<String, dynamic> json) {
+    return JornadaProductoBodega(
+      bodega: json['bodega'] ?? '',
+      producto: json['producto'] ?? '',
+      viajesMuelle: json['viajes_muelle'] ?? 0,
+      viajesSilos: json['viajes_silos'] ?? 0,
+      peso: _parseDouble(json['peso']),
+      pesoSilos: _parseDouble(json['peso_silos']),
+      bags: json['bags'] ?? 0,
+    );
+  }
+}
+
+/// Producto por almacen dentro de una jornada
+class JornadaProductoAlmacen {
+  final String almacen;
+  final String producto;
+  final int viajes;
+  final double peso;
+  final int bags;
+
+  const JornadaProductoAlmacen({
+    required this.almacen,
+    required this.producto,
+    this.viajes = 0,
+    this.peso = 0,
+    this.bags = 0,
+  });
+
+  factory JornadaProductoAlmacen.fromJson(Map<String, dynamic> json) {
+    return JornadaProductoAlmacen(
+      almacen: json['almacen'] ?? '',
+      producto: json['producto'] ?? '',
+      viajes: json['viajes'] ?? 0,
+      peso: _parseDouble(json['peso']),
+      bags: json['bags'] ?? 0,
+    );
+  }
+}
+
+/// Una jornada individual
+class JornadaResumen {
+  final String jornada;
+  final int nJornada;
+  final String turno;
+  final List<JornadaProductoBodega> productosBodega;
+  final List<JornadaProductoAlmacen> productosAlmacen;
+  final double totalPesoBodega;
+  final int totalViajesMuelleBodega;
+  final int totalViajesSilosBodega;
+  final int totalBagsBodega;
+  final double totalPesoAlmacen;
+  final int totalViajesAlmacen;
+  final int totalBagsAlmacen;
+
+  const JornadaResumen({
+    required this.jornada,
+    required this.nJornada,
+    required this.turno,
+    this.productosBodega = const [],
+    this.productosAlmacen = const [],
+    this.totalPesoBodega = 0,
+    this.totalViajesMuelleBodega = 0,
+    this.totalViajesSilosBodega = 0,
+    this.totalBagsBodega = 0,
+    this.totalPesoAlmacen = 0,
+    this.totalViajesAlmacen = 0,
+    this.totalBagsAlmacen = 0,
+  });
+
+  factory JornadaResumen.fromJson(Map<String, dynamic> json) {
+    return JornadaResumen(
+      jornada: json['jornada'] ?? '',
+      nJornada: json['n_jornada'] ?? 0,
+      turno: json['turno'] ?? '',
+      productosBodega: (json['productos_bodega'] as List?)
+              ?.map((e) => JornadaProductoBodega.fromJson(e))
+              .toList() ??
+          [],
+      productosAlmacen: (json['productos_almacen'] as List?)
+              ?.map((e) => JornadaProductoAlmacen.fromJson(e))
+              .toList() ??
+          [],
+      totalPesoBodega: _parseDouble(json['total_peso_bodega']),
+      totalViajesMuelleBodega: json['total_viajes_muelle_bodega'] ?? 0,
+      totalViajesSilosBodega: json['total_viajes_silos_bodega'] ?? 0,
+      totalBagsBodega: json['total_bags_bodega'] ?? 0,
+      totalPesoAlmacen: _parseDouble(json['total_peso_almacen']),
+      totalViajesAlmacen: json['total_viajes_almacen'] ?? 0,
+      totalBagsAlmacen: json['total_bags_almacen'] ?? 0,
+    );
+  }
+}
+
+/// Total por bodega
+class JornadaTotalBodega {
+  final String bodega;
+  final String producto;
+  final double totalPeso;
+  final int totalViajes;
+  final int totalBags;
+
+  const JornadaTotalBodega({
+    required this.bodega,
+    required this.producto,
+    this.totalPeso = 0,
+    this.totalViajes = 0,
+    this.totalBags = 0,
+  });
+
+  factory JornadaTotalBodega.fromJson(Map<String, dynamic> json) {
+    return JornadaTotalBodega(
+      bodega: json['bodega'] ?? '',
+      producto: json['producto'] ?? '',
+      totalPeso: _parseDouble(json['total_peso']),
+      totalViajes: json['total_viajes'] ?? 0,
+      totalBags: json['total_bags'] ?? 0,
+    );
+  }
+}
+
+/// Total por almacen
+class JornadaTotalAlmacen {
+  final String almacen;
+  final String producto;
+  final double totalPeso;
+  final int totalViajes;
+  final int totalBags;
+
+  const JornadaTotalAlmacen({
+    required this.almacen,
+    required this.producto,
+    this.totalPeso = 0,
+    this.totalViajes = 0,
+    this.totalBags = 0,
+  });
+
+  factory JornadaTotalAlmacen.fromJson(Map<String, dynamic> json) {
+    return JornadaTotalAlmacen(
+      almacen: json['almacen'] ?? '',
+      producto: json['producto'] ?? '',
+      totalPeso: _parseDouble(json['total_peso']),
+      totalViajes: json['total_viajes'] ?? 0,
+      totalBags: json['total_bags'] ?? 0,
+    );
+  }
+}
+
+/// Saldo por bodega
+class JornadaSaldoBodega {
+  final String bodega;
+  final double saldo;
+  final int saldoBags;
+
+  const JornadaSaldoBodega({
+    required this.bodega,
+    this.saldo = 0,
+    this.saldoBags = 0,
+  });
+
+  factory JornadaSaldoBodega.fromJson(Map<String, dynamic> json) {
+    return JornadaSaldoBodega(
+      bodega: json['bodega'] ?? '',
+      saldo: _parseDouble(json['saldo']),
+      saldoBags: json['saldo_bags'] ?? 0,
+    );
+  }
+}
+
+/// Saldo por almacen
+class JornadaSaldoAlmacen {
+  final String almacen;
+  final double saldo;
+  final int saldoBags;
+
+  const JornadaSaldoAlmacen({
+    required this.almacen,
+    this.saldo = 0,
+    this.saldoBags = 0,
+  });
+
+  factory JornadaSaldoAlmacen.fromJson(Map<String, dynamic> json) {
+    return JornadaSaldoAlmacen(
+      almacen: json['almacen'] ?? '',
+      saldo: _parseDouble(json['saldo']),
+      saldoBags: json['saldo_bags'] ?? 0,
+    );
+  }
+}
+
+/// Respuesta completa del endpoint resumen_jornadas
+class ResumenJornadas {
+  final List<JornadaCabeceraBodega> cabecerasBodega;
+  final List<JornadaCabeceraAlmacen> cabecerasAlmacen;
+  final List<JornadaResumen> jornadas;
+  final List<JornadaTotalBodega> totalesBodega;
+  final List<JornadaTotalAlmacen> totalesAlmacen;
+  final List<JornadaSaldoBodega> saldosBodega;
+  final List<JornadaSaldoAlmacen> saldosAlmacen;
+  // Totales generales
+  final double totalPesoBodega;
+  final int totalViajesBodega;
+  final int totalBagsBodega;
+  final double totalPesoAlmacen;
+  final int totalViajesAlmacen;
+  final int totalBagsAlmacen;
+  // Totales manifestados
+  final double totalManifestadoBodega;
+  final int totalBagsManifestadosBodega;
+  final double totalManifestadoAlmacen;
+  final int totalBagsManifestadosAlmacen;
+  // Saldos totales
+  final double saldoTotalBodega;
+  final int saldoTotalBagsBodega;
+  final double saldoTotalAlmacen;
+  final int saldoTotalBagsAlmacen;
+
+  const ResumenJornadas({
+    this.cabecerasBodega = const [],
+    this.cabecerasAlmacen = const [],
+    this.jornadas = const [],
+    this.totalesBodega = const [],
+    this.totalesAlmacen = const [],
+    this.saldosBodega = const [],
+    this.saldosAlmacen = const [],
+    this.totalPesoBodega = 0,
+    this.totalViajesBodega = 0,
+    this.totalBagsBodega = 0,
+    this.totalPesoAlmacen = 0,
+    this.totalViajesAlmacen = 0,
+    this.totalBagsAlmacen = 0,
+    this.totalManifestadoBodega = 0,
+    this.totalBagsManifestadosBodega = 0,
+    this.totalManifestadoAlmacen = 0,
+    this.totalBagsManifestadosAlmacen = 0,
+    this.saldoTotalBodega = 0,
+    this.saldoTotalBagsBodega = 0,
+    this.saldoTotalAlmacen = 0,
+    this.saldoTotalBagsAlmacen = 0,
+  });
+
+  factory ResumenJornadas.fromJson(Map<String, dynamic> json) {
+    return ResumenJornadas(
+      cabecerasBodega: (json['cabeceras_bodega'] as List?)
+              ?.map((e) => JornadaCabeceraBodega.fromJson(e))
+              .toList() ??
+          [],
+      cabecerasAlmacen: (json['cabeceras_almacen'] as List?)
+              ?.map((e) => JornadaCabeceraAlmacen.fromJson(e))
+              .toList() ??
+          [],
+      jornadas: (json['jornadas'] as List?)
+              ?.map((e) => JornadaResumen.fromJson(e))
+              .toList() ??
+          [],
+      totalesBodega: (json['totales_bodega'] as List?)
+              ?.map((e) => JornadaTotalBodega.fromJson(e))
+              .toList() ??
+          [],
+      totalesAlmacen: (json['totales_almacen'] as List?)
+              ?.map((e) => JornadaTotalAlmacen.fromJson(e))
+              .toList() ??
+          [],
+      saldosBodega: (json['saldos_bodega'] as List?)
+              ?.map((e) => JornadaSaldoBodega.fromJson(e))
+              .toList() ??
+          [],
+      saldosAlmacen: (json['saldos_almacen'] as List?)
+              ?.map((e) => JornadaSaldoAlmacen.fromJson(e))
+              .toList() ??
+          [],
+      totalPesoBodega: _parseDouble(json['total_peso_bodega']),
+      totalViajesBodega: json['total_viajes_bodega'] ?? 0,
+      totalBagsBodega: json['total_bags_bodega'] ?? 0,
+      totalPesoAlmacen: _parseDouble(json['total_peso_almacen']),
+      totalViajesAlmacen: json['total_viajes_almacen'] ?? 0,
+      totalBagsAlmacen: json['total_bags_almacen'] ?? 0,
+      totalManifestadoBodega: _parseDouble(json['total_manifestado_bodega']),
+      totalBagsManifestadosBodega: json['total_bags_manifestados_bodega'] ?? 0,
+      totalManifestadoAlmacen: _parseDouble(json['total_manifestado_almacen']),
+      totalBagsManifestadosAlmacen: json['total_bags_manifestados_almacen'] ?? 0,
+      saldoTotalBodega: _parseDouble(json['saldo_total_bodega']),
+      saldoTotalBagsBodega: json['saldo_total_bags_bodega'] ?? 0,
+      saldoTotalAlmacen: _parseDouble(json['saldo_total_almacen']),
+      saldoTotalBagsAlmacen: json['saldo_total_bags_almacen'] ?? 0,
+    );
+  }
+
+  bool get hasData => cabecerasBodega.isNotEmpty || cabecerasAlmacen.isNotEmpty;
+}
