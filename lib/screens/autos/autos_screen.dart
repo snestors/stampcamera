@@ -155,6 +155,11 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.assignment),
+              onPressed: () => context.push('/autos/resumen-registros'),
+              tooltip: 'Resumen registros',
+            ),
             const Padding(
               padding: EdgeInsets.only(right: DesignTokens.spaceL),
               child: QueueBadge(),
@@ -178,6 +183,13 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
           ),
         ),
         actions: [
+          // Botón de resumen registros solo en pestaña Registro
+          if (currentTabId == 'registro')
+            IconButton(
+              icon: const Icon(Icons.assignment),
+              onPressed: () => context.push('/autos/resumen-registros'),
+              tooltip: 'Resumen registros',
+            ),
           // Botón de reporte solo en pestaña de Pedeteo
           if (currentTabId == 'pedeteo')
             IconButton(

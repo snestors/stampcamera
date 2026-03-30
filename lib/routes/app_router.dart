@@ -11,6 +11,7 @@ import 'package:stampcamera/widgets/autos/forms/fotos_presentacion_form.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_nave_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_detalle_screen.dart';
 import 'package:stampcamera/screens/autos/registro_general/detalle_registro_screen.dart';
+import 'package:stampcamera/screens/autos/registro_general/resumen_registros_screen.dart';
 import 'package:stampcamera/screens/autos/reporte_pedeteo_screen.dart';
 import 'package:stampcamera/screens/camara/camera_screen.dart';
 import 'package:stampcamera/screens/camara/fullscreen_image.dart';
@@ -111,6 +112,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'reporte-pedeteo',
             name: 'reporte-pedeteo',
             builder: (context, state) => const ReportePedeteoScreen(),
+          ),
+          GoRoute(
+            path: 'resumen-registros',
+            builder: (context, state) => const ResumenRegistrosScreen(),
           ),
           // Formularios con transición slide-up
           GoRoute(

@@ -78,12 +78,16 @@ class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
     switch (_tabController.index) {
       case 1: // Historial - crear registro
         final result = await context.push<String>('/autos/registro-vin/crear/${widget.vin}');
-        // Si eligió crear foto de presentación
-        if (result == 'create_foto' && mounted) {
+        if (!mounted) break;
+        if (result == 'create_foto') {
+          // Crear foto de presentación (loop hasta que elija solo guardar)
           String? fotoResult = 'create_another';
           while (fotoResult == 'create_another' && mounted) {
             fotoResult = await context.push<String>('/autos/foto/crear/${widget.vin}');
           }
+        } else if (result == null) {
+          // Solo guardar: volver a la pantalla de búsqueda de VINs
+          context.pop();
         }
         break;
       case 2: // Fotos - crear foto (loop)

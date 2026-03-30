@@ -87,7 +87,10 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
     if (isSelecting) {
       _toggleSelection(image);
     } else {
-      context.pop(index); // Devuelve index a FullscreenImage
+      context.pushNamed(
+        'fullscreen',
+        extra: {'camera': widget.camera, 'index': index},
+      );
     }
   }
 
