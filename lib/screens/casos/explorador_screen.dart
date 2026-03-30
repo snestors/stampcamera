@@ -104,7 +104,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
           if (state.contenido?.caso != null)
             Text(
               state.contenido!.caso!.nCaso,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w400,
@@ -198,11 +198,11 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.people, size: 16, color: AppColors.info),
+              const Icon(Icons.people, size: 16, color: AppColors.info),
               const SizedBox(width: 4),
               Text(
                 '${otros.length}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: AppColors.info,
@@ -264,7 +264,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                 .read(exploradorProvider.notifier)
                 .loadContenidoCarpeta(widget.carpetaId),
             child: ListView(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               children: [
                 // Subcarpetas
                 if (subcarpetas.isNotEmpty) ...[
@@ -272,7 +272,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                     title: 'Carpetas',
                     count: subcarpetas.length,
                   ),
-                  SizedBox(height: DesignTokens.spaceS),
+                  const SizedBox(height: DesignTokens.spaceS),
                   ...subcarpetas.map((c) => _CarpetaItem(
                         carpeta: c,
                         isSelected: state.selectedItems.containsKey(c.id),
@@ -299,7 +299,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                                 .restaurarCarpeta(c.id)
                             : null,
                       )),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
                 ],
 
                 // Archivos
@@ -308,7 +308,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                     title: 'Archivos',
                     count: archivos.length,
                   ),
-                  SizedBox(height: DesignTokens.spaceS),
+                  const SizedBox(height: DesignTokens.spaceS),
                   ...archivos.map((a) => _ArchivoItem(
                         archivo: a,
                         isSelected: state.selectedItems.containsKey(a.id),
@@ -344,13 +344,13 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.folder_open,
             size: 64,
             color: AppColors.textLight,
           ),
-          SizedBox(height: DesignTokens.spaceM),
-          Text(
+          const SizedBox(height: DesignTokens.spaceM),
+          const Text(
             'Carpeta vacía',
             style: TextStyle(
               fontSize: DesignTokens.fontSizeL,
@@ -358,15 +358,15 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
               color: AppColors.textSecondary,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceS),
-          Text(
+          const SizedBox(height: DesignTokens.spaceS),
+          const Text(
             'Crea una subcarpeta o sube archivos',
             style: TextStyle(
               fontSize: DesignTokens.fontSizeS,
               color: AppColors.textLight,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceXL),
+          const SizedBox(height: DesignTokens.spaceXL),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -377,7 +377,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                 size: AppButtonSize.small,
                 isOutlined: true,
               ),
-              SizedBox(width: DesignTokens.spaceM),
+              const SizedBox(width: DesignTokens.spaceM),
               AppButton.primary(
                 text: 'Agregar',
                 icon: Icons.add,
@@ -397,7 +397,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     final failed = state.uploadsFailed;
 
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceM,
         vertical: DesignTokens.spaceS,
       ),
@@ -409,19 +409,19 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
             height: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          SizedBox(width: DesignTokens.spaceM),
+          const SizedBox(width: DesignTokens.spaceM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Subiendo $completed/$total archivo${total != 1 ? 's' : ''}${failed > 0 ? ' ($failed error${failed != 1 ? 'es' : ''})' : ''}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 LinearProgressIndicator(
                   value: state.uploadTotalProgress,
                   backgroundColor: AppColors.neutral,
@@ -430,7 +430,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
             ),
           ),
           if (failed > 0) ...[
-            SizedBox(width: DesignTokens.spaceS),
+            const SizedBox(width: DesignTokens.spaceS),
             IconButton(
               icon: const Icon(Icons.refresh, size: 20),
               onPressed: () =>
@@ -461,13 +461,13 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
 
   Widget _buildSelectionBar(ExplorerState state) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceM,
         vertical: DesignTokens.spaceS,
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.neutral)),
+        border: const Border(top: BorderSide(color: AppColors.neutral)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -525,11 +525,11 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.create_new_folder, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Text('Nueva carpeta'),
+            SizedBox(width: 8),
+            Text('Nueva carpeta'),
           ],
         ),
         content: TextField(
@@ -589,8 +589,8 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -612,7 +612,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.camera_alt, color: AppColors.primary),
+                child: const Icon(Icons.camera_alt, color: AppColors.primary),
               ),
               title: const Text('Tomar fotos'),
               subtitle: const Text('Captura fotos con la camara'),
@@ -788,11 +788,11 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.people, color: AppColors.info),
-            const SizedBox(width: 8),
-            const Text('Usuarios conectados'),
+            SizedBox(width: 8),
+            Text('Usuarios conectados'),
           ],
         ),
         content: SizedBox(
@@ -807,7 +807,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                   backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   child: Text(
                     u.nombre.isNotEmpty ? u.nombre[0].toUpperCase() : 'U',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
@@ -817,7 +817,7 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                 subtitle: u.carpetaNombre != null
                     ? Text(
                         'En: ${u.carpetaNombre}',
-                        style: TextStyle(fontSize: DesignTokens.fontSizeXS),
+                        style: const TextStyle(fontSize: DesignTokens.fontSizeXS),
                       )
                     : null,
                 dense: true,
@@ -851,7 +851,7 @@ class _SectionTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeS,
             fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
@@ -866,7 +866,7 @@ class _SectionTitle extends StatelessWidget {
           ),
           child: Text(
             '$count',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
@@ -898,7 +898,7 @@ class _CarpetaItem extends StatelessWidget {
     final isDeleted = carpeta.isDeleted;
 
     return Card(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceXS),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spaceXS),
       elevation: isSelected ? 2 : 0,
       color: isSelected
           ? AppColors.primary.withValues(alpha: 0.08)
@@ -908,7 +908,7 @@ class _CarpetaItem extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         side: isSelected
-            ? BorderSide(color: AppColors.primary, width: 1.5)
+            ? const BorderSide(color: AppColors.primary, width: 1.5)
             : isDeleted
                 ? BorderSide(color: Colors.red.withValues(alpha: 0.3))
                 : BorderSide.none,
@@ -918,7 +918,7 @@ class _CarpetaItem extends StatelessWidget {
         onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         child: Padding(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
+          padding: const EdgeInsets.all(DesignTokens.spaceM),
           child: Row(
             children: [
               Icon(
@@ -928,7 +928,7 @@ class _CarpetaItem extends StatelessWidget {
                     : Colors.amber[700],
                 size: 28,
               ),
-              SizedBox(width: DesignTokens.spaceM),
+              const SizedBox(width: DesignTokens.spaceM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -947,10 +947,10 @@ class _CarpetaItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       '${carpeta.subcarpetasCount} carpetas, ${carpeta.archivosCount} archivos',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeXS * 0.9,
                         color: AppColors.textLight,
                       ),
@@ -965,7 +965,7 @@ class _CarpetaItem extends StatelessWidget {
                   tooltip: 'Restaurar',
                 )
               else
-                Icon(
+                const Icon(
                   Icons.chevron_right,
                   color: AppColors.textLight,
                   size: 20,
@@ -1046,7 +1046,7 @@ class _ArchivoItem extends StatelessWidget {
     final isDeleted = archivo.isDeleted;
 
     return Card(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceXS),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spaceXS),
       elevation: isSelected ? 2 : 0,
       color: isSelected
           ? AppColors.primary.withValues(alpha: 0.08)
@@ -1056,7 +1056,7 @@ class _ArchivoItem extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         side: isSelected
-            ? BorderSide(color: AppColors.primary, width: 1.5)
+            ? const BorderSide(color: AppColors.primary, width: 1.5)
             : isDeleted
                 ? BorderSide(color: Colors.red.withValues(alpha: 0.3))
                 : BorderSide.none,
@@ -1066,7 +1066,7 @@ class _ArchivoItem extends StatelessWidget {
         onLongPress: archivo.isTemporary ? null : onLongPress,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         child: Padding(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
+          padding: const EdgeInsets.all(DesignTokens.spaceM),
           child: Row(
             children: [
               Container(
@@ -1084,7 +1084,7 @@ class _ArchivoItem extends StatelessWidget {
                   size: 22,
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceM),
+              const SizedBox(width: DesignTokens.spaceM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1103,12 +1103,12 @@ class _ArchivoItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       archivo.isTemporary
                           ? 'Subiendo...'
                           : '${archivo.sizeDisplay} ${archivo.createdByName != null ? "- ${archivo.createdByName}" : ""}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeXS * 0.9,
                         color: AppColors.textLight,
                       ),

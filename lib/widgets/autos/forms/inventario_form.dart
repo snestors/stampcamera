@@ -419,7 +419,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
               Container(
                 width: 60,
                 height: 50,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   border: Border.symmetric(
                     horizontal: BorderSide(color: AppColors.neutral),
                   ),
@@ -501,7 +501,7 @@ class _InventarioFormWidgetState extends ConsumerState<InventarioFormWidget> {
   Widget _buildBottomButtons() {
     return Container(
       padding: const EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: AppColors.neutral)),
       ),

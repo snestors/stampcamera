@@ -95,7 +95,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
               onPressed: () => context.push('/graneles/paralizacion/crear'),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(
+              label: const Text(
                 'Nueva Paralizacion',
                 style: TextStyle(
                   color: Colors.white,
@@ -141,7 +141,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.fromLTRB(
+        padding: const EdgeInsets.fromLTRB(
           DesignTokens.spaceM,
           DesignTokens.spaceM,
           DesignTokens.spaceM,
@@ -152,7 +152,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
           if (index < items.length) {
             final item = items[index];
             return Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+              padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _ParalizacionCard(
                 paralizacion: item,
                 onTap: () => _showDetailSheet(item),
@@ -161,7 +161,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
           }
 
           return Container(
-            padding: EdgeInsets.all(DesignTokens.spaceL),
+            padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
             child: Column(
               children: [
@@ -227,7 +227,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
         expand: false,
         builder: (_, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          padding: EdgeInsets.all(DesignTokens.spaceL),
+          padding: const EdgeInsets.all(DesignTokens.spaceL),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -236,7 +236,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
                 child: Container(
                   width: 40,
                   height: 4,
-                  margin: EdgeInsets.only(bottom: DesignTokens.spaceM),
+                  margin: const EdgeInsets.only(bottom: DesignTokens.spaceM),
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.circular(2),
@@ -245,7 +245,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
               ),
 
               // Titulo
-              Row(
+              const Row(
                 children: [
                   Icon(Icons.pause_circle_outline, color: AppColors.primary),
                   SizedBox(width: DesignTokens.spaceS),
@@ -260,41 +260,41 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
                   ),
                 ],
               ),
-              SizedBox(height: DesignTokens.spaceM),
+              const SizedBox(height: DesignTokens.spaceM),
 
               // Servicio
               if (p.servicioCodigo != null) ...[
                 _detailRow(Icons.directions_boat, 'Servicio',
                     '${p.servicioCodigo}${p.naveNombre != null ? ' - ${p.naveNombre}' : ''}'),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
               ],
 
               _detailRow(Icons.warehouse, 'Bodega', p.bodega),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.report_problem_outlined, 'Motivo', p.motivoStr ?? '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.play_arrow, 'Inicio',
                   p.inicio != null ? dateTimeFormat.format(toLima(p.inicio!)) : '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.stop, 'Fin',
                   p.fin != null ? dateTimeFormat.format(toLima(p.fin!)) : '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.timer_outlined, 'Duracion', p.duracion ?? '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.schedule, 'Jornada', p.jornadaStr ?? '-'),
 
               if (p.observacion != null && p.observacion!.isNotEmpty) ...[
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
                 _detailRow(Icons.notes, 'Observacion', p.observacion!),
               ],
 
               if (p.createByNombre != null) ...[
-                SizedBox(height: DesignTokens.spaceM),
+                const SizedBox(height: DesignTokens.spaceM),
                 const Divider(),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
                 Text(
                   'Creado por: ${p.createByNombre}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
                     color: AppColors.textSecondary,
                   ),
@@ -302,7 +302,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
                 if (p.createAt != null)
                   Text(
                     dateTimeFormat.format(toLima(p.createAt!)),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       color: AppColors.textSecondary,
                     ),
@@ -311,7 +311,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
 
               // Botones de accion
               if (canEdit || canDelete) ...[
-                SizedBox(height: DesignTokens.spaceL),
+                const SizedBox(height: DesignTokens.spaceL),
                 Row(
                   children: [
                     if (canEdit)
@@ -325,7 +325,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
                           },
                         ),
                       ),
-                    if (canEdit && canDelete) SizedBox(width: DesignTokens.spaceS),
+                    if (canEdit && canDelete) const SizedBox(width: DesignTokens.spaceS),
                     if (canDelete)
                       Expanded(
                         child: AppButton.secondary(
@@ -349,12 +349,12 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 16, color: AppColors.textSecondary),
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
         SizedBox(
           width: 80,
           child: Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               color: AppColors.textSecondary,
             ),
@@ -363,7 +363,7 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               fontWeight: FontWeight.w600,
             ),
@@ -435,12 +435,12 @@ class _ParalizacionCard extends ConsumerWidget {
           if (paralizacion.servicioCodigo != null) ...[
             Row(
               children: [
-                Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
-                SizedBox(width: DesignTokens.spaceXS),
+                const Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
+                const SizedBox(width: DesignTokens.spaceXS),
                 Expanded(
                   child: Text(
                     '${paralizacion.servicioCodigo}${paralizacion.naveNombre != null ? ' - ${paralizacion.naveNombre}' : ''}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       color: AppColors.accent,
                       fontWeight: FontWeight.w600,
@@ -450,14 +450,14 @@ class _ParalizacionCard extends ConsumerWidget {
                 ),
               ],
             ),
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
           ],
 
           // Bodega badge + motivo
           Row(
             children: [
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignTokens.spaceS,
                   vertical: DesignTokens.spaceXS,
                 ),
@@ -469,10 +469,10 @@ class _ParalizacionCard extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.warehouse, size: 14, color: Colors.white),
-                    SizedBox(width: DesignTokens.spaceXS),
+                    const SizedBox(width: DesignTokens.spaceXS),
                     Text(
                       paralizacion.bodega,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: DesignTokens.fontSizeS,
@@ -484,7 +484,7 @@ class _ParalizacionCard extends ConsumerWidget {
               const Spacer(),
               if (paralizacion.jornadaStr != null)
                 Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: DesignTokens.spaceS,
                     vertical: 2,
                   ),
@@ -494,7 +494,7 @@ class _ParalizacionCard extends ConsumerWidget {
                   ),
                   child: Text(
                     paralizacion.jornadaStr!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.info,
                       fontWeight: FontWeight.w600,
                       fontSize: DesignTokens.fontSizeXS,
@@ -503,17 +503,17 @@ class _ParalizacionCard extends ConsumerWidget {
                 ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // Motivo
           Row(
             children: [
-              Icon(Icons.report_problem_outlined, size: 14, color: AppColors.textSecondary),
-              SizedBox(width: DesignTokens.spaceXS),
+              const Icon(Icons.report_problem_outlined, size: 14, color: AppColors.textSecondary),
+              const SizedBox(width: DesignTokens.spaceXS),
               Expanded(
                 child: Text(
                   paralizacion.motivoStr ?? 'Sin motivo',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
                   ),
@@ -522,23 +522,23 @@ class _ParalizacionCard extends ConsumerWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // Inicio/Fin y duracion
           Row(
             children: [
-              Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
-              SizedBox(width: DesignTokens.spaceXS),
+              const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
+              const SizedBox(width: DesignTokens.spaceXS),
               Text(
                 paralizacion.inicio != null
                     ? dateTimeFormat.format(toLima(paralizacion.inicio!))
                     : '-',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeS,
                   color: AppColors.textSecondary,
                 ),
               ),
-              Text(
+              const Text(
                 ' - ',
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeS,
@@ -549,15 +549,15 @@ class _ParalizacionCard extends ConsumerWidget {
                 paralizacion.fin != null
                     ? dateTimeFormat.format(toLima(paralizacion.fin!))
                     : '?',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeS,
                   color: AppColors.textSecondary,
                 ),
               ),
               if (paralizacion.duracion != null) ...[
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: DesignTokens.spaceXS,
                     vertical: 2,
                   ),
@@ -567,7 +567,7 @@ class _ParalizacionCard extends ConsumerWidget {
                   ),
                   child: Text(
                     paralizacion.duracion!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       fontWeight: FontWeight.w600,
                     ),
@@ -579,11 +579,11 @@ class _ParalizacionCard extends ConsumerWidget {
 
           // Observacion
           if (paralizacion.observacion != null && paralizacion.observacion!.isNotEmpty) ...[
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
             const Divider(),
             Text(
               paralizacion.observacion!,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeXS,
                 color: AppColors.textSecondary,
                 fontStyle: FontStyle.italic,

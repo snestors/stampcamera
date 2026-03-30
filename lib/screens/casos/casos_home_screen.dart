@@ -157,7 +157,7 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
     return RefreshIndicator(
       onRefresh: () => ref.read(exploradorProvider.notifier).loadCarpetasRaiz(),
       child: ListView.builder(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
         itemCount: state.rubros.length,
         itemBuilder: (context, index) {
           final rubro = state.rubros[index];
@@ -202,7 +202,7 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
       children: [
         // Barra de búsqueda
         Padding(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
+          padding: const EdgeInsets.all(DesignTokens.spaceM),
           child: TextField(
             decoration: InputDecoration(
               hintText: 'Buscar caso...',
@@ -211,13 +211,13 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
               fillColor: AppColors.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-                borderSide: BorderSide(color: AppColors.neutral),
+                borderSide: const BorderSide(color: AppColors.neutral),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-                borderSide: BorderSide(color: AppColors.neutral),
+                borderSide: const BorderSide(color: AppColors.neutral),
               ),
-              contentPadding: EdgeInsets.symmetric(
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: DesignTokens.spaceM,
                 vertical: DesignTokens.spaceS,
               ),
@@ -230,12 +230,12 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
 
         // Contador
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceL),
+          padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceL),
           child: Row(
             children: [
               Text(
                 '${filtered.length} carpeta${filtered.length != 1 ? 's' : ''}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeS,
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
@@ -245,7 +245,7 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
           ),
         ),
 
-        SizedBox(height: DesignTokens.spaceS),
+        const SizedBox(height: DesignTokens.spaceS),
 
         // Lista
         Expanded(
@@ -253,7 +253,7 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
             onRefresh: () =>
                 ref.read(exploradorProvider.notifier).loadCarpetasRaiz(),
             child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceM),
+              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceM),
               itemCount: filtered.length,
               itemBuilder: (context, index) {
                 final carpeta = filtered[index];
@@ -311,7 +311,7 @@ class _RubroCard extends StatelessWidget {
     final color = _getColor();
 
     return Card(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceM),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spaceM),
       elevation: 2,
       shadowColor: color.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(
@@ -321,7 +321,7 @@ class _RubroCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         child: Container(
-          padding: EdgeInsets.all(DesignTokens.spaceL),
+          padding: const EdgeInsets.all(DesignTokens.spaceL),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DesignTokens.radiusL),
             gradient: LinearGradient(
@@ -336,30 +336,30 @@ class _RubroCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(DesignTokens.spaceM),
+                padding: const EdgeInsets.all(DesignTokens.spaceM),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                 ),
                 child: Icon(_getIcon(), color: color, size: 28),
               ),
-              SizedBox(width: DesignTokens.spaceL),
+              const SizedBox(width: DesignTokens.spaceL),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       rubro.nombre,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeRegular,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    SizedBox(height: DesignTokens.spaceXS),
+                    const SizedBox(height: DesignTokens.spaceXS),
                     Text(
                       '${rubro.count} caso${rubro.count != 1 ? 's' : ''}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeS,
                         color: AppColors.textSecondary,
                       ),
@@ -367,7 +367,7 @@ class _RubroCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right,
                 color: AppColors.textSecondary,
               ),
@@ -388,7 +388,7 @@ class _CarpetaRaizCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceS),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spaceS),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -397,29 +397,29 @@ class _CarpetaRaizCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         child: Padding(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
+          padding: const EdgeInsets.all(DesignTokens.spaceM),
           child: Row(
             children: [
               Container(
-                padding: EdgeInsets.all(DesignTokens.spaceS),
+                padding: const EdgeInsets.all(DesignTokens.spaceS),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.folder,
                   color: AppColors.primary,
                   size: 24,
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceM),
+              const SizedBox(width: DesignTokens.spaceM),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       carpeta.casoInfo?.nCaso ?? carpeta.nombre,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeS,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -428,10 +428,10 @@ class _CarpetaRaizCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (carpeta.casoInfo?.asuntoDetalle != null) ...[
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         carpeta.casoInfo!.asuntoDetalle!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           color: AppColors.textSecondary,
                         ),
@@ -439,19 +439,19 @@ class _CarpetaRaizCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    SizedBox(height: DesignTokens.spaceXS),
+                    const SizedBox(height: DesignTokens.spaceXS),
                     Row(
                       children: [
                         _InfoChip(
                           icon: Icons.folder_open,
                           label: '${carpeta.subcarpetasCount}',
                         ),
-                        SizedBox(width: DesignTokens.spaceS),
+                        const SizedBox(width: DesignTokens.spaceS),
                         _InfoChip(
                           icon: Icons.insert_drive_file,
                           label: '${carpeta.archivosCount}',
                         ),
-                        SizedBox(width: DesignTokens.spaceS),
+                        const SizedBox(width: DesignTokens.spaceS),
                         _InfoChip(
                           icon: Icons.data_usage,
                           label: carpeta.totalSizeDisplay,
@@ -461,7 +461,7 @@ class _CarpetaRaizCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right,
                 color: AppColors.textLight,
               ),
@@ -488,7 +488,7 @@ class _InfoChip extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeXS * 0.9,
             color: AppColors.textLight,
           ),

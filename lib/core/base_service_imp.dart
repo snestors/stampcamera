@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
-import '../models/paginated_response.dart';
-import '../services/http_service.dart';
-import 'base_service.dart';
+import 'package:stampcamera/models/paginated_response.dart';
+import 'package:stampcamera/services/http_service.dart';
+import 'package:stampcamera/core/base_service.dart';
 
 /// Implementación base para servicios Django DRF
 abstract class BaseServiceImpl<T> implements BaseService<T> {

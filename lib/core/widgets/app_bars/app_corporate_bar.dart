@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 /// AppBar corporativo con diseño consistente
 class AppCorporateBar extends StatelessWidget implements PreferredSizeWidget {

@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 class AppSectionHeader extends StatelessWidget {
   final IconData icon;
@@ -27,7 +27,7 @@ class AppSectionHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(DesignTokens.spaceXS),
+          padding: const EdgeInsets.all(DesignTokens.spaceXS),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -38,11 +38,11 @@ class AppSectionHeader extends StatelessWidget {
             color: color,
           ),
         ),
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
         Expanded(
           child: Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeM,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -51,7 +51,7 @@ class AppSectionHeader extends StatelessWidget {
         ),
         if (count != null) ...[
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spaceS,
               vertical: DesignTokens.spaceXS,
             ),

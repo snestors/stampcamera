@@ -15,7 +15,7 @@ class DetalleInfoGeneral extends StatelessWidget {
       children: [
         // Header con gradient (VIN + Marca + Serie)
         _buildHeader(),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
 
         // Sección: Vehículo
         _buildSection(
@@ -25,11 +25,11 @@ class DetalleInfoGeneral extends StatelessWidget {
             _buildInfoRow('Modelo', r.informacionUnidad?.modelo ?? 'N/A'),
             _buildInfoRow('Versión', r.informacionUnidad?.version ?? 'N/A'),
             _buildInfoRow('Color', r.color ?? 'N/A'),
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildInventarioButton(context),
           ],
         ),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
 
         // Sección: Embarque / Nave
         _buildSection(
@@ -65,7 +65,7 @@ class DetalleInfoGeneral extends StatelessWidget {
   // ============================================================================
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -85,7 +85,7 @@ class DetalleInfoGeneral extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Text(
               r.vin,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeM,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -94,7 +94,7 @@ class DetalleInfoGeneral extends StatelessWidget {
               maxLines: 1,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
           // Badges + icono de marca
           Row(
             children: [
@@ -116,7 +116,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: EdgeInsets.all(DesignTokens.spaceS),
+                padding: const EdgeInsets.all(DesignTokens.spaceS),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -138,7 +138,7 @@ class DetalleInfoGeneral extends StatelessWidget {
 
   Widget _buildHeaderBadge(String text, IconData icon) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceS,
         vertical: 3,
       ),
@@ -150,10 +150,10 @@ class DetalleInfoGeneral extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: Colors.white),
-          SizedBox(width: DesignTokens.spaceXS),
+          const SizedBox(width: DesignTokens.spaceXS),
           Text(
             text,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeXS,
               color: Colors.white,
               fontWeight: FontWeight.w600,
@@ -188,14 +188,14 @@ class DetalleInfoGeneral extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.all(DesignTokens.spaceM),
+            padding: const EdgeInsets.all(DesignTokens.spaceM),
             child: Row(
               children: [
                 Icon(icon, size: 20, color: AppColors.primary),
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeM,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
@@ -206,7 +206,7 @@ class DetalleInfoGeneral extends StatelessWidget {
           ),
           const Divider(height: 1),
           Padding(
-            padding: EdgeInsets.all(DesignTokens.spaceM),
+            padding: const EdgeInsets.all(DesignTokens.spaceM),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: children,
@@ -222,7 +222,7 @@ class DetalleInfoGeneral extends StatelessWidget {
   // ============================================================================
   Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -230,7 +230,7 @@ class DetalleInfoGeneral extends StatelessWidget {
             width: 120,
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
@@ -239,7 +239,7 @@ class DetalleInfoGeneral extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.w600,
               ),
@@ -267,7 +267,7 @@ class DetalleInfoGeneral extends StatelessWidget {
             : null,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         child: Container(
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: DesignTokens.spaceM,
             vertical: DesignTokens.spaceS,
           ),
@@ -286,7 +286,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                 size: 18,
                 color: statusColor,
               ),
-              SizedBox(width: DesignTokens.spaceS),
+              const SizedBox(width: DesignTokens.spaceS),
               Expanded(
                 child: Text(
                   hasInventario ? 'Inventario completado' : 'Inventario pendiente',
@@ -298,7 +298,7 @@ class DetalleInfoGeneral extends StatelessWidget {
                 ),
               ),
               if (hasId) ...[
-                Text(
+                const Text(
                   'Ver',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
@@ -306,8 +306,8 @@ class DetalleInfoGeneral extends StatelessWidget {
                     color: AppColors.primary,
                   ),
                 ),
-                SizedBox(width: 4),
-                Icon(Icons.chevron_right, size: 18, color: AppColors.primary),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, size: 18, color: AppColors.primary),
               ],
             ],
           ),

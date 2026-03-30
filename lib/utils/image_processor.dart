@@ -139,12 +139,12 @@ class LocationService {
         return _cachedLocation;
       }
 
-      bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
+      final bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
       if (!isLocationEnabled) {
         return _cachedLocation;
       }
 
-      Position position = await Geolocator.getCurrentPosition(
+      final Position position = await Geolocator.getCurrentPosition(
         locationSettings: AndroidSettings(
           accuracy: LocationAccuracy.high,
           timeLimit: _gpsTimeout,
@@ -153,7 +153,7 @@ class LocationService {
 
       String? locationString;
       try {
-        List<Placemark> placemarks = await placemarkFromCoordinates(
+        final List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
           position.longitude,
         ).timeout(const Duration(seconds: 5));
@@ -211,10 +211,10 @@ class LocationService {
 
       if (permission == LocationPermission.deniedForever) return _cachedLocation;
 
-      bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
+      final bool isLocationEnabled = await Geolocator.isLocationServiceEnabled();
       if (!isLocationEnabled) return _cachedLocation;
 
-      Position position = await Geolocator.getCurrentPosition(
+      final Position position = await Geolocator.getCurrentPosition(
         locationSettings: AndroidSettings(
           accuracy: LocationAccuracy.high,
           timeLimit: _gpsTimeout,
@@ -465,7 +465,7 @@ class ImageProcessor {
     // Calcular tamaños según resolución
     final fontSize = _calculateFontSize(width, height);
     final logoRatio = _calculateLogoRatio(width);
-    final padding = 16.0;
+    const padding = 16.0;
 
     // Dibujar logo si está configurado
     if (config.showLogo && _cache.logo != null) {

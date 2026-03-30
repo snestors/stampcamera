@@ -243,13 +243,13 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     return DropdownButtonFormField<int>(
       isExpanded: true,
       initialValue: _selectedRegistroVinId,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: DesignTokens.fontSizeS,
         color: AppColors.textPrimary,
       ),
       decoration: InputDecoration(
         labelText: 'Condición *',
-        hintStyle: TextStyle(
+        hintStyle: const TextStyle(
           fontSize: DesignTokens.fontSizeS,
           color: AppColors.textSecondary,
         ),
@@ -260,21 +260,21 @@ class _DanoFormState extends ConsumerState<DanoForm> {
             : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: AppColors.neutral,
             width: DesignTokens.borderWidthNormal,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: AppColors.primary,
             width: DesignTokens.borderWidthNormal,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: AppColors.error,
             width: DesignTokens.borderWidthNormal,
           ),
@@ -296,7 +296,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                     const SizedBox(width: 12),
                     Text(
                       condicion.value,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeS,
                         fontWeight: FontWeight.w500,
                       ),
@@ -311,7 +311,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           : null,
       validator: (value) => value == null ? 'Seleccione una condición' : null,
       disabledHint: condicionesFiltradas.isEmpty
-          ? Text(
+          ? const Text(
               'Sin condiciones disponibles',
               style: TextStyle(
                 color: AppColors.textSecondary,
@@ -535,13 +535,13 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     return DropdownButtonFormField<int>(
       initialValue: _selectedFotoPresentacion,
       isExpanded: true,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: DesignTokens.fontSizeS,
         color: AppColors.textPrimary,
       ),
       decoration: InputDecoration(
         labelText: 'Documento de Referencia',
-        hintStyle: TextStyle(
+        hintStyle: const TextStyle(
           fontSize: DesignTokens.fontSizeS,
           color: AppColors.textSecondary,
         ),
@@ -549,21 +549,21 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         prefixIcon: const Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: AppColors.neutral,
             width: DesignTokens.borderWidthNormal,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: AppColors.primary,
             width: DesignTokens.borderWidthNormal,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: AppColors.error,
             width: DesignTokens.borderWidthNormal,
           ),
@@ -572,7 +572,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         filled: true,
       ),
       items: [
-        DropdownMenuItem<int>(
+        const DropdownMenuItem<int>(
           value: null,
           child: Text(
             'Sin documento asociado',
@@ -603,7 +603,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                 Expanded(
                   child: Text(
                     '${_getFotoTipoLabel(foto.tipo)} - ${foto.nDocumento!}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       fontWeight: FontWeight.w500,
                     ),
@@ -636,11 +636,11 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           child: InputDecorator(
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: TextStyle(
+              labelStyle: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
-              hintStyle: TextStyle(
+              hintStyle: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
@@ -648,14 +648,14 @@ class _DanoFormState extends ConsumerState<DanoForm> {
               suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: AppColors.neutral,
                   width: DesignTokens.borderWidthNormal,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: AppColors.neutral,
                   width: DesignTokens.borderWidthNormal,
                 ),
@@ -696,10 +696,10 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                   children: [
                     Text(
                       option['label'],
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeXS,
                         fontWeight: FontWeight.w500,
-                        color: const Color(0xFF3B82F6),
+                        color: Color(0xFF3B82F6),
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -754,7 +754,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   List<Widget> _buildCameraCards() {
-    List<Widget> widgets = [];
+    final List<Widget> widgets = [];
 
     if (_imagenesPaths.isEmpty && !isEditMode) {
       _imagenesPaths.add(null);
@@ -1103,7 +1103,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     Function(List<int>) onChanged,
   ) {
     // Copia local para manejar selección sin cerrar el diálogo
-    List<int> tempSelected = List<int>.from(selectedValues);
+    final List<int> tempSelected = List<int>.from(selectedValues);
 
     showModalBottomSheet(
       context: context,
@@ -1114,7 +1114,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.6,
           ),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(DesignTokens.radiusXL),
@@ -1158,7 +1158,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                         children: [
                           Text(
                             'Seleccionar $title',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: DesignTokens.fontSizeL,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
@@ -1166,7 +1166,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                           ),
                           Text(
                             '${tempSelected.length} seleccionada${tempSelected.length != 1 ? 's' : ''}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: DesignTokens.fontSizeXS,
                               color: AppColors.textSecondary,
                             ),
@@ -1180,7 +1180,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                           tempSelected.clear();
                         });
                       },
-                      child: Text(
+                      child: const Text(
                         'Limpiar',
                         style: TextStyle(
                           fontSize: DesignTokens.fontSizeS,
@@ -1283,7 +1283,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                             borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Cancelar',
                           style: TextStyle(fontSize: DesignTokens.fontSizeS),
                         ),
@@ -1303,7 +1303,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                             borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Aplicar',
                           style: TextStyle(
                             fontSize: DesignTokens.fontSizeS,

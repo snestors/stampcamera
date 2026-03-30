@@ -60,7 +60,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
         // Intentar login biométrico automático si está disponible
         final biometricSuccess = await _attemptBiometricLogin();
         if (!biometricSuccess) {
-          state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+          state = const AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
         }
       }
     }
@@ -118,7 +118,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
           // Conectar WebSocket de presencia
           _ref.read(appSocketProvider.notifier).connect();
         } else {
-          state = AsyncValue.data(
+          state = const AsyncValue.data(
             AuthState(
               status: AuthStatus.loggedIn,
               user: null,
@@ -127,7 +127,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
           );
         }
       } else {
-        state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+        state = const AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
       }
     } on PlatformException catch (e) {
       // Solo PlatformException indica corrupcion real
@@ -138,11 +138,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       } catch (cleanError) {
         debugPrint('❌ AuthProvider: No se pudo reparar storage - $cleanError');
       }
-      state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+      state = const AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
     } catch (e) {
       // Otros errores no requieren limpiar storage
       debugPrint('⚠️ AuthProvider: Error leyendo storage - $e');
-      state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+      state = const AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
     }
   }
 
@@ -167,7 +167,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     debugPrint('🔐 AuthProvider: Iniciando login para: $username');
 
     if (username.trim().isEmpty || password.trim().isEmpty) {
-      state = AsyncValue.data(
+      state = const AsyncValue.data(
         AuthState(
           status: AuthStatus.loggedOut,
           errorMessage: 'Usuario y contraseña son requeridos',
@@ -211,7 +211,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   Future<void> _checkAuthWithRetry() async {
     final access = await _storage.read(key: 'access');
     if (access == null) {
-      state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+      state = const AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
       return;
     }
 
@@ -284,7 +284,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
           if (attempt == maxRetries) {
             final access = await _storage.read(key: 'access');
             if (access != null) {
-              state = AsyncValue.data(
+              state = const AsyncValue.data(
                 AuthState(
                   status: AuthStatus.loggedIn,
                   user: null,
@@ -331,7 +331,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
       debugPrint('🚪 AuthProvider: Logout por razón: $reason');
     }
 
-    state = AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
+    state = const AsyncValue.data(AuthState(status: AuthStatus.loggedOut));
 
     try {
       // ✅ SOLO borrar claves específicas del AUTH, NO deleteAll()

@@ -3,9 +3,9 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
-import '../buttons/app_button.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
+import 'package:stampcamera/core/widgets/buttons/app_button.dart';
 
 enum AppErrorType {
   network,
@@ -234,7 +234,7 @@ class AppErrorState extends StatelessWidget {
         if (message != null || errorConfig.message.isNotEmpty) ...[
           _buildMessage(errorConfig),
           if (showDetails && details != null) ...[
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildDetails(),
           ],
           SizedBox(height: spacing),
@@ -313,7 +313,7 @@ class AppErrorState extends StatelessWidget {
 
   Widget _buildDetails() {
     return ExpansionTile(
-      title: Text(
+      title: const Text(
         'Ver detalles',
         style: TextStyle(
           fontSize: DesignTokens.fontSizeS,
@@ -327,7 +327,7 @@ class AppErrorState extends StatelessWidget {
             details!,
             style:
                 detailsStyle ??
-                TextStyle(
+                const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.textSecondary,
                   fontFamily: 'monospace',
@@ -559,7 +559,7 @@ class AppInlineError extends StatelessWidget {
               size: DesignTokens.iconM,
               color: effectiveColor,
             ),
-            SizedBox(width: DesignTokens.spaceS),
+            const SizedBox(width: DesignTokens.spaceS),
           ],
           Expanded(
             child: Text(
@@ -572,7 +572,7 @@ class AppInlineError extends StatelessWidget {
             ),
           ),
           if (dismissible && onDismiss != null) ...[
-            SizedBox(width: DesignTokens.spaceS),
+            const SizedBox(width: DesignTokens.spaceS),
             GestureDetector(
               onTap: onDismiss,
               child: Icon(
@@ -617,7 +617,7 @@ class AppFormError extends StatelessWidget {
                   padding ?? const EdgeInsets.only(top: DesignTokens.spaceXS),
               child: Text(
                 message,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.error,
                   fontWeight: DesignTokens.fontWeightMedium,

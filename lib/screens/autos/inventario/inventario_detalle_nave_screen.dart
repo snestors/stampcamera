@@ -322,9 +322,9 @@ class _InventarioDetalleNaveScreenState
           // Header de la marca con botón compartir
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.primary,
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(8),
                 topRight: Radius.circular(8),
               ),
@@ -353,17 +353,17 @@ class _InventarioDetalleNaveScreenState
           // Header de la tabla
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(color: AppColors.surface),
-            child: Row(
+            decoration: const BoxDecoration(color: AppColors.surface),
+            child: const Row(
               children: [
-                const Expanded(
+                Expanded(
                   flex: 3,
                   child: Text(
                     'MODELO',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   flex: 2,
                   child: Text(
                     'TOTAL',
@@ -379,7 +379,7 @@ class _InventarioDetalleNaveScreenState
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const Spacer(),
+                Spacer(),
               ],
             ),
           ),
@@ -390,7 +390,7 @@ class _InventarioDetalleNaveScreenState
           // Fila de totales
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(
                 top: BorderSide(color: AppColors.neutral, width: 1),
@@ -549,7 +549,7 @@ class _InventarioDetalleNaveScreenState
                       ),
                       Text(
                         '${version.cantidadUnidades} unidades • ${version.inventario ? "Inventariado" : "Pendiente"}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           color: AppColors.textSecondary,
                         ),
@@ -559,7 +559,7 @@ class _InventarioDetalleNaveScreenState
                 ),
 
                 // Texto + flecha de acción
-                Text(
+                const Text(
                   'Ver',
                   style: TextStyle(
                     fontSize: 11,

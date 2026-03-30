@@ -165,7 +165,7 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
                         ),
                       ),
                       if (isSelected)
-                        Positioned(
+                        const Positioned(
                           top: 6,
                           right: 6,
                           child: Icon(

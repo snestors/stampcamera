@@ -62,14 +62,14 @@ class _DeviceRegistrationScreenState
             color: AppColors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
+          child: const Icon(
             Icons.phonelink_lock,
             size: 40,
             color: AppColors.primary,
           ),
         ),
         const SizedBox(height: 12),
-        Text(
+        const Text(
           'Registrar Dispositivo',
           style: TextStyle(
             fontSize: DesignTokens.fontSizeXL,
@@ -78,7 +78,7 @@ class _DeviceRegistrationScreenState
           ),
         ),
         const SizedBox(height: 4),
-        Text(
+        const Text(
           'Autoriza este dispositivo para acceder',
           style: TextStyle(
             fontSize: DesignTokens.fontSizeS,
@@ -107,12 +107,12 @@ class _DeviceRegistrationScreenState
   }
 
   Widget _buildLoadingState() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 40),
+    return const Padding(
+      padding: EdgeInsets.only(top: 40),
       child: Column(
         children: [
-          const CircularProgressIndicator(),
-          const SizedBox(height: 12),
+          CircularProgressIndicator(),
+          SizedBox(height: 12),
           Text(
             'Verificando...',
             style: TextStyle(
@@ -234,7 +234,7 @@ class _DeviceRegistrationScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Ingresa tu usuario',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeM,
@@ -243,7 +243,7 @@ class _DeviceRegistrationScreenState
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'Te enviaremos un código a tu email registrado',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
@@ -298,7 +298,7 @@ class _DeviceRegistrationScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Token de registro',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeM,
@@ -307,7 +307,7 @@ class _DeviceRegistrationScreenState
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                const Text(
                   'Solicita el token a tu administrador',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
@@ -367,7 +367,7 @@ class _DeviceRegistrationScreenState
                       color: AppColors.success.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.mark_email_read_outlined,
                       color: AppColors.success,
                       size: 20,
@@ -378,7 +378,7 @@ class _DeviceRegistrationScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Código enviado',
                           style: TextStyle(
                             fontSize: DesignTokens.fontSizeM,
@@ -388,7 +388,7 @@ class _DeviceRegistrationScreenState
                         ),
                         Text(
                           deviceState.maskedEmail ?? 'a tu email',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: DesignTokens.fontSizeXS,
                             color: AppColors.textSecondary,
                           ),
@@ -411,7 +411,7 @@ class _DeviceRegistrationScreenState
                 ],
               ),
               const SizedBox(height: 6),
-              Text(
+              const Text(
                 'El código expira en 5 minutos',
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
@@ -439,7 +439,7 @@ class _DeviceRegistrationScreenState
         const SizedBox(height: 8),
         TextButton(
           onPressed: _goBack,
-          child: Text(
+          child: const Text(
             'Volver',
             style: TextStyle(color: AppColors.textSecondary),
           ),
@@ -470,14 +470,14 @@ class _DeviceRegistrationScreenState
                       color: AppColors.warning.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.info_outline,
                       color: AppColors.warning,
                       size: 20,
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       'Usuario sin email',
                       style: TextStyle(
@@ -490,7 +490,7 @@ class _DeviceRegistrationScreenState
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'Solicita un token de registro al administrador.',
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeS,
@@ -526,7 +526,7 @@ class _DeviceRegistrationScreenState
         const SizedBox(height: 8),
         TextButton(
           onPressed: _goBack,
-          child: Text(
+          child: const Text(
             'Volver',
             style: TextStyle(color: AppColors.textSecondary),
           ),
@@ -551,14 +551,14 @@ class _DeviceRegistrationScreenState
               color: AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.check_circle,
               size: 48,
               color: AppColors.success,
             ),
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'Dispositivo Registrado',
             style: TextStyle(
               fontSize: DesignTokens.fontSizeL,
@@ -570,7 +570,7 @@ class _DeviceRegistrationScreenState
             const SizedBox(height: 4),
             Text(
               deviceState.deviceName!,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
@@ -598,7 +598,7 @@ class _DeviceRegistrationScreenState
             const SizedBox(height: 8),
             Text(
               'Asignado a: ${deviceState.user!.fullName}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
@@ -628,13 +628,13 @@ class _DeviceRegistrationScreenState
       ),
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
             size: 48,
             color: AppColors.error,
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Error',
             style: TextStyle(
               fontSize: DesignTokens.fontSizeL,
@@ -645,7 +645,7 @@ class _DeviceRegistrationScreenState
           const SizedBox(height: 4),
           Text(
             deviceState.errorMessage ?? 'Error desconocido',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               color: AppColors.textSecondary,
             ),

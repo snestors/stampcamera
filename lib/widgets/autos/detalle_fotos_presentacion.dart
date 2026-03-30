@@ -30,7 +30,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
         // ✅ Header de sección con botón agregar
         _buildSectionHeader(context),
 
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
 
         // ✅ Lista de fotos
         ..._buildPhotosByType(context, ref),
@@ -85,7 +85,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
     return items
         .map(
           (foto) => Padding(
-            padding: EdgeInsets.only(bottom: DesignTokens.spaceM),
+            padding: const EdgeInsets.only(bottom: DesignTokens.spaceM),
             child: _buildFotoCard(context, ref, foto),
           ),
         )
@@ -108,7 +108,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(DesignTokens.spaceXXS),
+                padding: const EdgeInsets.all(DesignTokens.spaceXXS),
                 decoration: BoxDecoration(
                   color: _getTipoColor(foto.tipo).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
@@ -119,7 +119,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
                   color: _getTipoColor(foto.tipo),
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceXS),
+              const SizedBox(width: DesignTokens.spaceXS),
               Expanded(
                 child: Text(
                   _getTipoLabel(foto.tipo),
@@ -134,7 +134,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
             ],
           ),
 
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // ✅ CONTENIDO: Información + Foto
           Row(
@@ -156,7 +156,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
                     // Documento si existe
                     if (foto.nDocumento != null &&
                         foto.nDocumento!.isNotEmpty) ...[
-                      SizedBox(height: DesignTokens.spaceXS),
+                      const SizedBox(height: DesignTokens.spaceXS),
                       _buildInfoRow(
                         Icons.description,
                         'Documento',
@@ -167,7 +167,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
 
                     // Fecha y usuario
                     if (foto.createAt != null) ...[
-                      SizedBox(height: DesignTokens.spaceXS),
+                      const SizedBox(height: DesignTokens.spaceXS),
                       _buildInfoRow(
                         Icons.access_time,
                         'Fecha',
@@ -177,7 +177,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
                     ],
 
                     if (foto.createBy != null) ...[
-                      SizedBox(height: DesignTokens.spaceXS),
+                      const SizedBox(height: DesignTokens.spaceXS),
                       _buildInfoRow(
                         Icons.person,
                         'Registrado por',
@@ -189,7 +189,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
                 ),
               ),
 
-              SizedBox(width: DesignTokens.spaceM),
+              const SizedBox(width: DesignTokens.spaceM),
 
               // Foto (lado derecho)
               if (foto.imagenThumbnailUrl != null)
@@ -230,7 +230,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
               onTap: () => _showEditFotoForm(context, foto),
-              child: Padding(
+              child: const Padding(
                 padding: EdgeInsets.all(DesignTokens.spaceXXS),
                 child: Icon(
                   Icons.edit_outlined,
@@ -242,7 +242,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
           ),
         ),
 
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
 
         // ✅ Botón Delete
         Container(
@@ -255,7 +255,7 @@ class DetalleFotosPresentacion extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
               onTap: () => _confirmDelete(context, ref, foto),
-              child: Padding(
+              child: const Padding(
                 padding: EdgeInsets.all(DesignTokens.spaceXXS),
                 child: Icon(
                   Icons.delete_outline,
@@ -330,14 +330,14 @@ class DetalleFotosPresentacion extends ConsumerWidget {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(DesignTokens.spaceXXS),
+          padding: const EdgeInsets.all(DesignTokens.spaceXXS),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
           ),
           child: Icon(icon, size: DesignTokens.iconS, color: color),
         ),
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

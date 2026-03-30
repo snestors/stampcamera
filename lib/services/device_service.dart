@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'biometric_service.dart';
-import 'http_service.dart';
-import 'storage_health_service.dart'; // Importa appSecureStorage
+import 'package:stampcamera/services/biometric_service.dart';
+import 'package:stampcamera/services/http_service.dart';
+import 'package:stampcamera/services/storage_health_service.dart'; // Importa appSecureStorage
 
 /// Modelo para el estado del dispositivo
 class DeviceStatus {

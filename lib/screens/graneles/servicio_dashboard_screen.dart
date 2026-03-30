@@ -25,7 +25,7 @@ class ServicioDashboardScreen extends ConsumerWidget {
         elevation: 0,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           'Dashboard',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -81,46 +81,46 @@ class _DashboardContent extends StatelessWidget {
 
             // Contenido
             Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Boton Jornadas
                   _buildJornadasButton(context),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
 
                   // KPIs principales
                   _buildKpisGrid(),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
 
                   // Progreso general
                   _buildProgressCard(),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
 
                   // Viajes
                   _buildViajesCard(),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
 
                   // Silos (si hay datos)
                   if (dashboard.silos.totalViajes > 0) ...[
                     _buildSilosCard(),
-                    SizedBox(height: DesignTokens.spaceL),
+                    const SizedBox(height: DesignTokens.spaceL),
                   ],
 
                   // Descarga por Bodega de Nave
                   _buildBodegasCard(),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
 
                   // Productos con distribuciones
                   if (dashboard.productos.isNotEmpty) ...[
                     _buildSectionTitle('Detalle por Producto'),
-                    SizedBox(height: DesignTokens.spaceM),
+                    const SizedBox(height: DesignTokens.spaceM),
                     ...dashboard.productos.map(
                       (producto) => _ProductoExpandableCard(producto: producto),
                     ),
                   ],
 
-                  SizedBox(height: DesignTokens.spaceXL),
+                  const SizedBox(height: DesignTokens.spaceXL),
                 ],
               ),
             ),
@@ -136,7 +136,7 @@ class _DashboardContent extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -154,7 +154,7 @@ class _DashboardContent extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignTokens.spaceS,
                   vertical: DesignTokens.spaceXS,
                 ),
@@ -164,16 +164,16 @@ class _DashboardContent extends StatelessWidget {
                 ),
                 child: Text(
                   servicio.codigo,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: DesignTokens.fontSizeS,
                   ),
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceS),
+              const SizedBox(width: DesignTokens.spaceS),
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignTokens.spaceS,
                   vertical: DesignTokens.spaceXS,
                 ),
@@ -189,10 +189,10 @@ class _DashboardContent extends StatelessWidget {
                       size: 12,
                       color: Colors.white,
                     ),
-                    SizedBox(width: DesignTokens.spaceXS),
+                    const SizedBox(width: DesignTokens.spaceXS),
                     Text(
                       servicio.cierreServicio ? 'CERRADO' : 'EN PROCESO',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: DesignTokens.fontSizeXS,
@@ -203,17 +203,17 @@ class _DashboardContent extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // Nave
           Row(
             children: [
               const Icon(Icons.directions_boat, color: Colors.white, size: 24),
-              SizedBox(width: DesignTokens.spaceS),
+              const SizedBox(width: DesignTokens.spaceS),
               Expanded(
                 child: Text(
                   servicio.naveNombre ?? 'Sin nave',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: DesignTokens.fontSizeL,
                     fontWeight: FontWeight.bold,
@@ -224,7 +224,7 @@ class _DashboardContent extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // Info adicional
           Wrap(
@@ -255,7 +255,7 @@ class _DashboardContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle('Resumen de Carga'),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
         Row(
           children: [
             Expanded(
@@ -267,7 +267,7 @@ class _DashboardContent extends StatelessWidget {
                 color: AppColors.primary,
               ),
             ),
-            SizedBox(width: DesignTokens.spaceS),
+            const SizedBox(width: DesignTokens.spaceS),
             Expanded(
               child: _KpiCard(
                 title: 'Descargado',
@@ -280,7 +280,7 @@ class _DashboardContent extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: DesignTokens.spaceS),
+        const SizedBox(height: DesignTokens.spaceS),
         Row(
           children: [
             Expanded(
@@ -293,7 +293,7 @@ class _DashboardContent extends StatelessWidget {
                 color: AppColors.accent,
               ),
             ),
-            SizedBox(width: DesignTokens.spaceS),
+            const SizedBox(width: DesignTokens.spaceS),
             Expanded(
               child: _KpiCard(
                 title: 'Saldo',
@@ -313,7 +313,7 @@ class _DashboardContent extends StatelessWidget {
     final kpis = dashboard.kpis;
 
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
@@ -328,7 +328,7 @@ class _DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.trending_up, size: 20, color: AppColors.primary),
               SizedBox(width: DesignTokens.spaceS),
@@ -342,13 +342,13 @@ class _DashboardContent extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
           _ProgressRow(
             label: 'Descarga de Nave',
             percentage: kpis.porcentajeDescarga,
             color: AppColors.success,
           ),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
           _ProgressRow(
             label: 'Despacho a Almacén',
             percentage: kpis.porcentajeDespacho,
@@ -364,7 +364,7 @@ class _DashboardContent extends StatelessWidget {
     final numberFormat = NumberFormat('#,##0', 'es');
 
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
@@ -379,7 +379,7 @@ class _DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.route, size: 20, color: AppColors.primary),
               SizedBox(width: DesignTokens.spaceS),
@@ -393,7 +393,7 @@ class _DashboardContent extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
           Row(
             children: [
               Expanded(
@@ -443,7 +443,7 @@ class _DashboardContent extends StatelessWidget {
     final intFormat = NumberFormat('#,##0', 'es');
 
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
@@ -458,7 +458,7 @@ class _DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.storage, size: 20, color: AppColors.secondary),
               SizedBox(width: DesignTokens.spaceS),
@@ -472,7 +472,7 @@ class _DashboardContent extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // Totales
           Row(
@@ -503,10 +503,10 @@ class _DashboardContent extends StatelessWidget {
 
           // Por producto
           if (silos.porProducto.isNotEmpty) ...[
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
             Divider(color: AppColors.neutral.withValues(alpha: 0.2)),
-            SizedBox(height: DesignTokens.spaceS),
-            Text(
+            const SizedBox(height: DesignTokens.spaceS),
+            const Text(
               'Por Producto',
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeS,
@@ -514,7 +514,7 @@ class _DashboardContent extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
             ...silos.porProducto.map((p) => _SilosProductoRow(
                   producto: p,
                   numberFormat: numberFormat,
@@ -537,7 +537,7 @@ class _DashboardContent extends StatelessWidget {
         : 0.0;
 
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
@@ -552,7 +552,7 @@ class _DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.directions_boat, size: 20, color: AppColors.primary),
               SizedBox(width: DesignTokens.spaceS),
@@ -568,7 +568,7 @@ class _DashboardContent extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // Totales
           Row(
@@ -597,13 +597,13 @@ class _DashboardContent extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
           Divider(color: AppColors.neutral.withValues(alpha: 0.2)),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // Por bodega
           if (bodegas.porBodega.isEmpty)
-            Padding(
+            const Padding(
               padding: EdgeInsets.all(DesignTokens.spaceM),
               child: Center(
                 child: Text(
@@ -635,7 +635,7 @@ class _DashboardContent extends StatelessWidget {
       borderRadius: BorderRadius.circular(DesignTokens.radiusL),
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -668,7 +668,7 @@ class _DashboardContent extends StatelessWidget {
                 size: 22,
               ),
             ),
-            SizedBox(width: DesignTokens.spaceM),
+            const SizedBox(width: DesignTokens.spaceM),
             const Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -714,10 +714,10 @@ class _DashboardContent extends StatelessWidget {
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeM,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -744,10 +744,10 @@ class _HeaderChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 14, color: Colors.white70),
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
         Text(
           text,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeXS,
             color: Colors.white70,
           ),
@@ -777,7 +777,7 @@ class _KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
@@ -796,7 +796,7 @@ class _KpiCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(DesignTokens.spaceXS),
+                padding: const EdgeInsets.all(DesignTokens.spaceXS),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -806,7 +806,7 @@ class _KpiCard extends StatelessWidget {
               const Spacer(),
               if (percentage != null)
                 Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: DesignTokens.spaceS,
                     vertical: 2,
                   ),
@@ -816,7 +816,7 @@ class _KpiCard extends StatelessWidget {
                   ),
                   child: Text(
                     '${percentage!.toStringAsFixed(1)}%',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -825,15 +825,15 @@ class _KpiCard extends StatelessWidget {
                 ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeXS,
               color: AppColors.textSecondary,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceXS),
+          const SizedBox(height: DesignTokens.spaceXS),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
@@ -850,10 +850,10 @@ class _KpiCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceXS),
+              const SizedBox(width: DesignTokens.spaceXS),
               Text(
                 unit,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.textSecondary,
                 ),
@@ -887,7 +887,7 @@ class _ProgressRow extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
@@ -902,7 +902,7 @@ class _ProgressRow extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: DesignTokens.spaceS),
+        const SizedBox(height: DesignTokens.spaceS),
         ClipRRect(
           borderRadius: BorderRadius.circular(5),
           child: LinearProgressIndicator(
@@ -935,14 +935,14 @@ class _ViajeItem extends StatelessWidget {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.all(DesignTokens.spaceS),
+          padding: const EdgeInsets.all(DesignTokens.spaceS),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, size: 20, color: color),
         ),
-        SizedBox(height: DesignTokens.spaceS),
+        const SizedBox(height: DesignTokens.spaceS),
         Text(
           value,
           style: TextStyle(
@@ -953,7 +953,7 @@ class _ViajeItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeXS,
             color: AppColors.textSecondary,
           ),
@@ -980,12 +980,12 @@ class _SilosSummaryItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeXS,
             color: AppColors.textSecondary,
           ),
         ),
-        SizedBox(height: DesignTokens.spaceXS),
+        const SizedBox(height: DesignTokens.spaceXS),
         Text(
           value,
           style: TextStyle(
@@ -1014,7 +1014,7 @@ class _SilosProductoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: AppColors.neutral.withValues(alpha: 0.1)),
@@ -1022,32 +1022,32 @@ class _SilosProductoRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.grain, size: 14, color: AppColors.secondary),
-          SizedBox(width: DesignTokens.spaceS),
+          const Icon(Icons.grain, size: 14, color: AppColors.secondary),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             flex: 2,
             child: Text(
               producto.producto,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.w500,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           Text(
             '${numberFormat.format(producto.peso)} TM',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeXS,
               fontWeight: FontWeight.w600,
               color: AppColors.secondary,
             ),
           ),
-          SizedBox(width: DesignTokens.spaceM),
+          const SizedBox(width: DesignTokens.spaceM),
           Text(
             '${intFormat.format(producto.viajes)}v',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeXS,
               color: AppColors.textSecondary,
             ),
@@ -1076,7 +1076,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
     final producto = widget.producto;
 
     return Container(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceM),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
@@ -1095,13 +1095,13 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
             onTap: () => setState(() => _isExpanded = !_isExpanded),
             borderRadius: BorderRadius.circular(DesignTokens.radiusL),
             child: Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               child: Column(
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(DesignTokens.spaceS),
+                        padding: const EdgeInsets.all(DesignTokens.spaceS),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -1113,23 +1113,23 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                         ),
                         child: const Icon(Icons.grain, size: 20, color: Colors.white),
                       ),
-                      SizedBox(width: DesignTokens.spaceM),
+                      const SizedBox(width: DesignTokens.spaceM),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               producto.producto,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: DesignTokens.fontSizeM,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            SizedBox(height: DesignTokens.spaceXS),
+                            const SizedBox(height: DesignTokens.spaceXS),
                             Text(
                               '${numberFormat.format(producto.pesoManifestado)} TM manifestado',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: DesignTokens.fontSizeXS,
                                 color: AppColors.textSecondary,
                               ),
@@ -1140,14 +1140,14 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                       AnimatedRotation(
                         turns: _isExpanded ? 0.5 : 0,
                         duration: const Duration(milliseconds: 200),
-                        child: Icon(
+                        child: const Icon(
                           Icons.keyboard_arrow_down,
                           color: AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: DesignTokens.spaceM),
+                  const SizedBox(height: DesignTokens.spaceM),
 
                   // Mini progress bars
                   Row(
@@ -1159,7 +1159,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                           color: AppColors.success,
                         ),
                       ),
-                      SizedBox(width: DesignTokens.spaceM),
+                      const SizedBox(width: DesignTokens.spaceM),
                       Expanded(
                         child: _MiniProgress(
                           label: 'Despacho',
@@ -1193,7 +1193,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
     NumberFormat numberFormat,
   ) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(DesignTokens.radiusL),
@@ -1204,7 +1204,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
         children: [
           // Datos detallados
           Padding(
-            padding: EdgeInsets.all(DesignTokens.spaceM),
+            padding: const EdgeInsets.all(DesignTokens.spaceM),
             child: Column(
               children: [
                 Row(
@@ -1225,7 +1225,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                     ),
                   ],
                 ),
-                SizedBox(height: DesignTokens.spaceM),
+                const SizedBox(height: DesignTokens.spaceM),
                 Row(
                   children: [
                     Expanded(
@@ -1259,11 +1259,11 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
           if (producto.bodegas.isNotEmpty) ...[
             Divider(height: 1, color: AppColors.neutral.withValues(alpha: 0.2)),
             Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
                       Icon(Icons.directions_boat, size: 16, color: AppColors.primary),
                       SizedBox(width: DesignTokens.spaceXS),
@@ -1277,7 +1277,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                       ),
                     ],
                   ),
-                  SizedBox(height: DesignTokens.spaceS),
+                  const SizedBox(height: DesignTokens.spaceS),
                   ...producto.bodegas.map(
                     (bodega) => _BodegaRowCompact(
                       bodega: bodega,
@@ -1293,11 +1293,11 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
           if (producto.distribuciones.isNotEmpty) ...[
             Divider(height: 1, color: AppColors.neutral.withValues(alpha: 0.2)),
             Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
                       Icon(Icons.warehouse, size: 16, color: AppColors.accent),
                       SizedBox(width: DesignTokens.spaceXS),
@@ -1311,7 +1311,7 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                       ),
                     ],
                   ),
-                  SizedBox(height: DesignTokens.spaceS),
+                  const SizedBox(height: DesignTokens.spaceS),
                   ...producto.distribuciones.map(
                     (dist) => _DistribucionRow(
                       distribucion: dist,
@@ -1349,7 +1349,7 @@ class _MiniProgress extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeXS,
                 color: AppColors.textSecondary,
               ),
@@ -1364,7 +1364,7 @@ class _MiniProgress extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: DesignTokens.spaceXS),
+        const SizedBox(height: DesignTokens.spaceXS),
         ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
@@ -1396,13 +1396,13 @@ class _DetailItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeXS,
             color: AppColors.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: DesignTokens.spaceXS),
+        const SizedBox(height: DesignTokens.spaceXS),
         Text(
           value,
           style: TextStyle(
@@ -1429,7 +1429,7 @@ class _DistribucionRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: AppColors.neutral.withValues(alpha: 0.1)),
@@ -1440,17 +1440,17 @@ class _DistribucionRow extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.accent,
               shape: BoxShape.circle,
             ),
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             flex: 2,
             child: Text(
               distribucion.almacen,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.w500,
               ),
@@ -1462,7 +1462,7 @@ class _DistribucionRow extends StatelessWidget {
             children: [
               Text(
                 '${numberFormat.format(distribucion.pesoBalanza)} TM',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   fontWeight: FontWeight.w600,
                   color: AppColors.accent,
@@ -1470,7 +1470,7 @@ class _DistribucionRow extends StatelessWidget {
               ),
               Text(
                 '${distribucion.viajesBalanza} viajes',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.textSecondary,
                 ),
@@ -1500,12 +1500,12 @@ class _BodegaSummaryItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeXS,
             color: AppColors.textSecondary,
           ),
         ),
-        SizedBox(height: DesignTokens.spaceXS),
+        const SizedBox(height: DesignTokens.spaceXS),
         Text(
           value,
           style: TextStyle(
@@ -1534,7 +1534,7 @@ class _BodegaRowCompact extends StatelessWidget {
     final porcentaje = bodega.porcentajeDescarga;
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: AppColors.neutral.withValues(alpha: 0.1)),
@@ -1544,7 +1544,7 @@ class _BodegaRowCompact extends StatelessWidget {
         children: [
           // Nombre bodega
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spaceS,
               vertical: 2,
             ),
@@ -1554,14 +1554,14 @@ class _BodegaRowCompact extends StatelessWidget {
             ),
             child: Text(
               bodega.bodega,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeXS,
                 fontWeight: FontWeight.bold,
                 color: AppColors.primary,
               ),
             ),
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           // Barra de progreso
           Expanded(
             child: ClipRRect(
@@ -1576,7 +1576,7 @@ class _BodegaRowCompact extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           // Porcentaje y valores
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -1591,7 +1591,7 @@ class _BodegaRowCompact extends StatelessWidget {
               ),
               Text(
                 '${numberFormat.format(bodega.descargado)}/${numberFormat.format(bodega.manifestado)}',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.textSecondary,
                 ),
@@ -1620,7 +1620,7 @@ class _BodegaRow extends StatelessWidget {
     final porcentaje = bodega.porcentajeDescarga;
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: AppColors.neutral.withValues(alpha: 0.1)),
@@ -1633,7 +1633,7 @@ class _BodegaRow extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignTokens.spaceS,
                   vertical: DesignTokens.spaceXS,
                 ),
@@ -1643,7 +1643,7 @@ class _BodegaRow extends StatelessWidget {
                 ),
                 child: Text(
                   bodega.bodega,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
@@ -1661,7 +1661,7 @@ class _BodegaRow extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // Barra de progreso
           ClipRRect(
@@ -1675,7 +1675,7 @@ class _BodegaRow extends StatelessWidget {
               minHeight: 8,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
 
           // Detalles: Manifestado / Descargado / Viajes
           Row(
@@ -1683,15 +1683,15 @@ class _BodegaRow extends StatelessWidget {
               Expanded(
                 child: RichText(
                   text: TextSpan(
-                    style: TextStyle(fontSize: DesignTokens.fontSizeXS),
+                    style: const TextStyle(fontSize: DesignTokens.fontSizeXS),
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: 'Manif: ',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextSpan(
                         text: numberFormat.format(bodega.manifestado),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
@@ -1703,15 +1703,15 @@ class _BodegaRow extends StatelessWidget {
               Expanded(
                 child: RichText(
                   text: TextSpan(
-                    style: TextStyle(fontSize: DesignTokens.fontSizeXS),
+                    style: const TextStyle(fontSize: DesignTokens.fontSizeXS),
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: 'Desc: ',
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextSpan(
                         text: numberFormat.format(bodega.descargado),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.success,
                         ),
@@ -1722,15 +1722,15 @@ class _BodegaRow extends StatelessWidget {
               ),
               RichText(
                 text: TextSpan(
-                  style: TextStyle(fontSize: DesignTokens.fontSizeXS),
+                  style: const TextStyle(fontSize: DesignTokens.fontSizeXS),
                   children: [
-                    TextSpan(
+                    const TextSpan(
                       text: 'Viajes: ',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
                     TextSpan(
                       text: '${bodega.viajes}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),

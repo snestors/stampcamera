@@ -60,20 +60,20 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.neutral)),
       ),
       child: Row(
         children: [
-          Icon(Icons.photo_library, color: AppColors.primary, size: 24),
-          SizedBox(width: DesignTokens.spaceM),
+          const Icon(Icons.photo_library, color: AppColors.primary, size: 24),
+          const SizedBox(width: DesignTokens.spaceM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Imágenes del Inventario',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeL + 2,
@@ -82,7 +82,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                 ),
                 Text(
                   '${widget.response.imageCount} imagen${widget.response.imageCount != 1 ? 'es' : ''} registrada${widget.response.imageCount != 1 ? 's' : ''}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeM,
                     color: AppColors.textSecondary,
                   ),
@@ -140,7 +140,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                       )
                     : Container(
                         color: AppColors.surface,
-                        child: Icon(
+                        child: const Icon(
                           Icons.image,
                           color: AppColors.textSecondary,
                           size: 32,
@@ -189,7 +189,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.schedule,
                         size: 14,
                         color: AppColors.textSecondary,
@@ -197,7 +197,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                       const SizedBox(width: 4),
                       Text(
                         imagen.createAt ?? 'Fecha no disponible',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
@@ -208,7 +208,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.person,
                           size: 14,
                           color: AppColors.textSecondary,
@@ -217,7 +217,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
                         Expanded(
                           child: Text(
                             imagen.createBy ?? 'Usuario no disponible',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
                             ),
@@ -262,18 +262,18 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.surface,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.photo_library_outlined,
                 size: 64,
                 color: AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               'No hay imágenes registradas',
               style: TextStyle(
                 fontSize: 20,
@@ -282,7 +282,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Toca el botón + para agregar la primera imagen del inventario',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -292,7 +292,7 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
               ),
             ),
             const SizedBox(height: 32),
-            Icon(Icons.arrow_downward, size: 32, color: AppColors.textSecondary),
+            const Icon(Icons.arrow_downward, size: 32, color: AppColors.textSecondary),
           ],
         ),
       ),

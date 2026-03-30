@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:collection';
-import '../providers/auth_provider.dart';
-import 'storage_health_service.dart'; // Importa appSecureStorage
+import 'package:stampcamera/providers/auth_provider.dart';
+import 'package:stampcamera/services/storage_health_service.dart'; // Importa appSecureStorage
 
 // Modelo para requests pendientes
 class PendingRequest {
@@ -46,8 +46,7 @@ class HttpService {
   late Dio dio;
   final storage = appSecureStorage; // Usar instancia global compartida
 
-  // TODO: Cambiar a producción antes de release
-  static const baseUrl = 'http://10.0.2.2:8000/';
+  static const baseUrl = 'https://www.aygajustadores.com/';
   static const tokenEndpoint = 'token/';
   static const refreshEndpoint = 'api/v1/token/refresh/';
 
@@ -523,7 +522,7 @@ class HttpService {
         }
 
         // Pausa pequeña entre requests para no saturar
-        await Future.delayed(Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 100));
       }
     } finally {
       _isProcessingQueue = false;

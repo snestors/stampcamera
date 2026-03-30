@@ -43,7 +43,7 @@ class ConnectivityAppBar extends ConsumerWidget implements PreferredSizeWidget {
         ...actions ?? [],
         // Agregar indicador de conectividad
         Padding(
-          padding: EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.only(right: 8),
           child: Icon(
             connectivityState.isOnline ? Icons.wifi : Icons.wifi_off,
             color: connectivityState.isOnline ? Colors.green : Colors.red,
@@ -55,7 +55,7 @@ class ConnectivityAppBar extends ConsumerWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
 // Versión con más información en un popup
@@ -129,8 +129,8 @@ class ConnectivityAppBarWithDetails extends ConsumerWidget
               state.isOnline ? Icons.wifi : Icons.wifi_off,
               color: state.isOnline ? Colors.green : Colors.red,
             ),
-            SizedBox(width: 8),
-            Text('Conectividad'),
+            const SizedBox(width: 8),
+            const Text('Conectividad'),
           ],
         ),
         content: Column(
@@ -138,23 +138,23 @@ class ConnectivityAppBarWithDetails extends ConsumerWidget
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Estado: $status'),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text('Tipo: $connectionType'),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text('Última verificación: ${_formatTime(state.lastChecked)}'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cerrar'),
+            child: const Text('Cerrar'),
           ),
           ElevatedButton(
             onPressed: () {
               ref.read(connectivityProvider.notifier).forceCheck();
               Navigator.pop(context);
             },
-            child: Text('Verificar'),
+            child: const Text('Verificar'),
           ),
         ],
       ),
@@ -187,5 +187,5 @@ class ConnectivityAppBarWithDetails extends ConsumerWidget
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

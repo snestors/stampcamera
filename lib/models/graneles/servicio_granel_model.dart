@@ -36,6 +36,7 @@ class ProductoGranel {
 
 /// Servicio de granel (descarga de nave)
 class ServicioGranel with HasId {
+  @override
   final int id;
   final String codigo;
   final String? naveNombre;
@@ -216,6 +217,7 @@ class AlmacenResumen {
 
 /// Ticket de muelle
 class TicketMuelle with HasId {
+  @override
   final int id;
   final String numeroTicket;
   final String? placaStr;
@@ -321,6 +323,7 @@ class TicketMuelle with HasId {
 
 /// Registro de balanza
 class Balanza with HasId {
+  @override
   final int id;
   final int? servicioId;
   final String? servicioCodigo;
@@ -413,6 +416,7 @@ class Balanza with HasId {
 
 /// Registro de silos
 class Silos with HasId {
+  @override
   final int id;
   final int? numeroSilo;  // n_camion en el modelo Django
   final String? productoNombre;
@@ -947,6 +951,7 @@ class SilosOptions {
 
 /// Registro de almacén
 class AlmacenGranel with HasId {
+  @override
   final int id;
   final String? guia;
   final String? ticketNumero;
@@ -1008,6 +1013,7 @@ class AlmacenGranel with HasId {
 // =============================================================================
 
 class Paralizacion with HasId {
+  @override
   final int id;
   final int? servicioId;
   final String? servicioCodigo;
@@ -1098,6 +1104,7 @@ class ParalizacionOptions {
 // =============================================================================
 
 class ControlHumedad with HasId {
+  @override
   final int id;
   final int? servicioId;
   final String? servicioCodigo;

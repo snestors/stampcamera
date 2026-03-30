@@ -7,7 +7,6 @@ import 'package:stampcamera/core/base_service.dart';
 import 'package:stampcamera/models/paginated_response.dart';
 import 'package:stampcamera/services/http_service.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
-import 'package:stampcamera/core/helpers/formatters/date_formatters.dart';
 
 // =============================================================================
 // SERVICIO DE TICKETS MUELLE (implementa BaseService para paginación)

@@ -2,6 +2,7 @@
 import 'package:stampcamera/core/has_id.dart';
 
 class ContenedorModel with HasId {
+  @override
   final int id;
   final String nContenedor;
   final NaveDescargaModel naveDescarga; // ✅ CAMBIO: Ahora es un objeto

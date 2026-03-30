@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 /// Tipos de snackbar disponibles
 enum AppSnackBarType {
@@ -212,19 +212,19 @@ class AppSnackBar {
   static _SnackBarConfig _getConfig(AppSnackBarType type) {
     switch (type) {
       case AppSnackBarType.success:
-        return _SnackBarConfig(
+        return const _SnackBarConfig(
           backgroundColor: AppColors.success,
         );
       case AppSnackBarType.error:
-        return _SnackBarConfig(
+        return const _SnackBarConfig(
           backgroundColor: AppColors.error,
         );
       case AppSnackBarType.warning:
-        return _SnackBarConfig(
+        return const _SnackBarConfig(
           backgroundColor: AppColors.warning,
         );
       case AppSnackBarType.info:
-        return _SnackBarConfig(
+        return const _SnackBarConfig(
           backgroundColor: AppColors.info,
         );
     }

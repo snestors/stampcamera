@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 enum AppCardType { basic, elevated, outlined, filled }
 
@@ -120,7 +120,7 @@ class AppCard extends StatelessWidget {
       type: AppCardType.elevated,
       size: size,
       padding: padding,
-      backgroundColor: Color.fromARGB(
+      backgroundColor: const Color.fromARGB(
         255,
         250,
         251,
@@ -307,7 +307,7 @@ class AppCard extends StatelessWidget {
 
     // Separador si hay header o título
     if (children.isNotEmpty) {
-      children.add(SizedBox(height: DesignTokens.spaceS));
+      children.add(const SizedBox(height: DesignTokens.spaceS));
     }
 
     // Contenido principal
@@ -315,7 +315,7 @@ class AppCard extends StatelessWidget {
 
     // Footer si existe
     if (footer != null) {
-      children.add(SizedBox(height: DesignTokens.spaceS));
+      children.add(const SizedBox(height: DesignTokens.spaceS));
       children.add(footer!);
     }
 
@@ -342,7 +342,7 @@ class AppCard extends StatelessWidget {
       children: [
         if (leading != null) ...[
           leading!,
-          SizedBox(width: DesignTokens.spaceM),
+          const SizedBox(width: DesignTokens.spaceM),
         ],
         Expanded(
           child: Column(
@@ -361,7 +361,7 @@ class AppCard extends StatelessWidget {
                   ),
                 ),
               if (subtitle != null) ...[
-                if (title != null) SizedBox(height: DesignTokens.spaceXS),
+                if (title != null) const SizedBox(height: DesignTokens.spaceXS),
                 Text(
                   subtitle!,
                   style: TextStyle(
@@ -376,7 +376,7 @@ class AppCard extends StatelessWidget {
           ),
         ),
         if (trailing != null) ...[
-          SizedBox(width: DesignTokens.spaceM),
+          const SizedBox(width: DesignTokens.spaceM),
           trailing!,
         ],
       ],
@@ -433,20 +433,20 @@ class AppCard extends StatelessWidget {
     switch (size) {
       case AppCardSize.small:
         return _CardDimensions(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
-          margin: EdgeInsets.all(DesignTokens.spaceXS),
+          padding: const EdgeInsets.all(DesignTokens.spaceM),
+          margin: const EdgeInsets.all(DesignTokens.spaceXS),
           borderRadius: DesignTokens.radiusS,
         );
       case AppCardSize.medium:
         return _CardDimensions(
-          padding: EdgeInsets.all(DesignTokens.spaceL),
-          margin: EdgeInsets.all(DesignTokens.spaceS),
+          padding: const EdgeInsets.all(DesignTokens.spaceL),
+          margin: const EdgeInsets.all(DesignTokens.spaceS),
           borderRadius: DesignTokens.radiusM,
         );
       case AppCardSize.large:
         return _CardDimensions(
-          padding: EdgeInsets.all(DesignTokens.spaceXL),
-          margin: EdgeInsets.all(DesignTokens.spaceM),
+          padding: const EdgeInsets.all(DesignTokens.spaceXL),
+          margin: const EdgeInsets.all(DesignTokens.spaceM),
           borderRadius: DesignTokens.radiusL,
         );
     }
@@ -513,7 +513,7 @@ class AppInfoCard extends StatelessWidget {
       onTap: onTap,
       leading: icon != null
           ? Container(
-              padding: EdgeInsets.all(DesignTokens.spaceS),
+              padding: const EdgeInsets.all(DesignTokens.spaceS),
               decoration: BoxDecoration(
                 color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -531,17 +531,17 @@ class AppInfoCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeM,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
           if (subtitle != null) ...[
-            SizedBox(height: DesignTokens.spaceXS),
+            const SizedBox(height: DesignTokens.spaceXS),
             Text(
               subtitle!,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textSecondary,
@@ -549,10 +549,10 @@ class AppInfoCard extends StatelessWidget {
             ),
           ],
           if (description != null) ...[
-            SizedBox(height: DesignTokens.spaceXS),
+            const SizedBox(height: DesignTokens.spaceXS),
             Text(
               description!,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),

@@ -8,7 +8,7 @@ import 'package:stampcamera/screens/autos/contenedores/contenedores_tab.dart';
 import 'package:stampcamera/screens/autos/pedeteo_screen.dart';
 import 'package:stampcamera/screens/autos/inventario/inventario_screen.dart';
 import 'package:stampcamera/widgets/pedeteo/queue_badge.dart';
-import 'registro_general/registro_screen.dart';
+import 'package:stampcamera/screens/autos/registro_general/registro_screen.dart';
 
 /// Configuración de un tab dentro del módulo Autos
 class _TabConfig {
@@ -147,7 +147,7 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
           elevation: 0,
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          title: Text(
+          title: const Text(
             'Autos',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -155,7 +155,7 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
             ),
           ),
           actions: [
-            Padding(
+            const Padding(
               padding: EdgeInsets.only(right: DesignTokens.spaceL),
               child: QueueBadge(),
             ),
@@ -170,7 +170,7 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
         elevation: 0,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           'Autos',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -192,7 +192,7 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
               onPressed: () => ref.invalidate(pedeteoOptionsProvider),
               tooltip: 'Actualizar opciones',
             ),
-          Padding(
+          const Padding(
             padding: EdgeInsets.only(right: DesignTokens.spaceL),
             child: QueueBadge(),
           ),
@@ -222,11 +222,11 @@ class _AutosScreenState extends ConsumerState<AutosScreen> {
           backgroundColor: Colors.white,
           selectedItemColor: AppColors.primary,
           unselectedItemColor: AppColors.textSecondary,
-          selectedLabelStyle: TextStyle(
+          selectedLabelStyle: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeXS * 0.8,
           ),
-          unselectedLabelStyle: TextStyle(
+          unselectedLabelStyle: const TextStyle(
             fontWeight: FontWeight.w500,
             fontSize: DesignTokens.fontSizeXS * 0.75,
           ),

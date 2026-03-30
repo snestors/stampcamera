@@ -69,7 +69,7 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
   Widget _buildHeader() {
     return Row(
       children: [
-        Icon(Icons.add_a_photo, color: AppColors.primary, size: 28),
+        const Icon(Icons.add_a_photo, color: AppColors.primary, size: 28),
         const SizedBox(width: 12),
         const Expanded(
           child: Text(
@@ -127,7 +127,7 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
   Widget _buildBottomButtons() {
     return Container(
       padding: const EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: AppColors.neutral)),
       ),

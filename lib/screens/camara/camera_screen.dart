@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
-import '../../providers/camera_provider.dart';
+import 'package:stampcamera/providers/camera_provider.dart';
 
 class CameraScreen extends ConsumerStatefulWidget {
   final CameraDescription camera;
@@ -298,7 +298,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
-                              BoxShadow(
+                              const BoxShadow(
                                 color: Colors.black45,
                                 blurRadius: 10,
                                 spreadRadius: 2,

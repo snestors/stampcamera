@@ -225,7 +225,7 @@ class ContenedorService extends BaseServiceImpl<ContenedorModel> {
       if (entry.key != 'non_field_errors' && entry.value is List) {
         final errors = entry.value as List;
         if (errors.isNotEmpty) {
-          String fieldName = _getFieldDisplayName(entry.key);
+          final String fieldName = _getFieldDisplayName(entry.key);
           return '$fieldName: ${errors.first}';
         }
       }

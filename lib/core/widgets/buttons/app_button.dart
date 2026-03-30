@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 enum AppButtonType {
   primary,
@@ -241,7 +241,7 @@ class AppButton extends StatelessWidget {
     Widget button = Container(
       width: isFullWidth ? double.infinity : customWidth,
       height: customHeight ?? dimensions.height,
-      constraints: BoxConstraints(
+      constraints: const BoxConstraints(
         minWidth: DesignTokens.minTouchTarget,
         minHeight: DesignTokens.minTouchTarget,
       ),

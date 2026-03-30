@@ -2,8 +2,8 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../../models/autos/detalle_registro_model.dart';
-import '../http_service.dart';
+import 'package:stampcamera/models/autos/detalle_registro_model.dart';
+import 'package:stampcamera/services/http_service.dart';
 
 /// Servicio completo para manejar detalles de registro y sus operaciones
 class DetalleRegistroService {

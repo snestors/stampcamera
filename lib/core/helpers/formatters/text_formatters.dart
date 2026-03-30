@@ -229,7 +229,7 @@ class TextFormatters {
     final parts = formatted.split('.');
     
     // Agregar separadores de miles
-    String integerPart = parts[0];
+    final String integerPart = parts[0];
     String formattedInteger = '';
     
     for (int i = integerPart.length - 1; i >= 0; i--) {

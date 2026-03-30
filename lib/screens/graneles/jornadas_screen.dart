@@ -105,7 +105,7 @@ class _JornadasScreenState extends ConsumerState<JornadasScreen> {
   Widget _buildServiceHeader(DashboardServicioInfo servicio) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceM,
         vertical: DesignTokens.spaceS,
       ),
@@ -122,7 +122,7 @@ class _JornadasScreenState extends ConsumerState<JornadasScreen> {
       child: Row(
         children: [
           const Icon(Icons.directions_boat, color: Colors.white, size: 20),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +151,7 @@ class _JornadasScreenState extends ConsumerState<JornadasScreen> {
             ),
           ),
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spaceS,
               vertical: DesignTokens.spaceXS,
             ),
@@ -175,88 +175,96 @@ class _JornadasScreenState extends ConsumerState<JornadasScreen> {
 
   Widget _buildFilters(List<DashboardProducto> productos) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceM,
         vertical: DesignTokens.spaceS,
       ),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(
           bottom: BorderSide(color: AppColors.borderLight, width: 1),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // Filtro producto
-            const Text(
-              'Producto:',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(width: DesignTokens.spaceXS),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.borderLight),
-                borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _productoFiltro ?? '',
-                  isDense: true,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('Todos')),
-                    ...productos.map((p) => DropdownMenuItem(
-                          value: p.producto,
-                          child: Text(p.producto),
-                        )),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _productoFiltro = value?.isEmpty == true ? null : value;
-                    });
-                  },
+      child: Wrap(
+        spacing: DesignTokens.spaceS,
+        runSpacing: DesignTokens.spaceS,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          // Filtro producto
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Producto:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-
-            SizedBox(width: DesignTokens.spaceL),
-
-            // Filtro tipo operacion
-            const Text(
-              'Operacion:',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+              const SizedBox(width: DesignTokens.spaceXS),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.borderLight),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _productoFiltro ?? '',
+                    isDense: true,
+                    style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                    items: [
+                      const DropdownMenuItem(value: '', child: Text('Todos')),
+                      ...productos.map((p) => DropdownMenuItem(
+                            value: p.producto,
+                            child: Text(p.producto),
+                          )),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _productoFiltro = value?.isEmpty == true ? null : value;
+                      });
+                    },
+                  ),
+                ),
               ),
-            ),
-            SizedBox(width: DesignTokens.spaceXS),
-            _FilterChip(
-              label: 'Ambos',
-              selected: _tipoOperacion == null,
-              onSelected: () => setState(() => _tipoOperacion = null),
-            ),
-            SizedBox(width: DesignTokens.spaceXS),
-            _FilterChip(
-              label: 'Directa',
-              selected: _tipoOperacion == 'directa',
-              onSelected: () => setState(() => _tipoOperacion = 'directa'),
-            ),
-            SizedBox(width: DesignTokens.spaceXS),
-            _FilterChip(
-              label: 'Silos',
-              selected: _tipoOperacion == 'silos',
-              onSelected: () => setState(() => _tipoOperacion = 'silos'),
-            ),
-          ],
-        ),
+            ],
+          ),
+
+          // Filtro tipo operacion
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Operacion:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: DesignTokens.spaceXS),
+              _FilterChip(
+                label: 'Ambos',
+                selected: _tipoOperacion == null,
+                onSelected: () => setState(() => _tipoOperacion = null),
+              ),
+              const SizedBox(width: DesignTokens.spaceXS),
+              _FilterChip(
+                label: 'Directa',
+                selected: _tipoOperacion == 'directa',
+                onSelected: () => setState(() => _tipoOperacion = 'directa'),
+              ),
+              const SizedBox(width: DesignTokens.spaceXS),
+              _FilterChip(
+                label: 'Silos',
+                selected: _tipoOperacion == 'silos',
+                onSelected: () => setState(() => _tipoOperacion = 'silos'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -341,46 +349,77 @@ class _JornadasTableView extends StatelessWidget {
     final colsBodega = cabBodega.length + (cabBodega.isNotEmpty ? 1 : 0);
     final colsAlmacen = cabAlmacen.length + (cabAlmacen.isNotEmpty ? 1 : 0);
 
-    return Table(
-      defaultColumnWidth: const IntrinsicColumnWidth(),
-      border: TableBorder.all(
-        color: AppColors.borderLight,
-        width: 0.5,
-      ),
+    const double colWidth = 110.0;
+    const double jornadaWidth = 120.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // ===== ROW 1: Section headers =====
-        TableRow(
+        // ===== ROW 1: Section headers — Row limpio sin bordes internos =====
+        Row(
           children: [
-            _headerCell('Jornada', color: const Color(0xFFF9FAFB), rowSpan: true),
+            Container(
+              width: jornadaWidth,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF9FAFB),
+                border: Border(
+                  top: BorderSide(color: AppColors.borderLight, width: 0.5),
+                  left: BorderSide(color: AppColors.borderLight, width: 0.5),
+                  bottom: BorderSide(color: AppColors.borderLight, width: 0.5),
+                  right: BorderSide(color: AppColors.borderLight, width: 0.5),
+                ),
+              ),
+              child: const Text('Jornada', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            ),
             if (cabBodega.isNotEmpty)
-              ...List.generate(colsBodega, (i) {
-                if (i == 0) {
-                  return _sectionHeaderCell(
-                    'DESCARGA DE NAVE',
-                    descargaColor,
-                    colSpan: colsBodega,
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
+              Container(
+                width: colWidth * colsBodega,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: BoxDecoration(
+                  color: descargaColor,
+                  border: Border(
+                    top: const BorderSide(color: descargaColor, width: 0.5),
+                    bottom: const BorderSide(color: descargaColor, width: 0.5),
+                    right: BorderSide(color: cabAlmacen.isNotEmpty ? Colors.white24 : descargaColor, width: 1),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: const Text('DESCARGA DE NAVE', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
             if (cabAlmacen.isNotEmpty)
-              ...List.generate(colsAlmacen, (i) {
-                if (i == 0) {
-                  return _sectionHeaderCell(
-                    'DESPACHO A ALMACENES',
-                    despachoColor,
-                    colSpan: colsAlmacen,
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
+              Container(
+                width: colWidth * colsAlmacen,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: const BoxDecoration(
+                  color: despachoColor,
+                  border: Border(
+                    top: BorderSide(color: despachoColor, width: 0.5),
+                    bottom: BorderSide(color: despachoColor, width: 0.5),
+                    right: BorderSide(color: despachoColor, width: 0.5),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: const Text('DESPACHO A ALMACENES', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+              ),
           ],
         ),
-
-        // ===== ROW 2: Product headers with manifest =====
+        // ===== TABLE: Rows 2+ =====
+        Table(
+          columnWidths: {
+            0: const FixedColumnWidth(jornadaWidth),
+            for (int i = 1; i <= colsBodega + colsAlmacen; i++)
+              i: const FixedColumnWidth(colWidth),
+          },
+          border: TableBorder.all(
+            color: AppColors.borderLight,
+            width: 0.5,
+          ),
+          children: [
+            // ===== ROW 2: Product headers with manifest =====
         TableRow(
           children: [
-            const SizedBox.shrink(), // Jornada column (spanned)
+            _headerCell('', color: const Color(0xFFF9FAFB)),
             ...cabBodega.map((c) => _productHeaderCell(
                   c.producto,
                   '${_nf.format(c.pesoManifestado)} TM',
@@ -420,7 +459,7 @@ class _JornadasTableView extends StatelessWidget {
             ),
           ),
           children: [
-            const SizedBox.shrink(), // Jornada column (spanned)
+            _headerCell('', color: const Color(0xFFF9FAFB)),
             ...cabBodega.map((c) => _nameHeaderCell(c.bodega, descargaLightBg)),
             if (cabBodega.isNotEmpty)
               _nameHeaderCell('Total Descargado', descargaTotalBg, bold: true),
@@ -508,6 +547,8 @@ class _JornadasTableView extends StatelessWidget {
           ],
         ),
       ],
+    ),
+      ],
     );
   }
 
@@ -515,7 +556,7 @@ class _JornadasTableView extends StatelessWidget {
   // CELL BUILDERS
   // ===========================================================================
 
-  Widget _headerCell(String text, {Color? color, bool rowSpan = false}) {
+  Widget _headerCell(String text, {Color? color}) {
     return Container(
       constraints: const BoxConstraints(minWidth: 110),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -526,23 +567,6 @@ class _JornadasTableView extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionHeaderCell(String text, Color color, {int colSpan = 1}) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 100),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      color: color,
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
         ),
       ),
     );

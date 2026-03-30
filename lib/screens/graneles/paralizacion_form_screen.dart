@@ -99,7 +99,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
         foregroundColor: Colors.white,
         title: Text(
           widget.isEditMode ? 'Editar Paralizacion' : 'Nueva Paralizacion',
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeL,
           ),
@@ -122,52 +122,52 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
     return Form(
       key: _formKey,
       child: ListView(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
         children: [
           // Servicio
           if (options.servicios.isNotEmpty) ...[
-            AppSectionHeader(icon: Icons.directions_boat, title: 'Servicio'),
-            SizedBox(height: DesignTokens.spaceS),
+            const AppSectionHeader(icon: Icons.directions_boat, title: 'Servicio'),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildServicioSelector(options.servicios),
-            SizedBox(height: DesignTokens.spaceL),
+            const SizedBox(height: DesignTokens.spaceL),
           ],
 
           // Bodega
-          AppSectionHeader(icon: Icons.warehouse, title: 'Bodega'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.warehouse, title: 'Bodega'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildBodegaSelector(options.bodegas),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Motivo
-          AppSectionHeader(icon: Icons.report_problem_outlined, title: 'Motivo'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.report_problem_outlined, title: 'Motivo'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildMotivoSelector(options.motivos),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Inicio
-          AppSectionHeader(icon: Icons.play_arrow, title: 'Inicio'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.play_arrow, title: 'Inicio'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildDateTimeField(
             label: 'Fecha y hora de inicio',
             value: _inicio,
             onChanged: (dt) => setState(() => _inicio = dt),
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Fin (opcional)
-          AppSectionHeader(icon: Icons.stop, title: 'Fin (opcional)'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.stop, title: 'Fin (opcional)'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildDateTimeField(
             label: 'Fecha y hora de fin',
             value: _fin,
             isOptional: true,
             onChanged: (dt) => setState(() => _fin = dt),
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Observacion
-          AppSectionHeader(icon: Icons.notes, title: 'Observacion'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.notes, title: 'Observacion'),
+          const SizedBox(height: DesignTokens.spaceS),
           TextFormField(
             controller: _observacionController,
             maxLines: 3,
@@ -180,7 +180,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
               fillColor: AppColors.surface,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceXL),
+          const SizedBox(height: DesignTokens.spaceXL),
 
           // Submit
           _buildSubmitButton(),
@@ -192,11 +192,11 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
 
   Widget _buildServicioSelector(List<OptionItem> servicios) {
     return DropdownButtonFormField<int>(
-      value: _selectedServicioId,
+      initialValue: _selectedServicioId,
       decoration: InputDecoration(
         labelText: 'Servicio *',
         hintText: 'Seleccionar servicio...',
-        prefixIcon: Icon(Icons.directions_boat, color: AppColors.primary, size: 20),
+        prefixIcon: const Icon(Icons.directions_boat, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -209,7 +209,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
           value: s.id,
           child: Text(
             s.label,
-            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            style: const TextStyle(fontSize: DesignTokens.fontSizeS),
             overflow: TextOverflow.ellipsis,
           ),
         );
@@ -226,7 +226,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
         decoration: InputDecoration(
           labelText: 'Bodega *',
           hintText: 'Ej: BODEGA 1',
-          prefixIcon: Icon(Icons.warehouse, color: AppColors.primary, size: 20),
+          prefixIcon: const Icon(Icons.warehouse, color: AppColors.primary, size: 20),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(DesignTokens.radiusM),
           ),
@@ -239,11 +239,11 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
     }
 
     return DropdownButtonFormField<String>(
-      value: _selectedBodega != null && bodegas.contains(_selectedBodega) ? _selectedBodega : null,
+      initialValue: _selectedBodega != null && bodegas.contains(_selectedBodega) ? _selectedBodega : null,
       decoration: InputDecoration(
         labelText: 'Bodega *',
         hintText: 'Seleccionar bodega...',
-        prefixIcon: Icon(Icons.warehouse, color: AppColors.primary, size: 20),
+        prefixIcon: const Icon(Icons.warehouse, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -254,7 +254,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
       items: bodegas.map((b) {
         return DropdownMenuItem<String>(
           value: b,
-          child: Text(b, style: TextStyle(fontSize: DesignTokens.fontSizeS)),
+          child: Text(b, style: const TextStyle(fontSize: DesignTokens.fontSizeS)),
         );
       }).toList(),
       onChanged: (v) => setState(() => _selectedBodega = v),
@@ -268,11 +268,11 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
     }
 
     return DropdownButtonFormField<int>(
-      value: _selectedMotivoId,
+      initialValue: _selectedMotivoId,
       decoration: InputDecoration(
         labelText: 'Motivo *',
         hintText: 'Seleccionar motivo...',
-        prefixIcon: Icon(Icons.report_problem_outlined, color: AppColors.primary, size: 20),
+        prefixIcon: const Icon(Icons.report_problem_outlined, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -285,7 +285,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
           value: m.id,
           child: Text(
             m.label,
-            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            style: const TextStyle(fontSize: DesignTokens.fontSizeS),
             overflow: TextOverflow.ellipsis,
           ),
         );
@@ -335,10 +335,10 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label + (isOptional ? '' : ' *'),
-          prefixIcon: Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+          prefixIcon: const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
           suffixIcon: isOptional && value != null
               ? IconButton(
-                  icon: Icon(Icons.clear, size: 20),
+                  icon: const Icon(Icons.clear, size: 20),
                   onPressed: () => onChanged(nowLima()), // Reset
                 )
               : null,
@@ -361,7 +361,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
 
   Widget _buildWarningBox(String text) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -369,12 +369,12 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
-          SizedBox(width: DesignTokens.spaceS),
+          const Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.warning,
               ),
@@ -399,7 +399,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
           ),
         ),
         icon: _isSubmitting
-            ? SizedBox(
+            ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -414,7 +414,7 @@ class _ParalizacionFormScreenState extends ConsumerState<ParalizacionFormScreen>
               : widget.isEditMode
                   ? 'Guardar Cambios'
                   : 'Crear Paralizacion',
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeM,
           ),

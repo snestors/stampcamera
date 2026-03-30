@@ -143,7 +143,7 @@ class _AsistenciaCard extends StatelessWidget {
                     // Línea Entrada / Salida
                     Row(
                       children: [
-                        _ChipIcon(icon: Icons.login, color: accent),
+                        const _ChipIcon(icon: Icons.login, color: accent),
                         const SizedBox(width: 8),
                         Text(
                           "Entrada: ${_formatHora(asistencia.fechaHoraEntrada)}",
@@ -157,7 +157,7 @@ class _AsistenciaCard extends StatelessWidget {
                         if (asistencia.fechaHoraSalida != null)
                           Row(
                             children: [
-                              _ChipIcon(icon: Icons.logout, color: Colors.red),
+                              const _ChipIcon(icon: Icons.logout, color: Colors.red),
                               const SizedBox(width: 6),
                               Text(
                                 _formatHora(asistencia.fechaHoraSalida!),
@@ -174,7 +174,7 @@ class _AsistenciaCard extends StatelessWidget {
                     if (asistencia.zonaTrabajo != null)
                       Row(
                         children: [
-                          _ChipIcon(icon: Icons.place, color: Colors.blueGrey),
+                          const _ChipIcon(icon: Icons.place, color: Colors.blueGrey),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
@@ -190,7 +190,7 @@ class _AsistenciaCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          _ChipIcon(
+                          const _ChipIcon(
                             icon: Icons.directions_boat,
                             color: primary,
                           ),

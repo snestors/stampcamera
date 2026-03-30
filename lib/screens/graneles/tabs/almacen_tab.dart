@@ -93,7 +93,7 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
         onPressed: () => context.push('/graneles/almacen/crear'),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
+        label: const Text(
           'Nuevo Almacén',
           style: TextStyle(
             color: Colors.white,
@@ -139,7 +139,7 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
       child: ListView.builder(
         controller: _scrollController,
         // Padding extra abajo para el FAB (80px)
-        padding: EdgeInsets.fromLTRB(
+        padding: const EdgeInsets.fromLTRB(
           DesignTokens.spaceM,
           DesignTokens.spaceM,
           DesignTokens.spaceM,
@@ -150,7 +150,7 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
           if (index < registros.length) {
             final almacen = registros[index];
             return Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+              padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _AlmacenCard(
                 almacen: almacen,
                 onEdit: () => context.push('/graneles/almacen/editar/${almacen.id}'),
@@ -159,7 +159,7 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
           }
 
           return Container(
-            padding: EdgeInsets.all(DesignTokens.spaceL),
+            padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
             child: Column(
               children: [
@@ -235,12 +235,12 @@ class _AlmacenCard extends StatelessWidget {
             if (almacen.servicioCodigo != null) ...[
               Row(
                 children: [
-                  Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
-                  SizedBox(width: DesignTokens.spaceXS),
+                  const Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
+                  const SizedBox(width: DesignTokens.spaceXS),
                   Expanded(
                     child: Text(
                       almacen.servicioCodigo!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeXS,
                         color: AppColors.accent,
                         fontWeight: FontWeight.w600,
@@ -250,13 +250,13 @@ class _AlmacenCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
             ],
             // Header con guía, ticket y botón editar
             Row(
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: DesignTokens.spaceS,
                     vertical: DesignTokens.spaceXS,
                   ),
@@ -268,10 +268,10 @@ class _AlmacenCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.warehouse, size: 14, color: Colors.white),
-                      SizedBox(width: DesignTokens.spaceXS),
+                      const SizedBox(width: DesignTokens.spaceXS),
                       Text(
                         almacen.almacenNombre ?? 'Almacén',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: DesignTokens.fontSizeS,
@@ -280,7 +280,7 @@ class _AlmacenCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,14 +288,14 @@ class _AlmacenCard extends StatelessWidget {
                       if (almacen.guia != null)
                         Text(
                           'Guía: ${almacen.guia}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: DesignTokens.fontSizeS,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       Text(
                         'Ticket: ${almacen.ticketNumero ?? "-"}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           color: AppColors.textSecondary,
                         ),
@@ -306,42 +306,42 @@ class _AlmacenCard extends StatelessWidget {
                 if (almacen.foto1Url != null)
                   IconButton(
                     onPressed: () => _showPhotoDialog(context, almacen.foto1Url!),
-                    icon: Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
+                    icon: const Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
                     tooltip: 'Ver foto',
                     constraints: const BoxConstraints(),
-                    padding: EdgeInsets.all(DesignTokens.spaceXS),
+                    padding: const EdgeInsets.all(DesignTokens.spaceXS),
                   ),
                 if (onEdit != null)
                   IconButton(
                     onPressed: onEdit,
-                    icon: Icon(Icons.edit, size: 20, color: AppColors.primary),
+                    icon: const Icon(Icons.edit, size: 20, color: AppColors.primary),
                     tooltip: 'Editar registro',
                     constraints: const BoxConstraints(),
-                    padding: EdgeInsets.all(DesignTokens.spaceXS),
+                    padding: const EdgeInsets.all(DesignTokens.spaceXS),
                   ),
               ],
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
 
             // Placa
             Row(
               children: [
-                Icon(Icons.local_shipping, size: 16, color: AppColors.textSecondary),
-                SizedBox(width: DesignTokens.spaceS),
+                const Icon(Icons.local_shipping, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: DesignTokens.spaceS),
                 Text(
                   almacen.placaStr ?? 'Sin placa',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeM,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
 
             // Pesos
             Container(
-              padding: EdgeInsets.all(DesignTokens.spaceS),
+              padding: const EdgeInsets.all(DesignTokens.spaceS),
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -378,24 +378,24 @@ class _AlmacenCard extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
 
             // Tiempos
             Row(
               children: [
-                Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
-                SizedBox(width: DesignTokens.spaceXS),
+                const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: DesignTokens.spaceXS),
                 Text(
                   'Entrada: ${almacen.fechaEntradaAlmacen != null ? dateFormat.format(toLima(almacen.fechaEntradaAlmacen!)) : "-"}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                SizedBox(width: DesignTokens.spaceM),
+                const SizedBox(width: DesignTokens.spaceM),
                 Text(
                   'Salida: ${almacen.fechaSalidaAlmacen != null ? dateFormat.format(toLima(almacen.fechaSalidaAlmacen!)) : "-"}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,
                   ),
@@ -405,11 +405,11 @@ class _AlmacenCard extends StatelessWidget {
 
             // Observaciones
             if (almacen.observaciones != null && almacen.observaciones!.isNotEmpty) ...[
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               const Divider(),
               Text(
                 almacen.observaciones!,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.textSecondary,
                   fontStyle: FontStyle.italic,
@@ -451,12 +451,12 @@ class _PesoItem extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeXS,
             color: AppColors.textSecondary,
           ),
         ),
-        SizedBox(height: DesignTokens.spaceXS),
+        const SizedBox(height: DesignTokens.spaceXS),
         Text(
           value,
           style: TextStyle(
@@ -468,7 +468,7 @@ class _PesoItem extends StatelessWidget {
         if (unit.isNotEmpty)
           Text(
             unit,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeXS,
               color: AppColors.textSecondary,
             ),

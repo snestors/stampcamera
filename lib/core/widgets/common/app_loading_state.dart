@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 enum AppLoadingType {
   circular,
@@ -710,7 +710,7 @@ class AppCardLoadingState extends StatelessWidget {
               size: AppLoadingSize.medium,
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
           ],
           ...List.generate(lineCount, (index) {
             return Column(
@@ -719,12 +719,12 @@ class AppCardLoadingState extends StatelessWidget {
                   size: AppLoadingSize.small,
                   borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                 ),
-                if (index < lineCount - 1) SizedBox(height: DesignTokens.spaceS),
+                if (index < lineCount - 1) const SizedBox(height: DesignTokens.spaceS),
               ],
             );
           }),
           if (showFooter) ...[
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
             AppLoadingState.shimmer(
               size: AppLoadingSize.medium,
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),

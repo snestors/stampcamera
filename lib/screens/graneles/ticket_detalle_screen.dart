@@ -27,7 +27,7 @@ class TicketDetalleScreen extends ConsumerWidget {
         elevation: 0,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           'Resumen del Viaje',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -70,13 +70,13 @@ class _TicketDetalleContent extends StatelessWidget {
     final numberFormat = NumberFormat('#,##0.000', 'es_PE');
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header del ticket
           _buildHeader(context),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // =============================================
           // SECCIÓN: MUELLE
@@ -120,10 +120,10 @@ class _TicketDetalleContent extends StatelessWidget {
               if (ticket.observaciones != null && ticket.observaciones!.isNotEmpty) ...[
                 const Divider(),
                 Padding(
-                  padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
+                  padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
                   child: Text(
                     ticket.observaciones!,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       color: AppColors.textSecondary,
                       fontStyle: FontStyle.italic,
@@ -133,7 +133,7 @@ class _TicketDetalleContent extends StatelessWidget {
               ],
             ],
           ),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // =============================================
           // SECCION: BALANZA
@@ -174,16 +174,16 @@ class _TicketDetalleContent extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
+                          const Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.balanzaData!.fechaEntradaBalanza != null
                                 ? dateTimeFormat.format(toLima(ticket.balanzaData!.fechaEntradaBalanza!))
                                 : '-',
-                            style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
                           if (ticket.balanzaData!.balanzaEntrada != null)
                             Text('Bal: ${ticket.balanzaData!.balanzaEntrada}',
-                                style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
+                                style: const TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                         ],
                       ),
                     ),
@@ -191,16 +191,16 @@ class _TicketDetalleContent extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
+                          const Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.balanzaData!.fechaSalidaBalanza != null
                                 ? dateTimeFormat.format(toLima(ticket.balanzaData!.fechaSalidaBalanza!))
                                 : '-',
-                            style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
                           if (ticket.balanzaData!.balanzaSalida != null)
                             Text('Bal: ${ticket.balanzaData!.balanzaSalida}',
-                                style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
+                                style: const TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                         ],
                       ),
                     ),
@@ -209,10 +209,10 @@ class _TicketDetalleContent extends StatelessWidget {
                 if (ticket.balanzaData!.observaciones != null && ticket.balanzaData!.observaciones!.isNotEmpty) ...[
                   const Divider(),
                   Padding(
-                    padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
+                    padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
                     child: Text(
                       ticket.balanzaData!.observaciones!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeS,
                         color: AppColors.textSecondary,
                         fontStyle: FontStyle.italic,
@@ -222,7 +222,7 @@ class _TicketDetalleContent extends StatelessWidget {
                 ],
               ],
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
           ] else ...[
             // Sin balanza -> mostrar boton para agregar
             _buildEmptySectionWithAction(
@@ -234,7 +234,7 @@ class _TicketDetalleContent extends StatelessWidget {
               canAdd: permissions.balanza.canAdd,
               onAdd: () => context.push('/graneles/viaje/editar/${ticket.id}?step=2'),
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
           ],
 
           // =============================================
@@ -262,14 +262,14 @@ class _TicketDetalleContent extends StatelessWidget {
                 ),
                 // Diferencia peso neto: puerto vs almacén
                 if (ticket.balanzaData != null) ...[
-                  SizedBox(height: DesignTokens.spaceS),
+                  const SizedBox(height: DesignTokens.spaceS),
                   Builder(builder: (context) {
                     final pesoPuerto = ticket.balanzaData!.pesoNeto;
                     final pesoAlmacen = ticket.almacenData!.pesoNeto;
                     final diferencia = pesoAlmacen - pesoPuerto;
                     final isPositive = diferencia >= 0;
                     return Container(
-                      padding: EdgeInsets.all(DesignTokens.spaceS),
+                      padding: const EdgeInsets.all(DesignTokens.spaceS),
                       decoration: BoxDecoration(
                         color: (isPositive ? AppColors.success : AppColors.error).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -284,7 +284,7 @@ class _TicketDetalleContent extends StatelessWidget {
                             size: 16,
                             color: isPositive ? AppColors.success : AppColors.error,
                           ),
-                          SizedBox(width: DesignTokens.spaceXS),
+                          const SizedBox(width: DesignTokens.spaceXS),
                           Text(
                             'Diferencia: ${isPositive ? "+" : ""}${numberFormat.format(diferencia)} TM',
                             style: TextStyle(
@@ -296,7 +296,7 @@ class _TicketDetalleContent extends StatelessWidget {
                           const Spacer(),
                           Text(
                             'Puerto: ${numberFormat.format(pesoPuerto)}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: DesignTokens.fontSizeXS,
                               color: AppColors.textSecondary,
                             ),
@@ -314,12 +314,12 @@ class _TicketDetalleContent extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
+                          const Text('Entrada', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.almacenData!.fechaEntradaAlmacen != null
                                 ? dateTimeFormat.format(toLima(ticket.almacenData!.fechaEntradaAlmacen!))
                                 : '-',
-                            style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -328,12 +328,12 @@ class _TicketDetalleContent extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
+                          const Text('Salida', style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
                           Text(
                             ticket.almacenData!.fechaSalidaAlmacen != null
                                 ? dateTimeFormat.format(toLima(ticket.almacenData!.fechaSalidaAlmacen!))
                                 : '-',
-                            style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -343,10 +343,10 @@ class _TicketDetalleContent extends StatelessWidget {
                 if (ticket.almacenData!.observaciones != null && ticket.almacenData!.observaciones!.isNotEmpty) ...[
                   const Divider(),
                   Padding(
-                    padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
+                    padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
                     child: Text(
                       ticket.almacenData!.observaciones!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeS,
                         color: AppColors.textSecondary,
                         fontStyle: FontStyle.italic,
@@ -369,7 +369,7 @@ class _TicketDetalleContent extends StatelessWidget {
             ),
           ],
           // Si no tiene balanza, no mostrar seccion de almacen (primero necesita balanza)
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
         ],
       ),
     );
@@ -377,7 +377,7 @@ class _TicketDetalleContent extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -392,27 +392,27 @@ class _TicketDetalleContent extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            padding: EdgeInsets.all(DesignTokens.spaceS),
+            padding: const EdgeInsets.all(DesignTokens.spaceS),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
             ),
             child: const Icon(Icons.receipt_long, size: 32, color: Colors.white),
           ),
-          SizedBox(width: DesignTokens.spaceM),
+          const SizedBox(width: DesignTokens.spaceM),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Viaje #${ticket.numeroTicket}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeXL,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: DesignTokens.spaceXS),
+                const SizedBox(height: DesignTokens.spaceXS),
                 Text(
                   ticket.placaStr ?? 'Sin placa',
                   style: TextStyle(
@@ -430,7 +430,7 @@ class _TicketDetalleContent extends StatelessWidget {
                 ticket.balanzaData != null ? 'BALANZA' : 'SIN BAL.',
                 ticket.balanzaData != null ? AppColors.success : AppColors.warning,
               ),
-              SizedBox(height: DesignTokens.spaceXS),
+              const SizedBox(height: DesignTokens.spaceXS),
               _buildStatusBadge(
                 ticket.almacenData != null ? 'ALMACÉN' : 'SIN ALM.',
                 ticket.almacenData != null ? AppColors.success : AppColors.warning,
@@ -444,7 +444,7 @@ class _TicketDetalleContent extends StatelessWidget {
 
   Widget _buildStatusBadge(String text, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceS,
         vertical: 2,
       ),
@@ -454,7 +454,7 @@ class _TicketDetalleContent extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
           fontSize: DesignTokens.fontSizeXS,
@@ -478,7 +478,7 @@ class _TicketDetalleContent extends StatelessWidget {
       children: [
         if (hasPhoto) ...[
           _PhotoButton(url: photoUrl, context: context),
-          if (canEdit) SizedBox(width: DesignTokens.spaceXS),
+          if (canEdit) const SizedBox(width: DesignTokens.spaceXS),
         ],
         if (canEdit)
           _EditButton(onTap: onEdit),
@@ -509,15 +509,15 @@ class _TicketDetalleContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.all(DesignTokens.spaceM),
+            padding: const EdgeInsets.all(DesignTokens.spaceM),
             child: Row(
               children: [
                 Icon(icon, size: 20, color: AppColors.primary),
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeM,
                       fontWeight: FontWeight.bold,
                       color: AppColors.primary,
@@ -530,7 +530,7 @@ class _TicketDetalleContent extends StatelessWidget {
           ),
           const Divider(height: 1),
           Padding(
-            padding: EdgeInsets.all(DesignTokens.spaceM),
+            padding: const EdgeInsets.all(DesignTokens.spaceM),
             child: Column(children: children),
           ),
         ],
@@ -560,16 +560,16 @@ class _TicketDetalleContent extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
         child: Column(
           children: [
             Row(
               children: [
                 Icon(icon, size: 20, color: AppColors.textSecondary),
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeM,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textSecondary,
@@ -578,7 +578,7 @@ class _TicketDetalleContent extends StatelessWidget {
                 const Spacer(),
                 Text(
                   message,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     color: AppColors.textSecondary,
                     fontStyle: FontStyle.italic,
@@ -587,7 +587,7 @@ class _TicketDetalleContent extends StatelessWidget {
               ],
             ),
             if (canAdd) ...[
-              SizedBox(height: DesignTokens.spaceM),
+              const SizedBox(height: DesignTokens.spaceM),
               SizedBox(
                 width: double.infinity,
                 child: AppButton.primary(
@@ -605,7 +605,7 @@ class _TicketDetalleContent extends StatelessWidget {
 
   Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -613,7 +613,7 @@ class _TicketDetalleContent extends StatelessWidget {
             width: 120,
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
@@ -622,7 +622,7 @@ class _TicketDetalleContent extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.w600,
               ),
@@ -635,7 +635,7 @@ class _TicketDetalleContent extends StatelessWidget {
 
   Widget _buildWeightRow(NumberFormat fmt, double bruto, double tara, double neto, int? bags) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
+      padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -656,8 +656,8 @@ class _TicketDetalleContent extends StatelessWidget {
   Widget _buildWeightItem(String label, String value, bool highlight) {
     return Column(
       children: [
-        Text(label, style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
-        SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: DesignTokens.fontSizeXS, color: AppColors.textSecondary)),
+        const SizedBox(height: 2),
         Text(
           value,
           style: TextStyle(
@@ -687,7 +687,7 @@ class _EditButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(DesignTokens.radiusS),
       child: Container(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: DesignTokens.spaceS,
           vertical: DesignTokens.spaceXS,
         ),
@@ -695,7 +695,7 @@ class _EditButton extends StatelessWidget {
           color: AppColors.warning.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(DesignTokens.radiusS),
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.edit, size: 16, color: AppColors.warning),
@@ -728,7 +728,7 @@ class _PhotoButton extends StatelessWidget {
       onTap: () => _showPhotoDialog(context, url),
       borderRadius: BorderRadius.circular(DesignTokens.radiusS),
       child: Container(
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
           horizontal: DesignTokens.spaceS,
           vertical: DesignTokens.spaceXS,
         ),
@@ -736,7 +736,7 @@ class _PhotoButton extends StatelessWidget {
           color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(DesignTokens.radiusS),
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.photo_camera, size: 16, color: AppColors.primary),

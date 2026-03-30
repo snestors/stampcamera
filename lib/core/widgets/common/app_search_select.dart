@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 class AppSearchSelectOption<T> {
   final T value;
@@ -151,19 +151,19 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
         // Label
         if (widget.label.isNotEmpty)
           Padding(
-            padding: EdgeInsets.only(bottom: DesignTokens.spaceXS),
+            padding: const EdgeInsets.only(bottom: DesignTokens.spaceXS),
             child: Row(
               children: [
                 Text(
                   widget.label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 if (widget.isRequired)
-                  Text(
+                  const Text(
                     ' *',
                     style: TextStyle(
                       fontSize: DesignTokens.fontSizeS,
@@ -183,13 +183,13 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
             controller: _searchController,
             focusNode: _focusNode,
             enabled: widget.enabled,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               color: AppColors.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: widget.hint ?? 'Buscar...',
-              hintStyle: TextStyle(
+              hintStyle: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
@@ -203,21 +203,21 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: AppColors.neutral,
                   width: DesignTokens.borderWidthNormal,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: AppColors.primary,
                   width: DesignTokens.borderWidthNormal,
                 ),
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: AppColors.error,
                   width: DesignTokens.borderWidthNormal,
                 ),
@@ -234,7 +234,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
         // Helper/Error Text
         if (widget.helperText != null || widget.errorText != null)
           Padding(
-            padding: EdgeInsets.only(top: DesignTokens.spaceXS),
+            padding: const EdgeInsets.only(top: DesignTokens.spaceXS),
             child: Text(
               widget.errorText ?? widget.helperText!,
               style: TextStyle(
@@ -352,7 +352,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
                             // Options List (sin search field interno)
                             Flexible(
                               child: _filteredOptions.isEmpty
-                                  ? Padding(
+                                  ? const Padding(
                                       padding: EdgeInsets.all(
                                         DesignTokens.spaceL,
                                       ),
@@ -376,7 +376,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
                                         return InkWell(
                                           onTap: () => _selectOption(option),
                                           child: Container(
-                                            padding: EdgeInsets.all(
+                                            padding: const EdgeInsets.all(
                                               DesignTokens.spaceM,
                                             ),
                                             decoration: BoxDecoration(
@@ -389,7 +389,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
                                               children: [
                                                 if (option.leading != null) ...[
                                                   option.leading!,
-                                                  SizedBox(
+                                                  const SizedBox(
                                                     width: DesignTokens.spaceS,
                                                   ),
                                                 ],
@@ -418,7 +418,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
                                                           null)
                                                         Text(
                                                           option.subtitle!,
-                                                          style: TextStyle(
+                                                          style: const TextStyle(
                                                             fontSize:
                                                                 DesignTokens
                                                                     .fontSizeXS,
@@ -430,7 +430,7 @@ class _AppSearchSelectState<T> extends State<AppSearchSelect<T>> {
                                                   ),
                                                 ),
                                                 if (isSelected)
-                                                  Icon(
+                                                  const Icon(
                                                     Icons.check,
                                                     color: AppColors.primary,
                                                     size: DesignTokens.iconM,

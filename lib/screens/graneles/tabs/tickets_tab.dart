@@ -116,7 +116,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               onPressed: () => _navigateToCreateTicket(),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(
+              label: const Text(
                 'Nuevo Viaje',
                 style: TextStyle(
                   color: Colors.white,
@@ -135,7 +135,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
 
   Widget _buildFilterChips(TicketMuelleNotifier notifier) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceS,
         vertical: DesignTokens.spaceXS,
       ),
@@ -148,21 +148,21 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               isSelected: _currentFilter == ViajeFilterType.todos,
               onSelected: () => _onFilterChanged(ViajeFilterType.todos, notifier),
             ),
-            SizedBox(width: DesignTokens.spaceXS),
+            const SizedBox(width: DesignTokens.spaceXS),
             _buildFilterChip(
               label: 'Pend. Balanza',
               isSelected: _currentFilter == ViajeFilterType.pendienteBalanza,
               onSelected: () => _onFilterChanged(ViajeFilterType.pendienteBalanza, notifier),
               color: AppColors.warning,
             ),
-            SizedBox(width: DesignTokens.spaceXS),
+            const SizedBox(width: DesignTokens.spaceXS),
             _buildFilterChip(
               label: 'Pend. Almacen',
               isSelected: _currentFilter == ViajeFilterType.pendienteAlmacen,
               onSelected: () => _onFilterChanged(ViajeFilterType.pendienteAlmacen, notifier),
               color: AppColors.accent,
             ),
-            SizedBox(width: DesignTokens.spaceXS),
+            const SizedBox(width: DesignTokens.spaceXS),
             _buildFilterChip(
               label: 'Completos',
               isSelected: _currentFilter == ViajeFilterType.completos,
@@ -202,7 +202,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
           color: isSelected ? chipColor : chipColor.withValues(alpha: 0.3),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceXS),
+      padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceXS),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
     );
@@ -272,7 +272,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
       child: ListView.builder(
         controller: _scrollController,
         // Padding extra abajo para el FAB (80px)
-        padding: EdgeInsets.fromLTRB(
+        padding: const EdgeInsets.fromLTRB(
           DesignTokens.spaceM,
           DesignTokens.spaceM,
           DesignTokens.spaceM,
@@ -283,7 +283,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
           if (index < tickets.length) {
             final ticket = tickets[index];
             return Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+              padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _TicketCard(
                 ticket: ticket,
                 onTap: () => _navigateToDetail(ticket.id),
@@ -293,7 +293,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
           }
 
           return Container(
-            padding: EdgeInsets.all(DesignTokens.spaceL),
+            padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
             child: Column(
               children: [
@@ -430,12 +430,12 @@ class _TicketCard extends StatelessWidget {
               if (ticket.servicioCodigo != null) ...[
                 Row(
                   children: [
-                    Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
-                    SizedBox(width: DesignTokens.spaceXS),
+                    const Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
+                    const SizedBox(width: DesignTokens.spaceXS),
                     Expanded(
                       child: Text(
                         '${ticket.servicioCodigo}${ticket.servicioNave != null ? ' - ${ticket.servicioNave}' : ''}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           color: AppColors.accent,
                           fontWeight: FontWeight.w600,
@@ -445,14 +445,14 @@ class _TicketCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
               ],
 
               // Header con numero de ticket y botones
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: DesignTokens.spaceS,
                       vertical: DesignTokens.spaceXS,
                     ),
@@ -464,10 +464,10 @@ class _TicketCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(Icons.receipt, size: 14, color: Colors.white),
-                        SizedBox(width: DesignTokens.spaceXS),
+                        const SizedBox(width: DesignTokens.spaceXS),
                         Text(
                           ticket.numeroTicket,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: DesignTokens.fontSizeS,
@@ -481,28 +481,28 @@ class _TicketCard extends StatelessWidget {
                   if (ticket.fotoUrl != null)
                     IconButton(
                       onPressed: () => _showPhotoDialog(context, ticket.fotoUrl!),
-                      icon: Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
+                      icon: const Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
                       tooltip: 'Ver foto',
                       constraints: const BoxConstraints(),
-                      padding: EdgeInsets.all(DesignTokens.spaceXS),
+                      padding: const EdgeInsets.all(DesignTokens.spaceXS),
                     ),
-                  SizedBox(width: DesignTokens.spaceXS),
+                  const SizedBox(width: DesignTokens.spaceXS),
                   // Boton editar
                   IconButton(
                     onPressed: onEdit,
-                    icon: Icon(Icons.edit, size: 20, color: AppColors.primary),
+                    icon: const Icon(Icons.edit, size: 20, color: AppColors.primary),
                     tooltip: 'Editar viaje',
                     constraints: const BoxConstraints(),
-                    padding: EdgeInsets.all(DesignTokens.spaceXS),
+                    padding: const EdgeInsets.all(DesignTokens.spaceXS),
                   ),
                 ],
               ),
-              SizedBox(height: DesignTokens.spaceXS),
+              const SizedBox(height: DesignTokens.spaceXS),
               // Status badges (balanza y almacen)
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: DesignTokens.spaceS,
                       vertical: 2,
                     ),
@@ -533,23 +533,23 @@ class _TicketCard extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: DesignTokens.spaceM),
+              const SizedBox(height: DesignTokens.spaceM),
 
               // Placa
               Row(
                 children: [
-                  Icon(Icons.local_shipping, size: 16, color: AppColors.textSecondary),
-                  SizedBox(width: DesignTokens.spaceS),
+                  const Icon(Icons.local_shipping, size: 16, color: AppColors.textSecondary),
+                  const SizedBox(width: DesignTokens.spaceS),
                   Text(
                     ticket.placaStr ?? 'Sin placa',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeM,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
 
               // Producto y BL
               Row(
@@ -557,12 +557,12 @@ class _TicketCard extends StatelessWidget {
                   Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.inventory_2, size: 14, color: AppColors.textSecondary),
-                        SizedBox(width: DesignTokens.spaceXS),
+                        const Icon(Icons.inventory_2, size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: DesignTokens.spaceXS),
                         Expanded(
                           child: Text(
                             ticket.productoNombre ?? 'Sin producto',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: DesignTokens.fontSizeS,
                               color: AppColors.textSecondary,
                             ),
@@ -572,46 +572,46 @@ class _TicketCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(width: DesignTokens.spaceS),
+                  const SizedBox(width: DesignTokens.spaceS),
                   Text(
                     'BL: ${ticket.blStr ?? "-"}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       color: AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
 
               // Bodega y tiempos
               Row(
                 children: [
-                  Icon(Icons.warehouse, size: 14, color: AppColors.textSecondary),
-                  SizedBox(width: DesignTokens.spaceXS),
+                  const Icon(Icons.warehouse, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: DesignTokens.spaceXS),
                   Text(
                     ticket.bodega ?? 'Sin bodega',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       color: AppColors.textSecondary,
                     ),
                   ),
                   const Spacer(),
-                  Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
-                  SizedBox(width: DesignTokens.spaceXS),
+                  const Icon(Icons.access_time, size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: DesignTokens.spaceXS),
                   Text(
                     ticket.inicioDescarga != null
                         ? '${timeFormat.format(toLima(ticket.inicioDescarga!))} - ${ticket.finDescarga != null ? timeFormat.format(toLima(ticket.finDescarga!)) : "?"}'
                         : 'Sin horario',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       color: AppColors.textSecondary,
                     ),
                   ),
                   if (ticket.tiempoCargio != null) ...[
-                    SizedBox(width: DesignTokens.spaceS),
+                    const SizedBox(width: DesignTokens.spaceS),
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: DesignTokens.spaceXS,
                         vertical: 2,
                       ),
@@ -621,7 +621,7 @@ class _TicketCard extends StatelessWidget {
                       ),
                       child: Text(
                         ticket.tiempoCargio!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           fontWeight: FontWeight.w600,
                         ),
@@ -633,11 +633,11 @@ class _TicketCard extends StatelessWidget {
 
               // Observaciones
               if (ticket.observaciones != null && ticket.observaciones!.isNotEmpty) ...[
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
                 const Divider(),
                 Text(
                   ticket.observaciones!,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
                     color: AppColors.textSecondary,
                     fontStyle: FontStyle.italic,

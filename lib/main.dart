@@ -11,13 +11,13 @@ import 'package:stampcamera/core/theme/app_theme.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 import 'package:stampcamera/core/helpers/formatters/date_formatters.dart';
-import 'routes/app_router.dart';
+import 'package:stampcamera/routes/app_router.dart';
 
 late List<CameraDescription> cameras;
 late ProviderContainer _providerContainer;
 
 Future<void> main() async {
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // Inicializar timezone America/Lima para toda la app

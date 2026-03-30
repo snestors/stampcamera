@@ -95,7 +95,7 @@ class PedeteoScreen extends ConsumerWidget {
     Set<String> pedeteadosEnSesion,
   ) {
     return ListView(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       children: [
         // Sección: Pendientes
         if (noPedeteados.isNotEmpty) ...[
@@ -106,7 +106,7 @@ class PedeteoScreen extends ConsumerWidget {
             AppColors.warning,
           ),
           ...noPedeteados.map((v) => _buildVinTile(v, false, false)),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
         ],
 
         // Sección: Ya pedeteados
@@ -145,11 +145,11 @@ class PedeteoScreen extends ConsumerWidget {
     Color color,
   ) {
     return Padding(
-      padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+      padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
       child: Row(
         children: [
           Icon(icon, color: color, size: DesignTokens.iconS),
-          SizedBox(width: DesignTokens.spaceXS),
+          const SizedBox(width: DesignTokens.spaceXS),
           Text(
             title,
             style: TextStyle(
@@ -158,9 +158,9 @@ class PedeteoScreen extends ConsumerWidget {
               color: color,
             ),
           ),
-          SizedBox(width: DesignTokens.spaceXS),
+          const SizedBox(width: DesignTokens.spaceXS),
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spaceS,
               vertical: 2,
             ),
@@ -190,8 +190,8 @@ class PedeteoScreen extends ConsumerWidget {
     final color = isPedeteado ? AppColors.success : AppColors.primary;
 
     return Container(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceXS),
-      padding: EdgeInsets.symmetric(
+      margin: const EdgeInsets.only(bottom: DesignTokens.spaceXS),
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceM,
         vertical: DesignTokens.spaceS,
       ),
@@ -210,7 +210,7 @@ class PedeteoScreen extends ConsumerWidget {
             color: color,
             size: DesignTokens.iconS,
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
 
           // VIN
           Expanded(
@@ -219,7 +219,7 @@ class PedeteoScreen extends ConsumerWidget {
               children: [
                 Text(
                   vin.vin,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeS,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -229,7 +229,7 @@ class PedeteoScreen extends ConsumerWidget {
                 if (vin.marca != null || vin.modelo != null)
                   Text(
                     '${vin.marca ?? ''} ${vin.modelo ?? ''}'.trim(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       color: AppColors.textSecondary,
                     ),
@@ -241,7 +241,7 @@ class PedeteoScreen extends ConsumerWidget {
           // Badge si fue pedeteado en esta sesión
           if (pedeteadoEnSesion)
             Container(
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: DesignTokens.spaceS,
                 vertical: 2,
               ),
@@ -249,7 +249,7 @@ class PedeteoScreen extends ConsumerWidget {
                 color: AppColors.success,
                 borderRadius: BorderRadius.circular(DesignTokens.radiusS),
               ),
-              child: Text(
+              child: const Text(
                 'NUEVO',
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeXS * 0.9,
@@ -266,7 +266,7 @@ class PedeteoScreen extends ConsumerWidget {
   /// Indicador de progreso
   Widget _buildProgressIndicator(int pedeteados, int pendientes) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceM,
         vertical: DesignTokens.spaceS,
       ),
@@ -285,21 +285,21 @@ class PedeteoScreen extends ConsumerWidget {
           // Pedeteados
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.check_circle,
                 size: DesignTokens.iconS,
                 color: AppColors.success,
               ),
-              SizedBox(width: DesignTokens.spaceXS),
+              const SizedBox(width: DesignTokens.spaceXS),
               Text(
                 '$pedeteados',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeM,
                   fontWeight: FontWeight.bold,
                   color: AppColors.success,
                 ),
               ),
-              Text(
+              const Text(
                 ' pedeteados',
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeS,
@@ -312,21 +312,21 @@ class PedeteoScreen extends ConsumerWidget {
           // Pendientes
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.pending,
                 size: DesignTokens.iconS,
                 color: AppColors.warning,
               ),
-              SizedBox(width: DesignTokens.spaceXS),
+              const SizedBox(width: DesignTokens.spaceXS),
               Text(
                 '$pendientes',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeM,
                   fontWeight: FontWeight.bold,
                   color: AppColors.warning,
                 ),
               ),
-              Text(
+              const Text(
                 ' pendientes',
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeS,

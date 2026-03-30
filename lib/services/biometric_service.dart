@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
-import 'storage_health_service.dart'; // Importa appSecureStorage
+import 'package:stampcamera/services/storage_health_service.dart'; // Importa appSecureStorage
 
 /// Servicio para manejo de autenticación biométrica
 /// Solo disponible para dispositivos personales

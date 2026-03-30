@@ -285,10 +285,10 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: isLoading
-                          ? Row(
+                          ? const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const SizedBox(
+                                SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
@@ -296,8 +296,8 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                                     color: Colors.white,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                const Text(
+                                SizedBox(width: 12),
+                                Text(
                                   'Obteniendo ubicación...',
                                   style: TextStyle(
                                     fontSize: 16,
@@ -306,12 +306,12 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                                 ),
                               ],
                             )
-                          : Row(
+                          : const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.check_circle, size: 22),
-                                const SizedBox(width: 8),
-                                const Text(
+                                Icon(Icons.check_circle, size: 22),
+                                SizedBox(width: 8),
+                                Text(
                                   'Confirmar Entrada',
                                   style: TextStyle(
                                     fontSize: 16,

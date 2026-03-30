@@ -126,7 +126,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         foregroundColor: Colors.white,
         title: Text(
           widget.isEditMode ? 'Editar Silo' : 'Nuevo Registro de Silo',
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeL,
           ),
@@ -149,58 +149,58 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
         children: [
           // Solo mostrar selectores en modo creación
           if (!widget.isEditMode) ...[
             // Sección: BL
-            AppSectionHeader(icon: Icons.description, title: 'BL'),
-            SizedBox(height: DesignTokens.spaceS),
+            const AppSectionHeader(icon: Icons.description, title: 'BL'),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildBlSelector(options.bls),
-            SizedBox(height: DesignTokens.spaceL),
+            const SizedBox(height: DesignTokens.spaceL),
 
             // Sección: Distribución (filtrada por BL)
-            AppSectionHeader(icon: Icons.warehouse, title: 'Distribución / Bodega'),
-            SizedBox(height: DesignTokens.spaceS),
+            const AppSectionHeader(icon: Icons.warehouse, title: 'Distribución / Bodega'),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildDistribucionSelector(options),
-            SizedBox(height: DesignTokens.spaceL),
+            const SizedBox(height: DesignTokens.spaceL),
 
             // Sección: Jornada (de la nave del servicio)
-            AppSectionHeader(icon: Icons.schedule, title: 'Jornada'),
-            SizedBox(height: DesignTokens.spaceS),
+            const AppSectionHeader(icon: Icons.schedule, title: 'Jornada'),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildJornadaSelector(options),
-            SizedBox(height: DesignTokens.spaceL),
+            const SizedBox(height: DesignTokens.spaceL),
           ],
 
           // Sección: N° Camión/Ticket
-          AppSectionHeader(icon: Icons.tag, title: 'N° Camión / Ticket'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.tag, title: 'N° Camión / Ticket'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildNumeroCamionField(),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Fecha y hora
-          AppSectionHeader(icon: Icons.access_time, title: 'Fecha y Hora de Pesaje'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.access_time, title: 'Fecha y Hora de Pesaje'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildFechaHoraField(),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Pesos
-          AppSectionHeader(icon: Icons.scale, title: 'Peso y Cantidad'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.scale, title: 'Peso y Cantidad'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildWeightFields(),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Foto
-          AppSectionHeader(icon: Icons.camera_alt, title: 'Foto'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.camera_alt, title: 'Foto'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildPhotoField(),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Observaciones
-          AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildObservacionesField(),
-          SizedBox(height: DesignTokens.spaceXL),
+          const SizedBox(height: DesignTokens.spaceXL),
 
           // Botón de guardar
           _buildSubmitButton(),
@@ -220,7 +220,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       decoration: InputDecoration(
         labelText: 'BL *',
         hintText: 'Seleccionar BL...',
-        prefixIcon: Icon(Icons.description, color: AppColors.primary, size: 20),
+        prefixIcon: const Icon(Icons.description, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -233,7 +233,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           value: bl.id,
           child: Text(
             bl.label,
-            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            style: const TextStyle(fontSize: DesignTokens.fontSizeS),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -245,7 +245,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               bl.label,
-              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              style: const TextStyle(fontSize: DesignTokens.fontSizeS),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -281,7 +281,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       decoration: InputDecoration(
         labelText: 'Distribución / Bodega *',
         hintText: 'Seleccionar distribución...',
-        prefixIcon: Icon(Icons.warehouse, color: AppColors.primary, size: 20),
+        prefixIcon: const Icon(Icons.warehouse, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -294,7 +294,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           value: dist.id,
           child: Text(
             dist.label,
-            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            style: const TextStyle(fontSize: DesignTokens.fontSizeS),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -306,7 +306,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               dist.label,
-              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              style: const TextStyle(fontSize: DesignTokens.fontSizeS),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -336,7 +336,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       decoration: InputDecoration(
         labelText: 'Jornada *',
         hintText: 'Seleccionar jornada...',
-        prefixIcon: Icon(Icons.schedule, color: AppColors.primary, size: 20),
+        prefixIcon: const Icon(Icons.schedule, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -349,7 +349,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           value: jornada.id,
           child: Text(
             jornada.label,
-            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            style: const TextStyle(fontSize: DesignTokens.fontSizeS),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -361,7 +361,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               jornada.label,
-              style: TextStyle(fontSize: DesignTokens.fontSizeS),
+              style: const TextStyle(fontSize: DesignTokens.fontSizeS),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -375,7 +375,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
 
   Widget _buildDisabledText(String text) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.neutral.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -383,7 +383,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       ),
       child: Text(
         text,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: DesignTokens.fontSizeS,
           color: AppColors.textSecondary,
           fontStyle: FontStyle.italic,
@@ -394,7 +394,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
 
   Widget _buildWarningBox(String text) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -402,12 +402,12 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
-          SizedBox(width: DesignTokens.spaceS),
+          const Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(color: AppColors.warning, fontSize: DesignTokens.fontSizeS),
+              style: const TextStyle(color: AppColors.warning, fontSize: DesignTokens.fontSizeS),
             ),
           ),
         ],
@@ -456,7 +456,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         ),
         child: Text(
           dateFormat.format(toLima(_fechaHora)),
-          style: TextStyle(fontSize: DesignTokens.fontSizeS),
+          style: const TextStyle(fontSize: DesignTokens.fontSizeS),
         ),
       ),
     );
@@ -524,7 +524,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
                 },
               ),
             ),
-            SizedBox(width: DesignTokens.spaceS),
+            const SizedBox(width: DesignTokens.spaceS),
             Expanded(
               child: TextFormField(
                 controller: _pesoTaraController,
@@ -557,7 +557,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
             ),
           ],
         ),
-        SizedBox(height: DesignTokens.spaceS),
+        const SizedBox(height: DesignTokens.spaceS),
 
         // Fila 2: Peso Neto y Bags
         Row(
@@ -596,7 +596,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
                 },
               ),
             ),
-            SizedBox(width: DesignTokens.spaceS),
+            const SizedBox(width: DesignTokens.spaceS),
             Expanded(
               child: TextFormField(
                 controller: _bagsController,

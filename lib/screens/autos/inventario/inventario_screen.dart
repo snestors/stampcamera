@@ -155,7 +155,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
             );
           }
 
-          return Padding(
+          return const Padding(
             padding: EdgeInsets.all(DesignTokens.spaceM),
             child: Center(
               child: SizedBox(
@@ -210,7 +210,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                 // Content
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.all(DesignTokens.spaceM),
+                    padding: const EdgeInsets.all(DesignTokens.spaceM),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -222,18 +222,18 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                               color: accentColor,
                               size: 20,
                             ),
-                            SizedBox(width: DesignTokens.spaceS),
+                            const SizedBox(width: DesignTokens.spaceS),
                             Expanded(
                               child: Text(
                                 nave.naveDescargaNombre,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: DesignTokens.fontSizeL,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
-                            Icon(
+                            const Icon(
                               Icons.chevron_right,
                               size: 20,
                               color: AppColors.textSecondary,
@@ -241,7 +241,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                           ],
                         ),
 
-                        SizedBox(height: DesignTokens.spaceS),
+                        const SizedBox(height: DesignTokens.spaceS),
 
                         // Metadata row
                         Wrap(
@@ -256,7 +256,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                           ],
                         ),
 
-                        SizedBox(height: DesignTokens.spaceS),
+                        const SizedBox(height: DesignTokens.spaceS),
 
                         // Stats badges
                         Wrap(
@@ -297,10 +297,10 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 12, color: AppColors.textSecondary),
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
         Text(
           text,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeS,
             color: AppColors.textSecondary,
           ),
@@ -352,7 +352,7 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                 ? 'No se encontraron inventarios que coincidan con "${_searchController.text}"'
                 : 'Aún no hay inventarios registrados',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary),
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
           if (isSearching) ...[

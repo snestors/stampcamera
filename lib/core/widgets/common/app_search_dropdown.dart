@@ -4,8 +4,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 class AppSearchDropdownOption<T> {
   final T value;
@@ -197,14 +197,14 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
               focusNode: _focusNode,
               enabled: widget.enabled,
               onChanged: _filterOptions,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textPrimary,
               ),
               decoration: InputDecoration(
                 labelText: widget.isRequired ? '${widget.label} *' : widget.label,
                 hintText: widget.hint,
-                hintStyle: TextStyle(
+                hintStyle: const TextStyle(
                   fontSize: DesignTokens.fontSizeS,
                   color: AppColors.textSecondary,
                 ),
@@ -214,7 +214,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                   children: [
                     if (isSelected)
                       IconButton(
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.clear,
                           size: 18,
                           color: AppColors.textSecondary,
@@ -224,7 +224,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                         constraints: const BoxConstraints(),
                       ),
                     Padding(
-                      padding: EdgeInsets.only(right: DesignTokens.spaceS),
+                      padding: const EdgeInsets.only(right: DesignTokens.spaceS),
                       child: Icon(
                         _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                         color: AppColors.textSecondary,
@@ -236,21 +236,21 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                 // Mismo estilo de bordes que DropdownButtonFormField
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                  borderSide: BorderSide(
+                  borderSide: const BorderSide(
                     color: AppColors.neutral,
                     width: DesignTokens.borderWidthNormal,
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                  borderSide: BorderSide(
+                  borderSide: const BorderSide(
                     color: AppColors.primary,
                     width: DesignTokens.borderWidthNormal,
                   ),
                 ),
                 errorBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                  borderSide: BorderSide(
+                  borderSide: const BorderSide(
                     color: AppColors.error,
                     width: DesignTokens.borderWidthNormal,
                   ),
@@ -259,7 +259,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                 fillColor: AppColors.surface,
                 // Mostrar error del FormField
                 errorText: _errorText,
-                errorStyle: TextStyle(
+                errorStyle: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS,
                   color: AppColors.error,
                 ),
@@ -269,7 +269,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
             // Dropdown Results
             if (_isExpanded && _filteredOptions.isNotEmpty)
               Container(
-                margin: EdgeInsets.only(top: DesignTokens.spaceXS),
+                margin: const EdgeInsets.only(top: DesignTokens.spaceXS),
                 constraints: const BoxConstraints(maxHeight: 220),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -285,7 +285,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                 ),
                 child: ListView.builder(
                   shrinkWrap: true,
-                  padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
+                  padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
                   itemCount: _filteredOptions.length,
                   itemBuilder: (context, index) {
                     final option = _filteredOptions[index];
@@ -296,7 +296,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                       child: InkWell(
                         onTap: () => _selectOption(option),
                         child: Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: DesignTokens.spaceM,
                             vertical: DesignTokens.spaceS,
                           ),
@@ -309,7 +309,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                             children: [
                               if (option.leading != null) ...[
                                 option.leading!,
-                                SizedBox(width: DesignTokens.spaceS),
+                                const SizedBox(width: DesignTokens.spaceS),
                               ],
                               Expanded(
                                 child: Column(
@@ -330,7 +330,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                                     if (option.subtitle != null)
                                       Text(
                                         option.subtitle!,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: DesignTokens.fontSizeXS,
                                           color: AppColors.textSecondary,
                                         ),
@@ -339,7 +339,7 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
                                 ),
                               ),
                               if (isItemSelected)
-                                Icon(
+                                const Icon(
                                   Icons.check_circle,
                                   color: AppColors.primary,
                                   size: 20,
@@ -356,14 +356,14 @@ class _AppSearchDropdownState<T> extends State<AppSearchDropdown<T>> {
             // No results message
             if (_isExpanded && _filteredOptions.isEmpty)
               Container(
-                margin: EdgeInsets.only(top: DesignTokens.spaceXS),
-                padding: EdgeInsets.all(DesignTokens.spaceM),
+                margin: const EdgeInsets.only(top: DesignTokens.spaceXS),
+                padding: const EdgeInsets.all(DesignTokens.spaceM),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                   border: Border.all(color: AppColors.neutral),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(

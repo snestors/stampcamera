@@ -48,7 +48,7 @@ class ResumenAsistenciaWidget extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    _ChipIcon(icon: Icons.access_time, color: accent),
+                    const _ChipIcon(icon: Icons.access_time, color: accent),
                     const SizedBox(width: 10),
                     Text(
                       "Resumen de jornada",
@@ -64,7 +64,7 @@ class ResumenAsistenciaWidget extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    _ChipIcon(icon: Icons.work, color: Colors.green),
+                    const _ChipIcon(icon: Icons.work, color: Colors.green),
                     const SizedBox(width: 8),
                     const Text(
                       "Horas trabajadas:",

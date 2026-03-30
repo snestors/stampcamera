@@ -101,7 +101,7 @@ class _SilosTabState extends ConsumerState<SilosTab> {
               onPressed: () => context.push('/graneles/silos/crear'),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(
+              label: const Text(
                 'Nuevo Silo',
                 style: TextStyle(
                   color: Colors.white,
@@ -148,7 +148,7 @@ class _SilosTabState extends ConsumerState<SilosTab> {
       child: ListView.builder(
         controller: _scrollController,
         // Padding extra abajo para el FAB (80px)
-        padding: EdgeInsets.fromLTRB(
+        padding: const EdgeInsets.fromLTRB(
           DesignTokens.spaceM,
           DesignTokens.spaceM,
           DesignTokens.spaceM,
@@ -159,13 +159,13 @@ class _SilosTabState extends ConsumerState<SilosTab> {
           if (index < silos.length) {
             final silo = silos[index];
             return Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+              padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _SiloCard(silo: silo),
             );
           }
 
           return Container(
-            padding: EdgeInsets.all(DesignTokens.spaceL),
+            padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
             child: Column(
               children: [
@@ -262,12 +262,12 @@ class _SiloCard extends ConsumerWidget {
                         width: 80,
                         height: 80,
                         color: AppColors.surface,
-                        child: Icon(Icons.broken_image, color: AppColors.textSecondary),
+                        child: const Icon(Icons.broken_image, color: AppColors.textSecondary),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: DesignTokens.spaceM),
+                const SizedBox(width: DesignTokens.spaceM),
               ],
 
               // Contenido principal
@@ -279,7 +279,7 @@ class _SiloCard extends ConsumerWidget {
                     Row(
                       children: [
                         Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: DesignTokens.spaceS,
                             vertical: DesignTokens.spaceXS,
                           ),
@@ -291,10 +291,10 @@ class _SiloCard extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.storage, size: 14, color: Colors.white),
-                              SizedBox(width: DesignTokens.spaceXS),
+                              const SizedBox(width: DesignTokens.spaceXS),
                               Text(
                                 'N° ${silo.numeroSilo ?? "-"}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: DesignTokens.fontSizeS,
@@ -306,7 +306,7 @@ class _SiloCard extends ConsumerWidget {
                         const Spacer(),
                         if (canEdit)
                           IconButton(
-                            icon: Icon(Icons.edit, size: 20, color: AppColors.primary),
+                            icon: const Icon(Icons.edit, size: 20, color: AppColors.primary),
                             onPressed: () => context.push('/graneles/silos/editar/${silo.id}'),
                             constraints: const BoxConstraints(),
                             padding: EdgeInsets.zero,
@@ -314,17 +314,17 @@ class _SiloCard extends ConsumerWidget {
                           ),
                       ],
                     ),
-                    SizedBox(height: DesignTokens.spaceS),
+                    const SizedBox(height: DesignTokens.spaceS),
 
                     // Producto
                     Row(
                       children: [
-                        Icon(Icons.inventory_2, size: 14, color: AppColors.textSecondary),
-                        SizedBox(width: DesignTokens.spaceXS),
+                        const Icon(Icons.inventory_2, size: 14, color: AppColors.textSecondary),
+                        const SizedBox(width: DesignTokens.spaceXS),
                         Expanded(
                           child: Text(
                             silo.productoNombre ?? 'Sin producto',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: DesignTokens.fontSizeS,
                               fontWeight: FontWeight.w600,
                             ),
@@ -332,14 +332,14 @@ class _SiloCard extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: DesignTokens.spaceS),
+                    const SizedBox(height: DesignTokens.spaceS),
 
                     // Peso y bags en fila compacta
                     Row(
                       children: [
                         // Peso
                         Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: DesignTokens.spaceS,
                             vertical: DesignTokens.spaceXS,
                           ),
@@ -350,13 +350,13 @@ class _SiloCard extends ConsumerWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.scale, size: 14, color: AppColors.primary),
-                              SizedBox(width: DesignTokens.spaceXS),
+                              const Icon(Icons.scale, size: 14, color: AppColors.primary),
+                              const SizedBox(width: DesignTokens.spaceXS),
                               Text(
                                 silo.peso != null
                                     ? '${numberFormat.format(silo.peso!)} TM'
                                     : '- TM',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: DesignTokens.fontSizeS,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.primary,
@@ -365,12 +365,12 @@ class _SiloCard extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        SizedBox(width: DesignTokens.spaceS),
+                        const SizedBox(width: DesignTokens.spaceS),
 
                         // Bags (si existe)
                         if (silo.bags != null) ...[
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: DesignTokens.spaceS,
                               vertical: DesignTokens.spaceXS,
                             ),
@@ -381,11 +381,11 @@ class _SiloCard extends ConsumerWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.inventory, size: 14, color: AppColors.secondary),
-                                SizedBox(width: DesignTokens.spaceXS),
+                                const Icon(Icons.inventory, size: 14, color: AppColors.secondary),
+                                const SizedBox(width: DesignTokens.spaceXS),
                                 Text(
                                   '${silo.bags} bags',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: DesignTokens.fontSizeS,
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.secondary,
@@ -397,18 +397,18 @@ class _SiloCard extends ConsumerWidget {
                         ],
                       ],
                     ),
-                    SizedBox(height: DesignTokens.spaceS),
+                    const SizedBox(height: DesignTokens.spaceS),
 
                     // Fecha y hora
                     Row(
                       children: [
-                        Icon(Icons.calendar_today, size: 12, color: AppColors.textSecondary),
-                        SizedBox(width: DesignTokens.spaceXS),
+                        const Icon(Icons.calendar_today, size: 12, color: AppColors.textSecondary),
+                        const SizedBox(width: DesignTokens.spaceXS),
                         Text(
                           silo.fechaHora != null
                               ? dateTimeFormat.format(toLima(silo.fechaHora!))
                               : 'Sin fecha',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: DesignTokens.fontSizeXS,
                             color: AppColors.textSecondary,
                           ),

@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 class AppEmptyState extends StatelessWidget {
   final IconData icon;
@@ -27,7 +27,7 @@ class AppEmptyState extends StatelessWidget {
     final stateColor = color ?? AppColors.textSecondary;
 
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceXXXL),
+      padding: const EdgeInsets.all(DesignTokens.spaceXXXL),
       decoration: BoxDecoration(
         color: stateColor.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
@@ -44,7 +44,7 @@ class AppEmptyState extends StatelessWidget {
             size: DesignTokens.iconHuge, 
             color: stateColor,
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
           Text(
             title,
             style: TextStyle(
@@ -53,7 +53,7 @@ class AppEmptyState extends StatelessWidget {
               color: stateColor,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
           Text(
             subtitle,
             style: TextStyle(
@@ -63,7 +63,7 @@ class AppEmptyState extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           if (action != null) ...[
-            SizedBox(height: DesignTokens.spaceL),
+            const SizedBox(height: DesignTokens.spaceL),
             action!,
           ],
         ],

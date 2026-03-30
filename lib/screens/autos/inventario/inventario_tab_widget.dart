@@ -27,26 +27,26 @@ class InventarioTabWidget extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(DesignTokens.spaceXXXL),
+        padding: const EdgeInsets.all(DesignTokens.spaceXXXL),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: EdgeInsets.all(DesignTokens.spaceXXL),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(DesignTokens.spaceXXL),
+              decoration: const BoxDecoration(
                 color: AppColors.backgroundLight,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.inventory_2_outlined,
                 size: DesignTokens.iconGiant,
                 color: AppColors.textLight,
               ),
             ),
 
-            SizedBox(height: DesignTokens.spaceXXL),
+            const SizedBox(height: DesignTokens.spaceXXL),
 
-            Text(
+            const Text(
               'No hay inventario registrado',
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeL,
@@ -55,9 +55,9 @@ class InventarioTabWidget extends ConsumerWidget {
               ),
             ),
 
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
 
-            Text(
+            const Text(
               'Esta unidad aún no tiene un inventario creado.\nPuedes crear uno ahora.',
               textAlign: TextAlign.center,
               style: TextStyle(

@@ -123,7 +123,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
         foregroundColor: Colors.white,
         actions: [
           if (_isLoading)
-            Padding(
+            const Padding(
               padding: EdgeInsets.all(DesignTokens.spaceM),
               child: SizedBox(
                 width: 20,
@@ -140,7 +140,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               child: optionsAsync.when(
                 data: (options) {
                   if (widget.contenedor == null) {
@@ -270,7 +270,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             primaryColor: AppColors.secondary,
           ),
 
-          Divider(height: DesignTokens.spaceXL, color: AppColors.neutral),
+          const Divider(height: DesignTokens.spaceXL, color: AppColors.neutral),
 
           // Precinto 1
           Row(
@@ -382,7 +382,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             primaryColor: AppColors.warning,
           ),
 
-          Divider(height: DesignTokens.spaceXL, color: AppColors.neutral),
+          const Divider(height: DesignTokens.spaceXL, color: AppColors.neutral),
 
           // Foto Contenedor Vacío
           _buildCameraCardWithRemove(
@@ -411,7 +411,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
             primaryColor: AppColors.info,
           ),
 
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
         ],
       ),
     );
@@ -442,7 +442,7 @@ class _ContenedorFormState extends ConsumerState<ContenedorForm> {
           children: [
             Row(
               children: [
-                Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

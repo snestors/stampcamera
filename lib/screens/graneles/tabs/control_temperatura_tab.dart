@@ -97,7 +97,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
               onPressed: () => context.push('/graneles/control-humedad/crear'),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
-              label: Text(
+              label: const Text(
                 'Nuevo Registro',
                 style: TextStyle(
                   color: Colors.white,
@@ -143,7 +143,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.fromLTRB(
+        padding: const EdgeInsets.fromLTRB(
           DesignTokens.spaceM,
           DesignTokens.spaceM,
           DesignTokens.spaceM,
@@ -154,7 +154,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
           if (index < items.length) {
             final item = items[index];
             return Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+              padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _ControlHumedadCard(
                 control: item,
                 onTap: () => _showDetailSheet(item),
@@ -163,7 +163,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
           }
 
           return Container(
-            padding: EdgeInsets.all(DesignTokens.spaceL),
+            padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
             child: Column(
               children: [
@@ -229,7 +229,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
         expand: false,
         builder: (_, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          padding: EdgeInsets.all(DesignTokens.spaceL),
+          padding: const EdgeInsets.all(DesignTokens.spaceL),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -238,7 +238,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
                 child: Container(
                   width: 40,
                   height: 4,
-                  margin: EdgeInsets.only(bottom: DesignTokens.spaceM),
+                  margin: const EdgeInsets.only(bottom: DesignTokens.spaceM),
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.circular(2),
@@ -247,7 +247,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
               ),
 
               // Titulo
-              Row(
+              const Row(
                 children: [
                   Icon(Icons.thermostat, color: AppColors.primary),
                   SizedBox(width: DesignTokens.spaceS),
@@ -262,46 +262,46 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
                   ),
                 ],
               ),
-              SizedBox(height: DesignTokens.spaceM),
+              const SizedBox(height: DesignTokens.spaceM),
 
               // Servicio
               if (c.servicioCodigo != null) ...[
                 _detailRow(Icons.directions_boat, 'Servicio',
                     '${c.servicioCodigo}${c.naveNombre != null ? ' - ${c.naveNombre}' : ''}'),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
               ],
 
               _detailRow(Icons.category, 'Distribucion', c.distribucionStr ?? '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.schedule, 'Jornada', c.jornadaStr ?? '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.access_time, 'Hora muestra',
                   c.horaMuestra != null ? dateTimeFormat.format(toLima(c.horaMuestra!)) : '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.thermostat, 'Temperatura',
                   c.temperatura != null ? '${c.temperatura!.toStringAsFixed(1)} C' : '-'),
-              SizedBox(height: DesignTokens.spaceS),
+              const SizedBox(height: DesignTokens.spaceS),
               _detailRow(Icons.water_drop, 'Humedad',
                   c.humedad != null ? '${c.humedad!.toStringAsFixed(1)} %' : '-'),
 
               if (c.observaciones != null && c.observaciones!.isNotEmpty) ...[
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
                 _detailRow(Icons.notes, 'Observaciones', c.observaciones!),
               ],
 
               // Fotos
               if (c.fotoTemperaturaUrl != null || c.fotoHumedadUrl != null || c.fotoExtraUrl != null) ...[
-                SizedBox(height: DesignTokens.spaceM),
+                const SizedBox(height: DesignTokens.spaceM),
                 const Divider(),
-                SizedBox(height: DesignTokens.spaceS),
-                Text(
+                const SizedBox(height: DesignTokens.spaceS),
+                const Text(
                   'Fotos',
                   style: TextStyle(
                     fontSize: DesignTokens.fontSizeM,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
                 Wrap(
                   spacing: DesignTokens.spaceS,
                   runSpacing: DesignTokens.spaceS,
@@ -317,12 +317,12 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
               ],
 
               if (c.createByNombre != null) ...[
-                SizedBox(height: DesignTokens.spaceM),
+                const SizedBox(height: DesignTokens.spaceM),
                 const Divider(),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
                 Text(
                   'Creado por: ${c.createByNombre}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
                     color: AppColors.textSecondary,
                   ),
@@ -330,7 +330,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
                 if (c.createAt != null)
                   Text(
                     dateTimeFormat.format(toLima(c.createAt!)),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       color: AppColors.textSecondary,
                     ),
@@ -339,7 +339,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
 
               // Botones editar / eliminar
               if (canEdit || canDelete) ...[
-                SizedBox(height: DesignTokens.spaceL),
+                const SizedBox(height: DesignTokens.spaceL),
                 Row(
                   children: [
                     if (canEdit)
@@ -353,7 +353,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
                           },
                         ),
                       ),
-                    if (canEdit && canDelete) SizedBox(width: DesignTokens.spaceS),
+                    if (canEdit && canDelete) const SizedBox(width: DesignTokens.spaceS),
                     if (canDelete)
                       Expanded(
                         child: AppButton.error(
@@ -377,12 +377,12 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 16, color: AppColors.textSecondary),
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
         SizedBox(
           width: 100,
           child: Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               color: AppColors.textSecondary,
             ),
@@ -391,7 +391,7 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               fontWeight: FontWeight.w600,
             ),
@@ -441,17 +441,17 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
           width: 80,
           height: 80,
           fit: BoxFit.cover,
-          placeholder: (_, __) => Container(
+          placeholder: (_, _) => Container(
             width: 80,
             height: 80,
             color: AppColors.surface,
             child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
           ),
-          errorWidget: (_, __, ___) => Container(
+          errorWidget: (_, _, _) => Container(
             width: 80,
             height: 80,
             color: AppColors.surface,
-            child: Icon(Icons.broken_image, color: AppColors.textSecondary),
+            child: const Icon(Icons.broken_image, color: AppColors.textSecondary),
           ),
         ),
       ),
@@ -496,21 +496,21 @@ class _ControlHumedadCard extends ConsumerWidget {
                 width: 70,
                 height: 70,
                 fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
+                placeholder: (_, _) => Container(
                   width: 70,
                   height: 70,
                   color: AppColors.surface,
                   child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                 ),
-                errorWidget: (_, __, ___) => Container(
+                errorWidget: (_, _, _) => Container(
                   width: 70,
                   height: 70,
                   color: AppColors.surface,
-                  child: Icon(Icons.broken_image, color: AppColors.textSecondary),
+                  child: const Icon(Icons.broken_image, color: AppColors.textSecondary),
                 ),
               ),
             ),
-            SizedBox(width: DesignTokens.spaceM),
+            const SizedBox(width: DesignTokens.spaceM),
           ],
 
           // Contenido
@@ -522,12 +522,12 @@ class _ControlHumedadCard extends ConsumerWidget {
                 if (control.servicioCodigo != null) ...[
                   Row(
                     children: [
-                      Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
-                      SizedBox(width: DesignTokens.spaceXS),
+                      const Icon(Icons.directions_boat, size: 14, color: AppColors.accent),
+                      const SizedBox(width: DesignTokens.spaceXS),
                       Expanded(
                         child: Text(
                           '${control.servicioCodigo}${control.naveNombre != null ? ' - ${control.naveNombre}' : ''}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: DesignTokens.fontSizeXS,
                             color: AppColors.accent,
                             fontWeight: FontWeight.w600,
@@ -537,7 +537,7 @@ class _ControlHumedadCard extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: DesignTokens.spaceXS),
+                  const SizedBox(height: DesignTokens.spaceXS),
                 ],
 
                 // Distribucion + Jornada
@@ -546,7 +546,7 @@ class _ControlHumedadCard extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         control.distribucionStr ?? 'Sin distribucion',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: DesignTokens.fontSizeS,
                           fontWeight: FontWeight.w600,
                         ),
@@ -555,7 +555,7 @@ class _ControlHumedadCard extends ConsumerWidget {
                     ),
                     if (control.jornadaStr != null)
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: DesignTokens.spaceS,
                           vertical: 2,
                         ),
@@ -565,7 +565,7 @@ class _ControlHumedadCard extends ConsumerWidget {
                         ),
                         child: Text(
                           control.jornadaStr!,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.info,
                             fontWeight: FontWeight.w600,
                             fontSize: DesignTokens.fontSizeXS,
@@ -574,14 +574,14 @@ class _ControlHumedadCard extends ConsumerWidget {
                       ),
                   ],
                 ),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
 
                 // Temperatura y Humedad badges
                 Row(
                   children: [
                     // Temperatura
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: DesignTokens.spaceS,
                         vertical: DesignTokens.spaceXS,
                       ),
@@ -592,13 +592,13 @@ class _ControlHumedadCard extends ConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.thermostat, size: 14, color: AppColors.error),
-                          SizedBox(width: DesignTokens.spaceXS),
+                          const Icon(Icons.thermostat, size: 14, color: AppColors.error),
+                          const SizedBox(width: DesignTokens.spaceXS),
                           Text(
                             control.temperatura != null
                                 ? '${control.temperatura!.toStringAsFixed(1)} C'
                                 : '- C',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: DesignTokens.fontSizeS,
                               fontWeight: FontWeight.bold,
                               color: AppColors.error,
@@ -607,10 +607,10 @@ class _ControlHumedadCard extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    SizedBox(width: DesignTokens.spaceS),
+                    const SizedBox(width: DesignTokens.spaceS),
                     // Humedad
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: DesignTokens.spaceS,
                         vertical: DesignTokens.spaceXS,
                       ),
@@ -621,13 +621,13 @@ class _ControlHumedadCard extends ConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.water_drop, size: 14, color: AppColors.info),
-                          SizedBox(width: DesignTokens.spaceXS),
+                          const Icon(Icons.water_drop, size: 14, color: AppColors.info),
+                          const SizedBox(width: DesignTokens.spaceXS),
                           Text(
                             control.humedad != null
                                 ? '${control.humedad!.toStringAsFixed(1)} %'
                                 : '- %',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: DesignTokens.fontSizeS,
                               fontWeight: FontWeight.bold,
                               color: AppColors.info,
@@ -638,18 +638,18 @@ class _ControlHumedadCard extends ConsumerWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: DesignTokens.spaceS),
+                const SizedBox(height: DesignTokens.spaceS),
 
                 // Hora muestra
                 Row(
                   children: [
-                    Icon(Icons.access_time, size: 12, color: AppColors.textSecondary),
-                    SizedBox(width: DesignTokens.spaceXS),
+                    const Icon(Icons.access_time, size: 12, color: AppColors.textSecondary),
+                    const SizedBox(width: DesignTokens.spaceXS),
                     Text(
                       control.horaMuestra != null
                           ? dateTimeFormat.format(toLima(control.horaMuestra!))
                           : 'Sin hora',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeXS,
                         color: AppColors.textSecondary,
                       ),

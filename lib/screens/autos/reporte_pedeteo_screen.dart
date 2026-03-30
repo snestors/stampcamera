@@ -65,16 +65,16 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, size: 48, color: AppColors.error),
-                    SizedBox(height: DesignTokens.spaceM),
-                    Text(
+                    const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+                    const SizedBox(height: DesignTokens.spaceM),
+                    const Text(
                       'Error al cargar reporte',
                       style: TextStyle(
                         fontSize: DesignTokens.fontSizeM,
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    SizedBox(height: DesignTokens.spaceS),
+                    const SizedBox(height: DesignTokens.spaceS),
                     TextButton.icon(
                       onPressed: () => ref.invalidate(reportePedeteoProvider(fechaStr)),
                       icon: const Icon(Icons.refresh),
@@ -93,20 +93,20 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
 
   Widget _buildDateHeader() {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.1),
-        border: Border(
+        border: const Border(
           bottom: BorderSide(color: AppColors.neutral),
         ),
       ),
       child: Row(
         children: [
-          Icon(Icons.date_range, color: AppColors.primary),
-          SizedBox(width: DesignTokens.spaceS),
+          const Icon(Icons.date_range, color: AppColors.primary),
+          const SizedBox(width: DesignTokens.spaceS),
           Text(
             DateFormat('dd/MM/yyyy').format(_selectedDate),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeM,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
@@ -124,7 +124,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
 
   Widget _buildReporteContent(ReportePedeteoJornadas reporte) {
     if (reporte.totalGeneral == 0) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -143,13 +143,13 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
     }
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Resumen total
           _buildTotalCard(reporte.totalGeneral),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Jornadas
           ...reporte.jornadas.map((jornada) => _buildJornadaCard(jornada)),
@@ -161,7 +161,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
   Widget _buildTotalCard(int total) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(DesignTokens.spaceL),
+      padding: const EdgeInsets.all(DesignTokens.spaceL),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
@@ -177,23 +177,23 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
       ),
       child: Column(
         children: [
-          Text(
+          const Text(
             'Total Pedeteados',
             style: TextStyle(
               fontSize: DesignTokens.fontSizeS,
               color: Colors.white70,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceXS),
+          const SizedBox(height: DesignTokens.spaceXS),
           Text(
             total.toString(),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeXXL,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          Text(
+          const Text(
             'unidades',
             style: TextStyle(
               fontSize: DesignTokens.fontSizeS,
@@ -207,7 +207,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
 
   Widget _buildJornadaCard(JornadaReporte jornada) {
     return Container(
-      margin: EdgeInsets.only(bottom: DesignTokens.spaceM),
+      margin: const EdgeInsets.only(bottom: DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -225,7 +225,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
         child: ExpansionTile(
           initiallyExpanded: jornada.total > 0,
           leading: Container(
-            padding: EdgeInsets.all(DesignTokens.spaceS),
+            padding: const EdgeInsets.all(DesignTokens.spaceS),
             decoration: BoxDecoration(
               color: _getJornadaColor(jornada.nombre).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -237,20 +237,20 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
           ),
           title: Text(
             jornada.nombre,
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: DesignTokens.fontSizeM,
             ),
           ),
           subtitle: Text(
             '${jornada.total} unidades',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               color: AppColors.textSecondary,
             ),
           ),
           trailing: Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spaceM,
               vertical: DesignTokens.spaceXS,
             ),
@@ -268,7 +268,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
           ),
           children: [
             if (jornada.personas.isEmpty)
-              Padding(
+              const Padding(
                 padding: EdgeInsets.all(DesignTokens.spaceM),
                 child: Text(
                   'Sin registros en esta jornada',
@@ -296,7 +296,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: EdgeInsets.symmetric(
+          tilePadding: const EdgeInsets.symmetric(
             horizontal: DesignTokens.spaceM,
             vertical: 0,
           ),
@@ -306,7 +306,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
             backgroundColor: AppColors.secondary.withValues(alpha: 0.1),
             child: Text(
               _getInitials(persona.nombre),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeXS,
                 fontWeight: FontWeight.bold,
                 color: AppColors.secondary,
@@ -315,20 +315,20 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
           ),
           title: Text(
             persona.nombre,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               fontWeight: FontWeight.w500,
             ),
           ),
           subtitle: Text(
             '${persona.resumenPorHora.length} horas activas',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: DesignTokens.fontSizeXS,
               color: AppColors.textSecondary,
             ),
           ),
           trailing: Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spaceS,
               vertical: DesignTokens.spaceXS,
             ),
@@ -338,7 +338,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
             ),
             child: Text(
               persona.cantidad.toString(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: AppColors.success,
                 fontSize: DesignTokens.fontSizeS,
@@ -355,7 +355,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
 
   Widget _buildResumenPorHora(List<ResumenHora> resumen, int total) {
     if (resumen.isEmpty) {
-      return Padding(
+      return const Padding(
         padding: EdgeInsets.all(DesignTokens.spaceM),
         child: Text(
           'Sin desglose disponible',
@@ -371,7 +371,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
     final maxCantidad = resumen.map((r) => r.cantidad).reduce((a, b) => a > b ? a : b);
 
     return Container(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         DesignTokens.spaceM,
         0,
         DesignTokens.spaceM,
@@ -383,7 +383,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
           final barWidth = maxCantidad > 0 ? (r.cantidad / maxCantidad) : 0.0;
 
           return Padding(
-            padding: EdgeInsets.only(bottom: DesignTokens.spaceXS),
+            padding: const EdgeInsets.only(bottom: DesignTokens.spaceXS),
             child: Row(
               children: [
                 // Hora
@@ -391,7 +391,7 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
                   width: 50,
                   child: Text(
                     r.hora,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textSecondary,
@@ -423,13 +423,13 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 // Cantidad y porcentaje
                 SizedBox(
                   width: 65,
                   child: Text(
                     '${r.cantidad} (${porcentaje.toStringAsFixed(0)}%)',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeXS,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,

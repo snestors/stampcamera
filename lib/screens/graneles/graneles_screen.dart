@@ -128,7 +128,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
           elevation: 0,
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          title: Text(
+          title: const Text(
             'Graneles',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -158,7 +158,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
           elevation: 0,
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          title: Text(
+          title: const Text(
             'Graneles',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -166,9 +166,9 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
             ),
           ),
         ),
-        body: Center(
+        body: const Center(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -177,7 +177,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
                   size: 64,
                   color: AppColors.textLight,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   'Sin acceso',
                   style: TextStyle(
@@ -186,7 +186,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   'No tienes permisos para ver este módulo.\nContacta a tu coordinador.',
                   textAlign: TextAlign.center,
@@ -208,7 +208,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
         foregroundColor: Colors.white,
         title: Row(
           children: [
-            Text(
+            const Text(
               'Graneles',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -226,7 +226,7 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
                 ),
                 child: Text(
                   permissions.zonaTipo!,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
                     fontWeight: FontWeight.w500,
                   ),
@@ -256,11 +256,11 @@ class _GranelesScreenState extends ConsumerState<GranelesScreen>
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white60,
               dividerColor: Colors.transparent,
-              labelStyle: TextStyle(
+              labelStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: DesignTokens.fontSizeXS,
               ),
-              unselectedLabelStyle: TextStyle(
+              unselectedLabelStyle: const TextStyle(
                 fontWeight: FontWeight.w500,
                 fontSize: DesignTokens.fontSizeXS,
               ),

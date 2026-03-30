@@ -111,7 +111,7 @@ class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
       ),
       title: Text(
         widget.vin,
-        style: TextStyle(
+        style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: DesignTokens.fontSizeM,
         ),
@@ -147,11 +147,11 @@ class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
       indicatorWeight: 3,
       labelColor: Colors.white,
       unselectedLabelColor: Colors.white70,
-      labelStyle: TextStyle(
+      labelStyle: const TextStyle(
         fontWeight: FontWeight.w600,
         fontSize: DesignTokens.fontSizeXS * 0.7,
       ),
-      unselectedLabelStyle: TextStyle(
+      unselectedLabelStyle: const TextStyle(
         fontWeight: FontWeight.w400,
         fontSize: DesignTokens.fontSizeXS * 0.7,
       ),
@@ -208,7 +208,7 @@ class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
             right: -8,
             top: -2,
             child: Container(
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: DesignTokens.spaceXS,
                 vertical: DesignTokens.spaceXXS,
               ),
@@ -220,13 +220,13 @@ class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
                   width: DesignTokens.borderWidthNormal,
                 ),
               ),
-              constraints: BoxConstraints(
+              constraints: const BoxConstraints(
                 minWidth: DesignTokens.iconM,
                 minHeight: DesignTokens.iconM,
               ),
               child: Text(
                 count.toString(),
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: DesignTokens.fontSizeM * 0.5,
                   fontWeight: FontWeight.bold,
@@ -297,7 +297,7 @@ class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
 
   Widget _buildScrollableTab({required Widget child}) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(DesignTokens.spaceL),
+      padding: const EdgeInsets.all(DesignTokens.spaceL),
       physics: const AlwaysScrollableScrollPhysics(),
       child: child,
     );

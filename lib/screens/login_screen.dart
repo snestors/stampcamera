@@ -301,7 +301,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             //const SizedBox(height: 5),
 
             // Título mejorado
-            Text(
+            const Text(
               'Bienvenido',
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeXXL,
@@ -311,7 +311,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
             ),
             const SizedBox(height: 6),
-            Text(
+            const Text(
               'Ingresa tus credenciales para continuar',
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeS,
@@ -354,7 +354,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 // Card de usuario para equipos personales
                 if (_isPersonalDevice) ...[
                   _buildPersonalDeviceCard(),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
                 ] else ...[
                   AppTextField(
                     controller: _usernameCtrl,
@@ -363,7 +363,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     prefixIcon: Icons.person_outline,
                     validator: FormValidators.validateRequired,
                   ),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
                 ],
 
                 AppTextField.password(
@@ -382,7 +382,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     },
                     dismissible: true,
                   ),
-                  SizedBox(height: DesignTokens.spaceL),
+                  const SizedBox(height: DesignTokens.spaceL),
                 ],
 
                 AppButton.primary(
@@ -394,7 +394,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                 // Botón biométrico para dispositivos personales
                 if (_isPersonalDevice && _biometricEnabled) ...[
-                  SizedBox(height: DesignTokens.spaceM),
+                  const SizedBox(height: DesignTokens.spaceM),
                   _buildBiometricButton(isLoading),
                 ],
               ],
@@ -411,7 +411,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       borderRadius: BorderRadius.circular(DesignTokens.radiusL),
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
+        padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
         decoration: BoxDecoration(
           border: Border.all(
             color: AppColors.primary.withValues(alpha: 0.3),
@@ -422,7 +422,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_biometricLoading) ...[
-              SizedBox(
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -430,8 +430,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   color: AppColors.primary,
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceS),
-              Text(
+              const SizedBox(width: DesignTokens.spaceS),
+              const Text(
                 'Verificando...',
                 style: TextStyle(
                   color: AppColors.primary,
@@ -440,13 +440,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
               ),
             ] else ...[
-              Icon(
+              const Icon(
                 Icons.fingerprint,
                 color: AppColors.primary,
                 size: 24,
               ),
-              SizedBox(width: DesignTokens.spaceS),
-              Text(
+              const SizedBox(width: DesignTokens.spaceS),
+              const Text(
                 'Ingresar con biométrico',
                 style: TextStyle(
                   color: AppColors.primary,
@@ -489,7 +489,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   color: AppColors.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.verified_user,
                   color: AppColors.primary,
                   size: 24,
@@ -500,7 +500,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Equipo Personal',
                       style: TextStyle(
                         fontSize: DesignTokens.fontSizeXS,
@@ -512,7 +512,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     const SizedBox(height: 2),
                     Text(
                       _usernameCtrl.text,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: DesignTokens.fontSizeL,
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.bold,
@@ -521,7 +521,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.lock_outline,
                 color: AppColors.textLight,
                 size: 20,
@@ -544,8 +544,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 InkWell(
                   onTap: _disableBiometric,
                   borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -554,7 +554,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           size: 16,
                           color: AppColors.success,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           'Biométrico',
                           style: TextStyle(
@@ -571,8 +571,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               InkWell(
                 onTap: _clearDeviceRegistration,
                 borderRadius: BorderRadius.circular(DesignTokens.radiusS),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -581,7 +581,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         size: 16,
                         color: AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         'Cambiar equipo',
                         style: TextStyle(
@@ -612,7 +612,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget _buildFooter() {
     return Text(
       'Versión $_appVersion',
-      style: TextStyle(
+      style: const TextStyle(
         color: AppColors.textLight,
         fontSize: DesignTokens.fontSizeXS,
       ),

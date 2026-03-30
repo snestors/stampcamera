@@ -31,14 +31,14 @@ class DetalleDanos extends ConsumerWidget {
         // ✅ Header de sección con botón agregar
         _buildSectionHeader(context),
 
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
 
         // ✅ Lista de daños
         ...danos.asMap().entries.map((entry) {
           final index = entry.key;
           final dano = entry.value;
           return Padding(
-            padding: EdgeInsets.only(bottom: DesignTokens.spaceM),
+            padding: const EdgeInsets.only(bottom: DesignTokens.spaceM),
             child: _buildDanoCard(context, ref, dano, index),
           );
         }),
@@ -81,7 +81,7 @@ class DetalleDanos extends ConsumerWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.error,
           foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: DesignTokens.spaceL,
             vertical: DesignTokens.spaceS,
           ),
@@ -118,13 +118,13 @@ class DetalleDanos extends ConsumerWidget {
 
           // ✅ Información adicional
           if (_hasAdditionalInfo(dano)) ...[
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildAdditionalInfo(context, dano),
           ],
 
           // ✅ Fotos del daño
           if (dano.imagenes.isNotEmpty) ...[
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildImagenesSection(dano.imagenes),
           ],
         ],
@@ -164,7 +164,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
         ),
 
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
 
         // ✅ Condición y badges
         Expanded(
@@ -188,7 +188,7 @@ class DetalleDanos extends ConsumerWidget {
                       color: VehicleHelpers.getCondicionColor(condicionTexto),
                     ),
                   ),
-                  SizedBox(width: DesignTokens.spaceXS),
+                  const SizedBox(width: DesignTokens.spaceXS),
                   Text(
                     condicionTexto,
                     style: TextStyle(
@@ -200,7 +200,7 @@ class DetalleDanos extends ConsumerWidget {
                 ],
               ),
 
-              SizedBox(height: DesignTokens.spaceXS),
+              const SizedBox(height: DesignTokens.spaceXS),
 
               // Badges de estado
               Wrap(
@@ -267,7 +267,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
         ),
 
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
 
         // ✅ Botón Delete
         Container(
@@ -347,7 +347,7 @@ class DetalleDanos extends ConsumerWidget {
           AppColors.error,
         ),
 
-        SizedBox(height: DesignTokens.spaceXS),
+        const SizedBox(height: DesignTokens.spaceXS),
 
         // Área del daño
         _buildInfoRow(
@@ -359,7 +359,7 @@ class DetalleDanos extends ConsumerWidget {
 
         // Zonas si existen
         if (dano.zonas.isNotEmpty) ...[
-          SizedBox(height: DesignTokens.spaceXS),
+          const SizedBox(height: DesignTokens.spaceXS),
           _buildInfoRow(
             Icons.location_on,
             'Zonas',
@@ -396,7 +396,7 @@ class DetalleDanos extends ConsumerWidget {
           // Responsabilidad
           if (dano.responsabilidad?.esp != null) ...[
             if (dano.descripcion != null && dano.descripcion!.isNotEmpty)
-              SizedBox(height: DesignTokens.spaceXS),
+              const SizedBox(height: DesignTokens.spaceXS),
             _buildInfoRow(
               Icons.assignment_ind,
               'Responsabilidad',
@@ -409,13 +409,13 @@ class DetalleDanos extends ConsumerWidget {
           if (dano.nDocumento != null) ...[
             if ((dano.descripcion != null && dano.descripcion!.isNotEmpty) ||
                 dano.responsabilidad?.esp != null)
-              SizedBox(height: DesignTokens.spaceXS),
+              const SizedBox(height: DesignTokens.spaceXS),
             _buildDocumentoRow(context, dano.nDocumento!),
           ],
 
           // Fecha y usuario
           if (dano.createAt != null) ...[
-            SizedBox(height: DesignTokens.spaceXS),
+            const SizedBox(height: DesignTokens.spaceXS),
             _buildInfoRow(
               Icons.access_time,
               'Fecha de Registro',
@@ -425,7 +425,7 @@ class DetalleDanos extends ConsumerWidget {
           ],
 
           if (dano.createBy != null) ...[
-            SizedBox(height: DesignTokens.spaceXS),
+            const SizedBox(height: DesignTokens.spaceXS),
             _buildInfoRow(
               Icons.person,
               'Registrado por',
@@ -440,7 +440,7 @@ class DetalleDanos extends ConsumerWidget {
 
   Widget _buildImagenesSection(List<DanoImagen> imagenes) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceS),
+      padding: const EdgeInsets.all(DesignTokens.spaceS),
       decoration: BoxDecoration(
         color: AppColors.success.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -466,7 +466,7 @@ class DetalleDanos extends ConsumerWidget {
                   color: AppColors.success,
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceXS),
+              const SizedBox(width: DesignTokens.spaceXS),
               Text(
                 'Fotos del Daño (${imagenes.length})',
                 style: const TextStyle(
@@ -478,7 +478,7 @@ class DetalleDanos extends ConsumerWidget {
             ],
           ),
 
-          SizedBox(height: DesignTokens.spaceXS),
+          const SizedBox(height: DesignTokens.spaceXS),
 
           Wrap(
             spacing: 8,
@@ -512,7 +512,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
           child: Icon(icon, size: 14, color: color),
         ),
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,7 +594,7 @@ class DetalleDanos extends ConsumerWidget {
           ),
           child: const Icon(Icons.article, size: 14, color: Color(0xFF00B4D8)),
         ),
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

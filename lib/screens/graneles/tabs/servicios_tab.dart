@@ -123,13 +123,13 @@ class _ServiciosTabState extends ConsumerState<ServiciosTab> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
         itemCount: servicios.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < servicios.length) {
             final servicio = servicios[index];
             return Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.spaceS),
+              padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _ServicioCard(
                 servicio: servicio,
                 onTap: () {
@@ -140,7 +140,7 @@ class _ServiciosTabState extends ConsumerState<ServiciosTab> {
           }
 
           return Container(
-            padding: EdgeInsets.all(DesignTokens.spaceL),
+            padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
             child: Column(
               children: [
@@ -217,7 +217,7 @@ class _ServicioCard extends StatelessWidget {
           children: [
             // Header con color de fondo
             Container(
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: DesignTokens.spaceM,
                 vertical: DesignTokens.spaceS,
               ),
@@ -225,7 +225,7 @@ class _ServicioCard extends StatelessWidget {
                 color: servicio.cierreServicio
                     ? AppColors.success.withValues(alpha: 0.08)
                     : AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(DesignTokens.radiusM),
                   topRight: Radius.circular(DesignTokens.radiusM),
                 ),
@@ -235,16 +235,16 @@ class _ServicioCard extends StatelessWidget {
                   // Código
                   Text(
                     servicio.codigo,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: DesignTokens.fontSizeM,
                       color: AppColors.primary,
                     ),
                   ),
-                  SizedBox(width: DesignTokens.spaceS),
+                  const SizedBox(width: DesignTokens.spaceS),
                   // Estado badge
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: DesignTokens.spaceS,
                       vertical: 2,
                     ),
@@ -256,7 +256,7 @@ class _ServicioCard extends StatelessWidget {
                     ),
                     child: Text(
                       servicio.cierreServicio ? 'CERRADO' : 'ACTIVO',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 10,
@@ -266,7 +266,7 @@ class _ServicioCard extends StatelessWidget {
                   const Spacer(),
                   // Tickets count
                   Container(
-                    padding: EdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: DesignTokens.spaceS,
                       vertical: 2,
                     ),
@@ -277,11 +277,11 @@ class _ServicioCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.receipt_long, size: 12, color: AppColors.textSecondary),
-                        SizedBox(width: 4),
+                        const Icon(Icons.receipt_long, size: 12, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
                         Text(
                           '${servicio.totalTickets}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: DesignTokens.fontSizeXS,
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
@@ -290,22 +290,22 @@ class _ServicioCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(width: DesignTokens.spaceXS),
-                  Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
+                  const SizedBox(width: DesignTokens.spaceXS),
+                  const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20),
                 ],
               ),
             ),
 
             // Contenido principal
             Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Nave (título principal)
                   Text(
                     servicio.naveNombre ?? 'Sin nave',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeM,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -313,43 +313,43 @@ class _ServicioCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: DesignTokens.spaceXS),
+                  const SizedBox(height: DesignTokens.spaceXS),
 
                   // Consignatario
                   Text(
                     servicio.consignatarioNombre ?? 'Sin consignatario',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: DesignTokens.fontSizeS,
                       color: AppColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: DesignTokens.spaceS),
+                  const SizedBox(height: DesignTokens.spaceS),
 
                   // Puerto y fecha en fila
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
-                      SizedBox(width: 4),
+                      const Icon(Icons.location_on, size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
                       Flexible(
                         child: Text(
                           servicio.puerto ?? 'Sin puerto',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: DesignTokens.fontSizeXS,
                             color: AppColors.textSecondary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      SizedBox(width: DesignTokens.spaceM),
-                      Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
-                      SizedBox(width: 4),
+                      const SizedBox(width: DesignTokens.spaceM),
+                      const Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
                       Text(
                         servicio.fechaAtraque != null
                             ? dateFormat.format(toLima(servicio.fechaAtraque!))
                             : 'Sin fecha',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           color: AppColors.textSecondary,
                         ),
@@ -359,13 +359,13 @@ class _ServicioCard extends StatelessWidget {
 
                   // Productos (chips compactos)
                   if (servicio.productos.isNotEmpty) ...[
-                    SizedBox(height: DesignTokens.spaceS),
+                    const SizedBox(height: DesignTokens.spaceS),
                     Wrap(
                       spacing: DesignTokens.spaceXS,
                       runSpacing: DesignTokens.spaceXS,
                       children: servicio.productos.take(3).map((p) {
                         return Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: DesignTokens.spaceS,
                             vertical: 2,
                           ),
@@ -375,7 +375,7 @@ class _ServicioCard extends StatelessWidget {
                           ),
                           child: Text(
                             '${p.producto} ${p.cantidad} TM',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.secondary,
                               fontWeight: FontWeight.w500,
@@ -387,10 +387,10 @@ class _ServicioCard extends StatelessWidget {
                     // Indicador si hay más productos
                     if (servicio.productos.length > 3)
                       Padding(
-                        padding: EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           '+${servicio.productos.length - 3} más',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 10,
                             color: AppColors.textSecondary,
                             fontStyle: FontStyle.italic,

@@ -3,8 +3,8 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 class AppInfoRow extends StatelessWidget {
   final IconData icon;
@@ -27,7 +27,7 @@ class AppInfoRow extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(DesignTokens.spaceXS),
+          padding: const EdgeInsets.all(DesignTokens.spaceXS),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -38,20 +38,20 @@ class AppInfoRow extends StatelessWidget {
             color: color,
           ),
         ),
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeXS * 0.8,
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              SizedBox(height: DesignTokens.spaceXXS),
+              const SizedBox(height: DesignTokens.spaceXXS),
               Text(
                 value,
                 style: TextStyle(

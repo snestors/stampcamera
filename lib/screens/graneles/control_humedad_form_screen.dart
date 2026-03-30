@@ -115,7 +115,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
         foregroundColor: Colors.white,
         title: Text(
           widget.isEditMode ? 'Editar Control' : 'Nuevo Control Temp/Humedad',
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeL,
           ),
@@ -138,19 +138,19 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
     return Form(
       key: _formKey,
       child: ListView(
-        padding: EdgeInsets.all(DesignTokens.spaceM),
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
         children: [
           // Servicio
           if (options.servicios.isNotEmpty) ...[
-            AppSectionHeader(icon: Icons.directions_boat, title: 'Servicio'),
-            SizedBox(height: DesignTokens.spaceS),
+            const AppSectionHeader(icon: Icons.directions_boat, title: 'Servicio'),
+            const SizedBox(height: DesignTokens.spaceS),
             _buildServicioSelector(options.servicios),
-            SizedBox(height: DesignTokens.spaceL),
+            const SizedBox(height: DesignTokens.spaceL),
           ],
 
           // Distribucion
-          AppSectionHeader(icon: Icons.category, title: 'Distribucion'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.category, title: 'Distribucion'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildDropdown(
             value: _selectedDistribucionId,
             items: options.distribuciones,
@@ -160,11 +160,11 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
             onChanged: (v) => setState(() => _selectedDistribucionId = v),
             validator: (v) => v == null ? 'Selecciona una distribucion' : null,
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Jornada
-          AppSectionHeader(icon: Icons.schedule, title: 'Jornada'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.schedule, title: 'Jornada'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildDropdown(
             value: _selectedJornadaId,
             items: options.jornadas,
@@ -174,17 +174,17 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
             onChanged: (v) => setState(() => _selectedJornadaId = v),
             validator: (v) => v == null ? 'Selecciona una jornada' : null,
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Hora muestra
-          AppSectionHeader(icon: Icons.access_time, title: 'Hora de Muestra'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.access_time, title: 'Hora de Muestra'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildDateTimeField(),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Temperatura y Humedad
-          AppSectionHeader(icon: Icons.thermostat, title: 'Temperatura y Humedad'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.thermostat, title: 'Temperatura y Humedad'),
+          const SizedBox(height: DesignTokens.spaceS),
           Row(
             children: [
               Expanded(
@@ -196,7 +196,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
                   ],
                   decoration: InputDecoration(
                     labelText: 'Temperatura (C) *',
-                    prefixIcon: Icon(Icons.thermostat, color: AppColors.error, size: 20),
+                    prefixIcon: const Icon(Icons.thermostat, color: AppColors.error, size: 20),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                     ),
@@ -206,7 +206,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
                   validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
                 ),
               ),
-              SizedBox(width: DesignTokens.spaceM),
+              const SizedBox(width: DesignTokens.spaceM),
               Expanded(
                 child: TextFormField(
                   controller: _humedadController,
@@ -216,7 +216,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
                   ],
                   decoration: InputDecoration(
                     labelText: 'Humedad (%) *',
-                    prefixIcon: Icon(Icons.water_drop, color: AppColors.info, size: 20),
+                    prefixIcon: const Icon(Icons.water_drop, color: AppColors.info, size: 20),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                     ),
@@ -228,17 +228,17 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
               ),
             ],
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Fotos
-          AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
+          const SizedBox(height: DesignTokens.spaceS),
           _buildPhotoSection(),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
 
           // Observaciones
-          AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+          const SizedBox(height: DesignTokens.spaceS),
           TextFormField(
             controller: _observacionesController,
             maxLines: 3,
@@ -251,7 +251,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
               fillColor: AppColors.surface,
             ),
           ),
-          SizedBox(height: DesignTokens.spaceXL),
+          const SizedBox(height: DesignTokens.spaceXL),
 
           // Submit
           _buildSubmitButton(),
@@ -263,11 +263,11 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
 
   Widget _buildServicioSelector(List<OptionItem> servicios) {
     return DropdownButtonFormField<int>(
-      value: _selectedServicioId,
+      initialValue: _selectedServicioId,
       decoration: InputDecoration(
         labelText: 'Servicio *',
         hintText: 'Seleccionar servicio...',
-        prefixIcon: Icon(Icons.directions_boat, color: AppColors.primary, size: 20),
+        prefixIcon: const Icon(Icons.directions_boat, color: AppColors.primary, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
         ),
@@ -280,7 +280,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
           value: s.id,
           child: Text(
             s.label,
-            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            style: const TextStyle(fontSize: DesignTokens.fontSizeS),
             overflow: TextOverflow.ellipsis,
           ),
         );
@@ -313,7 +313,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
     }
 
     return DropdownButtonFormField<int>(
-      value: value != null && items.any((i) => i.id == value) ? value : null,
+      initialValue: value != null && items.any((i) => i.id == value) ? value : null,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -330,7 +330,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
           value: item.id,
           child: Text(
             item.label,
-            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+            style: const TextStyle(fontSize: DesignTokens.fontSizeS),
             overflow: TextOverflow.ellipsis,
           ),
         );
@@ -374,7 +374,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: 'Hora de muestra *',
-          prefixIcon: Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
+          prefixIcon: const Icon(Icons.calendar_today, color: AppColors.primary, size: 20),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(DesignTokens.radiusM),
           ),
@@ -383,7 +383,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
         ),
         child: Text(
           dateTimeFormat.format(_horaMuestra),
-          style: TextStyle(fontSize: DesignTokens.fontSizeS),
+          style: const TextStyle(fontSize: DesignTokens.fontSizeS),
         ),
       ),
     );
@@ -399,7 +399,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
           currentImageUrl: _existingFotoTemperaturaUrl,
           onImageSelected: (path) => setState(() => _fotoTemperaturaPath = path),
         ),
-        SizedBox(height: DesignTokens.spaceS),
+        const SizedBox(height: DesignTokens.spaceS),
 
         // Foto humedad
         ReusableCameraCard(
@@ -408,7 +408,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
           currentImageUrl: _existingFotoHumedadUrl,
           onImageSelected: (path) => setState(() => _fotoHumedadPath = path),
         ),
-        SizedBox(height: DesignTokens.spaceS),
+        const SizedBox(height: DesignTokens.spaceS),
 
         // Foto extra
         ReusableCameraCard(
@@ -423,7 +423,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
 
   Widget _buildWarningBox(String text) {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceM),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
         color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -431,12 +431,12 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
-          SizedBox(width: DesignTokens.spaceS),
+          const Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.warning,
               ),
@@ -461,7 +461,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
           ),
         ),
         icon: _isSubmitting
-            ? SizedBox(
+            ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -476,7 +476,7 @@ class _ControlHumedadFormScreenState extends ConsumerState<ControlHumedadFormScr
               : widget.isEditMode
                   ? 'Guardar Cambios'
                   : 'Crear Registro',
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: DesignTokens.fontSizeM,
           ),

@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/design_tokens.dart';
+import 'package:stampcamera/core/theme/app_colors.dart';
+import 'package:stampcamera/core/theme/design_tokens.dart';
 
 enum AppTextFieldType {
   text,
@@ -440,11 +440,11 @@ class _AppTextFieldState extends State<AppTextField> {
       children: [
         if (widget.label != null) ...[
           _buildLabel(),
-          SizedBox(height: DesignTokens.spaceXS),
+          const SizedBox(height: DesignTokens.spaceXS),
         ],
         textField,
         if (widget.helperText != null && widget.errorText == null) ...[
-          SizedBox(height: DesignTokens.spaceXS),
+          const SizedBox(height: DesignTokens.spaceXS),
           _buildHelperText(),
         ],
       ],
@@ -457,14 +457,14 @@ class _AppTextFieldState extends State<AppTextField> {
         text: widget.label!,
         style:
             widget.customLabelStyle ??
-            TextStyle(
+            const TextStyle(
               fontSize: DesignTokens.fontSizeS,
               fontWeight: DesignTokens.fontWeightMedium,
               color: AppColors.textPrimary,
             ),
         children: [
           if (widget.isRequired)
-            TextSpan(
+            const TextSpan(
               text: ' *',
               style: TextStyle(
                 color: AppColors.error,
@@ -479,7 +479,7 @@ class _AppTextFieldState extends State<AppTextField> {
   Widget _buildHelperText() {
     return Text(
       widget.helperText!,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: DesignTokens.fontSizeXS,
         color: AppColors.textSecondary,
       ),
@@ -504,7 +504,7 @@ class _AppTextFieldState extends State<AppTextField> {
             color: AppColors.textSecondary,
           ),
       errorText: widget.errorText,
-      errorStyle: TextStyle(
+      errorStyle: const TextStyle(
         fontSize: DesignTokens.fontSizeXS,
         color: AppColors.error,
       ),

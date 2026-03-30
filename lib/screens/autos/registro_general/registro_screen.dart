@@ -110,7 +110,7 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
   /// Construye los chips de filtro
   Widget _buildFilterChips(RegistroGeneralNotifier notifier) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: DesignTokens.spaceS,
         vertical: DesignTokens.spaceXS,
       ),
@@ -123,28 +123,28 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
               isSelected: _currentFilter == RegistroFilterType.todos,
               onSelected: () => _onFilterChanged(RegistroFilterType.todos, notifier),
             ),
-            SizedBox(width: DesignTokens.spaceXS),
+            const SizedBox(width: DesignTokens.spaceXS),
             _buildFilterChip(
               label: 'Con Daños',
               isSelected: _currentFilter == RegistroFilterType.conDanos,
               onSelected: () => _onFilterChanged(RegistroFilterType.conDanos, notifier),
               color: AppColors.error,
             ),
-            SizedBox(width: DesignTokens.spaceXS),
+            const SizedBox(width: DesignTokens.spaceXS),
             _buildFilterChip(
               label: 'Sin Reg. Puerto',
               isSelected: _currentFilter == RegistroFilterType.sinRegistroPuerto,
               onSelected: () => _onFilterChanged(RegistroFilterType.sinRegistroPuerto, notifier),
               color: AppColors.warning,
             ),
-            SizedBox(width: DesignTokens.spaceXS),
+            const SizedBox(width: DesignTokens.spaceXS),
             _buildFilterChip(
               label: 'Sin Recepción',
               isSelected: _currentFilter == RegistroFilterType.sinRecepcion,
               onSelected: () => _onFilterChanged(RegistroFilterType.sinRecepcion, notifier),
               color: AppColors.accent,
             ),
-            SizedBox(width: DesignTokens.spaceXS),
+            const SizedBox(width: DesignTokens.spaceXS),
             _buildFilterChip(
               label: 'Pedeteados',
               isSelected: _currentFilter == RegistroFilterType.pedeteados,
@@ -184,7 +184,7 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
           color: isSelected ? chipColor : chipColor.withValues(alpha: 0.3),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceXS),
+      padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceXS),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
     );
@@ -254,13 +254,13 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: EdgeInsets.all(DesignTokens.spaceS),
+        padding: const EdgeInsets.all(DesignTokens.spaceS),
         itemCount: registros.length + (notifier.hasNextPage ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < registros.length) {
             final registro = registros[index];
             return Padding(
-              padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
+              padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceXS),
               child: GestureDetector(
                 onTap: () => _navigateToDetail(registro.vin),
                 child: DetalleRegistroCard(registro: registro),
@@ -269,9 +269,9 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
           }
 
           // Indicador de carga al final (sin botón manual)
-          return Padding(
+          return const Padding(
             padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
-            child: const Center(
+            child: Center(
               child: SizedBox(
                 width: 24,
                 height: 24,
@@ -309,7 +309,7 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
                 ? 'No se encontraron registros que coincidan con "${_searchController.text}"'
                 : 'Aún no hay registros disponibles',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary),
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
           if (isSearching) ...[

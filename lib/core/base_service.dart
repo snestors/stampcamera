@@ -1,4 +1,4 @@
-import '../models/paginated_response.dart';
+import 'package:stampcamera/models/paginated_response.dart';
 
 /// Interface base para servicios que interactúan con Django DRF ViewSets
 abstract class BaseService<T> {

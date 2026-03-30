@@ -56,16 +56,16 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
-                  Icon(Icons.security, size: 64, color: Colors.white),
+                  const Icon(Icons.security, size: 64, color: Colors.white),
                   //SizedBox(height: 16),
                   Image.asset('assets/splash/branding.png', height: 120),
-                  SizedBox(height: 1),
-                  Text(
+                  const SizedBox(height: 1),
+                  const Text(
                     'Aplicación de Inspección Vehicular',
                     style: TextStyle(fontSize: 16, color: Colors.white70),
                     textAlign: TextAlign.center,
                   ),
-                  Text(
+                  const Text(
                     'A&G Ajustadores y Peritos de Seguro',
                     style: TextStyle(
                       fontSize: 14,

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import '../services/device_service.dart';
-import '../services/http_service.dart';
+import 'package:stampcamera/services/device_service.dart';
+import 'package:stampcamera/services/http_service.dart';
 
 /// Estados posibles del dispositivo
 enum DeviceRegistrationStatus {

@@ -61,17 +61,17 @@ class DetalleRegistroCard extends ConsumerWidget {
             // Content
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(DesignTokens.spaceM),
+                padding: const EdgeInsets.all(DesignTokens.spaceM),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header: VIN + urgente + chevron
                     _buildHeader(r, isPedeteado),
-                    SizedBox(height: DesignTokens.spaceS),
+                    const SizedBox(height: DesignTokens.spaceS),
 
                     // Metadata: marca/modelo, color, nave
                     _buildMetadata(r),
-                    SizedBox(height: DesignTokens.spaceS),
+                    const SizedBox(height: DesignTokens.spaceS),
 
                     // Status badges
                     _buildStatusRow(r, isPedeteado),
@@ -90,7 +90,7 @@ class DetalleRegistroCard extends ConsumerWidget {
       children: [
         // Brand icon
         Container(
-          padding: EdgeInsets.all(DesignTokens.spaceS),
+          padding: const EdgeInsets.all(DesignTokens.spaceS),
           decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(DesignTokens.radiusS),
@@ -101,7 +101,7 @@ class DetalleRegistroCard extends ConsumerWidget {
             size: 20,
           ),
         ),
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
 
         // VIN + Serie
         Expanded(
@@ -110,7 +110,7 @@ class DetalleRegistroCard extends ConsumerWidget {
             children: [
               Text(
                 r.vin,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeM,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
@@ -122,7 +122,7 @@ class DetalleRegistroCard extends ConsumerWidget {
               if (r.serie != null && r.serie!.isNotEmpty)
                 Text(
                   'Serie: ${r.serie}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: DesignTokens.fontSizeXS,
                     color: AppColors.textSecondary,
                   ),
@@ -134,7 +134,7 @@ class DetalleRegistroCard extends ConsumerWidget {
         // Urgente badge
         if (r.urgente) ...[
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: DesignTokens.spaceS,
               vertical: 2,
             ),
@@ -142,7 +142,7 @@ class DetalleRegistroCard extends ConsumerWidget {
               color: AppColors.error,
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
             ),
-            child: Text(
+            child: const Text(
               'URGENTE',
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeXS,
@@ -151,10 +151,10 @@ class DetalleRegistroCard extends ConsumerWidget {
               ),
             ),
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
         ],
 
-        Icon(
+        const Icon(
           Icons.chevron_right,
           size: 20,
           color: AppColors.textSecondary,
@@ -187,10 +187,10 @@ class DetalleRegistroCard extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 12, color: AppColors.textSecondary),
-        SizedBox(width: DesignTokens.spaceXS),
+        const SizedBox(width: DesignTokens.spaceXS),
         Text(
           text,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: DesignTokens.fontSizeS,
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w500,
@@ -232,7 +232,7 @@ class DetalleRegistroCard extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: color),
-          SizedBox(width: DesignTokens.spaceXS),
+          const SizedBox(width: DesignTokens.spaceXS),
           Text(
             text,
             style: TextStyle(

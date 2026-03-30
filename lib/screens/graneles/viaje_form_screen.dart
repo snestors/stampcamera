@@ -2,7 +2,6 @@
 // FORMULARIO UNIFICADO DE VIAJE — 3 PASOS (MUELLE, BALANZA, ALMACEN)
 // =============================================================================
 import 'dart:async';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -466,7 +465,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       elevation: 0,
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
-      title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeL)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeL)),
     );
   }
 
@@ -480,7 +479,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               child: _buildStepContent(options),
             ),
           ),
@@ -497,7 +496,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
 
   Widget _buildStepperHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceM, vertical: DesignTokens.spaceS),
+      padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceM, vertical: DesignTokens.spaceS),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -507,9 +506,9 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       child: Row(
         children: [
           _buildStepButton(0, Icons.anchor, 'Muelle'),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           _buildStepButton(1, Icons.scale, 'Balanza'),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           _buildStepButton(2, Icons.warehouse, 'Almacen'),
         ],
       ),
@@ -545,7 +544,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               borderRadius: BorderRadius.circular(DesignTokens.radiusM),
               onTap: () => setState(() => _currentStep = step),
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
+                padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
                 alignment: Alignment.center,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -555,7 +554,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                       Icon(Icons.check, size: 16, color: fgColor)
                     else
                       Icon(icon, size: 16, color: fgColor),
-                    SizedBox(width: DesignTokens.spaceXS),
+                    const SizedBox(width: DesignTokens.spaceXS),
                     Flexible(
                       child: Text(
                         label,
@@ -619,13 +618,13 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 label: const Text('Anterior'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  side: BorderSide(color: AppColors.primary),
+                  side: const BorderSide(color: AppColors.primary),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusM)),
-                  padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
+                  padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
                 ),
               ),
             ),
-          if (_currentStep > 0) SizedBox(width: DesignTokens.spaceS),
+          if (_currentStep > 0) const SizedBox(width: DesignTokens.spaceS),
           if (_currentStep < 2)
             Expanded(
               child: OutlinedButton.icon(
@@ -634,25 +633,25 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 label: const Text('Siguiente'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  side: BorderSide(color: AppColors.primary),
+                  side: const BorderSide(color: AppColors.primary),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusM)),
-                  padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
+                  padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
                 ),
               ),
             ),
-          if (_currentStep < 2) SizedBox(width: DesignTokens.spaceS),
+          if (_currentStep < 2) const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             child: ElevatedButton.icon(
               onPressed: _isSubmitting ? null : _submitForm,
               icon: _isSubmitting
-                  ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                   : const Icon(Icons.save, size: 18),
               label: Text(_isSubmitting ? 'Guardando...' : 'Guardar'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusM)),
-                padding: EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
+                padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceM),
               ),
             ),
           ),
@@ -686,8 +685,8 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppSectionHeader(icon: Icons.receipt, title: 'Datos del Ticket'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.receipt, title: 'Datos del Ticket'),
+        const SizedBox(height: DesignTokens.spaceS),
 
         // N° Ticket
         TextFormField(
@@ -707,7 +706,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             return null;
           },
         ),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
 
         // BL
         _buildDropdown<int>(
@@ -727,7 +726,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           },
           validator: (value) => value == null ? 'Seleccione un BL' : null,
         ),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
 
         // Bodega (distribucion filtrada por BL)
         Builder(builder: (context) {
@@ -745,11 +744,11 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             onChanged: _selectedBlId == null ? null : (value) => setState(() => _selectedDistribucionId = value),
           );
         }),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Vehiculo y Transporte
-        AppSectionHeader(icon: Icons.local_shipping, title: 'Vehiculo y Transporte'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.local_shipping, title: 'Vehiculo y Transporte'),
+        const SizedBox(height: DesignTokens.spaceS),
         _buildAsyncSearchField(
           label: 'Placa',
           hint: 'Buscar placa (min. 2 caracteres)',
@@ -762,7 +761,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           onSelected: (item) => setState(() { _selectedPlacaId = item.id; _placaResults = []; }),
           onClear: () => setState(() { _selectedPlacaId = null; _placaSearchController.clear(); }),
         ),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
         _buildAsyncSearchField(
           label: 'Empresa de Transporte',
           hint: 'Buscar por RUC o nombre (min. 2 caracteres)',
@@ -775,25 +774,25 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           onSelected: (item) => setState(() { _selectedTransporteId = item.id; _transporteResults = []; }),
           onClear: () => setState(() { _selectedTransporteId = null; _transporteSearchController.clear(); }),
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Tiempos
-        AppSectionHeader(icon: Icons.access_time, title: 'Tiempos de Cargio'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.access_time, title: 'Tiempos de Cargio'),
+        const SizedBox(height: DesignTokens.spaceS),
         Row(
           children: [
             Expanded(child: _buildDateTimePicker(label: 'Inicio *', value: _inicioDescarga, onChanged: (v) => setState(() => _inicioDescarga = v))),
-            SizedBox(width: DesignTokens.spaceM),
+            const SizedBox(width: DesignTokens.spaceM),
             Expanded(child: _buildDateTimePicker(label: 'Fin *', value: _finDescarga, onChanged: (v) => setState(() => _finDescarga = v), hasError: _hasMuelleTimeError)),
           ],
         ),
         if (_hasMuelleTimeError)
           _buildTimeError('El fin de cargio debe ser mayor que el inicio'),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Observaciones
-        AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+        const SizedBox(height: DesignTokens.spaceS),
         TextFormField(
           controller: _muelleObservacionesController,
           maxLines: 3,
@@ -804,7 +803,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             fillColor: AppColors.surface,
           ),
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Foto
         ReusableCameraCard(
@@ -817,7 +816,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           cameraResolution: CameraResolution.high,
           primaryColor: AppColors.primary,
         ),
-        SizedBox(height: DesignTokens.spaceXL),
+        const SizedBox(height: DesignTokens.spaceXL),
       ],
     );
   }
@@ -838,8 +837,8 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Guia
-        AppSectionHeader(icon: Icons.description, title: 'Informacion de Guia'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.description, title: 'Informacion de Guia'),
+        const SizedBox(height: DesignTokens.spaceS),
         TextFormField(
           controller: _guiaController,
           decoration: InputDecoration(
@@ -852,11 +851,11 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           ),
           textCapitalization: TextCapitalization.characters,
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Almacen destino y seguridad
-        AppSectionHeader(icon: Icons.warehouse, title: 'Distribucion y Seguridad'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.warehouse, title: 'Distribucion y Seguridad'),
+        const SizedBox(height: DesignTokens.spaceS),
 
         ...[
           // Almacen destino
@@ -871,7 +870,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Almacen Destino',
                   hintText: 'Seleccionar almacen...',
-                  prefixIcon: Icon(Icons.warehouse, color: AppColors.primary, size: 20),
+                  prefixIcon: const Icon(Icons.warehouse, color: AppColors.primary, size: 20),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusM)),
                   filled: true,
                   fillColor: AppColors.surface,
@@ -879,29 +878,29 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 isExpanded: true,
                 items: distribuciones.map((dist) => DropdownMenuItem<int>(
                   value: dist.id,
-                  child: Text(dist.label, style: TextStyle(fontSize: DesignTokens.fontSizeS), overflow: TextOverflow.ellipsis),
+                  child: Text(dist.label, style: const TextStyle(fontSize: DesignTokens.fontSizeS), overflow: TextOverflow.ellipsis),
                 )).toList(),
                 onChanged: (value) => setState(() => _selectedDistribucionAlmacenId = value),
               );
             }),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
           ] else if (_selectedBlId == null) ...[
-            Text(
+            const Text(
               'Seleccione un BL en el paso 1 para cargar los almacenes',
               style: TextStyle(fontSize: DesignTokens.fontSizeS, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
           ] else ...[
-            Text(
+            const Text(
               'No hay almacenes configurados para el BL seleccionado',
               style: TextStyle(fontSize: DesignTokens.fontSizeS, color: AppColors.textSecondary, fontStyle: FontStyle.italic),
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
           ],
 
           // Precinto (busqueda async)
           _buildPrecintoSearch(),
-          SizedBox(height: DesignTokens.spaceM),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // Permiso
           if (permisos.isNotEmpty) ...[
@@ -914,26 +913,26 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Permiso',
                   hintText: 'Seleccionar permiso (opcional)...',
-                  prefixIcon: Icon(Icons.badge, color: AppColors.primary, size: 20),
+                  prefixIcon: const Icon(Icons.badge, color: AppColors.primary, size: 20),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusM)),
                   filled: true,
                   fillColor: AppColors.surface,
                 ),
                 isExpanded: true,
                 items: [
-                  DropdownMenuItem<int>(value: null, child: Text('Sin permiso', style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic))),
-                  ...permisos.map((p) => DropdownMenuItem<int>(value: p.id, child: Text(p.label, style: TextStyle(fontSize: DesignTokens.fontSizeS)))),
+                  const DropdownMenuItem<int>(value: null, child: Text('Sin permiso', style: TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic))),
+                  ...permisos.map((p) => DropdownMenuItem<int>(value: p.id, child: Text(p.label, style: const TextStyle(fontSize: DesignTokens.fontSizeS)))),
                 ],
                 onChanged: (value) => setState(() => _selectedPermisoId = value),
               );
             }),
           ],
         ],
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Entrada (fecha + balanza string)
-        AppSectionHeader(icon: Icons.login, title: 'Entrada'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.login, title: 'Entrada'),
+        const SizedBox(height: DesignTokens.spaceS),
         _buildBalanzaDateTimeRow(
           label: 'Fecha Entrada',
           value: _fechaEntradaBalanza,
@@ -941,11 +940,11 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           balanzaController: _balanzaEntradaStrController,
           balanzaHint: 'B1',
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Salida (fecha + balanza string)
-        AppSectionHeader(icon: Icons.logout, title: 'Salida'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.logout, title: 'Salida'),
+        const SizedBox(height: DesignTokens.spaceS),
         _buildBalanzaDateTimeRow(
           label: 'Fecha Salida',
           value: _fechaSalidaBalanza,
@@ -956,46 +955,46 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         ),
         if (_hasBalanzaTimeError)
           _buildTimeError('La fecha de salida debe ser mayor que la de entrada'),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Pesos
-        AppSectionHeader(icon: Icons.scale, title: 'Pesos (TM)'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.scale, title: 'Pesos (TM)'),
+        const SizedBox(height: DesignTokens.spaceS),
         _buildWeightFields(
           brutoController: _balanzaPesoBrutoController,
           taraController: _balanzaPesoTaraController,
           netoController: _balanzaPesoNetoController,
           bagsController: _balanzaBagsController,
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Fecha envio WP
-        AppSectionHeader(icon: Icons.send, title: 'Envio WhatsApp'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.send, title: 'Envio WhatsApp'),
+        const SizedBox(height: DesignTokens.spaceS),
         _buildDateTimePicker(label: 'Fecha Envio WP', value: _fechaEnvioWp, onChanged: (v) => setState(() => _fechaEnvioWp = v)),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Fotos
-        AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
+        const SizedBox(height: DesignTokens.spaceS),
         ReusableCameraCard(
           title: 'Foto 1',
           currentImagePath: _balanzaFoto1Path,
           currentImageUrl: _existingBalanzaFoto1Url,
           onImageSelected: (path) => setState(() => _balanzaFoto1Path = path),
         ),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
         ReusableCameraCard(
           title: 'Foto 2 (Opcional)',
           currentImagePath: _balanzaFoto2Path,
           currentImageUrl: _existingBalanzaFoto2Url,
           onImageSelected: (path) => setState(() => _balanzaFoto2Path = path),
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Observaciones
-        AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+        const SizedBox(height: DesignTokens.spaceS),
         TextFormField(
           controller: _balanzaObservacionesController,
           maxLines: 3,
@@ -1007,7 +1006,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           ),
           textCapitalization: TextCapitalization.sentences,
         ),
-        SizedBox(height: DesignTokens.spaceXL),
+        const SizedBox(height: DesignTokens.spaceXL),
       ],
     );
   }
@@ -1032,11 +1031,11 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       children: [
         // Badge de almacen destino
         if (almacenLabel != null) ...[
-          AppSectionHeader(icon: Icons.warehouse, title: 'Almacen Destino'),
-          SizedBox(height: DesignTokens.spaceS),
+          const AppSectionHeader(icon: Icons.warehouse, title: 'Almacen Destino'),
+          const SizedBox(height: DesignTokens.spaceS),
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(DesignTokens.spaceM),
+            padding: const EdgeInsets.all(DesignTokens.spaceM),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -1044,66 +1043,66 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.warehouse, color: AppColors.primary, size: 20),
-                SizedBox(width: DesignTokens.spaceS),
+                const Icon(Icons.warehouse, color: AppColors.primary, size: 20),
+                const SizedBox(width: DesignTokens.spaceS),
                 Expanded(
                   child: Text(
                     almacenLabel,
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: DesignTokens.fontSizeS, color: AppColors.primary),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: DesignTokens.fontSizeS, color: AppColors.primary),
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(height: DesignTokens.spaceL),
+          const SizedBox(height: DesignTokens.spaceL),
         ],
 
         // Tiempos
-        AppSectionHeader(icon: Icons.access_time, title: 'Tiempos de Almacen'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.access_time, title: 'Tiempos de Almacen'),
+        const SizedBox(height: DesignTokens.spaceS),
         Row(
           children: [
             Expanded(child: _buildDateTimePicker(label: 'Entrada *', value: _fechaEntradaAlmacen, onChanged: (v) => setState(() => _fechaEntradaAlmacen = v))),
-            SizedBox(width: DesignTokens.spaceM),
+            const SizedBox(width: DesignTokens.spaceM),
             Expanded(child: _buildDateTimePicker(label: 'Salida *', value: _fechaSalidaAlmacen, onChanged: (v) => setState(() => _fechaSalidaAlmacen = v), hasError: _hasAlmacenTimeError)),
           ],
         ),
         if (_hasAlmacenTimeError)
           _buildTimeError('La entrada debe ser anterior a la salida'),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Pesos
-        AppSectionHeader(icon: Icons.scale, title: 'Pesos (TM)'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.scale, title: 'Pesos (TM)'),
+        const SizedBox(height: DesignTokens.spaceS),
         _buildWeightFields(
           brutoController: _almacenPesoBrutoController,
           taraController: _almacenPesoTaraController,
           netoController: _almacenPesoNetoController,
           bagsController: _almacenBagsController,
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Fotos
-        AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.camera_alt, title: 'Fotos'),
+        const SizedBox(height: DesignTokens.spaceS),
         ReusableCameraCard(
           title: 'Foto 1',
           currentImagePath: _almacenFoto1Path,
           currentImageUrl: _existingAlmacenFoto1Url,
           onImageSelected: (path) => setState(() => _almacenFoto1Path = path),
         ),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
         ReusableCameraCard(
           title: 'Foto 2 (Opcional)',
           currentImagePath: _almacenFoto2Path,
           currentImageUrl: _existingAlmacenFoto2Url,
           onImageSelected: (path) => setState(() => _almacenFoto2Path = path),
         ),
-        SizedBox(height: DesignTokens.spaceL),
+        const SizedBox(height: DesignTokens.spaceL),
 
         // Observaciones
-        AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
-        SizedBox(height: DesignTokens.spaceS),
+        const AppSectionHeader(icon: Icons.notes, title: 'Observaciones'),
+        const SizedBox(height: DesignTokens.spaceS),
         TextFormField(
           controller: _almacenObservacionesController,
           maxLines: 3,
@@ -1115,7 +1114,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           ),
           textCapitalization: TextCapitalization.sentences,
         ),
-        SizedBox(height: DesignTokens.spaceXL),
+        const SizedBox(height: DesignTokens.spaceXL),
       ],
     );
   }
@@ -1193,7 +1192,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         ),
         if (results.isNotEmpty && selectedId == null)
           Container(
-            margin: EdgeInsets.only(top: DesignTokens.spaceXS),
+            margin: const EdgeInsets.only(top: DesignTokens.spaceXS),
             constraints: const BoxConstraints(maxHeight: 200),
             decoration: BoxDecoration(
               color: AppColors.surface,
@@ -1209,7 +1208,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 final item = results[index];
                 return ListTile(
                   dense: true,
-                  title: Text(item.label, style: TextStyle(fontSize: DesignTokens.fontSizeS)),
+                  title: Text(item.label, style: const TextStyle(fontSize: DesignTokens.fontSizeS)),
                   onTap: () {
                     controller.text = item.label;
                     onSelected(item);
@@ -1228,7 +1227,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       children: [
         if (_selectedPrecinto != null) ...[
           Container(
-            padding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceM, vertical: DesignTokens.spaceS),
+            padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceM, vertical: DesignTokens.spaceS),
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -1236,9 +1235,9 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.lock, size: 18, color: AppColors.primary),
-                SizedBox(width: DesignTokens.spaceS),
-                Expanded(child: Text(_selectedPrecinto!.label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: DesignTokens.fontSizeS))),
+                const Icon(Icons.lock, size: 18, color: AppColors.primary),
+                const SizedBox(width: DesignTokens.spaceS),
+                Expanded(child: Text(_selectedPrecinto!.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: DesignTokens.fontSizeS))),
                 IconButton(
                   icon: const Icon(Icons.close, size: 18, color: AppColors.error),
                   onPressed: () => setState(() { _selectedPrecinto = null; _selectedPrecintoId = null; }),
@@ -1266,7 +1265,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           ),
           if (_precintoResults.isNotEmpty)
             Container(
-              margin: EdgeInsets.only(top: DesignTokens.spaceS),
+              margin: const EdgeInsets.only(top: DesignTokens.spaceS),
               constraints: const BoxConstraints(maxHeight: 150),
               decoration: BoxDecoration(
                 border: Border.all(color: AppColors.neutral),
@@ -1275,13 +1274,13 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: _precintoResults.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (_, index) {
                   final precinto = _precintoResults[index];
                   return ListTile(
                     dense: true,
-                    leading: Icon(Icons.lock, size: 18, color: AppColors.primary),
-                    title: Text(precinto.label, style: TextStyle(fontSize: DesignTokens.fontSizeS)),
+                    leading: const Icon(Icons.lock, size: 18, color: AppColors.primary),
+                    title: Text(precinto.label, style: const TextStyle(fontSize: DesignTokens.fontSizeS)),
                     onTap: () => setState(() {
                       _selectedPrecinto = precinto;
                       _selectedPrecintoId = precinto.id;
@@ -1329,7 +1328,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       child: Builder(builder: (context) {
         final display = toLima(value);
         return Container(
-          padding: EdgeInsets.all(DesignTokens.spaceM),
+          padding: const EdgeInsets.all(DesignTokens.spaceM),
           decoration: BoxDecoration(
             color: hasError ? AppColors.error.withValues(alpha: 0.05) : AppColors.surface,
             borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -1339,16 +1338,16 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label, style: TextStyle(fontSize: DesignTokens.fontSizeXS, color: hasError ? AppColors.error : AppColors.textSecondary)),
-              SizedBox(height: DesignTokens.spaceXS),
+              const SizedBox(height: DesignTokens.spaceXS),
               Row(children: [
                 Icon(Icons.calendar_today, size: 16, color: hasError ? AppColors.error : AppColors.primary),
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 Text('${display.day}/${display.month}/${display.year}', style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600, color: hasError ? AppColors.error : null)),
               ]),
-              SizedBox(height: DesignTokens.spaceXS),
+              const SizedBox(height: DesignTokens.spaceXS),
               Row(children: [
                 Icon(Icons.access_time, size: 16, color: hasError ? AppColors.error : AppColors.primary),
-                SizedBox(width: DesignTokens.spaceS),
+                const SizedBox(width: DesignTokens.spaceS),
                 Text('${display.hour.toString().padLeft(2, '0')}:${display.minute.toString().padLeft(2, '0')}', style: TextStyle(fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w600, color: hasError ? AppColors.error : null)),
               ]),
             ],
@@ -1397,7 +1396,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             child: InputDecorator(
               decoration: InputDecoration(
                 labelText: '$label *',
-                labelStyle: hasError ? TextStyle(color: AppColors.error) : null,
+                labelStyle: hasError ? const TextStyle(color: AppColors.error) : null,
                 prefixIcon: Icon(Icons.access_time, size: 20, color: hasError ? AppColors.error : null),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -1409,7 +1408,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 ),
                 filled: true,
                 fillColor: hasError ? AppColors.error.withValues(alpha: 0.05) : AppColors.surface,
-                contentPadding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceS, vertical: DesignTokens.spaceS),
+                contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceS, vertical: DesignTokens.spaceS),
               ),
               child: Text(
                 dateFormat.format(toLima(value)),
@@ -1418,7 +1417,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             ),
           ),
         ),
-        SizedBox(width: DesignTokens.spaceS),
+        const SizedBox(width: DesignTokens.spaceS),
         Expanded(
           flex: 1,
           child: TextFormField(
@@ -1430,12 +1429,12 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               filled: true,
               fillColor: AppColors.surface,
               counterText: '',
-              contentPadding: EdgeInsets.symmetric(horizontal: DesignTokens.spaceS, vertical: DesignTokens.spaceM),
+              contentPadding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceS, vertical: DesignTokens.spaceM),
             ),
             maxLength: 2,
             textCapitalization: TextCapitalization.characters,
             textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: DesignTokens.fontSizeM),
           ),
         ),
       ],
@@ -1468,7 +1467,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}'))],
             ),
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             child: TextFormField(
               controller: taraController,
@@ -1484,7 +1483,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
             ),
           ),
         ]),
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
         Row(children: [
           Expanded(
             child: TextFormField(
@@ -1507,7 +1506,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}'))],
             ),
           ),
-          SizedBox(width: DesignTokens.spaceS),
+          const SizedBox(width: DesignTokens.spaceS),
           Expanded(
             child: TextFormField(
               controller: bagsController,
@@ -1524,21 +1523,21 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
           ),
         ]),
         if (hasNetoError) ...[
-          SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceS),
           Container(
-            padding: EdgeInsets.all(DesignTokens.spaceS),
+            padding: const EdgeInsets.all(DesignTokens.spaceS),
             decoration: BoxDecoration(
               color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(DesignTokens.radiusS),
               border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: Row(children: [
-              Icon(Icons.warning_amber, color: AppColors.error, size: 18),
-              SizedBox(width: DesignTokens.spaceS),
+              const Icon(Icons.warning_amber, color: AppColors.error, size: 18),
+              const SizedBox(width: DesignTokens.spaceS),
               Expanded(
                 child: Text(
                   'Peso Neto no coincide. Esperado: ${expected.toStringAsFixed(3)} TM',
-                  style: TextStyle(color: AppColors.error, fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w500),
+                  style: const TextStyle(color: AppColors.error, fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w500),
                 ),
               ),
             ]),
@@ -1550,11 +1549,11 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
 
   Widget _buildTimeError(String message) {
     return Padding(
-      padding: EdgeInsets.only(top: DesignTokens.spaceXS),
+      padding: const EdgeInsets.only(top: DesignTokens.spaceXS),
       child: Row(children: [
-        Icon(Icons.error_outline, size: 14, color: AppColors.error),
-        SizedBox(width: DesignTokens.spaceXS),
-        Expanded(child: Text(message, style: TextStyle(color: AppColors.error, fontSize: DesignTokens.fontSizeXS))),
+        const Icon(Icons.error_outline, size: 14, color: AppColors.error),
+        const SizedBox(width: DesignTokens.spaceXS),
+        Expanded(child: Text(message, style: const TextStyle(color: AppColors.error, fontSize: DesignTokens.fontSizeXS))),
       ]),
     );
   }
@@ -1668,45 +1667,45 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusL)),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: AppColors.warning, size: 28),
             SizedBox(width: DesignTokens.spaceS),
-            const Text('Campos pendientes', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Campos pendientes', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Corrige los siguientes errores antes de guardar:',
               style: TextStyle(color: AppColors.textSecondary, fontSize: DesignTokens.fontSizeS),
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
             ...errors.entries.map((entry) => Padding(
-              padding: EdgeInsets.only(bottom: DesignTokens.spaceM),
+              padding: const EdgeInsets.only(bottom: DesignTokens.spaceM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     entry.key,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
                       fontSize: DesignTokens.fontSizeS,
                     ),
                   ),
-                  SizedBox(height: DesignTokens.spaceXS),
+                  const SizedBox(height: DesignTokens.spaceXS),
                   ...entry.value.map((msg) => Padding(
-                    padding: EdgeInsets.only(left: DesignTokens.spaceM, bottom: 2),
+                    padding: const EdgeInsets.only(left: DesignTokens.spaceM, bottom: 2),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.circle, size: 6, color: AppColors.error),
-                        SizedBox(width: DesignTokens.spaceS),
+                        const Icon(Icons.circle, size: 6, color: AppColors.error),
+                        const SizedBox(width: DesignTokens.spaceS),
                         Expanded(
-                          child: Text(msg, style: TextStyle(fontSize: DesignTokens.fontSizeS)),
+                          child: Text(msg, style: const TextStyle(fontSize: DesignTokens.fontSizeS)),
                         ),
                       ],
                     ),
@@ -1719,7 +1718,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Entendido', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+            child: const Text('Entendido', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
           ),
         ],
       ),

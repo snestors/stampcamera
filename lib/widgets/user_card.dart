@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
+import 'package:stampcamera/models/user_model.dart';
 
 class UserCard extends StatelessWidget {
   final UserModel user;

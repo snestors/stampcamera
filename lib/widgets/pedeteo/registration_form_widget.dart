@@ -87,13 +87,13 @@ class _PedeteoRegistrationFormState extends ConsumerState<PedeteoRegistrationFor
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.warning_amber_rounded,
               size: 64,
               color: Colors.white,
             ),
-            SizedBox(height: DesignTokens.spaceM),
-            Text(
+            const SizedBox(height: DesignTokens.spaceM),
+            const Text(
               'UNIDAD URGENTE',
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeL,
@@ -102,7 +102,7 @@ class _PedeteoRegistrationFormState extends ConsumerState<PedeteoRegistrationFor
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: DesignTokens.spaceS),
+            const SizedBox(height: DesignTokens.spaceS),
             Text(
               'Esta unidad tiene prioridad alta',
               style: TextStyle(
@@ -116,7 +116,7 @@ class _PedeteoRegistrationFormState extends ConsumerState<PedeteoRegistrationFor
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: const Text(
               'ENTENDIDO',
               style: TextStyle(
                 color: Colors.white,

@@ -1,4 +1,4 @@
-import '../models/user_model.dart';
+import 'package:stampcamera/models/user_model.dart';
 
 // lib/models/auth_state.dart - Versión actualizada
 enum AuthStatus {

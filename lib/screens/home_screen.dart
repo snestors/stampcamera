@@ -82,7 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.settings, color: AppColors.primary, size: 20),
+                child: const Icon(Icons.settings, color: AppColors.primary, size: 20),
               ),
               onPressed: () => _showSettingsDialog(context),
               tooltip: 'Configuración',
@@ -154,8 +154,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildUserHeader(AsyncValue authState) {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.all(DesignTokens.spaceL),
-      padding: EdgeInsets.all(DesignTokens.spaceXL),
+      margin: const EdgeInsets.all(DesignTokens.spaceL),
+      padding: const EdgeInsets.all(DesignTokens.spaceXL),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -188,11 +188,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: DesignTokens.spaceL),
+      margin: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceL),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
+          const Padding(
             padding: EdgeInsets.only(
               left: DesignTokens.spaceXS,
               bottom: DesignTokens.spaceXS,
@@ -225,8 +225,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildModulesGrid(BuildContext context, dynamic user) {
     final List<dynamic> allModules = user.availableModules;
 
-    // Filtrar solo módulos habilitados (ocultar los inactivos)
-    final modules = allModules.where((m) => m.isEnabled == true).toList();
+    // Filtrar: habilitados, quitar dashboard y casos
+    final modules = allModules
+        .where((m) => m.isEnabled == true)
+        .where((m) => m.id != 'dashboard' && m.id != 'casos')
+        .toList();
+
+    // Ordenar: camera → asistencia → autos → graneles → resto
+    const orden = ['camera', 'asistencia', 'autos', 'graneles'];
+    modules.sort((a, b) {
+      final ia = orden.indexOf(a.id);
+      final ib = orden.indexOf(b.id);
+      return (ia == -1 ? 99 : ia).compareTo(ib == -1 ? 99 : ib);
+    });
 
     // Si el usuario no tiene módulos disponibles (clientes externos)
     if (modules.isEmpty) {
@@ -253,14 +264,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Mensaje cuando el usuario no tiene acceso a la app móvil
   Widget _buildNoAccessMessage() {
     return Container(
-      padding: EdgeInsets.all(DesignTokens.spaceXL),
-      margin: EdgeInsets.symmetric(vertical: DesignTokens.spaceL),
+      padding: const EdgeInsets.all(DesignTokens.spaceXL),
+      margin: const EdgeInsets.symmetric(vertical: DesignTokens.spaceL),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
       ),
-      child: Column(
+      child: const Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
@@ -314,37 +325,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   _ModuleConfig _getModuleConfig(String moduleId) {
     switch (moduleId) {
       case 'camera':
-        return _ModuleConfig(
+        return const _ModuleConfig(
           icon: Icons.camera_alt,
           color: AppColors.primary,
           subtitle: 'Captura y gestiona fotos',
         );
       case 'asistencia':
-        return _ModuleConfig(
+        return const _ModuleConfig(
           icon: Icons.access_time,
           color: AppColors.secondary,
           subtitle: 'Registro de entrada y salida',
         );
       case 'autos':
-        return _ModuleConfig(
+        return const _ModuleConfig(
           icon: Icons.directions_car,
           color: AppColors.accent,
           subtitle: 'Gestión de vehículos',
         );
       case 'graneles':
-        return _ModuleConfig(
+        return const _ModuleConfig(
           icon: Icons.directions_boat,
           color: AppColors.warning,
           subtitle: 'Gestión de graneles',
         );
       case 'casos':
-        return _ModuleConfig(
+        return const _ModuleConfig(
           icon: Icons.folder_shared,
           color: AppColors.info,
           subtitle: 'Casos y documentos',
         );
       default:
-        return _ModuleConfig(
+        return const _ModuleConfig(
           icon: Icons.apps,
           color: AppColors.textSecondary,
           subtitle: 'Módulo disponible',
@@ -415,15 +426,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               'Para acceder a este módulo necesitas tener una asistencia activa.',
               style: TextStyle(fontWeight: FontWeight.w500),
             ),
-            SizedBox(height: DesignTokens.spaceM),
+            const SizedBox(height: DesignTokens.spaceM),
             Container(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
+              padding: const EdgeInsets.all(DesignTokens.spaceM),
               decoration: BoxDecoration(
                 color: AppColors.info.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
                 border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.info_outline, color: AppColors.info, size: 20),
                   SizedBox(width: DesignTokens.spaceS),
@@ -541,14 +552,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildFooter() {
     return Container(
-      margin: EdgeInsets.all(DesignTokens.spaceS),
-      padding: EdgeInsets.all(DesignTokens.spaceL),
+      margin: const EdgeInsets.all(DesignTokens.spaceS),
+      padding: const EdgeInsets.all(DesignTokens.spaceL),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         border: Border.all(color: AppColors.neutral),
       ),
-      child: Row(
+      child: const Row(
         children: [
           Icon(
             Icons.info_outline,
@@ -590,11 +601,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.logout, color: Colors.red),
-            const SizedBox(width: 8),
-            const Text('Cerrar Sesión'),
+            SizedBox(width: 8),
+            Text('Cerrar Sesión'),
           ],
         ),
         content: const Text(
@@ -636,11 +647,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusL),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.settings, color: AppColors.primary),
-            const SizedBox(width: 8),
-            const Text('Configuración'),
+            SizedBox(width: 8),
+            Text('Configuración'),
           ],
         ),
         content: Column(
@@ -655,7 +666,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: AppColors.info.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.info_outline, color: AppColors.info),
+                child: const Icon(Icons.info_outline, color: AppColors.info),
               ),
               title: const Text('Acerca de'),
               subtitle: const Text('Información de la aplicación'),
@@ -692,13 +703,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.info_outline, color: AppColors.primary),
+              child: const Icon(Icons.info_outline, color: AppColors.primary),
             ),
             const SizedBox(width: 12),
             const Text('Acerca de'),
           ],
         ),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -710,7 +721,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Aplicación para gestión de vehículos con cámara de sellos.',
               style: TextStyle(
@@ -718,11 +729,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               children: [
                 Icon(Icons.business, color: AppColors.textSecondary, size: 16),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   'A&G Logistics',
                   style: TextStyle(
@@ -787,7 +798,7 @@ class _AppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
         onTap: isDisabled ? null : onTap, // Bloqueado aún permite tap para mostrar diálogo
         child: Container(
-          padding: EdgeInsets.all(DesignTokens.spaceS),
+          padding: const EdgeInsets.all(DesignTokens.spaceS),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
             gradient: isDisabled
@@ -815,7 +826,7 @@ class _AppCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                   Container(
-                    padding: EdgeInsets.all(DesignTokens.spaceL),
+                    padding: const EdgeInsets.all(DesignTokens.spaceL),
                     decoration: BoxDecoration(
                       color: isDisabled
                           ? AppColors.neutral.withValues(alpha: 0.2)
@@ -828,7 +839,7 @@ class _AppCard extends StatelessWidget {
                       color: isDisabled ? AppColors.textLight : effectiveColor,
                     ),
                   ),
-                  SizedBox(height: DesignTokens.spaceS),
+                  const SizedBox(height: DesignTokens.spaceS),
                   Text(
                     title,
                     style: TextStyle(
@@ -840,7 +851,7 @@ class _AppCard extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: DesignTokens.spaceXS),
+                  const SizedBox(height: DesignTokens.spaceXS),
                   Text(
                     subtitle,
                     style: TextStyle(
@@ -911,7 +922,7 @@ class _UserInfo extends StatelessWidget {
               child: Center(
                 child: Text(
                   userInitials,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: DesignTokens.fontSizeM,
                     fontWeight: FontWeight.bold,
@@ -919,12 +930,12 @@ class _UserInfo extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: DesignTokens.spaceL),
+            const SizedBox(width: DesignTokens.spaceL),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     '¡Hola!',
                     style: TextStyle(
                       color: Colors.white,
@@ -934,7 +945,7 @@ class _UserInfo extends StatelessWidget {
                   ),
                   Text(
                     displayName,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: DesignTokens.fontSizeM,
                       fontWeight: FontWeight.bold,
@@ -943,7 +954,7 @@ class _UserInfo extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.waving_hand,
               color: AppColors.warning,
               size: DesignTokens.iconL,
@@ -951,9 +962,9 @@ class _UserInfo extends StatelessWidget {
           ],
         ),
         // Estado de asistencia
-        SizedBox(height: DesignTokens.spaceM),
+        const SizedBox(height: DesignTokens.spaceM),
         Container(
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: DesignTokens.spaceM,
             vertical: DesignTokens.spaceS,
           ),
@@ -976,14 +987,14 @@ class _UserInfo extends StatelessWidget {
                 color: hasAsistencia ? Colors.green[300] : Colors.orange[300],
                 size: 16,
               ),
-              SizedBox(width: DesignTokens.spaceS),
+              const SizedBox(width: DesignTokens.spaceS),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       hasAsistencia ? 'Asistencia Activa' : 'Sin Asistencia',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: DesignTokens.fontSizeXS,
                         fontWeight: FontWeight.w600,
@@ -1052,9 +1063,9 @@ class _LoadingUserInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+        CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
         SizedBox(width: DesignTokens.spaceL),
         Text(
           'Cargando información...',
@@ -1073,7 +1084,7 @@ class _WelcomeMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
         Icon(Icons.home, color: Colors.white, size: DesignTokens.iconXL),
         SizedBox(width: DesignTokens.spaceL),
