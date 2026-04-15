@@ -1741,13 +1741,17 @@ class _BodegaRow extends StatelessWidget {
     // Fila SILOS pura: manifestado = 0, no hay % real → mostrar como 100%
     final esSilosPuro = bodega.manifestado == 0 && bodega.tieneSilos;
     
-    // El total descargado debe ser la suma de balanza + silos para estar "completo"
-    final totalDescargado = bodega.descargadoBalanza + bodega.descargadoSilos;
+    // La descarga real de la bodega es lo que fue a balanza
+    final descargaBalanza = bodega.descargadoBalanza;
+    // Lo que se descargó a silos desde ESTA bodega
+    final descargaSilos = bodega.descargadoSilos;
+    // El total completado de la bodega es la suma de ambos
+    final totalCompletado = descargaBalanza + descargaSilos;
     
-    // Calcular porcentaje basado en el total (balanza + silos)
+    // Calcular porcentaje basado en el total completado vs manifiesto
     final porcentaje = esSilosPuro 
         ? 100.0 
-        : (bodega.manifestado > 0 ? (totalDescargado / bodega.manifestado * 100).clamp(0.0, 100.0) : 0.0);
+        : (bodega.manifestado > 0 ? (totalCompletado / bodega.manifestado * 100).clamp(0.0, 100.0) : 0.0);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
@@ -1840,7 +1844,7 @@ class _BodegaRow extends StatelessWidget {
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextSpan(
-                        text: numberFormat.format(totalDescargado),
+                        text: numberFormat.format(totalCompletado),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppColors.success,
@@ -1848,7 +1852,7 @@ class _BodegaRow extends StatelessWidget {
                       ),
                       if (bodega.tieneSilos && !esSilosPuro)
                         TextSpan(
-                          text: ' (B:${numberFormat.format(bodega.descargadoBalanza)}/S:${numberFormat.format(bodega.descargadoSilos)})',
+                          text: ' (B:${numberFormat.format(descargaBalanza)} / S:${numberFormat.format(descargaSilos)})',
                           style: const TextStyle(
                             fontSize: 9,
                             color: AppColors.textSecondary,
