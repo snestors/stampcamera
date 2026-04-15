@@ -42,8 +42,6 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(exploradorProvider.notifier).loadContenidoCarpeta(widget.carpetaId);
-      ref.read(appSocketProvider.notifier)
-          .notifyRouteChange('/app/casos/${widget.carpetaId}');
     });
   }
 

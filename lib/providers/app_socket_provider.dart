@@ -104,29 +104,6 @@ final wsAsistenciaChangedProvider = StreamProvider<AppSocketEvent>((ref) {
       .where((event) => event.type == 'asistencia_changed');
 });
 
-/// Stream filtrado de eventos del explorador de archivos
-final wsExploradorEventsProvider = StreamProvider<AppSocketEvent>((ref) {
-  final service = ref.watch(appSocketServiceProvider);
-  const exploradorTypes = {
-    'usuario_conectado',
-    'usuario_desconectado',
-    'usuario_cambio_carpeta',
-    'usuario_cambio_seleccion',
-    'archivo_creado',
-    'archivo_eliminado',
-    'archivo_movido',
-    'archivo_restaurado',
-    'carpeta_creada',
-    'carpeta_eliminada',
-    'carpeta_restaurada',
-    'carpeta_renombrada',
-    'permisos_actualizados',
-    'usuarios_lista',
-  };
-  return service.eventStream
-      .where((event) => exploradorTypes.contains(event.type));
-});
-
 /// Notifier para el estado de socket
 class AppSocketNotifier extends StateNotifier<AppSocketState> {
   final Ref _ref;

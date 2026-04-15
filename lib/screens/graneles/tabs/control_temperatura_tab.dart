@@ -165,20 +165,16 @@ class _ControlTemperaturaTabState extends ConsumerState<ControlTemperaturaTab> {
           return Container(
             padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
-            child: Column(
-              children: [
-                if (notifier.isLoadingMore) ...[
-                  AppLoadingState.circular(
-                    message: 'Cargando mas registros...',
-                  ),
-                ] else ...[
-                  AppButton.ghost(
-                    text: 'Cargar mas',
-                    icon: Icons.expand_more,
-                    onPressed: () => notifier.loadMore(),
-                  ),
-                ],
-              ],
+            child: Builder(
+              builder: (context) {
+                if (!notifier.isLoadingMore) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) => notifier.loadMore());
+                }
+                return const CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                );
+              },
             ),
           );
         },

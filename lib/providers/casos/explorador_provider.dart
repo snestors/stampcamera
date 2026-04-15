@@ -219,13 +219,7 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
       onError: (e) => debugPrint('ExploradorProvider WS error: $e'),
     );
 
-    // Escuchar reconexiones para re-suscribir carpeta actual
-    service.connectionStateStream.listen((wsState) {
-      if (wsState == WsConnectionState.connected && state.currentCarpetaId != null) {
-        final nombre = _findCarpetaName(state.currentCarpetaId!);
-        service.sendCambiarCarpeta(state.currentCarpetaId!, nombre ?? '');
-      }
-    });
+    // WS explorador deshabilitado — tracking se hace via route listener global
   }
 
   // ─── Carga de datos ──────────────────────────────────────────────────
@@ -278,13 +272,6 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
       selectedItems: {},
       clearError: true,
     );
-
-    // Notificar al WebSocket
-    final socketService = _ref.read(appSocketServiceProvider);
-    if (socketService.isConnected) {
-      final carpetaNombre = _findCarpetaName(carpetaId);
-      socketService.sendCambiarCarpeta(carpetaId, carpetaNombre ?? '');
-    }
 
     try {
       final contenido = await _service.getContenidoCarpeta(
@@ -385,13 +372,7 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   }
 
   void _notifySelectionChange() {
-    final socketService = _ref.read(appSocketServiceProvider);
-    if (!socketService.isConnected) return;
-
-    final seleccion = state.selectedItems.entries
-        .map((e) => {'id': e.key, 'tipo': e.value})
-        .toList();
-    socketService.sendCambiarSeleccion(seleccion);
+    // WS selección deshabilitado — no se usa en Flutter
   }
 
   // ─── Clipboard (Cortar/Pegar) ────────────────────────────────────────
@@ -890,23 +871,6 @@ class ExploradorNotifier extends StateNotifier<ExplorerState> {
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────
-
-  String? _findCarpetaName(int id) {
-    // Buscar en carpetas raíz
-    for (final c in state.carpetasRaiz) {
-      if (c.id == id) return c.nombre;
-    }
-    // Buscar en contenido actual
-    if (state.contenido != null) {
-      if (state.contenido!.carpetaPrincipal.id == id) {
-        return state.contenido!.carpetaPrincipal.nombre;
-      }
-      for (final c in state.contenido!.subcarpetas) {
-        if (c.id == id) return c.nombre;
-      }
-    }
-    return null;
-  }
 
   List<BreadcrumbItem> _buildBreadcrumbs(Carpeta carpeta) {
     final items = <BreadcrumbItem>[];

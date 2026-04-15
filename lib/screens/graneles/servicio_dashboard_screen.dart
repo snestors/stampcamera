@@ -527,103 +527,10 @@ class _DashboardContent extends StatelessWidget {
   }
 
   Widget _buildBodegasCard() {
-    final bodegas = dashboard.bodegas;
-    final numberFormat = NumberFormat('#,##0.00', 'es');
-    final intFormat = NumberFormat('#,##0', 'es');
-
-    // Calcular porcentaje total
-    final porcentajeTotal = bodegas.totalManifestado > 0
-        ? (bodegas.totalDescargado / bodegas.totalManifestado * 100)
-        : 0.0;
-
-    return Container(
-      padding: const EdgeInsets.all(DesignTokens.spaceM),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.directions_boat, size: 20, color: AppColors.primary),
-              SizedBox(width: DesignTokens.spaceS),
-              Expanded(
-                child: Text(
-                  'Descarga por Bodega',
-                  style: TextStyle(
-                    fontSize: DesignTokens.fontSizeM,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: DesignTokens.spaceM),
-
-          // Totales
-          Row(
-            children: [
-              Expanded(
-                child: _BodegaSummaryItem(
-                  label: 'Manifestado',
-                  value: '${numberFormat.format(bodegas.totalManifestado)} TM',
-                  color: AppColors.primary,
-                ),
-              ),
-              Expanded(
-                child: _BodegaSummaryItem(
-                  label: 'Descargado',
-                  value: '${numberFormat.format(bodegas.totalDescargado)} TM',
-                  color: AppColors.success,
-                ),
-              ),
-              Expanded(
-                child: _BodegaSummaryItem(
-                  label: 'Avance',
-                  value: '${porcentajeTotal.toStringAsFixed(1)}%',
-                  color: AppColors.accent,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: DesignTokens.spaceM),
-          Divider(color: AppColors.neutral.withValues(alpha: 0.2)),
-          const SizedBox(height: DesignTokens.spaceS),
-
-          // Por bodega
-          if (bodegas.porBodega.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(DesignTokens.spaceM),
-              child: Center(
-                child: Text(
-                  'No hay distribuciones de bodega configuradas',
-                  style: TextStyle(
-                    fontSize: DesignTokens.fontSizeS,
-                    color: AppColors.textSecondary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            )
-          else
-            ...bodegas.porBodega.map((b) => _BodegaRow(
-                  bodega: b,
-                  numberFormat: numberFormat,
-                  intFormat: intFormat,
-                )),
-        ],
-      ),
+    return _BodegasExpandableCard(
+      bodegas: dashboard.bodegas,
+      silosPeso: dashboard.silos.totalPeso,
+      silosViajes: dashboard.silos.totalViajes,
     );
   }
 
@@ -1058,6 +965,169 @@ class _SilosProductoRow extends StatelessWidget {
   }
 }
 
+class _BodegasExpandableCard extends StatefulWidget {
+  final DashboardBodegas bodegas;
+  final double silosPeso;
+  final int silosViajes;
+
+  const _BodegasExpandableCard({
+    required this.bodegas,
+    this.silosPeso = 0,
+    this.silosViajes = 0,
+  });
+
+  @override
+  State<_BodegasExpandableCard> createState() => _BodegasExpandableCardState();
+}
+
+class _BodegasExpandableCardState extends State<_BodegasExpandableCard> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bodegas = widget.bodegas;
+    final numberFormat = NumberFormat('#,##0.00', 'es');
+    final intFormat = NumberFormat('#,##0', 'es');
+
+    // Backend excluye SILOS de porBodega — silos viene directo de dashboard.silos
+    final totalManifestado = bodegas.totalManifestado;
+    final totalDescargadoBalanza = bodegas.totalDescargadoBalanza;
+    final totalDescargadoSilos = widget.silosPeso;
+    final totalDescargado = totalDescargadoBalanza + totalDescargadoSilos;
+    final totalViajesSilos = widget.silosViajes;
+    final totalViajes = bodegas.totalViajesBalanza + totalViajesSilos;
+    final tieneSilos = totalDescargadoSilos > 0;
+
+    final porcentajeTotal = totalManifestado > 0
+        ? (totalDescargado / totalManifestado * 100)
+        : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => setState(() => _isExpanded = !_isExpanded),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              children: [
+                const Icon(Icons.directions_boat, size: 20, color: AppColors.primary),
+                const SizedBox(width: DesignTokens.spaceS),
+                const Expanded(
+                  child: Text(
+                    'Descarga por Bodega',
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeM,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${porcentajeTotal.toStringAsFixed(1)}%',
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeS,
+                    fontWeight: FontWeight.w600,
+                    color: porcentajeTotal >= 100
+                        ? AppColors.success
+                        : AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: DesignTokens.spaceXS),
+                AnimatedRotation(
+                  turns: _isExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(
+                    Icons.expand_more,
+                    size: 20,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: DesignTokens.spaceM),
+
+          Row(
+            children: [
+              Expanded(
+                child: _BodegaSummaryItem(
+                  label: 'Manifestado',
+                  value: '${numberFormat.format(totalManifestado)} TM',
+                  color: AppColors.primary,
+                ),
+              ),
+              Expanded(
+                child: _BodegaSummaryItem(
+                  label: tieneSilos ? 'Bal+Silos' : 'Descargado',
+                  value: '${numberFormat.format(totalDescargado)} TM',
+                  color: AppColors.success,
+                ),
+              ),
+              Expanded(
+                child: _BodegaSummaryItem(
+                  label: 'Viajes',
+                  value: intFormat.format(totalViajes),
+                  color: AppColors.accent,
+                ),
+              ),
+            ],
+          ),
+
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              children: [
+                const SizedBox(height: DesignTokens.spaceM),
+                Divider(color: AppColors.neutral.withValues(alpha: 0.2)),
+                const SizedBox(height: DesignTokens.spaceS),
+                if (bodegas.porBodega.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(DesignTokens.spaceM),
+                    child: Center(
+                      child: Text(
+                        'No hay distribuciones de bodega configuradas',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeS,
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  ...bodegas.porBodega
+                      .where((b) => b.bodega.toUpperCase() != 'SILOS')
+                      .map((b) => _BodegaRow(
+                            bodega: b,
+                            numberFormat: numberFormat,
+                            intFormat: intFormat,
+                          )),
+              ],
+            ),
+            crossFadeState: _isExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ProductoExpandableCard extends StatefulWidget {
   final DashboardProducto producto;
 
@@ -1230,15 +1300,15 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                   children: [
                     Expanded(
                       child: _DetailItem(
-                        label: 'Viajes Muelle',
-                        value: '${producto.viajesMuelle}',
+                        label: 'Viajes Balanza',
+                        value: '${producto.viajesBalanza}',
                         color: AppColors.primary,
                       ),
                     ),
                     Expanded(
                       child: _DetailItem(
-                        label: 'Viajes Balanza',
-                        value: '${producto.viajesBalanza}',
+                        label: 'Viajes Muelle',
+                        value: '${producto.viajesMuelle}',
                         color: AppColors.secondary,
                       ),
                     ),
@@ -1255,39 +1325,6 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
             ),
           ),
 
-          // Bodegas de la nave (descarga)
-          if (producto.bodegas.isNotEmpty) ...[
-            Divider(height: 1, color: AppColors.neutral.withValues(alpha: 0.2)),
-            Padding(
-              padding: const EdgeInsets.all(DesignTokens.spaceM),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.directions_boat, size: 16, color: AppColors.primary),
-                      SizedBox(width: DesignTokens.spaceXS),
-                      Text(
-                        'Descarga por Bodega',
-                        style: TextStyle(
-                          fontSize: DesignTokens.fontSizeS,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: DesignTokens.spaceS),
-                  ...producto.bodegas.map(
-                    (bodega) => _BodegaRowCompact(
-                      bodega: bodega,
-                      numberFormat: numberFormat,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
 
           // Distribuciones (almacenes destino)
           if (producto.distribuciones.isNotEmpty) ...[
@@ -1428,6 +1465,9 @@ class _DistribucionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final saldo = distribucion.saldo;
+    final saldoColor = saldo < 0 ? AppColors.error : AppColors.textSecondary;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
       decoration: BoxDecoration(
@@ -1435,50 +1475,131 @@ class _DistribucionRow extends StatelessWidget {
           bottom: BorderSide(color: AppColors.neutral.withValues(alpha: 0.1)),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: AppColors.accent,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: DesignTokens.spaceS),
-          Expanded(
-            flex: 2,
-            child: Text(
-              distribucion.almacen,
-              style: const TextStyle(
-                fontSize: DesignTokens.fontSizeS,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Text(
-                '${numberFormat.format(distribucion.pesoBalanza)} TM',
-                style: const TextStyle(
-                  fontSize: DesignTokens.fontSizeXS,
-                  fontWeight: FontWeight.w600,
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
                   color: AppColors.accent,
+                  shape: BoxShape.circle,
                 ),
               ),
-              Text(
-                '${distribucion.viajesBalanza} viajes',
-                style: const TextStyle(
-                  fontSize: DesignTokens.fontSizeXS,
-                  color: AppColors.textSecondary,
+              const SizedBox(width: DesignTokens.spaceS),
+              Expanded(
+                child: Text(
+                  distribucion.almacen,
+                  style: const TextStyle(
+                    fontSize: DesignTokens.fontSizeS,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (saldo != 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: DesignTokens.spaceXS,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: saldoColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusXS),
+                  ),
+                  child: Text(
+                    'Saldo: ${numberFormat.format(saldo)} TM',
+                    style: TextStyle(
+                      fontSize: DesignTokens.fontSizeXS,
+                      fontWeight: FontWeight.w600,
+                      color: saldoColor,
+                    ),
+                  ),
+                ),
             ],
+          ),
+          const SizedBox(height: DesignTokens.spaceXS),
+          Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _DistribucionStat(
+                    label: 'Puerto',
+                    peso: numberFormat.format(distribucion.pesoBalanza),
+                    viajes: distribucion.viajesBalanza,
+                    color: AppColors.accent,
+                  ),
+                ),
+                Expanded(
+                  child: _DistribucionStat(
+                    label: 'Tránsito',
+                    peso: null,
+                    viajes: distribucion.viajesTransito,
+                    color: AppColors.warning,
+                  ),
+                ),
+                Expanded(
+                  child: _DistribucionStat(
+                    label: 'Recibido',
+                    peso: numberFormat.format(distribucion.pesoAlmacen),
+                    viajes: distribucion.viajesAlmacen,
+                    color: AppColors.success,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DistribucionStat extends StatelessWidget {
+  final String label;
+  final String? peso;
+  final int viajes;
+  final Color color;
+
+  const _DistribucionStat({
+    required this.label,
+    required this.peso,
+    required this.viajes,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeXS,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (peso != null)
+          Text(
+            '$peso TM',
+            style: const TextStyle(
+              fontSize: DesignTokens.fontSizeXS,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        Text(
+          '$viajes viajes',
+          style: const TextStyle(
+            fontSize: DesignTokens.fontSizeXS,
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1617,7 +1738,16 @@ class _BodegaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final porcentaje = bodega.porcentajeDescarga;
+    // Fila SILOS pura: manifestado = 0, no hay % real → mostrar como 100%
+    final esSilosPuro = bodega.manifestado == 0 && bodega.tieneSilos;
+    
+    // El total descargado debe ser la suma de balanza + silos para estar "completo"
+    final totalDescargado = bodega.descargadoBalanza + bodega.descargadoSilos;
+    
+    // Calcular porcentaje basado en el total (balanza + silos)
+    final porcentaje = esSilosPuro 
+        ? 100.0 
+        : (bodega.manifestado > 0 ? (totalDescargado / bodega.manifestado * 100).clamp(0.0, 100.0) : 0.0);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: DesignTokens.spaceS),
@@ -1710,12 +1840,21 @@ class _BodegaRow extends StatelessWidget {
                         style: TextStyle(color: AppColors.textSecondary),
                       ),
                       TextSpan(
-                        text: numberFormat.format(bodega.descargado),
+                        text: numberFormat.format(totalDescargado),
                         style: const TextStyle(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                           color: AppColors.success,
                         ),
                       ),
+                      if (bodega.tieneSilos && !esSilosPuro)
+                        TextSpan(
+                          text: ' (B:${numberFormat.format(bodega.descargadoBalanza)}/S:${numberFormat.format(bodega.descargadoSilos)})',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -1735,6 +1874,15 @@ class _BodegaRow extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
+                    if (bodega.tieneSilos && !esSilosPuro)
+                      TextSpan(
+                        text: ' (${bodega.viajesBalanza}/${bodega.viajesSilos})',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
                   ],
                 ),
               ),

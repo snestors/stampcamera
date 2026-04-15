@@ -2,28 +2,24 @@
 // APP SOCKET SERVICE - WebSocket Unificado (ws/app/)
 // =============================================================================
 //
-// Reemplaza el legacy PresenceWebSocketService conectando al endpoint unificado.
-// Soporta:
-// - Suscripción dinámica a canales (notifications, casos, autos, graneles, presence)
-// - Notificaciones en tiempo real
-// - Cambios de datos (data_changed) para sincronización
+// Conecta al endpoint unificado ws/app/ via ticket single-use.
+// Funcionalidad:
 // - Force logout y actualización de permisos
+// - Tracking de vista activa (route_change)
+// - Notificaciones y cambios de datos en tiempo real
 // - Heartbeat y reconexión automática
-//
-// URL: ws://host/ws/app/?token=<JWT>
 // =============================================================================
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:stampcamera/services/http_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-/// Canales disponibles para suscripción
+/// Canales disponibles (auto-suscritos por el backend según la ruta)
 class AppSocketChannels {
   static const String notifications = 'notifications';
-  static const String presence = 'presence';
-  static const String casos = 'casos';
   static const String autos = 'autos';
   static const String graneles = 'graneles';
 }
@@ -86,8 +82,16 @@ enum WsConnectionState {
 
 /// Servicio WebSocket unificado
 class AppSocketService {
-  // TODO: Cambiar a producción antes de release
-  static const String _wsBaseUrl = 'ws://10.0.2.2:8000/ws/app/';
+  /// URL del WS derivada de la base URL del HttpService
+  static String get _wsBaseUrl {
+    const base = HttpService.baseUrl;
+    // https://domain.com/ → wss://domain.com/ws/app/
+    // http://domain.com/ → ws://domain.com/ws/app/
+    final wsScheme = base.startsWith('https') ? 'wss' : 'ws';
+    final withoutScheme = base.replaceFirst(RegExp(r'^https?://'), '');
+    return '$wsScheme://$withoutScheme${withoutScheme.endsWith('/') ? '' : '/'}ws/app/';
+  }
+
   static const Duration _heartbeatInterval = Duration(seconds: 30);
   static const Duration _reconnectBaseDelay = Duration(seconds: 5);
   static const int _maxReconnectAttempts = 5;
@@ -123,13 +127,11 @@ class AppSocketService {
 
   // ─── Ticket WS ─────────────────────────────────────────────────────
 
-  // TODO: Cambiar a producción antes de release
-  static const String _ticketUrl =
-      'http://10.0.2.2:8000/api/v1/ws/ticket/';
+  /// URL del ticket derivada de la base URL del HttpService
+  static String get _ticketUrl => '${HttpService.baseUrl}api/v1/ws/ticket/';
 
   /// Solicita un ticket single-use para autenticación WS.
   /// El ticket expira en 30 segundos y se consume al conectar.
-  /// Retorna null si falla (el caller debe usar fallback con token directo).
   Future<String?> _fetchWsTicket(String accessToken) async {
     try {
       final client = HttpClient();
@@ -174,19 +176,16 @@ class AppSocketService {
     _setConnectionState(WsConnectionState.connecting);
 
     try {
-      // 1. Intentar obtener ticket single-use (preferido)
       final ticket = await _fetchWsTicket(accessToken);
-
-      Uri uri;
-      if (ticket != null) {
-        uri = Uri.parse('$_wsBaseUrl?ticket=$ticket');
-        debugPrint('WS: Conectando con ticket...');
-      } else {
-        // Fallback: usar token directo (deprecado, funciona durante transición)
-        uri = Uri.parse('$_wsBaseUrl?token=$accessToken');
-        debugPrint('WS: Conectando con token directo (fallback)...');
+      if (ticket == null) {
+        debugPrint('WS: No se pudo obtener ticket, abortando conexión');
+        _setConnectionState(WsConnectionState.error);
+        _scheduleReconnect();
+        return;
       }
 
+      final uri = Uri.parse('$_wsBaseUrl?ticket=$ticket');
+      debugPrint('WS: Conectando con ticket...');
       _channel = WebSocketChannel.connect(uri);
 
       _channel!.stream.listen(
@@ -252,27 +251,6 @@ class AppSocketService {
     });
   }
 
-  // ─── Explorador de archivos ──────────────────────────────────────────
-
-  void sendCambiarCarpeta(int carpetaId, String carpetaNombre) {
-    _send({
-      'type': 'cambiar_carpeta',
-      'carpeta_id': carpetaId,
-      'carpeta_nombre': carpetaNombre,
-    });
-  }
-
-  void sendCambiarSeleccion(List<Map<String, dynamic>> seleccion) {
-    _send({
-      'type': 'cambiar_seleccion',
-      'seleccion': seleccion,
-    });
-  }
-
-  void sendGetUsuarios() {
-    _send({'type': 'get_usuarios'});
-  }
-
   // ─── Manejo de mensajes ──────────────────────────────────────────────
 
   void _onMessage(dynamic message) {
@@ -321,23 +299,6 @@ class AppSocketService {
         case 'error':
           debugPrint('WS Error: ${data['message']}');
           break;
-
-        // Eventos del explorador de archivos
-        case 'usuario_conectado':
-        case 'usuario_desconectado':
-        case 'usuario_cambio_carpeta':
-        case 'usuario_cambio_seleccion':
-        case 'archivo_creado':
-        case 'archivo_eliminado':
-        case 'archivo_movido':
-        case 'archivo_restaurado':
-        case 'carpeta_creada':
-        case 'carpeta_eliminada':
-        case 'carpeta_restaurada':
-        case 'carpeta_renombrada':
-        case 'permisos_actualizados':
-        case 'usuarios_lista':
-          break; // Se emite abajo
       }
 
       _eventController.add(event);

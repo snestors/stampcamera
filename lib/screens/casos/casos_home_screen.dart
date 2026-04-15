@@ -27,7 +27,6 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(exploradorProvider.notifier).loadCarpetasRaiz();
-      ref.read(appSocketProvider.notifier).notifyRouteChange('/app/casos');
     });
   }
 

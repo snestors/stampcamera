@@ -9,7 +9,6 @@ import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/widgets/common/search_bar_widget.dart';
-import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 /// Tipos de filtro disponibles para Viajes
@@ -99,7 +98,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               }
             },
             onClear: () {
-              _applyCurrentFilter(notifier);
+              notifier.clearSearch();
               _searchFocusNode.unfocus();
             },
           ),
@@ -287,7 +286,6 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               child: _TicketCard(
                 ticket: ticket,
                 onTap: () => _navigateToDetail(ticket.id),
-                onEdit: () => _navigateToEditTicket(ticket.id),
               ),
             );
           }
@@ -295,20 +293,16 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
           return Container(
             padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
-            child: Column(
-              children: [
-                if (notifier.isLoadingMore) ...[
-                  AppLoadingState.circular(
-                    message: 'Cargando mas viajes...',
-                  ),
-                ] else ...[
-                  AppButton.ghost(
-                    text: 'Cargar mas',
-                    icon: Icons.expand_more,
-                    onPressed: () => notifier.loadMore(),
-                  ),
-                ],
-              ],
+            child: Builder(
+              builder: (context) {
+                if (!notifier.isLoadingMore) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) => notifier.loadMore());
+                }
+                return const CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                );
+              },
             ),
           );
         },
@@ -352,7 +346,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
         icon: Icons.clear,
         onPressed: () {
           _searchController.clear();
-          _applyCurrentFilter(notifier);
+          notifier.clearSearch();
         },
       );
     } else if (_currentFilter != ViajeFilterType.todos) {
@@ -391,10 +385,6 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
     context.push('/graneles/ticket/$ticketId');
   }
 
-  void _navigateToEditTicket(int ticketId) {
-    context.push('/graneles/ticket/editar/$ticketId');
-  }
-
   void _navigateToCreateTicket() {
     // Navegar al formulario unificado de viaje (3 pasos)
     context.push('/graneles/viaje/crear');
@@ -408,12 +398,10 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
 class _TicketCard extends StatelessWidget {
   final TicketMuelle ticket;
   final VoidCallback onTap;
-  final VoidCallback onEdit;
 
   const _TicketCard({
     required this.ticket,
     required this.onTap,
-    required this.onEdit,
   });
 
   @override
@@ -477,24 +465,6 @@ class _TicketCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  // Boton foto
-                  if (ticket.fotoUrl != null)
-                    IconButton(
-                      onPressed: () => _showPhotoDialog(context, ticket.fotoUrl!),
-                      icon: const Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
-                      tooltip: 'Ver foto',
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(DesignTokens.spaceXS),
-                    ),
-                  const SizedBox(width: DesignTokens.spaceXS),
-                  // Boton editar
-                  IconButton(
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit, size: 20, color: AppColors.primary),
-                    tooltip: 'Editar viaje',
-                    constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.all(DesignTokens.spaceXS),
-                  ),
                 ],
               ),
               const SizedBox(height: DesignTokens.spaceXS),
@@ -582,6 +552,25 @@ class _TicketCard extends StatelessWidget {
                   ),
                 ],
               ),
+
+              // Guia de balanza
+              if (ticket.balanzaData != null && ticket.balanzaData!.guia.isNotEmpty) ...[
+                const SizedBox(height: DesignTokens.spaceXS),
+                Row(
+                  children: [
+                    const Icon(Icons.description, size: 14, color: AppColors.accent),
+                    const SizedBox(width: DesignTokens.spaceXS),
+                    Text(
+                      'Guia: ${ticket.balanzaData!.guia}',
+                      style: const TextStyle(
+                        fontSize: DesignTokens.fontSizeS,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: DesignTokens.spaceS),
 
               // Bodega y tiempos
@@ -651,11 +640,4 @@ class _TicketCard extends StatelessWidget {
     );
   }
 
-  void _showPhotoDialog(BuildContext context, String url) {
-    FullscreenImageViewer.open(
-      context,
-      imageUrl: url,
-      title: 'Foto Ticket',
-    );
-  }
 }

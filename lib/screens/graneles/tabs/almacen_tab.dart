@@ -161,20 +161,16 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
           return Container(
             padding: const EdgeInsets.all(DesignTokens.spaceL),
             alignment: Alignment.center,
-            child: Column(
-              children: [
-                if (notifier.isLoadingMore) ...[
-                  AppLoadingState.circular(
-                    message: 'Cargando más registros...',
-                  ),
-                ] else ...[
-                  AppButton.ghost(
-                    text: 'Cargar más',
-                    icon: Icons.expand_more,
-                    onPressed: () => notifier.loadMore(),
-                  ),
-                ],
-              ],
+            child: Builder(
+              builder: (context) {
+                if (!notifier.isLoadingMore) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) => notifier.loadMore());
+                }
+                return const CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                );
+              },
             ),
           );
         },

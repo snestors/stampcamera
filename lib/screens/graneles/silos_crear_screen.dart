@@ -40,6 +40,7 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
   int? _selectedBlId;
   int? _selectedDistribucionId;
   int? _selectedJornadaId;
+  int? _siloServicioId;  // Para cargar opciones del servicio correcto en edit
 
   DateTime _fechaHora = nowLima();
   String? _fotoPath;
@@ -77,6 +78,11 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
           _bagsController.text = silo.bags?.toString() ?? '';
           _fechaHora = silo.fechaHora != null ? toLima(silo.fechaHora!) : nowLima();
           _existingFotoUrl = silo.fotoUrl;
+          // Cargar IDs de relaciones para los selectores
+          _selectedBlId = silo.bl;
+          _selectedDistribucionId = silo.distribucion;
+          _selectedJornadaId = silo.jornada;
+          _siloServicioId = silo.servicio;
           _isLoadingSilo = false;
         });
       }
@@ -115,8 +121,8 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       );
     }
 
-    // El backend obtiene la nave de la asistencia del usuario automáticamente
-    const optionsParams = TicketFormOptionsParams();
+    // En edit mode, pasar el servicio_id para incluir BLs del servicio original
+    final optionsParams = TicketFormOptionsParams(servicioId: _siloServicioId);
     final optionsAsync = ref.watch(ticketMuelleOptionsFlexProvider(optionsParams));
 
     return Scaffold(
@@ -151,31 +157,28 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       child: ListView(
         padding: const EdgeInsets.all(DesignTokens.spaceM),
         children: [
-          // Solo mostrar selectores en modo creación
-          if (!widget.isEditMode) ...[
-            // Sección: BL
-            const AppSectionHeader(icon: Icons.description, title: 'BL'),
-            const SizedBox(height: DesignTokens.spaceS),
-            _buildBlSelector(options.bls),
-            const SizedBox(height: DesignTokens.spaceL),
-
-            // Sección: Distribución (filtrada por BL)
-            const AppSectionHeader(icon: Icons.warehouse, title: 'Distribución / Bodega'),
-            const SizedBox(height: DesignTokens.spaceS),
-            _buildDistribucionSelector(options),
-            const SizedBox(height: DesignTokens.spaceL),
-
-            // Sección: Jornada (de la nave del servicio)
-            const AppSectionHeader(icon: Icons.schedule, title: 'Jornada'),
-            const SizedBox(height: DesignTokens.spaceS),
-            _buildJornadaSelector(options),
-            const SizedBox(height: DesignTokens.spaceL),
-          ],
-
           // Sección: N° Camión/Ticket
           const AppSectionHeader(icon: Icons.tag, title: 'N° Camión / Ticket'),
           const SizedBox(height: DesignTokens.spaceS),
           _buildNumeroCamionField(),
+          const SizedBox(height: DesignTokens.spaceL),
+
+          // Sección: BL
+          const AppSectionHeader(icon: Icons.description, title: 'BL'),
+          const SizedBox(height: DesignTokens.spaceS),
+          _buildBlSelector(options.bls),
+          const SizedBox(height: DesignTokens.spaceL),
+
+          // Sección: Distribución (filtrada por BL)
+          const AppSectionHeader(icon: Icons.warehouse, title: 'Distribución / Bodega'),
+          const SizedBox(height: DesignTokens.spaceS),
+          _buildDistribucionSelector(options),
+          const SizedBox(height: DesignTokens.spaceL),
+
+          // Sección: Jornada (de la nave del servicio)
+          const AppSectionHeader(icon: Icons.schedule, title: 'Jornada'),
+          const SizedBox(height: DesignTokens.spaceS),
+          _buildJornadaSelector(options),
           const SizedBox(height: DesignTokens.spaceL),
 
           // Sección: Fecha y hora
@@ -215,8 +218,14 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       return _buildWarningBox('No hay BLs disponibles para tu asistencia actual');
     }
 
+    // Verificar que el valor seleccionado existe en las opciones
+    final validBl = bls.any((bl) => bl.id == _selectedBlId)
+        ? _selectedBlId
+        : null;
+
     return DropdownButtonFormField<int>(
-      initialValue: _selectedBlId,
+      key: ValueKey('bl_$validBl'),
+      initialValue: validBl,
       decoration: InputDecoration(
         labelText: 'BL *',
         hintText: 'Seleccionar BL...',
@@ -276,8 +285,14 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       return _buildWarningBox('No hay distribuciones para este BL');
     }
 
+    // Verificar que el valor seleccionado existe en las opciones
+    final validDistribucion = distribuciones.any((d) => d.id == _selectedDistribucionId)
+        ? _selectedDistribucionId
+        : null;
+
     return DropdownButtonFormField<int>(
-      initialValue: _selectedDistribucionId,
+      key: ValueKey('dist_$validDistribucion'),
+      initialValue: validDistribucion,
       decoration: InputDecoration(
         labelText: 'Distribución / Bodega *',
         hintText: 'Seleccionar distribución...',
@@ -331,8 +346,14 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
       return _buildWarningBox('No hay jornadas disponibles para esta nave');
     }
 
+    // Verificar que el valor seleccionado existe en las opciones
+    final validJornada = jornadas.any((j) => j.id == _selectedJornadaId)
+        ? _selectedJornadaId
+        : null;
+
     return DropdownButtonFormField<int>(
-      initialValue: _selectedJornadaId,
+      key: ValueKey('jornada_$validJornada'),
+      initialValue: validJornada,
       decoration: InputDecoration(
         labelText: 'Jornada *',
         hintText: 'Seleccionar jornada...',
@@ -673,13 +694,10 @@ class _SilosCrearScreenState extends ConsumerState<SilosCrearScreen> {
         'peso_tara': double.parse(_pesoTaraController.text),
         'cantidad': double.parse(_pesoNetoController.text),
         'fecha_pesaje': _fechaHora.toIso8601String(),
+        'distribucion': _selectedDistribucionId,
+        'bl': _selectedBlId,
+        'jornada': _selectedJornadaId,
       };
-
-      if (!widget.isEditMode) {
-        data['distribucion'] = _selectedDistribucionId;
-        data['bl'] = _selectedBlId;
-        data['jornada'] = _selectedJornadaId;
-      }
 
       if (_bagsController.text.isNotEmpty) {
         data['bags'] = int.parse(_bagsController.text);

@@ -426,6 +426,10 @@ class Silos with HasId {
   final int? bags;
   final DateTime? fechaHora;  // fecha_pesaje en el modelo Django
   final String? fotoUrl;
+  final int? bl;
+  final int? distribucion;
+  final int? jornada;
+  final int? servicio;
 
   const Silos({
     required this.id,
@@ -437,6 +441,10 @@ class Silos with HasId {
     this.bags,
     this.fechaHora,
     this.fotoUrl,
+    this.bl,
+    this.distribucion,
+    this.jornada,
+    this.servicio,
   });
 
   factory Silos.fromJson(Map<String, dynamic> json) {
@@ -452,6 +460,10 @@ class Silos with HasId {
           ? DateTime.tryParse(json['fecha_hora'])
           : null,
       fotoUrl: json['foto_url'],
+      bl: json['bl'],
+      distribucion: json['distribucion'],
+      jornada: json['jornada'],
+      servicio: json['servicio'],
     );
   }
 }
@@ -802,12 +814,22 @@ class BodegaItem {
   final double manifestado;
   final double descargado;
   final int viajes;
+  final bool tieneSilos;
+  final double descargadoBalanza;
+  final double descargadoSilos;
+  final int viajesBalanza;
+  final int viajesSilos;
 
   const BodegaItem({
     required this.bodega,
     this.manifestado = 0,
     this.descargado = 0,
     this.viajes = 0,
+    this.tieneSilos = false,
+    this.descargadoBalanza = 0,
+    this.descargadoSilos = 0,
+    this.viajesBalanza = 0,
+    this.viajesSilos = 0,
   });
 
   factory BodegaItem.fromJson(Map<String, dynamic> json) {
@@ -816,6 +838,11 @@ class BodegaItem {
       manifestado: _parseDouble(json['manifestado']),
       descargado: _parseDouble(json['descargado']),
       viajes: json['viajes'] ?? 0,
+      tieneSilos: json['tiene_silos'] ?? false,
+      descargadoBalanza: _parseDouble(json['descargado_balanza']),
+      descargadoSilos: _parseDouble(json['descargado_silos']),
+      viajesBalanza: json['viajes_balanza'] ?? 0,
+      viajesSilos: json['viajes_silos'] ?? 0,
     );
   }
 
@@ -831,12 +858,16 @@ class DashboardBodegas {
   final double totalManifestado;
   final double totalDescargado;
   final int totalViajes;
+  final double totalDescargadoBalanza;
+  final int totalViajesBalanza;
   final List<BodegaItem> porBodega;
 
   const DashboardBodegas({
     this.totalManifestado = 0,
     this.totalDescargado = 0,
     this.totalViajes = 0,
+    this.totalDescargadoBalanza = 0,
+    this.totalViajesBalanza = 0,
     this.porBodega = const [],
   });
 
@@ -845,6 +876,8 @@ class DashboardBodegas {
       totalManifestado: _parseDouble(json['total_manifestado']),
       totalDescargado: _parseDouble(json['total_descargado']),
       totalViajes: json['total_viajes'] ?? 0,
+      totalDescargadoBalanza: _parseDouble(json['total_descargado_balanza']),
+      totalViajesBalanza: json['total_viajes_balanza'] ?? 0,
       porBodega: (json['por_bodega'] as List?)
               ?.map((e) => BodegaItem.fromJson(e))
               .toList() ??

@@ -71,8 +71,14 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
 
   @override
   Future<List<T>> loadInitial() async {
+    _searchToken++;
+    final currentToken = _searchToken;
+
     try {
       final paginated = await service.list();
+
+      // Si se lanzó un filtro/búsqueda mientras cargaba, ignorar este resultado
+      if (_searchToken != currentToken) return state.value ?? [];
 
       _nextUrl = paginated.next;
       _searchQuery = null;
@@ -81,6 +87,7 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
 
       return paginated.results;
     } catch (e) {
+      if (_searchToken != currentToken) return state.value ?? [];
       throw Exception(_parseError(e));
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:camera/camera.dart';
@@ -19,6 +20,14 @@ late ProviderContainer _providerContainer;
 Future<void> main() async {
   final WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
+  // Edge-to-edge para Android 15+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarDividerColor: Colors.transparent,
+  ));
 
   // Inicializar timezone America/Lima para toda la app
   initTimezone();
@@ -52,10 +61,8 @@ Future<void> main() async {
     ),
   );
 
-  // Verificar actualizacion al inicio
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    UpdateService.checkForUpdate();
-  });
+  // Verificar actualizacion al inicio y al volver del background
+  UpdateService().initialize();
 }
 
 class MyApp extends ConsumerWidget {

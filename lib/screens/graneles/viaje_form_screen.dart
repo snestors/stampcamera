@@ -220,9 +220,9 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         final b = ticket.balanzaData!;
         _editBalanzaId = b.id;
         _guiaController.text = b.guia;
-        _balanzaPesoBrutoController.text = b.pesoBruto > 0 ? b.pesoBruto.toStringAsFixed(3) : '';
-        _balanzaPesoTaraController.text = b.pesoTara > 0 ? b.pesoTara.toStringAsFixed(3) : '';
-        _balanzaPesoNetoController.text = b.pesoNeto > 0 ? b.pesoNeto.toStringAsFixed(3) : '';
+        _balanzaPesoBrutoController.text = b.pesoBruto > 0 ? b.pesoBruto.toStringAsFixed(2) : '';
+        _balanzaPesoTaraController.text = b.pesoTara > 0 ? b.pesoTara.toStringAsFixed(2) : '';
+        _balanzaPesoNetoController.text = b.pesoNeto > 0 ? b.pesoNeto.toStringAsFixed(2) : '';
         _balanzaBagsController.text = b.bags?.toString() ?? '';
         _balanzaEntradaStrController.text = b.balanzaEntrada ?? '';
         _balanzaSalidaStrController.text = b.balanzaSalida ?? '';
@@ -243,9 +243,9 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       if (ticket.almacenData != null) {
         final a = ticket.almacenData!;
         _editAlmacenId = a.id;
-        _almacenPesoBrutoController.text = a.pesoBruto > 0 ? a.pesoBruto.toStringAsFixed(3) : '';
-        _almacenPesoTaraController.text = a.pesoTara > 0 ? a.pesoTara.toStringAsFixed(3) : '';
-        _almacenPesoNetoController.text = a.pesoNeto > 0 ? a.pesoNeto.toStringAsFixed(3) : '';
+        _almacenPesoBrutoController.text = a.pesoBruto > 0 ? a.pesoBruto.toStringAsFixed(2) : '';
+        _almacenPesoTaraController.text = a.pesoTara > 0 ? a.pesoTara.toStringAsFixed(2) : '';
+        _almacenPesoNetoController.text = a.pesoNeto > 0 ? a.pesoNeto.toStringAsFixed(2) : '';
         _almacenBagsController.text = a.bags?.toString() ?? '';
         _almacenObservacionesController.text = a.observaciones ?? '';
         _fechaEntradaAlmacen = a.fechaEntradaAlmacen != null ? toLima(a.fechaEntradaAlmacen!) : nowLima();
@@ -1464,7 +1464,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 fillColor: AppColors.surface,
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}'))],
+              inputFormatters: [_DecimalInputFormatter()],
             ),
           ),
           const SizedBox(width: DesignTokens.spaceS),
@@ -1479,7 +1479,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 fillColor: AppColors.surface,
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}'))],
+              inputFormatters: [_DecimalInputFormatter()],
             ),
           ),
         ]),
@@ -1503,7 +1503,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
                 fillColor: hasNetoError ? AppColors.error.withValues(alpha: 0.05) : AppColors.surface,
               ),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,3}'))],
+              inputFormatters: [_DecimalInputFormatter()],
             ),
           ),
           const SizedBox(width: DesignTokens.spaceS),
@@ -1536,7 +1536,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
               const SizedBox(width: DesignTokens.spaceS),
               Expanded(
                 child: Text(
-                  'Peso Neto no coincide. Esperado: ${expected.toStringAsFixed(3)} TM',
+                  'Peso Neto no coincide. Esperado: ${expected.toStringAsFixed(2)} TM',
                   style: const TextStyle(color: AppColors.error, fontSize: DesignTokens.fontSizeS, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -1906,5 +1906,37 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
       'detail': 'Error',
     };
     return fieldNames[field] ?? field;
+  }
+}
+
+/// Máscara de peso: el usuario escribe solo dígitos, el punto se inserta solo.
+/// 1 → 0.01, 12 → 0.12, 123 → 1.23, 1234 → 12.34, 9999 → 99.99
+/// Máximo 99.99 TM (4 dígitos).
+class _DecimalInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Solo dígitos
+    final digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // Máximo 4 dígitos (99.99)
+    final trimmed = digits.length > 4 ? digits.substring(0, 4) : digits;
+    final value = int.parse(trimmed);
+
+    // Formatear como XX.XX
+    final formatted = (value / 100).toStringAsFixed(2);
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }
