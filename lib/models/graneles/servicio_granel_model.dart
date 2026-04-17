@@ -632,24 +632,30 @@ class DashboardServicioInfo {
 class DashboardKpis {
   final double totalManifestado;
   final double totalDescargado;
+  final double totalDescargadoBalanza;
+  final double totalSilos;
   final double totalDespachado;
   final double porcentajeDescarga;
   final double porcentajeDespacho;
   final int viajesMuelle;
   final int viajesBalanza;
   final int viajesAlmacen;
+  final int viajesSilos;
   final double saldoDescarga;
   final double saldoDespacho;
 
   const DashboardKpis({
     this.totalManifestado = 0,
     this.totalDescargado = 0,
+    this.totalDescargadoBalanza = 0,
+    this.totalSilos = 0,
     this.totalDespachado = 0,
     this.porcentajeDescarga = 0,
     this.porcentajeDespacho = 0,
     this.viajesMuelle = 0,
     this.viajesBalanza = 0,
     this.viajesAlmacen = 0,
+    this.viajesSilos = 0,
     this.saldoDescarga = 0,
     this.saldoDespacho = 0,
   });
@@ -658,12 +664,15 @@ class DashboardKpis {
     return DashboardKpis(
       totalManifestado: _parseDouble(json['total_manifestado']),
       totalDescargado: _parseDouble(json['total_descargado']),
+      totalDescargadoBalanza: _parseDouble(json['total_descargado_balanza']),
+      totalSilos: _parseDouble(json['total_silos']),
       totalDespachado: _parseDouble(json['total_despachado']),
       porcentajeDescarga: _parseDouble(json['porcentaje_descarga']),
       porcentajeDespacho: _parseDouble(json['porcentaje_despacho']),
-      viajesMuelle: json['viajes_muelle'] ?? 0,
-      viajesBalanza: json['viajes_balanza'] ?? 0,
+      viajesMuelle: json['viajes_balanza'] ?? 0,
+      viajesBalanza: json['viajes_muelle'] ?? 0,
       viajesAlmacen: json['viajes_almacen'] ?? 0,
+      viajesSilos: json['viajes_silos'] ?? 0,
       saldoDescarga: _parseDouble(json['saldo_descarga']),
       saldoDespacho: _parseDouble(json['saldo_despacho']),
     );
@@ -742,8 +751,8 @@ class DashboardProducto {
       pesoDespachado: _parseDouble(json['peso_despachado']),
       porcentajeDescarga: _parseDouble(json['porcentaje_descarga']),
       porcentajeDespacho: _parseDouble(json['porcentaje_despacho']),
-      viajesMuelle: json['viajes_muelle'] ?? 0,
-      viajesBalanza: json['viajes_balanza'] ?? 0,
+      viajesMuelle: json['viajes_balanza'] ?? 0,
+      viajesBalanza: json['viajes_muelle'] ?? 0,
       viajesAlmacen: json['viajes_almacen'] ?? 0,
       distribuciones: (json['distribuciones'] as List?)
               ?.map((e) => DistribucionAlmacenDashboard.fromJson(e))
@@ -753,6 +762,30 @@ class DashboardProducto {
               ?.map((e) => BodegaItem.fromJson(e))
               .toList() ??
           [],
+    );
+  }
+}
+
+/// Silos por bodega de nave
+class SilosBodega {
+  final String bodega;
+  final double descargado;
+  final int bags;
+  final int viajes;
+
+  const SilosBodega({
+    required this.bodega,
+    this.descargado = 0,
+    this.bags = 0,
+    this.viajes = 0,
+  });
+
+  factory SilosBodega.fromJson(Map<String, dynamic> json) {
+    return SilosBodega(
+      bodega: json['bodega'] ?? '',
+      descargado: _parseDouble(json['descargado']),
+      bags: json['bags'] ?? 0,
+      viajes: json['viajes'] ?? 0,
     );
   }
 }
@@ -783,25 +816,34 @@ class SilosProducto {
 
 /// Resumen de silos del servicio
 class DashboardSilos {
+  final double totalManifestado;
   final double totalPeso;
   final int totalBags;
   final int totalViajes;
   final List<SilosProducto> porProducto;
+  final List<SilosBodega> porBodega;
 
   const DashboardSilos({
+    this.totalManifestado = 0,
     this.totalPeso = 0,
     this.totalBags = 0,
     this.totalViajes = 0,
     this.porProducto = const [],
+    this.porBodega = const [],
   });
 
   factory DashboardSilos.fromJson(Map<String, dynamic> json) {
     return DashboardSilos(
+      totalManifestado: _parseDouble(json['total_manifestado']),
       totalPeso: _parseDouble(json['total_peso']),
       totalBags: json['total_bags'] ?? 0,
       totalViajes: json['total_viajes'] ?? 0,
       porProducto: (json['por_producto'] as List?)
               ?.map((e) => SilosProducto.fromJson(e))
+              .toList() ??
+          [],
+      porBodega: (json['por_bodega'] as List?)
+              ?.map((e) => SilosBodega.fromJson(e))
               .toList() ??
           [],
     );
@@ -833,14 +875,15 @@ class BodegaItem {
   });
 
   factory BodegaItem.fromJson(Map<String, dynamic> json) {
+    final descargadoSilos = _parseDouble(json['descargado_silos']);
     return BodegaItem(
       bodega: json['bodega'] ?? '',
       manifestado: _parseDouble(json['manifestado']),
       descargado: _parseDouble(json['descargado']),
       viajes: json['viajes'] ?? 0,
-      tieneSilos: json['tiene_silos'] ?? false,
+      tieneSilos: descargadoSilos > 0,
       descargadoBalanza: _parseDouble(json['descargado_balanza']),
-      descargadoSilos: _parseDouble(json['descargado_silos']),
+      descargadoSilos: descargadoSilos,
       viajesBalanza: json['viajes_balanza'] ?? 0,
       viajesSilos: json['viajes_silos'] ?? 0,
     );
@@ -855,29 +898,37 @@ class BodegaItem {
 
 /// Resumen de bodegas de la nave del servicio
 class DashboardBodegas {
-  final double totalManifestado;
-  final double totalDescargado;
-  final int totalViajes;
-  final double totalDescargadoBalanza;
-  final int totalViajesBalanza;
-  final List<BodegaItem> porBodega;
+  final double totalManifestado;       // solo bodegas físicas (sin SILOS)
+  final double totalDescargado;        // solo camiones/balanza
+  final int totalViajes;               // solo camiones
+  final double totalSilosManifestado;  // manifestado SILOS
+  final double totalSilosDescargado;   // descargado SILOS
+  final int totalSilosViajes;          // viajes SILOS
+  final List<BodegaItem> porBodega;    // solo BODEGA 1-N, sin fila SILOS
 
   const DashboardBodegas({
     this.totalManifestado = 0,
     this.totalDescargado = 0,
     this.totalViajes = 0,
-    this.totalDescargadoBalanza = 0,
-    this.totalViajesBalanza = 0,
+    this.totalSilosManifestado = 0,
+    this.totalSilosDescargado = 0,
+    this.totalSilosViajes = 0,
     this.porBodega = const [],
   });
+
+  /// Total descargado del barco — totalDescargado ya incluye silos mergeados por bodega
+  double get totalDescargadoGeneral => totalDescargado;
+
+  bool get tieneSilos => totalSilosDescargado > 0;
 
   factory DashboardBodegas.fromJson(Map<String, dynamic> json) {
     return DashboardBodegas(
       totalManifestado: _parseDouble(json['total_manifestado']),
       totalDescargado: _parseDouble(json['total_descargado']),
       totalViajes: json['total_viajes'] ?? 0,
-      totalDescargadoBalanza: _parseDouble(json['total_descargado_balanza']),
-      totalViajesBalanza: json['total_viajes_balanza'] ?? 0,
+      totalSilosManifestado: _parseDouble(json['total_silos_manifestado']),
+      totalSilosDescargado: _parseDouble(json['total_silos_descargado']),
+      totalSilosViajes: json['total_silos_viajes'] ?? 0,
       porBodega: (json['por_bodega'] as List?)
               ?.map((e) => BodegaItem.fromJson(e))
               .toList() ??
