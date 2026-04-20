@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/inventario_model.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
+import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
+import 'package:stampcamera/widgets/naves/editar_nave_bottom_sheet.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
 import 'dart:typed_data';
@@ -35,6 +37,15 @@ class _InventarioDetalleNaveScreenState
   @override
   Widget build(BuildContext context) {
     final naveProvider = ref.watch(inventariosByNaveProvider(widget.naveId));
+    final user = ref.watch(authProvider).valueOrNull?.user;
+    final puedeEditar = user?.canChangeNaveStatus ?? false;
+
+    // El nombre real de la nave lo obtenemos del data (si hay); como fallback,
+    // mostramos el ID hasta que cargue.
+    final naveNombre = naveProvider.whenOrNull(
+          data: (naves) => naves.isNotEmpty ? naves.first.naveDescargaNombre : null,
+        ) ??
+        'Nave ${widget.naveId}';
 
     return Scaffold(
       appBar: AppBar(
@@ -42,6 +53,12 @@ class _InventarioDetalleNaveScreenState
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
+          if (puedeEditar)
+            IconButton(
+              icon: const Icon(Icons.edit_calendar),
+              onPressed: () => _abrirEditarNave(naveNombre),
+              tooltip: 'Editar estado de nave',
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(inventariosByNaveProvider(widget.naveId)),
@@ -110,7 +127,7 @@ class _InventarioDetalleNaveScreenState
         ...modelosPorAgenteYMarca.entries.map((agenteEntry) {
           final agente = agenteEntry.key;
           final marcas = agenteEntry.value;
-          return _buildAgenteSection(agente, marcas);
+          return _buildAgenteSection(agente, marcas, nave.isFPR);
         }),
       ],
     );
@@ -236,6 +253,7 @@ class _InventarioDetalleNaveScreenState
   Widget _buildAgenteSection(
     String agente,
     Map<String, List<InventarioModelo>> marcas,
+    bool isFPR,
   ) {
     final isExpanded = _expandedAgentes[agente] ?? false;
 
@@ -291,7 +309,7 @@ class _InventarioDetalleNaveScreenState
                 children: marcas.entries.map((marcaEntry) {
                   final marca = marcaEntry.key;
                   final modelos = marcaEntry.value;
-                  return _buildMarcaSection(marca, modelos);
+                  return _buildMarcaSection(marca, modelos, isFPR);
                 }).toList(),
               ),
             ),
@@ -300,7 +318,11 @@ class _InventarioDetalleNaveScreenState
     );
   }
 
-  Widget _buildMarcaSection(String marca, List<InventarioModelo> modelos) {
+  Widget _buildMarcaSection(
+    String marca,
+    List<InventarioModelo> modelos,
+    bool isFPR,
+  ) {
     // Calcular totales de la marca
     final totalCantidad = modelos.fold<int>(
       0,
@@ -385,7 +407,7 @@ class _InventarioDetalleNaveScreenState
           ),
 
           // Filas de modelos
-          ...modelos.map((modelo) => _buildModeloRowSimple(modelo)),
+          ...modelos.map((modelo) => _buildModeloRowSimple(modelo, isFPR)),
 
           // Fila de totales
           Container(
@@ -436,7 +458,7 @@ class _InventarioDetalleNaveScreenState
     );
   }
 
-  Widget _buildModeloRowSimple(InventarioModelo modelo) {
+  Widget _buildModeloRowSimple(InventarioModelo modelo, bool isFPR) {
     final totalDescargadas = modelo.descargadoPuerto + modelo.descargadoAlmacen;
 
     return ExpansionTile(
@@ -491,7 +513,7 @@ class _InventarioDetalleNaveScreenState
               ),
               const SizedBox(height: 8),
               ...modelo.versiones.map(
-                (version) => _buildVersionRowSimple(version),
+                (version) => _buildVersionRowSimple(version, isFPR),
               ),
             ],
           ),
@@ -500,7 +522,8 @@ class _InventarioDetalleNaveScreenState
     );
   }
 
-  Widget _buildVersionRowSimple(InventarioVersion version) {
+  Widget _buildVersionRowSimple(InventarioVersion version, bool isFPR) {
+    final descargadas = version.descargadas(isFPR: isFPR);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Material(
@@ -548,7 +571,7 @@ class _InventarioDetalleNaveScreenState
                         ),
                       ),
                       Text(
-                        '${version.cantidadUnidades} unidades • ${version.inventario ? "Inventariado" : "Pendiente"}',
+                        '$descargadas/${version.cantidadUnidades} descargadas • ${version.inventario ? "Inventariado" : "Pendiente"}',
                         style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           color: AppColors.textSecondary,
@@ -875,5 +898,16 @@ class _InventarioDetalleNaveScreenState
 
   void _navigateToInventarioDetail(int informacionUnidadId) {
     context.push('/autos/inventario/detalle/$informacionUnidadId');
+  }
+
+  Future<void> _abrirEditarNave(String naveNombre) async {
+    final updated = await showEditarNaveBottomSheet(
+      context,
+      naveId: widget.naveId,
+      naveNombre: naveNombre,
+    );
+    if (updated == true) {
+      ref.invalidate(inventariosByNaveProvider(widget.naveId));
+    }
   }
 }

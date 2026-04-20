@@ -211,33 +211,53 @@ class InventarioModelo {
 /// Modelo para versión de vehículo en inventario
 class InventarioVersion {
   final int informacionUnidadId;
+  final int marcaId;
   final String version;
   final int cantidadUnidades;
   final bool inventario;
+  final int descargadoPuerto;
+  final int descargadoAlmacen;
+  final int descargadoRecepcion;
 
   const InventarioVersion({
     required this.informacionUnidadId,
+    required this.marcaId,
     required this.version,
     required this.cantidadUnidades,
     required this.inventario,
+    required this.descargadoPuerto,
+    required this.descargadoAlmacen,
+    required this.descargadoRecepcion,
   });
 
   factory InventarioVersion.fromJson(Map<String, dynamic> json) {
     return InventarioVersion(
       informacionUnidadId: json['informacion_unidad_id'] ?? 0,
+      marcaId: json['marca_id'] ?? 0,
       version: json['version'] ?? '',
       cantidadUnidades: json['cantidad_unidades'] ?? 0,
       inventario: json['inventario'] ?? false,
+      descargadoPuerto: json['descargado_puerto'] ?? 0,
+      descargadoAlmacen: json['descargado_almacen'] ?? 0,
+      descargadoRecepcion: json['descargado_recepcion'] ?? 0,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'informacion_unidad_id': informacionUnidadId,
+      'marca_id': marcaId,
       'version': version,
       'cantidad_unidades': cantidadUnidades,
       'inventario': inventario,
+      'descargado_puerto': descargadoPuerto,
+      'descargado_almacen': descargadoAlmacen,
+      'descargado_recepcion': descargadoRecepcion,
     };
+  }
+
+  int descargadas({required bool isFPR}) {
+    return isFPR ? descargadoPuerto : descargadoAlmacen;
   }
 }
 
