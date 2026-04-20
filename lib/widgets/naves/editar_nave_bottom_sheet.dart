@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/naves/berthing_model.dart';
 import 'package:stampcamera/providers/naves/berthings_provider.dart';
@@ -223,40 +222,31 @@ class _EditarNaveFormState extends ConsumerState<_EditarNaveForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Estatus
-        const Text(
-          'Estado',
-          style: TextStyle(
-            fontSize: DesignTokens.fontSizeS,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: DesignTokens.spaceXS),
+        const AppSectionHeader(icon: Icons.flag, title: 'Estado'),
+        const SizedBox(height: DesignTokens.spaceS),
         DropdownButtonFormField<BerthingEstatus>(
           initialValue: _estatus,
           isExpanded: true,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: soloActual
-                ? AppColors.surface.withValues(alpha: 0.5)
-                : AppColors.surface,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: DesignTokens.spaceM,
-              vertical: DesignTokens.spaceS,
-            ),
-          ),
-          style: const TextStyle(
-            fontSize: DesignTokens.fontSizeM,
-            color: AppColors.textPrimary,
-          ),
           items: opcionesMostrar
               .map((e) => DropdownMenuItem(value: e, child: Text(e.label)))
               .toList(),
           onChanged: soloActual ? null : (v) => setState(() => _estatus = v),
+          decoration: InputDecoration(
+            labelText: 'Estado de la nave',
+            hintText: 'Seleccionar estado',
+            prefixIcon: const Icon(Icons.assignment_turned_in),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+            ),
+            filled: true,
+            fillColor: soloActual
+                ? AppColors.neutral.withValues(alpha: 0.3)
+                : AppColors.surface,
+          ),
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: soloActual ? AppColors.textSecondary : AppColors.textPrimary,
+          ),
         ),
         if (soloActual && _estatusInicial != null) ...[
           const SizedBox(height: DesignTokens.spaceXS),
@@ -274,7 +264,8 @@ class _EditarNaveFormState extends ConsumerState<_EditarNaveForm> {
         ],
         const SizedBox(height: DesignTokens.spaceL),
 
-        // Fechas
+        const AppSectionHeader(icon: Icons.event, title: 'Fechas'),
+        const SizedBox(height: DesignTokens.spaceS),
         _DateTimeField(
           label: 'Fecha de arribo',
           value: _fechaArribo,
@@ -378,7 +369,8 @@ class _EditarNaveFormState extends ConsumerState<_EditarNaveForm> {
   }
 }
 
-/// Campo de fecha+hora reutilizable interno.
+/// Campo de fecha+hora con el mismo estilo que `_buildDateTimePicker` del
+/// formulario de muelle (viaje_form_screen.dart:1299).
 class _DateTimeField extends StatelessWidget {
   final String label;
   final DateTime? value;
@@ -394,50 +386,29 @@ class _DateTimeField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = DateFormat('dd/MM/yyyy HH:mm');
-    final text = value != null ? formatter.format(value!) : '';
+    final display = value;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: DesignTokens.fontSizeS,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: DesignTokens.spaceXS),
-        InkWell(
-          onTap: () => _pick(context),
+    return InkWell(
+      onTap: () => _pick(context),
+      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+      child: Container(
+        padding: const EdgeInsets.all(DesignTokens.spaceM),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: DesignTokens.spaceM,
-              vertical: DesignTokens.spaceM - 2,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-              border: Border.all(color: AppColors.neutral),
-            ),
-            child: Row(
+          border: Border.all(color: AppColors.neutral),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                const Icon(
-                  Icons.event,
-                  size: 18,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: DesignTokens.spaceS),
                 Expanded(
                   child: Text(
-                    text.isEmpty ? 'Seleccionar…' : text,
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeM,
-                      color: text.isEmpty
-                          ? AppColors.textSecondary
-                          : AppColors.textPrimary,
+                    label,
+                    style: const TextStyle(
+                      fontSize: DesignTokens.fontSizeXS,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -452,9 +423,55 @@ class _DateTimeField extends StatelessWidget {
                   ),
               ],
             ),
-          ),
+            const SizedBox(height: DesignTokens.spaceXS),
+            Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: DesignTokens.spaceS),
+                Text(
+                  display != null
+                      ? '${display.day}/${display.month}/${display.year}'
+                      : 'Seleccionar…',
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeS,
+                    fontWeight: FontWeight.w600,
+                    color: display == null
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: DesignTokens.spaceXS),
+            Row(
+              children: [
+                const Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: DesignTokens.spaceS),
+                Text(
+                  display != null
+                      ? '${display.hour.toString().padLeft(2, '0')}:${display.minute.toString().padLeft(2, '0')}'
+                      : '--:--',
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeS,
+                    fontWeight: FontWeight.w600,
+                    color: display == null
+                        ? AppColors.textSecondary
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -473,6 +490,11 @@ class _DateTimeField extends StatelessWidget {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(initial),
+      initialEntryMode: TimePickerEntryMode.input,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
     );
     if (time == null) return;
 
