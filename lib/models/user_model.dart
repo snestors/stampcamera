@@ -294,6 +294,18 @@ class UserModel {
   bool get hasAsistenciaAccess =>
       isSuperuser || !isCliente;
 
+  /// Usuario puede cambiar el estado de una nave (berthing).
+  /// Coordinadores, gestores y superusers.
+  bool get canChangeNaveStatus =>
+      isSuperuser ||
+      groups.any((g) => [
+        'COORDINACION AUTOS',
+        'COORDINACION AUTO',
+        'COORDINACION GRANELES',
+        'GESTORES',
+        'GESTORES COORDINACION AUTOS',
+      ].contains(g));
+
   // ===========================================================================
   // MÓDULOS DISPONIBLES
   // ===========================================================================
