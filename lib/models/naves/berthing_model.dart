@@ -25,9 +25,32 @@ class BerthingDetail {
     );
   }
 
+  /// Parsea fechas del backend. Acepta:
+  /// - ISO-8601 (`2025-10-23T06:24:00-05:00`, `2025-10-23T06:24`)
+  /// - Formato legacy de `BerthingsViewSet.retrieve`: `dd/MM/yy HH:mm`
+  ///   (ej: `"23/10/25 06:24"`)
   static DateTime? _parseDate(dynamic v) {
     if (v == null) return null;
-    return DateTime.tryParse(v.toString());
+    final s = v.toString().trim();
+    if (s.isEmpty) return null;
+
+    final iso = DateTime.tryParse(s);
+    if (iso != null) return iso;
+
+    // Fallback: dd/MM/yy HH:mm (formato de visualización de naves/views.py)
+    final m = RegExp(
+      r'^(\d{1,2})/(\d{1,2})/(\d{2,4})\s+(\d{1,2}):(\d{2})$',
+    ).firstMatch(s);
+    if (m == null) return null;
+
+    final day = int.parse(m.group(1)!);
+    final month = int.parse(m.group(2)!);
+    var year = int.parse(m.group(3)!);
+    if (year < 100) year += 2000;
+    final hour = int.parse(m.group(4)!);
+    final minute = int.parse(m.group(5)!);
+
+    return DateTime(year, month, day, hour, minute);
   }
 }
 
