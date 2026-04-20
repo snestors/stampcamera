@@ -586,6 +586,7 @@ class TicketMuelleOptions {
 /// Información del servicio en el dashboard
 class DashboardServicioInfo {
   final int id;
+  final int? naveId;
   final String codigo;
   final String? naveNombre;
   final String? consignatario;
@@ -597,6 +598,7 @@ class DashboardServicioInfo {
 
   const DashboardServicioInfo({
     required this.id,
+    this.naveId,
     required this.codigo,
     this.naveNombre,
     this.consignatario,
@@ -610,6 +612,7 @@ class DashboardServicioInfo {
   factory DashboardServicioInfo.fromJson(Map<String, dynamic> json) {
     return DashboardServicioInfo(
       id: json['id'] ?? 0,
+      naveId: json['nave_id'],
       codigo: json['codigo'] ?? '',
       naveNombre: json['nave_nombre'],
       consignatario: json['consignatario'],

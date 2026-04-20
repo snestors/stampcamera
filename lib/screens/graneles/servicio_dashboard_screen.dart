@@ -6,9 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:stampcamera/core/core.dart';
+import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
+import 'package:stampcamera/widgets/naves/editar_nave_bottom_sheet.dart';
 
 class ServicioDashboardScreen extends ConsumerWidget {
   final int servicioId;
@@ -18,6 +20,12 @@ class ServicioDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsync = ref.watch(servicioDashboardProvider(servicioId));
+    final user = ref.watch(authProvider).valueOrNull?.user;
+    final puedeEditar = user?.canChangeNaveStatus ?? false;
+
+    // Extraer nave del dashboard si está cargado, para el botón de editar.
+    final nave = dashboardAsync.whenOrNull(data: (d) => d.servicio);
+    final mostrarEditar = puedeEditar && nave?.naveId != null;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -33,9 +41,25 @@ class ServicioDashboardScreen extends ConsumerWidget {
           ),
         ),
         actions: [
+          if (mostrarEditar)
+            IconButton(
+              icon: const Icon(Icons.edit_calendar),
+              onPressed: () async {
+                final updated = await showEditarNaveBottomSheet(
+                  context,
+                  naveId: nave!.naveId!,
+                  naveNombre: nave.naveNombre ?? 'Nave ${nave.naveId}',
+                );
+                if (updated == true) {
+                  ref.invalidate(servicioDashboardProvider(servicioId));
+                }
+              },
+              tooltip: 'Editar estado de nave',
+            ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(servicioDashboardProvider(servicioId)),
+            onPressed: () =>
+                ref.invalidate(servicioDashboardProvider(servicioId)),
             tooltip: 'Actualizar',
           ),
         ],
@@ -50,7 +74,8 @@ class ServicioDashboardScreen extends ConsumerWidget {
         ),
         data: (dashboard) => _DashboardContent(
           dashboard: dashboard,
-          onRefresh: () => ref.invalidate(servicioDashboardProvider(servicioId)),
+          onRefresh: () =>
+              ref.invalidate(servicioDashboardProvider(servicioId)),
         ),
       ),
     );
@@ -61,10 +86,7 @@ class _DashboardContent extends StatelessWidget {
   final ServicioDashboard dashboard;
   final VoidCallback onRefresh;
 
-  const _DashboardContent({
-    required this.dashboard,
-    required this.onRefresh,
-  });
+  const _DashboardContent({required this.dashboard, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -174,14 +196,18 @@ class _DashboardContent extends StatelessWidget {
                   vertical: DesignTokens.spaceXS,
                 ),
                 decoration: BoxDecoration(
-                  color: servicio.cierreServicio ? AppColors.success : AppColors.warning,
+                  color: servicio.cierreServicio
+                      ? AppColors.success
+                      : AppColors.warning,
                   borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      servicio.cierreServicio ? Icons.check_circle : Icons.schedule,
+                      servicio.cierreServicio
+                          ? Icons.check_circle
+                          : Icons.schedule,
                       size: 12,
                       color: Colors.white,
                     ),
@@ -228,7 +254,10 @@ class _DashboardContent extends StatelessWidget {
             runSpacing: DesignTokens.spaceXS,
             children: [
               if (servicio.consignatario != null)
-                _HeaderChip(icon: Icons.business, text: servicio.consignatario!),
+                _HeaderChip(
+                  icon: Icons.business,
+                  text: servicio.consignatario!,
+                ),
               if (servicio.puerto != null)
                 _HeaderChip(icon: Icons.location_on, text: servicio.puerto!),
               if (servicio.fechaAtraque != null)
@@ -968,11 +997,13 @@ class _SilosCardState extends State<_SilosCard> {
               ),
             ),
             const SizedBox(height: DesignTokens.spaceS),
-            ...silos.porProducto.map((p) => _SilosProductoRow(
-                  producto: p,
-                  numberFormat: numberFormat,
-                  intFormat: intFormat,
-                )),
+            ...silos.porProducto.map(
+              (p) => _SilosProductoRow(
+                producto: p,
+                numberFormat: numberFormat,
+                intFormat: intFormat,
+              ),
+            ),
           ],
 
           // Por bodega (colapsable, solo bodegas físicas)
@@ -995,11 +1026,13 @@ class _SilosCardState extends State<_SilosCard> {
                         ),
                       ),
                       const SizedBox(height: DesignTokens.spaceS),
-                      ...bodegasDetalle.map((b) => _SilosBodegaRow(
-                            bodega: b,
-                            numberFormat: numberFormat,
-                            intFormat: intFormat,
-                          )),
+                      ...bodegasDetalle.map(
+                        (b) => _SilosBodegaRow(
+                          bodega: b,
+                          numberFormat: numberFormat,
+                          intFormat: intFormat,
+                        ),
+                      ),
                     ],
                   ),
             crossFadeState: _isExpanded
@@ -1016,9 +1049,7 @@ class _SilosCardState extends State<_SilosCard> {
 class _BodegasExpandableCard extends StatefulWidget {
   final DashboardBodegas bodegas;
 
-  const _BodegasExpandableCard({
-    required this.bodegas,
-  });
+  const _BodegasExpandableCard({required this.bodegas});
 
   @override
   State<_BodegasExpandableCard> createState() => _BodegasExpandableCardState();
@@ -1064,7 +1095,11 @@ class _BodegasExpandableCardState extends State<_BodegasExpandableCard> {
             behavior: HitTestBehavior.opaque,
             child: Row(
               children: [
-                const Icon(Icons.directions_boat, size: 20, color: AppColors.primary),
+                const Icon(
+                  Icons.directions_boat,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: DesignTokens.spaceS),
                 const Expanded(
                   child: Text(
@@ -1149,11 +1184,13 @@ class _BodegasExpandableCardState extends State<_BodegasExpandableCard> {
                     ),
                   )
                 else ...[
-                  ...bodegas.porBodega.map((b) => _BodegaRow(
-                        bodega: b,
-                        numberFormat: numberFormat,
-                        intFormat: intFormat,
-                      )),
+                  ...bodegas.porBodega.map(
+                    (b) => _BodegaRow(
+                      bodega: b,
+                      numberFormat: numberFormat,
+                      intFormat: intFormat,
+                    ),
+                  ),
                   if (bodegas.tieneSilos)
                     _SilosBodyRow(
                       descargado: bodegas.totalSilosDescargado,
@@ -1182,7 +1219,8 @@ class _ProductoExpandableCard extends StatefulWidget {
   const _ProductoExpandableCard({required this.producto});
 
   @override
-  State<_ProductoExpandableCard> createState() => _ProductoExpandableCardState();
+  State<_ProductoExpandableCard> createState() =>
+      _ProductoExpandableCardState();
 }
 
 class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
@@ -1227,9 +1265,15 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                               AppColors.primary.withValues(alpha: 0.8),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                          borderRadius: BorderRadius.circular(
+                            DesignTokens.radiusM,
+                          ),
                         ),
-                        child: const Icon(Icons.grain, size: 20, color: Colors.white),
+                        child: const Icon(
+                          Icons.grain,
+                          size: 20,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: DesignTokens.spaceM),
                       Expanded(
@@ -1330,14 +1374,16 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                     Expanded(
                       child: _DetailItem(
                         label: 'Descargado',
-                        value: '${numberFormat.format(producto.pesoDescargado)} TM',
+                        value:
+                            '${numberFormat.format(producto.pesoDescargado)} TM',
                         color: AppColors.success,
                       ),
                     ),
                     Expanded(
                       child: _DetailItem(
                         label: 'Despachado',
-                        value: '${numberFormat.format(producto.pesoDespachado)} TM',
+                        value:
+                            '${numberFormat.format(producto.pesoDespachado)} TM',
                         color: AppColors.accent,
                       ),
                     ),
@@ -1348,16 +1394,16 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
                   children: [
                     Expanded(
                       child: _DetailItem(
-                        label: 'Viajes Balanza',
-                        value: '${producto.viajesBalanza}',
-                        color: AppColors.primary,
+                        label: 'Viajes Muelle',
+                        value: '${producto.viajesMuelle}',
+                        color: AppColors.secondary,
                       ),
                     ),
                     Expanded(
                       child: _DetailItem(
-                        label: 'Viajes Muelle',
-                        value: '${producto.viajesMuelle}',
-                        color: AppColors.secondary,
+                        label: 'Viajes Balanza',
+                        value: '${producto.viajesBalanza}',
+                        color: AppColors.primary,
                       ),
                     ),
                     Expanded(
@@ -1372,7 +1418,6 @@ class _ProductoExpandableCardState extends State<_ProductoExpandableCard> {
               ],
             ),
           ),
-
 
           // Distribuciones (almacenes destino)
           if (producto.distribuciones.isNotEmpty) ...[
@@ -1747,7 +1792,9 @@ class _BodegaRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: DesignTokens.fontSizeS,
                   fontWeight: FontWeight.bold,
-                  color: porcentaje >= 100 ? AppColors.success : AppColors.accent,
+                  color: porcentaje >= 100
+                      ? AppColors.success
+                      : AppColors.accent,
                 ),
               ),
             ],
@@ -1809,7 +1856,8 @@ class _BodegaRow extends StatelessWidget {
                       ),
                       if (bodega.tieneSilos)
                         TextSpan(
-                          text: ' (${numberFormat.format(bodega.descargadoBalanza)}+'
+                          text:
+                              ' (${numberFormat.format(bodega.descargadoBalanza)}+'
                               '${numberFormat.format(bodega.descargadoSilos)})',
                           style: const TextStyle(
                             fontSize: 9,
@@ -1838,7 +1886,8 @@ class _BodegaRow extends StatelessWidget {
                     ),
                     if (bodega.tieneSilos)
                       TextSpan(
-                        text: ' (${bodega.viajesBalanza}+${bodega.viajesSilos})',
+                        text:
+                            ' (${bodega.viajesBalanza}+${bodega.viajesSilos})',
                         style: const TextStyle(
                           fontSize: 9,
                           color: AppColors.secondary,
