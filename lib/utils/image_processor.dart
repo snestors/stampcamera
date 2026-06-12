@@ -260,10 +260,12 @@ class ImageProcessorCache {
   ImageProcessorCache._internal();
 
   ui.Image? _cachedLogo;
+  Uint8List? _logoBytes;
   bool _isInitialized = false;
 
   bool get isInitialized => _isInitialized;
   ui.Image? get logo => _cachedLogo;
+  Uint8List? get logoBytes => _logoBytes;
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -286,6 +288,7 @@ class ImageProcessorCache {
     try {
       final byteData = await rootBundle.load('assets/logo.png');
       final bytes = byteData.buffer.asUint8List();
+      _logoBytes = bytes;
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
       _cachedLogo = frame.image;
@@ -298,6 +301,7 @@ class ImageProcessorCache {
   void dispose() {
     _cachedLogo?.dispose();
     _cachedLogo = null;
+    _logoBytes = null;
     _isInitialized = false;
   }
 }
@@ -312,9 +316,16 @@ class ImageProcessor {
 
   final _cache = ImageProcessorCache();
   final _methodChannel = const MethodChannel('scan_file_channel');
+  final _nativeChannel = const MethodChannel('image_processor_channel');
+
+  // Si el channel nativo no existe (p.ej. hot-restart sin rebuild del APK),
+  // se desactiva y se usa el pipeline Dart por el resto de la sesión.
+  bool _nativeEngineAvailable = true;
 
   // Solo redimensionar si la imagen es MÁS GRANDE que esto
   static const int _maxImageSize = 2560; // 2K - mantiene calidad en la mayoría de dispositivos
+
+  static const String _androidSaveDir = '/storage/emulated/0/DCIM/StampCamera';
 
   Future<void> initialize() async {
     await _cache.initialize();
@@ -340,6 +351,28 @@ class ImageProcessor {
       }
 
       final finalConfig = config ?? const WatermarkConfig();
+
+      // ========== RUTA NATIVA (Android): motor Kotlin en hilo de fondo ==========
+      // Decodificación, watermark, compresión adaptativa y guardado ocurren
+      // completos en Kotlin (portado del proyecto KMP); el isolate de Dart
+      // solo espera el path resultante. Si falla, cae al pipeline Dart.
+      if (Platform.isAndroid && _nativeEngineAvailable) {
+        try {
+          final savedPath = await _processWithNativeEngine(
+            imagePath,
+            finalConfig,
+            customTimestamp ?? _formatTimestamp(),
+          );
+          stopwatch.stop();
+          debugPrint('✅ TOTAL (nativo): ${stopwatch.elapsedMilliseconds}ms → $savedPath');
+          return savedPath;
+        } on MissingPluginException {
+          _nativeEngineAvailable = false;
+          debugPrint('⚠️ Motor nativo no disponible, usando pipeline Dart');
+        } catch (e) {
+          debugPrint('⚠️ Motor nativo falló ($e), fallback a pipeline Dart');
+        }
+      }
 
       // ========== PASO 1: REDIMENSIONAR (NATIVO) ==========
       stepwatch.start();
@@ -398,6 +431,87 @@ class ImageProcessor {
       debugPrint('❌ Error procesando imagen: $e');
       debugPrint('Stack trace: $stackTrace');
       rethrow;
+    }
+  }
+
+  /// Delega el procesamiento completo al motor Kotlin (NativeImageProcessor).
+  /// El archivo nunca cruza el platform channel: se pasa el path y el nativo
+  /// lee, procesa, guarda en DCIM/StampCamera y registra en MediaStore.
+  Future<String> _processWithNativeEngine(
+    String imagePath,
+    WatermarkConfig config,
+    String timestamp,
+  ) async {
+    // El motor nativo comprime de forma adaptativa (baja calidad hasta entrar
+    // en maxFileSizeBytes). Arrancar en 100 solo agrega reintentos: se parte
+    // de 90 como el motor original del proyecto KMP.
+    final startQuality = config.compressionQuality >= 100
+        ? 90
+        : config.compressionQuality.clamp(1, 100);
+
+    final savedPath = await _nativeChannel.invokeMethod<String>(
+      'processAndSaveImage',
+      {
+        'inputPath': imagePath,
+        'outputDir': _androidSaveDir,
+        'timestampText': config.showTimestamp ? timestamp : null,
+        'locationText':
+            (config.showLocation && config.locationText != null)
+                ? _truncateText(config.locationText!, _maxImageSize, 48)
+                : null,
+        'logoBytes': config.showLogo ? _cache.logoBytes : null,
+        'logoSizeRatio': config.logoSizeRatio,
+        'logoPosition': _positionName(config.logoPosition),
+        'timestampPosition': _positionName(config.timestampPosition),
+        'locationPosition': _positionName(config.locationPosition),
+        'timestampFontSize': _fontSizeName(config.timestampFontSize),
+        'locationFontSize': _fontSizeName(config.locationFontSize),
+        'quality': startQuality,
+        'maxFileSizeBytes': 950000, // ~0.95MB, mismo techo que el motor KMP
+        'textColor': '#FFFFFF',
+        'outlineColor': '#000000',
+      },
+    );
+
+    if (savedPath == null || savedPath.isEmpty) {
+      throw Exception('El motor nativo no devolvió un path');
+    }
+    return savedPath;
+  }
+
+  String _positionName(WatermarkPosition position) {
+    switch (position) {
+      case WatermarkPosition.topLeft:
+        return 'TOP_LEFT';
+      case WatermarkPosition.topCenter:
+        return 'TOP_CENTER';
+      case WatermarkPosition.topRight:
+        return 'TOP_RIGHT';
+      case WatermarkPosition.leftCenter:
+        return 'LEFT_CENTER';
+      case WatermarkPosition.center:
+        return 'CENTER';
+      case WatermarkPosition.rightCenter:
+        return 'RIGHT_CENTER';
+      case WatermarkPosition.bottomLeft:
+        return 'BOTTOM_LEFT';
+      case WatermarkPosition.bottomCenter:
+        return 'BOTTOM_CENTER';
+      case WatermarkPosition.bottomRight:
+        return 'BOTTOM_RIGHT';
+    }
+  }
+
+  String _fontSizeName(FontSize fontSize) {
+    switch (fontSize) {
+      case FontSize.auto:
+        return 'AUTO';
+      case FontSize.small:
+        return 'SMALL';
+      case FontSize.medium:
+        return 'MEDIUM';
+      case FontSize.large:
+        return 'LARGE';
     }
   }
 
