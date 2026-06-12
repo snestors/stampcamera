@@ -1,6 +1,7 @@
 // widgets/pedeteo/scanner_widget.dart - OPTIMIZADO: Una sola cámara
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:path_provider/path_provider.dart';
@@ -32,6 +33,9 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
   // 🎯 Estado del proceso
   ProcessingState _currentState = ProcessingState.idle;
 
+  // VIN leído, para mostrarlo como confirmación inmediata en el overlay
+  String? _scannedVin;
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +50,20 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
         torchEnabled: false,
         // 🚀 Habilitar captura de imagen para obtener foto del scan
         returnImage: true,
+        // Con returnImage el plugin codifica el frame COMPLETO a PNG antes
+        // de avisar la detección (1920x1080 por defecto = segundos de
+        // retraso). A 720p el aviso llega ~3x más rápido y la foto del VIN
+        // sigue siendo legible (igual se comprime al estamparla).
+        cameraResolution: const Size(1280, 720),
+        // Solo los formatos usados en etiquetas VIN: analizar TODOS los
+        // formatos hace más lento cada frame y retrasa la detección.
+        formats: const [
+          BarcodeFormat.code39,
+          BarcodeFormat.code128,
+          BarcodeFormat.dataMatrix,
+          BarcodeFormat.qrCode,
+          BarcodeFormat.pdf417,
+        ],
       );
 
       Future.delayed(const Duration(milliseconds: 300), () {
@@ -70,8 +88,12 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
         barcode.isNotEmpty &&
         _currentState == ProcessingState.idle &&
         mounted) {
-      // 🎯 ESTADO 1: VIN Detectado
-      setState(() => _currentState = ProcessingState.vinDetected);
+      // 🎯 ESTADO 1: VIN Detectado — feedback INMEDIATO (vibración + visual)
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _currentState = ProcessingState.vinDetected;
+        _scannedVin = barcode;
+      });
 
       try {
         String imagePath;
@@ -95,7 +117,10 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
 
           if (mounted) {
             ref.read(pedeteoStateProvider.notifier).onBarcodeScanned(barcode);
-            setState(() => _currentState = ProcessingState.idle);
+            setState(() {
+              _currentState = ProcessingState.idle;
+              _scannedVin = null;
+            });
           }
           return;
         }
@@ -119,24 +144,23 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
             .inMilliseconds;
         debugPrint('🎨 Imagen procesada en: ${processingDuration}ms');
 
-        // 🎯 ESTADO 3: Completado
+        // 🎯 ESTADO 3: Completado — onBarcodeScanned oculta el scanner
+        // (showScanner=false) y abre el formulario de inmediato; el VIN
+        // queda confirmado en el propio formulario (DetalleRegistroCard).
         if (mounted) {
           setState(() => _currentState = ProcessingState.completed);
 
           ref.read(pedeteoStateProvider.notifier).setCapturedImage(processedImagePath);
           ref.read(pedeteoStateProvider.notifier).onBarcodeScanned(barcode);
-
-          await Future.delayed(const Duration(milliseconds: 200));
-
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
         }
       } catch (e) {
         debugPrint('❌ Error en detección: $e');
 
         if (mounted) {
-          setState(() => _currentState = ProcessingState.idle);
+          setState(() {
+            _currentState = ProcessingState.idle;
+            _scannedVin = null;
+          });
           AppSnackBar.error(context, 'Error: $e');
         }
       } finally {
@@ -150,27 +174,13 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
   String _getStateMessage() {
     switch (_currentState) {
       case ProcessingState.idle:
-        return 'Centra el VIN en el recuadro';
+        return 'Apunta al código del VIN';
       case ProcessingState.vinDetected:
-        return 'VIN detectado!';
+        return '¡VIN escaneado!';
       case ProcessingState.processingImage:
-        return 'Procesando imagen...';
+        return 'Guardando foto...';
       case ProcessingState.completed:
-        return 'Completado!';
-    }
-  }
-
-  /// 🎯 Obtener color según el estado
-  Color _getStateColor() {
-    switch (_currentState) {
-      case ProcessingState.idle:
-        return Colors.blue;
-      case ProcessingState.vinDetected:
-        return Colors.green;
-      case ProcessingState.processingImage:
-        return Colors.purple;
-      case ProcessingState.completed:
-        return Colors.green;
+        return '¡Listo!';
     }
   }
 
@@ -195,69 +205,63 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Header del scanner
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.blue.shade50,
-          child: Row(
-            children: [
-              const Icon(Icons.qr_code_scanner, color: Colors.blue),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Escaneando VIN',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          _currentState == ProcessingState.idle
-                              ? Icons.camera_alt
-                              : Icons.sync,
-                          size: 12,
-                          color: _getStateColor(),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _getStateMessage(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: _getStateColor(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: _toggleTorch,
-                icon: const Icon(Icons.flash_on),
-                tooltip: 'Toggle Flash',
-              ),
-              IconButton(
-                onPressed: _closeScanner,
-                icon: const Icon(Icons.close),
-                tooltip: 'Cerrar Scanner',
-              ),
-            ],
-          ),
-        ),
-
-        // Scanner
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.blue, width: 3),
+    return ColoredBox(
+      color: Colors.black,
+      child: Column(
+        children: [
+          // Header del scanner
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignTokens.spaceM,
+              vertical: DesignTokens.spaceS,
             ),
+            color: AppColors.primary,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.white,
+                  size: DesignTokens.iconM,
+                ),
+                const SizedBox(width: DesignTokens.spaceS),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Escanear VIN',
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeM,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        _getStateMessage(),
+                        style: TextStyle(
+                          fontSize: DesignTokens.fontSizeXS,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: _toggleTorch,
+                  icon: const Icon(Icons.flash_on, color: Colors.white),
+                  tooltip: 'Linterna',
+                ),
+                IconButton(
+                  onPressed: _closeScanner,
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  tooltip: 'Cerrar',
+                ),
+              ],
+            ),
+          ),
+
+          // Scanner
+          Expanded(
             child: _isStarted
                 ? Stack(
                     children: [
@@ -267,74 +271,11 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
                         onDetect: _onBarcodeDetected,
                       ),
 
-                      // Overlay de procesamiento con estados
-                      if (_isProcessing)
-                        Container(
-                          color: Colors.black54,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    _getStateColor(),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _getStateMessage(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Estado: ${_currentState.name}',
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      // Overlay de confirmación: check inmediato + VIN leído
+                      if (_isProcessing) _buildConfirmationOverlay(),
 
-                      // Overlay del recuadro VIN
-                      if (!_isProcessing)
-                        Center(
-                          child: Container(
-                            width: 300,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.blue, width: 3),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'VIN',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(
-                                      offset: Offset(1, 1),
-                                      blurRadius: 3,
-                                      color: Colors.black54,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      // Indicadores de esquina
-                      if (!_isProcessing) _buildCornerIndicators(),
+                      // Visor de escaneo: marco con esquinas + instrucción
+                      if (!_isProcessing) _buildScanOverlay(),
                     ],
                   )
                 : const Center(
@@ -343,120 +284,164 @@ class _PedeteoScannerWidgetState extends ConsumerState<PedeteoScannerWidget> {
                       children: [
                         CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.blue,
+                            Colors.white,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: DesignTokens.spaceM),
                         Text(
-                          'Iniciando scanner...',
-                          style: TextStyle(color: Colors.blue, fontSize: 16),
+                          'Iniciando cámara...',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: DesignTokens.fontSizeS,
+                          ),
                         ),
                       ],
                     ),
                   ),
           ),
-        ),
-
-        // Footer con estado
-        Container(
-          padding: const EdgeInsets.all(16),
-          color: Colors.grey[100],
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _currentState == ProcessingState.idle
-                        ? Icons.camera_alt
-                        : Icons.sync,
-                    size: 16,
-                    color: _getStateColor(),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _getStateMessage(),
-                    style: TextStyle(
-                      color: _getStateColor(),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _isProcessing
-                    ? 'Procesando...'
-                    : 'Foto automatica al detectar VIN',
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildCornerIndicators() {
-    return Stack(
-      children: [
-        Positioned(
-          top: 50,
-          left: 50,
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.blue, width: 4),
-                left: BorderSide(color: Colors.blue, width: 4),
+  /// Confirmación de escaneo: el check y el VIN aparecen APENAS se detecta
+  /// el código (con vibración), y debajo va el progreso del guardado.
+  /// Así no queda duda de si ya escaneó o no.
+  Widget _buildConfirmationOverlay() {
+    final isSaving = _currentState == ProcessingState.processingImage ||
+        _currentState == ProcessingState.vinDetected;
+
+    return Container(
+      color: Colors.black.withValues(alpha: 0.75),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: AppColors.success,
+              size: 72,
+            ),
+            const SizedBox(height: DesignTokens.spaceM),
+            const Text(
+              '¡VIN escaneado!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: DesignTokens.fontSizeL,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (_scannedVin != null) ...[
+              const SizedBox(height: DesignTokens.spaceS),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DesignTokens.spaceM,
+                  vertical: DesignTokens.spaceXS,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Text(
+                  _scannedVin!,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: DesignTokens.fontSizeM,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'monospace',
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: DesignTokens.spaceL),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isSaving) ...[
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                    ),
+                  ),
+                  const SizedBox(width: DesignTokens.spaceS),
+                ],
+                Text(
+                  isSaving ? 'Guardando foto...' : 'Abriendo formulario...',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: DesignTokens.fontSizeS,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Visor centrado: 4 esquinas alineadas al marco + instrucción debajo
+  Widget _buildScanOverlay() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 300,
+            height: 110,
+            child: Stack(
+              children: [
+                Positioned(top: 0, left: 0, child: _corner(top: true, left: true)),
+                Positioned(top: 0, right: 0, child: _corner(top: true, left: false)),
+                Positioned(bottom: 0, left: 0, child: _corner(top: false, left: true)),
+                Positioned(bottom: 0, right: 0, child: _corner(top: false, left: false)),
+              ],
+            ),
+          ),
+          const SizedBox(height: DesignTokens.spaceM),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignTokens.spaceM,
+              vertical: DesignTokens.spaceXS,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+            ),
+            child: const Text(
+              'Centra el código del VIN en el marco',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: DesignTokens.fontSizeXS,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _corner({required bool top, required bool left}) {
+    const side = BorderSide(color: Colors.white, width: 3);
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        border: Border(
+          top: top ? side : BorderSide.none,
+          bottom: !top ? side : BorderSide.none,
+          left: left ? side : BorderSide.none,
+          right: !left ? side : BorderSide.none,
         ),
-        Positioned(
-          top: 50,
-          right: 50,
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: Colors.blue, width: 4),
-                right: BorderSide(color: Colors.blue, width: 4),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 50,
-          left: 50,
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.blue, width: 4),
-                left: BorderSide(color: Colors.blue, width: 4),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 50,
-          right: 50,
-          child: Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.blue, width: 4),
-                right: BorderSide(color: Colors.blue, width: 4),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

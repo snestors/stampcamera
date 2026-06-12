@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/widgets/common/custom_dropdown_field.dart';
 
@@ -15,26 +16,65 @@ class FormFieldsCard extends ConsumerWidget {
     // ✅ Patrón .when() robusto - Maneja todos los estados
     return ref.watch(pedeteoOptionsProvider).when(
       data: (options) => _buildFormCard(context, ref, options),
-      loading: () => const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(
+      loading: () => _buildCardShell(
+        child: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(DesignTokens.spaceM),
             child: CircularProgressIndicator(),
           ),
         ),
       ),
-      error: (error, _) => Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: Column(
-              children: [
-                const Icon(Icons.error, color: Colors.red),
-                const SizedBox(height: 8),
-                Text('Error al cargar opciones: $error'),
-              ],
-            ),
+      error: (error, _) => _buildCardShell(
+        accentColor: AppColors.error,
+        child: Center(
+          child: Column(
+            children: [
+              const Icon(Icons.error, color: AppColors.error),
+              const SizedBox(height: DesignTokens.spaceS),
+              Text('Error al cargar opciones: $error'),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Mismo estilo de tarjeta que DetalleRegistroCard (card del detalle VIN):
+  /// fondo blanco, radio L, sombra sutil y accent strip lateral.
+  Widget _buildCardShell({required Widget child, Color? accentColor}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Accent strip lateral
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: accentColor ?? AppColors.primary,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(DesignTokens.spaceM),
+                child: child,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -45,45 +85,65 @@ class FormFieldsCard extends ConsumerWidget {
     final fieldPermissions = options.fieldPermissions;
     final initialValues = options.initialValues;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Datos del Registro',
-              style: Theme.of(context).textTheme.titleLarge,
+    return _buildCardShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header con icono, mismo patrón que el card del detalle VIN
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(DesignTokens.spaceS),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                ),
+                child: const Icon(
+                  Icons.assignment_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: DesignTokens.spaceS),
+              const Text(
+                'Datos del Registro',
+                style: TextStyle(
+                  fontSize: DesignTokens.fontSizeM,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignTokens.spaceM),
+
+          // Condición
+          if (fieldPermissions['condicion'] != null)
+            _buildCondicionField(
+              ref,
+              options,
+              initialValues,
+              fieldPermissions,
             ),
-            const SizedBox(height: 16),
 
-            // Condición
-            if (fieldPermissions['condicion'] != null)
-              _buildCondicionField(
-                ref,
-                options,
-                initialValues,
-                fieldPermissions,
-              ),
+          const SizedBox(height: DesignTokens.spaceS),
 
-            const SizedBox(height: 12),
+          // Zona de Inspección
+          if (fieldPermissions['zona_inspeccion'] != null)
+            _buildZonaInspeccionField(
+              ref,
+              options,
+              initialValues,
+              fieldPermissions,
+            ),
 
-            // Zona de Inspección
-            if (fieldPermissions['zona_inspeccion'] != null)
-              _buildZonaInspeccionField(
-                ref,
-                options,
-                initialValues,
-                fieldPermissions,
-              ),
+          const SizedBox(height: DesignTokens.spaceS),
 
-            const SizedBox(height: 12),
-
-            // Bloque
-            if (fieldPermissions['bloque'] != null)
-              _buildBloqueField(ref, options, initialValues, fieldPermissions),
-          ],
-        ),
+          // Bloque
+          if (fieldPermissions['bloque'] != null)
+            _buildBloqueField(ref, options, initialValues, fieldPermissions),
+        ],
       ),
     );
   }

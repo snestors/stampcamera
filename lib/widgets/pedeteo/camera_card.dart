@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
 
@@ -11,8 +12,6 @@ class CameraCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(pedeteoStateProvider);
-
-    debugPrint('🔍 CameraCard - capturedImagePath: ${state.capturedImagePath}');
 
     return ReusableCameraCard(
       title: 'Foto del VIN',
@@ -24,7 +23,7 @@ class CameraCard extends ConsumerWidget {
       showGalleryOption: true,
       cameraButtonText: 'Tomar foto',
       galleryButtonText: 'Elegir de galería',
-      primaryColor: const Color(0xFF0A2D3E),
+      primaryColor: AppColors.primary,
     );
   }
 }

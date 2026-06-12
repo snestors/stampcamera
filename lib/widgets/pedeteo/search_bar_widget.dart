@@ -45,7 +45,11 @@ class _PedeteoSearchBarState extends ConsumerState<PedeteoSearchBar> {
     ref.read(pedeteoStateProvider.notifier).updateSearchQuery(query);
 
     setState(() {
-      if (query.isNotEmpty && query.length < 17 && _searchFocusNode.hasFocus) {
+      // Mínimo 3 caracteres para abrir el dropdown: con menos, los
+      // resultados son media nave y no aportan nada.
+      if (query.trim().length >= 3 &&
+          query.length < 17 &&
+          _searchFocusNode.hasFocus) {
         _showSearchDropdown();
       } else {
         _hideDropdown();

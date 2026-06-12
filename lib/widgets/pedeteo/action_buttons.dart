@@ -31,7 +31,7 @@ class ActionButtons extends ConsumerWidget {
                 ? () => _saveAndContinue(context, ref)
                 : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0A2D3E),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),

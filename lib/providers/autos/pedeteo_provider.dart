@@ -50,11 +50,12 @@ final pedeteoModeloFilterProvider = StateProvider<String?>((ref) => null);
 
 /// Provider que filtra localmente los VINs disponibles usando RegistroGeneral
 final pedeteoSearchResultsProvider = Provider<List<RegistroGeneral>>((ref) {
-  final query = ref.watch(pedeteoSearchQueryProvider);
+  final query = ref.watch(pedeteoSearchQueryProvider).trim();
   final optionsAsync = ref.watch(pedeteoOptionsProvider);
 
-  // Si no hay query o las opciones están cargando, retorna lista vacía
-  if (query.isEmpty || optionsAsync.isLoading || optionsAsync.hasError) {
+  // Mínimo 3 caracteres: con 1-2 el contains matchea media nave y el
+  // dropdown termina volcando la lista completa. Vacío = lista vacía.
+  if (query.length < 3 || optionsAsync.isLoading || optionsAsync.hasError) {
     return <RegistroGeneral>[];
   }
 
