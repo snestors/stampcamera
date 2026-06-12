@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/base_provider_imp.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
+import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/services/contenedor_service.dart';
 
 // ============================================================================
@@ -68,6 +69,8 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
       final current = state.value ?? [];
       state = AsyncValue.data([newContenedor, ...current]);
 
+      _invalidateOpcionesDependientes();
+
       return true;
     } catch (e) {
       rethrow;
@@ -101,6 +104,7 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
       }).toList();
 
       state = AsyncValue.data(updatedList);
+      _invalidateOpcionesDependientes();
       return true;
     } catch (e) {
       rethrow;
@@ -183,6 +187,7 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
       }).toList();
 
       state = AsyncValue.data(updatedList);
+      _invalidateOpcionesDependientes();
       return true;
     } catch (e) {
       rethrow;
@@ -199,10 +204,18 @@ class ContenedorNotifier extends BaseListProviderImpl<ContenedorModel> {
       final filteredList = current.where((item) => item.id != id).toList();
 
       state = AsyncValue.data(filteredList);
+      _invalidateOpcionesDependientes();
       return true;
     } catch (e) {
       return false;
     }
+  }
+
+  /// El dropdown de contenedores en registro VIN se alimenta de
+  /// registroVinOptionsProvider (cacheado); sin esto, los contenedores
+  /// nuevos solo aparecen tras reiniciar la app.
+  void _invalidateOpcionesDependientes() {
+    ref.invalidate(registroVinOptionsProvider);
   }
 
   /// Obtener contenedor por ID
