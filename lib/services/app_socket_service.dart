@@ -141,6 +141,13 @@ class AppSocketService {
       request.headers.set('Authorization', 'Bearer $accessToken');
       request.headers.set('Content-Type', 'application/json');
 
+      // El backend exige device_id en el WS: el ticket debe llevarlo.
+      // Este request no pasa por el interceptor de Dio, hay que agregarlo a mano.
+      final deviceId = await HttpService().storage.read(key: 'device_id');
+      if (deviceId != null && deviceId.isNotEmpty) {
+        request.headers.set('X-Device-ID', deviceId);
+      }
+
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();
 
