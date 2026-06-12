@@ -306,14 +306,18 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _NaveSearchSheet(
-        onSelected: (id, label) {
-          setState(() {
-            _filtroNaveId = id;
-            _filtroNaveLabel = label;
-          });
-          _applyCurrentFilter(notifier);
-        },
+      builder: (ctx) => Padding(
+        // Evita que el teclado tape el buscador
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: _NaveSearchSheet(
+          onSelected: (id, label) {
+            setState(() {
+              _filtroNaveId = id;
+              _filtroNaveLabel = label;
+            });
+            _applyCurrentFilter(notifier);
+          },
+        ),
       ),
     );
   }
