@@ -148,7 +148,7 @@ class ReusableCameraCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Color efectivo con fallback al color por defecto
-    final effectivePrimaryColor = primaryColor ?? const Color(0xFF0A2D3E);
+    final effectivePrimaryColor = primaryColor ?? AppColors.primary;
 
     return Card(
       child: Padding(
@@ -157,7 +157,12 @@ class ReusableCameraCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Título
-            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
             // Subtítulo opcional
             if (subtitle != null) ...[
@@ -166,36 +171,19 @@ class ReusableCameraCard extends StatelessWidget {
                 subtitle!,
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ],
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Preview de la imagen
             _buildImagePreview(context),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Botones de acción
             _buildActionButtons(context, effectivePrimaryColor),
-
-            // Información
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.info_outline, size: 16, color: Colors.grey),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    'La foto será marcada automáticamente con logo y timestamp',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -224,17 +212,26 @@ class ReusableCameraCard extends StatelessWidget {
                   // Badge de estado
                   Positioned(top: 8, right: 8, child: _buildImageBadge()),
 
-                  // Botón para ver imagen completa
+                  // Botón para ver imagen completa (sin FAB: evita Hero
+                  // implícito y sombra; con varios cards en un form el
+                  // heroTag compartido puede llegar a crashear al navegar)
                   Positioned(
                     bottom: 8,
                     right: 8,
-                    child: FloatingActionButton.small(
-                      onPressed: () => _showFullImage(context),
-                      backgroundColor: Colors.black54,
-                      child: const Icon(
-                        Icons.fullscreen,
-                        color: Colors.white,
-                        size: 20,
+                    child: Material(
+                      color: Colors.black54,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () => _showFullImage(context),
+                        child: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(
+                            Icons.fullscreen,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -265,6 +262,9 @@ class ReusableCameraCard extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
+      // Preview de ~200px: decodificar la foto completa (2560px) aquí es
+      // lo que hace sentir pesada la UI. Se decodifica a 1024px máx.
+      cacheWidth: 1024,
       errorBuilder: (context, error, stackTrace) {
         return Container(
           color: Colors.red.shade50,
@@ -290,6 +290,7 @@ class ReusableCameraCard extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
+      memCacheWidth: 1024,
       placeholder: (context, url) => const Center(
         child: CircularProgressIndicator(),
       ),
@@ -807,28 +808,9 @@ class _CameraScreenState extends State<_CameraScreen> {
       );
     }
 
-    return Stack(
-      children: [
-        CameraPreview(_cameraController!),
-        if (_isProcessing)
-          Container(
-            color: Colors.black54,
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Colors.white),
-                  SizedBox(height: 16),
-                  Text(
-                    'Procesando imagen...',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          ),
-      ],
-    );
+    // Cuando _isProcessing es true siempre hay imagen capturada y se muestra
+    // _buildImagePreview, así que aquí no hace falta overlay de procesamiento.
+    return CameraPreview(_cameraController!);
   }
 
   Widget _buildImagePreview() {
@@ -848,6 +830,12 @@ class _CameraScreenState extends State<_CameraScreen> {
               fit: BoxFit.contain,
               width: double.infinity,
               height: double.infinity,
+              // La original de cámara puede ser de 4000px: decodificarla
+              // entera para el preview congela la UI. 1600px basta para
+              // pantalla completa.
+              cacheWidth: 1600,
+              // Evita el flash en blanco al cambiar de original → procesada
+              gaplessPlayback: true,
             ),
           ),
 
@@ -916,6 +904,9 @@ class _CameraScreenState extends State<_CameraScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         FloatingActionButton(
+          // Sin Hero: evita la animación hero implícita contra FABs de la
+          // pantalla anterior al abrir/cerrar la cámara.
+          heroTag: null,
           onPressed: _isInitialized && !_isProcessing ? _takePicture : null,
           backgroundColor: Colors.white,
           child: _isProcessing
