@@ -370,6 +370,21 @@ class InventarioBaseService {
     }
   }
 
+  /// Descargar Excel con unidades pendientes de una nave.
+  /// tipo: 'pedeteo' (sin registro PUERTO/ALMACEN) o 'recepcion' (sin RECEPCION).
+  /// Backend: GET /api/v1/autos/registro-general/export-pendientes/
+  Future<List<int>> descargarPendientesExcel({
+    required int naveId,
+    required String tipo,
+  }) async {
+    final response = await _http.dio.get(
+      '/api/v1/autos/registro-general/export-pendientes/',
+      queryParameters: {'nave_descarga_id': naveId, 'tipo': tipo},
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return response.data as List<int>;
+  }
+
   /// Sincronizar inventario con inventario base previo
   Future<InventarioBase> syncWithPrevious({
     required int informacionUnidadId,

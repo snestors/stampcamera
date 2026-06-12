@@ -59,6 +59,33 @@ class _InventarioDetalleNaveScreenState
               onPressed: () => _abrirEditarNave(naveNombre),
               tooltip: 'Editar estado de nave',
             ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.download),
+            tooltip: 'Descargar pendientes',
+            onSelected: (tipo) => _descargarPendientes(tipo, naveNombre),
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'pedeteo',
+                child: Row(
+                  children: [
+                    Icon(Icons.pending_actions, size: 18, color: AppColors.warning),
+                    SizedBox(width: 8),
+                    Text('Faltan pedetear (Excel)'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'recepcion',
+                child: Row(
+                  children: [
+                    Icon(Icons.login, size: 18, color: AppColors.recepcion),
+                    SizedBox(width: 8),
+                    Text('Faltan recepcionar (Excel)'),
+                  ],
+                ),
+              ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.invalidate(inventariosByNaveProvider(widget.naveId)),
@@ -332,6 +359,10 @@ class _InventarioDetalleNaveScreenState
       0,
       (sum, modelo) => sum + modelo.descargadoPuerto + modelo.descargadoAlmacen,
     );
+    final totalRecepcion = modelos.fold<int>(
+      0,
+      (sum, modelo) => sum + modelo.descargadoRecepcion,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -395,10 +426,22 @@ class _InventarioDetalleNaveScreenState
                 ),
                 Expanded(
                   flex: 2,
-                  child: Icon(
-                    Icons.download,
-                    size: 16,
-                    color: AppColors.textSecondary,
+                  child: Text(
+                    'DESC.',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'RECEP.',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      color: AppColors.recepcion,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 Spacer(),
@@ -449,6 +492,18 @@ class _InventarioDetalleNaveScreenState
                     textAlign: TextAlign.center,
                   ),
                 ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    '$totalRecepcion',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: AppColors.recepcion,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
                 const Spacer(),
               ],
             ),
@@ -487,6 +542,17 @@ class _InventarioDetalleNaveScreenState
             child: Text(
               '$totalDescargadas',
               style: const TextStyle(fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              '${modelo.descargadoRecepcion}',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.recepcion,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -571,7 +637,7 @@ class _InventarioDetalleNaveScreenState
                         ),
                       ),
                       Text(
-                        '$descargadas/${version.cantidadUnidades} descargadas • ${version.inventario ? "Inventariado" : "Pendiente"}',
+                        '$descargadas/${version.cantidadUnidades} descargadas • ${version.descargadoRecepcion} recep. • ${version.inventario ? "Inventariado" : "Pendiente"}',
                         style: const TextStyle(
                           fontSize: DesignTokens.fontSizeXS,
                           color: AppColors.textSecondary,
@@ -701,6 +767,10 @@ class _InventarioDetalleNaveScreenState
       0,
       (sum, modelo) => sum + modelo.descargadoPuerto + modelo.descargadoAlmacen,
     );
+    final totalRecepcion = modelos.fold<int>(
+      0,
+      (sum, modelo) => sum + modelo.descargadoRecepcion,
+    );
 
     return Container(
       width: 400,
@@ -790,6 +860,14 @@ class _InventarioDetalleNaveScreenState
                     textAlign: TextAlign.center,
                   ),
                 ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'RECEPCIÓN',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ],
             ),
           ),
@@ -827,6 +905,14 @@ class _InventarioDetalleNaveScreenState
                     flex: 2,
                     child: Text(
                       '$descargado',
+                      style: const TextStyle(fontSize: 10),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      '${modelo.descargadoRecepcion}',
                       style: const TextStyle(fontSize: 10),
                       textAlign: TextAlign.center,
                     ),
@@ -878,6 +964,17 @@ class _InventarioDetalleNaveScreenState
                     textAlign: TextAlign.center,
                   ),
                 ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    '$totalRecepcion',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ],
             ),
           ),
@@ -894,6 +991,47 @@ class _InventarioDetalleNaveScreenState
         ],
       ),
     );
+  }
+
+  /// Descarga el Excel de pendientes (pedeteo o recepción) y lo comparte.
+  /// Requiere endpoint backend: /api/v1/autos/registro-general/export-pendientes/
+  Future<void> _descargarPendientes(String tipo, String naveNombre) async {
+    final label = tipo == 'pedeteo' ? 'pedeteo' : 'recepción';
+
+    try {
+      AppDialog.loading(context, message: 'Generando Excel de pendientes...');
+
+      final service = ref.read(inventarioBaseServiceProvider);
+      final bytes = await service.descargarPendientesExcel(
+        naveId: widget.naveId,
+        tipo: tipo,
+      );
+
+      final directory = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final file = File(
+        '${directory.path}/pendientes_${tipo}_nave${widget.naveId}_$timestamp.xlsx',
+      );
+      await file.writeAsBytes(bytes);
+
+      if (mounted) AppDialog.closeLoading(context);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          text: 'Pendientes de $label - $naveNombre',
+          files: [XFile(file.path)],
+        ),
+      );
+
+      if (mounted) {
+        AppSnackBar.success(context, 'Excel de pendientes generado');
+      }
+    } catch (e) {
+      if (mounted) AppDialog.closeLoading(context);
+      if (mounted) {
+        AppSnackBar.error(context, 'Error al descargar pendientes: $e');
+      }
+    }
   }
 
   void _navigateToInventarioDetail(int informacionUnidadId) {
