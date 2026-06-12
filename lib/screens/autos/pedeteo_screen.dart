@@ -50,13 +50,24 @@ class PedeteoScreen extends ConsumerWidget {
     // Estado normal - Contenido principal
     final vinsDisponibles = optionsAsync.value?.vinsDisponibles ?? [];
     final pedeteadosEnSesion = ref.watch(pedeteadosEnSesionProvider);
+    final naveFilter = ref.watch(pedeteoNaveFilterProvider);
+    final marcaFilter = ref.watch(pedeteoMarcaFilterProvider);
+    final modeloFilter = ref.watch(pedeteoModeloFilterProvider);
+
+    // Aplicar filtro local por nave/marca/modelo
+    final vinsFiltrados = vinsDisponibles.where((v) {
+      final naveOk = naveFilter == null || v.naveDescarga == naveFilter;
+      final marcaOk = marcaFilter == null || v.marca == marcaFilter;
+      final modeloOk = modeloFilter == null || v.modelo == modeloFilter;
+      return naveOk && marcaOk && modeloOk;
+    }).toList();
 
     // Filtrar: pedeteados del servidor + pedeteados en esta sesión
-    final vinsPedeteados = vinsDisponibles
+    final vinsPedeteados = vinsFiltrados
         .where((v) => v.pedeteado || pedeteadosEnSesion.contains(v.vin))
         .toList();
 
-    final vinsNoPedeteados = vinsDisponibles
+    final vinsNoPedeteados = vinsFiltrados
         .where((v) => !v.pedeteado && !pedeteadosEnSesion.contains(v.vin))
         .toList();
 
@@ -65,8 +76,23 @@ class PedeteoScreen extends ConsumerWidget {
         // Barra de búsqueda
         const PedeteoSearchBar(),
 
-        // Contador de progreso
-        _buildProgressIndicator(vinsPedeteados.length, vinsNoPedeteados.length),
+        // Filtros por nave/marca/modelo + dashboard (solo en vista de lista)
+        if (!state.showScanner && !state.showForm) ...[
+          _buildFilters(
+            ref,
+            vinsDisponibles,
+            naveFilter,
+            marcaFilter,
+            modeloFilter,
+          ),
+          _buildDashboard(
+            vinsPedeteados.length,
+            vinsNoPedeteados.length,
+            hasFilter: naveFilter != null ||
+                marcaFilter != null ||
+                modeloFilter != null,
+          ),
+        ],
 
         // Scanner de códigos de barras
         if (state.showScanner) const Expanded(child: PedeteoScannerWidget()),
@@ -85,6 +111,181 @@ class PedeteoScreen extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+
+  /// Filtros por nave, marca y modelo (sobre los VINs disponibles)
+  Widget _buildFilters(
+    WidgetRef ref,
+    List<RegistroGeneral> vinsDisponibles,
+    String? naveFilter,
+    String? marcaFilter,
+    String? modeloFilter,
+  ) {
+    // Naves únicas disponibles
+    final naves =
+        vinsDisponibles
+            .map((v) => v.naveDescarga)
+            .whereType<String>()
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
+
+    // Marcas únicas (limitadas a la nave seleccionada si hay)
+    final marcas =
+        vinsDisponibles
+            .where((v) => naveFilter == null || v.naveDescarga == naveFilter)
+            .map((v) => v.marca)
+            .whereType<String>()
+            .where((m) => m.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
+
+    // Modelos únicos (limitados a nave y marca seleccionadas si hay)
+    final modelos =
+        vinsDisponibles
+            .where((v) => naveFilter == null || v.naveDescarga == naveFilter)
+            .where((v) => marcaFilter == null || v.marca == marcaFilter)
+            .map((v) => v.modelo)
+            .whereType<String>()
+            .where((m) => m.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        DesignTokens.spaceM,
+        DesignTokens.spaceS,
+        DesignTokens.spaceM,
+        0,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildFilterDropdown(
+              label: 'Nave',
+              icon: Icons.directions_boat,
+              value: naveFilter,
+              options: naves,
+              onSelected: (value) {
+                ref.read(pedeteoNaveFilterProvider.notifier).state = value;
+                // Resetear marca y modelo al cambiar de nave
+                ref.read(pedeteoMarcaFilterProvider.notifier).state = null;
+                ref.read(pedeteoModeloFilterProvider.notifier).state = null;
+              },
+            ),
+          ),
+          const SizedBox(width: DesignTokens.spaceS),
+          Expanded(
+            child: _buildFilterDropdown(
+              label: 'Marca',
+              icon: Icons.directions_car,
+              value: marcaFilter,
+              options: marcas,
+              onSelected: (value) {
+                ref.read(pedeteoMarcaFilterProvider.notifier).state = value;
+                // Resetear modelo al cambiar de marca
+                ref.read(pedeteoModeloFilterProvider.notifier).state = null;
+              },
+            ),
+          ),
+          const SizedBox(width: DesignTokens.spaceS),
+          Expanded(
+            child: _buildFilterDropdown(
+              label: 'Modelo',
+              icon: Icons.commute,
+              value: modeloFilter,
+              options: modelos,
+              onSelected: (value) {
+                ref.read(pedeteoModeloFilterProvider.notifier).state = value;
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterDropdown({
+    required String label,
+    required IconData icon,
+    required String? value,
+    required List<String> options,
+    required void Function(String?) onSelected,
+  }) {
+    final isActive = value != null;
+
+    return PopupMenuButton<String?>(
+      tooltip: 'Filtrar por $label',
+      onSelected: (selected) =>
+          onSelected(selected == '__todos__' ? null : selected),
+      itemBuilder: (context) => [
+        PopupMenuItem<String?>(
+          value: '__todos__',
+          child: Text(
+            'Todos',
+            style: TextStyle(
+              fontSize: DesignTokens.fontSizeS,
+              fontWeight: !isActive ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+        ...options.map(
+          (option) => PopupMenuItem<String?>(
+            value: option,
+            child: Text(
+              option,
+              style: TextStyle(
+                fontSize: DesignTokens.fontSizeS,
+                fontWeight:
+                    option == value ? FontWeight.bold : FontWeight.normal,
+                color: option == value ? AppColors.primary : null,
+              ),
+            ),
+          ),
+        ),
+      ],
+      child: Container(
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceS),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : Colors.white,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+          border: Border.all(
+            color: isActive ? AppColors.primary : AppColors.neutral,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: DesignTokens.iconS,
+              color: isActive ? Colors.white : AppColors.textSecondary,
+            ),
+            const SizedBox(width: DesignTokens.spaceXS),
+            Expanded(
+              child: Text(
+                value ?? label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: DesignTokens.fontSizeXS,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                  color: isActive ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_drop_down,
+              size: DesignTokens.iconS,
+              color: isActive ? Colors.white : AppColors.textSecondary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -263,80 +464,122 @@ class PedeteoScreen extends ConsumerWidget {
     );
   }
 
-  /// Indicador de progreso
-  Widget _buildProgressIndicator(int pedeteados, int pendientes) {
+  /// Dashboard: conteos pendientes/pedeteados + barra de avance.
+  /// Refleja los filtros de nave/marca/modelo activos.
+  Widget _buildDashboard(
+    int pedeteados,
+    int pendientes, {
+    required bool hasFilter,
+  }) {
+    final total = pedeteados + pendientes;
+    final progreso = total > 0 ? pedeteados / total : 0.0;
+    final porcentaje = (progreso * 100).round();
+
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: DesignTokens.spaceM,
-        vertical: DesignTokens.spaceS,
+      margin: const EdgeInsets.fromLTRB(
+        DesignTokens.spaceM,
+        DesignTokens.spaceS,
+        DesignTokens.spaceM,
+        DesignTokens.spaceXS,
       ),
+      padding: const EdgeInsets.all(DesignTokens.spaceM),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.05),
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            width: 1,
-          ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withValues(alpha: 0.85),
+          ],
         ),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
         children: [
-          // Pedeteados
           Row(
             children: [
-              const Icon(
+              _buildDashboardStat(
                 Icons.check_circle,
-                size: DesignTokens.iconS,
-                color: AppColors.success,
+                pedeteados,
+                'Pedeteados',
               ),
-              const SizedBox(width: DesignTokens.spaceXS),
-              Text(
-                '$pedeteados',
-                style: const TextStyle(
-                  fontSize: DesignTokens.fontSizeM,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.success,
-                ),
+              _buildStatDivider(),
+              _buildDashboardStat(
+                Icons.pending_actions,
+                pendientes,
+                'Pendientes',
               ),
-              const Text(
-                ' pedeteados',
-                style: TextStyle(
-                  fontSize: DesignTokens.fontSizeS,
-                  color: AppColors.textSecondary,
-                ),
+              _buildStatDivider(),
+              _buildDashboardStat(
+                hasFilter ? Icons.filter_alt : Icons.inventory_2,
+                total,
+                hasFilter ? 'Filtrados' : 'Total',
               ),
             ],
           ),
-
-          // Pendientes
+          const SizedBox(height: DesignTokens.spaceM),
           Row(
             children: [
-              const Icon(
-                Icons.pending,
-                size: DesignTokens.iconS,
-                color: AppColors.warning,
-              ),
-              const SizedBox(width: DesignTokens.spaceXS),
-              Text(
-                '$pendientes',
-                style: const TextStyle(
-                  fontSize: DesignTokens.fontSizeM,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.warning,
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                  child: LinearProgressIndicator(
+                    value: progreso,
+                    minHeight: 8,
+                    backgroundColor: Colors.white.withValues(alpha: 0.25),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
+                  ),
                 ),
               ),
-              const Text(
-                ' pendientes',
-                style: TextStyle(
+              const SizedBox(width: DesignTokens.spaceS),
+              Text(
+                '$porcentaje%',
+                style: const TextStyle(
                   fontSize: DesignTokens.fontSizeS,
-                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDashboardStat(IconData icon, int count, String label) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: DesignTokens.iconM, color: Colors.white),
+          const SizedBox(height: DesignTokens.spaceXXS),
+          Text(
+            '$count',
+            style: const TextStyle(
+              fontSize: DesignTokens.fontSizeL,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: DesignTokens.fontSizeXS,
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatDivider() {
+    return Container(
+      width: 1,
+      height: 40,
+      color: Colors.white.withValues(alpha: 0.2),
     );
   }
 }

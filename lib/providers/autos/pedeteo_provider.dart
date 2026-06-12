@@ -43,6 +43,11 @@ final pedeteoOptionsProvider = FutureProvider<RegistroVinOptions>((ref) async {
 /// Provider para el query de búsqueda actual
 final pedeteoSearchQueryProvider = StateProvider<String>((ref) => '');
 
+/// Filtros locales por nave, marca y modelo para las listas de pedeteo
+final pedeteoNaveFilterProvider = StateProvider<String?>((ref) => null);
+final pedeteoMarcaFilterProvider = StateProvider<String?>((ref) => null);
+final pedeteoModeloFilterProvider = StateProvider<String?>((ref) => null);
+
 /// Provider que filtra localmente los VINs disponibles usando RegistroGeneral
 final pedeteoSearchResultsProvider = Provider<List<RegistroGeneral>>((ref) {
   final query = ref.watch(pedeteoSearchQueryProvider);
