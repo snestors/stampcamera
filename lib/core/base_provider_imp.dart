@@ -20,6 +20,11 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
   bool _isLoadingMore = false;
   bool _isSearching = false;
   int _searchToken = 0;
+  int? _totalCount;
+
+  /// Total de resultados reportado por el backend (count de la paginación)
+  /// para la lista/búsqueda/filtro actual.
+  int? get totalCount => _totalCount;
 
   // ============================================================================
   // PROPIEDADES DE ESTADO
@@ -84,6 +89,7 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
       _searchQuery = null;
       _searchNextUrl = null;
       _isSearching = false;
+      _totalCount = paginated.count;
 
       return paginated.results;
     } catch (e) {
@@ -171,6 +177,7 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
       }
 
       _searchNextUrl = paginated.next;
+      _totalCount = paginated.count;
       state = AsyncValue.data(paginated.results);
     } catch (e, st) {
       if (_searchToken == currentToken) {
@@ -214,6 +221,7 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
       if (_searchToken != currentToken) return;
 
       _searchNextUrl = paginated.next;
+      _totalCount = paginated.count;
       state = AsyncValue.data(paginated.results);
     } catch (e, st) {
       if (_searchToken == currentToken) {
@@ -258,6 +266,7 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
     _isLoadingMore = false;
     _isSearching = false;
     _searchToken = 0;
+    _totalCount = null;
     state = const AsyncValue.loading();
   }
 
