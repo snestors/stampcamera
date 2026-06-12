@@ -1010,3 +1010,62 @@ class PresenciaWebSocket {
 2. *Opcional* - Action `usuarios/` en RegistroVinViewSet (lista limpia de registradores); hoy se deriva de `resumen-registros/` y funciona.
 
 ### **📍 Estado**: `flutter analyze` sin issues. Sin bump de versión (pendiente probar en dispositivo).
+
+---
+
+## ✅ **COMPLETADO - SESIÓN 2026-06-12 (Sesión 2) - Fix contenedores + Motor de watermark NATIVO**
+
+### **1. FIX: Contenedores no aparecían en Registro VIN hasta reiniciar la app**
+- **Causa raíz**: `registroVinOptionsProvider` (FutureProvider SIN autoDispose → cacheado indefinidamente) alimenta el dropdown de contenedores en `registro_vin_forms.dart`, y al crear/editar/eliminar un contenedor NADIE lo invalidaba. Solo se invalidaba en logout (SessionManager) — por eso "aparecían" al reiniciar la app.
+- **Fix**: `ContenedorNotifier` ahora llama `_invalidateOpcionesDependientes()` (→ `ref.invalidate(registroVinOptionsProvider)`) tras create/update/updateWithFiles/delete exitosos. Cubre TODOS los call sites.
+- Archivo: `lib/providers/autos/contenedor_provider.dart`
+
+### **2. MOTOR DE WATERMARK NATIVO (portado del proyecto KMP `D:\AyG KMP`)**
+El cuello #1 de la cámara era el post-procesado (watermark + compresión) corriendo en el main isolate de Dart (300-800ms de UI congelada por foto). Ahora todo el pipeline corre en Kotlin en un hilo de fondo:
+
+- **`android/.../NativeImageProcessor.kt`** (NUEVO) — Port del `ImageProcessor.android.kt` del KMP:
+  - Decodifica desde path con `inSampleSize` (máx 2560px), rotación EXIF, logo cacheado (decode 1 sola vez), texto con contorno+relleno, 9 posiciones, fuentes AUTO/S/M/L.
+  - **Compresión adaptativa**: arranca en calidad 90 y baja de 7 en 7 (piso 60) hasta entrar en 950KB → fotos de ~400-600KB (antes: quality 100 sin techo).
+  - Guarda en `DCIM/StampCamera` y registra en MediaStore (mismo dir/nombre `IMG_<millis>.jpg` que el pipeline Dart).
+  - Agregado al KMP original: stacking de timestamp+ubicación cuando comparten posición (paridad con pipeline Dart).
+- **`MainActivity.kt`** — Nuevo channel `image_processor_channel`, método `processAndSaveImage`, ejecuta en `Executors.newSingleThreadExecutor()` (serializa ráfagas, evita picos de RAM) y responde en main looper.
+- **`lib/utils/image_processor.dart`** — `processAndSaveImage()` delega al nativo en Android (solo cruza el PATH por el channel, nunca los bytes de la foto; el logo sí se pasa como bytes y el nativo lo cachea). **Fallback automático al pipeline Dart** si el channel no existe (`MissingPluginException` → flag `_nativeEngineAvailable`) o si el nativo lanza error. iOS sigue usando el pipeline Dart.
+- Dart sigue siendo dueño del formato: timestamp (`dd/MM/yyyy HH:mm:ss` con segundos) y texto de ubicación (LocationService con geocoding + caché 5min) se pasan ya formateados → no se portó LocationHelper ni se agregó NINGUNA dependencia Gradle.
+
+**Cambios de comportamiento esperados (heredados del motor KMP, intencionales):**
+- Fotos ahora pesan ~400-600KB (antes podían pasar 2-4MB con quality 100).
+- Texto del watermark algo más grande (AUTO a 2560px: 48px vs 32px del pipeline Dart) — calibración del KMP v1.6.0.
+- UI ya NO se congela al procesar: el isolate de Dart solo espera el path.
+
+### **📍 Estado**: ✅ **PROBADO EN DISPOSITIVO (Galaxy S22)**: motor nativo procesando fotos en 70-300ms en hilo de fondo (antes 300-800ms bloqueando UI), watermark OK, fix de contenedores verificado.
+
+---
+
+## ✅ **COMPLETADO - SESIÓN 2026-06-12 (Sesión 3) - UI ligera + Pedeteo pulido (SECCIÓN CERRADA)**
+
+### **1. ReusableCameraCard - decodes acotados y sin Hero**
+- `Image.file` post-captura decodificaba la foto ORIGINAL completa (4000px) y luego la procesada → `cacheWidth: 1600` + `gaplessPlayback` (preview full-screen) y `cacheWidth: 1024` (preview card 200px); `memCacheWidth: 1024` en CachedNetworkImage.
+- Botón fullscreen: `FloatingActionButton.small` → `Material`+`InkWell` (el heroTag default compartido crashea con varios cards en un form); obturador con `heroTag: null`.
+- Eliminado overlay "Procesando imagen..." inalcanzable y la fila informativa "La foto será marcada automáticamente..."; título `titleLarge` → `titleMedium`.
+- Color por defecto `0xFF0A2D3E` → `AppColors.primary` (también en pedeteo action_buttons y camera_card).
+
+### **2. Scanner de pedeteo - rediseño + FIX de latencia de detección**
+- **FIX CRÍTICO de latencia**: con `returnImage: true`, mobile_scanner codifica el frame COMPLETO a PNG (1920x1080 default) ANTES de disparar el callback → "detectaba" 2-3s después de quitar la cámara. Fix: `cameraResolution: Size(1280, 720)` + `formats:` restringidos a etiquetas VIN (code39, code128, dataMatrix, qrCode, pdf417). Proceso completo medido: ~800ms (incl. 500ms de pausa de confirmación).
+- **Feedback inmediato**: `HapticFeedback.mediumImpact()` al detectar + overlay con check verde 72px + VIN leído en pill monospace + "Guardando foto..." → pausa 500ms (deliberada, para alcanzar a leer el VIN confirmado) → pop al formulario.
+- **Rediseño visual**: header `AppColors.primary` con estado integrado, sin borde azul de 3px, sin "VIN" gigante, esquinas del visor ALINEADAS al marco (antes a 50px fijos del borde), sin footer redundante, sin texto debug "Estado: vinDetected".
+
+### **3. Formulario de pedeteo**
+- `FormFieldsCard` ("Datos del Registro"): mismo estilo de tarjeta que `DetalleRegistroCard` — blanco, radiusL, sombra sutil, **accent strip lateral 4px**, header con icono en chip + título azul corporativo. Shell reutilizado en loading/error (strip rojo en error).
+
+### **4. Buscador de pedeteo - mínimo 3 caracteres**
+- Con 1-2 caracteres el `contains` matcheaba media nave y el dropdown volcaba la lista completa. Guard en `pedeteoSearchResultsProvider` (`query.trim().length < 3` → vacío) y en `_onSearchChanged` (dropdown solo con ≥3 chars). Búsqueda automática a 17 chars intacta.
+
+### **5. Scanner - flujo final y decisión sobre el fork**
+- Eliminado delay muerto de 500ms + `Navigator.pop` fantasma post-escaneo (el scanner está embebido, no es ruta; `onBarcodeScanned` ya lo desmonta). Tiempos reales medidos en dispositivo: **150-275ms** del callback al formulario.
+- **Latencia restante (~300-500ms)**: es el plugin `mobile_scanner` codificando el frame a **PNG calidad 100** ANTES de disparar el callback (visto en su código fuente, `MobileScanner.kt` línea ~186). DECISIÓN: **fork pospuesto**. Balas guardadas si se necesita más velocidad:
+  - **Opción A**: vendorear `mobile_scanner 7.0.1` en `packages/` + cambiar 1 línea (`CompressFormat.PNG, 100` → `JPEG, 90`) + `dependency_overrides` → empaquetado ~50-80ms. Deuda: re-aplicar parche en cada upgrade del plugin (es solo Android).
+  - **Opción B**: scanner propio con plugin `camera` + MLKit + `takePicture()` real (ISP hardware) — 2-3 días, es lo que hace la app KMP.
+
+### **📍 Estado FINAL**: `flutter analyze` sin issues. Probado en Galaxy S22. **Pedeteo CERRADO.** Versión **1.5.4+66** (salto de +65 porque el proyecto KMP usa el mismo applicationId con versionCode 65). Bundle release generado.
+
+### **⚠️ NOTA**: La sección "Versiones" arriba en este archivo está desactualizada (decía 1.3.19+45); la versión real del proyecto va en pubspec.yaml.
