@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Llaves de service account de Google Play (NUNCA commitear)
+/playstore/keys/
+
+# Python cache (scripts de playstore)
+__pycache__/

@@ -1,0 +1,7 @@
+{
+  "language": "es-419",
+  "title": "A&G Ajustadores",
+  "shortDescription": "Inspección vehicular y operaciones portuarias de A&G Ajustadores.",
+  "fullDescription": "Aplicación oficial de A&G Ajustadores y Peritos de Seguros para el trabajo de campo.\n\nFunciones principales:\n• Registro fotográfico con marca de agua, fecha y hora certificada.\n• Inspección de vehículos en puerto y almacenes (recepción, daños, pedeteo).\n• Consulta de unidades por VIN con escáner de código de barras.\n• Control de asistencias del personal.\n• Acceso seguro con autenticación biométrica y dispositivos de confianza.\n\nEsta aplicación es de uso interno: requiere una cuenta corporativa de A&G Ajustadores para iniciar sesión.",
+  "releaseNotes": "• Se corrige un error en el inicio de sesión con biometría.\n• Mejoras visuales en los buscadores desplegables."
+}

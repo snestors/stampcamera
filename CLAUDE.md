@@ -973,3 +973,40 @@ class PresenciaWebSocket {
 
 *Archivo generado automáticamente por Claude Code*
 *Última actualización: 2026-01-24 - v1.3.19+45 - ✅ GO_ROUTER MIGRATION + ADAPTIVE TIMERS + CACHED IMAGES + BUGFIX*
+---
+
+## ✅ **COMPLETADO - SESIÓN 2026-06-12 - Filtros pedeteo + Lista Registro VIN + Recepción en inventarios**
+
+### **1. PEDETEO - Filtro marca/modelo + mini dashboard**
+- Filtros locales por Marca y Modelo (dropdowns sobre `vins_disponibles`, sin backend)
+- Al cambiar marca se resetea el filtro de modelo
+- Mini dashboard: pedeteados / pendientes / total (o "filtrados") + barra de progreso con %
+- Archivos: `lib/providers/autos/pedeteo_provider.dart` (`pedeteoMarcaFilterProvider`, `pedeteoModeloFilterProvider`), `lib/screens/autos/pedeteo_screen.dart`
+
+### **2. REGISTROS - Lista de registros VIN individuales (en pantalla "Registros VIN" del AppBar)**
+- **OJO: la pantalla principal de REGISTRO (`registro_screen.dart`) NO se tocó** — mantiene su lista de unidades, filtro de nave y chips de estado
+- Lo reemplazado es la pantalla del botón del AppBar (`/autos/resumen-registros` → `resumen_registros_screen.dart`): antes era el resumen agrupado día→hora→usuario, ahora es la lista plana práctica
+- Nueva lista consume `/api/v1/autos/registro-vin/` (ordenada por -id = más reciente primero)
+- Cada card muestra: VIN, marca/modelo, badge de condición, nave, **fecha dd/MM/yyyy + hora HH:mm** y **usuario registrador**
+- Filtro por usuario registrador (`?create_by=<id>`) con bottom sheet; usuarios derivados de `resumen-registros/` (sin backend nuevo)
+- Chips de condición (Puerto/Recepción/Almacén/PDI/Pre-PDI) → `?condicion=`
+- Archivos nuevos: `lib/models/autos/registro_vin_list_model.dart`, `lib/services/autos/registro_vin_list_service.dart`, `lib/providers/autos/registro_vin_list_provider.dart`
+- Reescrito: `lib/screens/autos/registro_general/resumen_registros_screen.dart`
+
+### **3. INVENTARIOS - Recepción en cuadro de descarga + export de pendientes**
+- Cuadro por marca ahora tiene 4 columnas: MODELO | TOTAL | DESC. | RECEP. (`descargado_recepcion`)
+- Fila de totales y reporte PNG compartible también incluyen RECEPCIÓN
+- Subtítulo de versión muestra conteo de recepcionados
+- Botón de descarga en AppBar (menú): "Faltan pedetear (Excel)" y "Faltan recepcionar (Excel)" → descarga bytes y comparte con share_plus
+- Archivos: `lib/screens/autos/inventario/inventario_detalle_nave_screen.dart`, `lib/services/autos/inventario_service.dart` (`descargarPendientesExcel`)
+
+### **🎯 PENDIENTE BACKEND (sesión Django)**
+1. **REQUERIDO** - Endpoint export de pendientes:
+   `GET /api/v1/autos/registro-general/export-pendientes/?nave_descarga_id=<id>&tipo=pedeteo|recepcion`
+   → HttpResponse xlsx (openpyxl, patrón de autos/excel/). Lógica:
+   - tipo=pedeteo: unidades de la nave SIN RegistroVin con condicion in [PUERTO, ALMACEN]
+   - tipo=recepcion: unidades de la nave SIN RegistroVin con condicion = RECEPCION
+   - Columnas sugeridas: VIN, serie, marca, modelo, versión, color, embarque/BL, destinatario
+2. *Opcional* - Action `usuarios/` en RegistroVinViewSet (lista limpia de registradores); hoy se deriva de `resumen-registros/` y funciona.
+
+### **📍 Estado**: `flutter analyze` sin issues. Sin bump de versión (pendiente probar en dispositivo).
