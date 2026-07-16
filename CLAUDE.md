@@ -1089,7 +1089,7 @@ Si el usuario tiene asistencia activa en zona tipo `ALMACEN`/`ALMACEN-PDI` (vía
 ### **⚠️ Deuda conocida (no tocada)**
 - FABs de `almacen_tab.dart` y `balanzas_tab.dart` apuntan a rutas muertas (`/graneles/almacen/crear`, `/graneles/balanza/crear|editar` no existen en el router; los formularios viejos fueron eliminados). El registro real es vía `ViajeFormScreen`.
 
-### **📍 Estado**: `flutter analyze` sin issues. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (57.6MB). **Pendiente probar en dispositivo** con inspector en zona almacén.
+### **📍 Estado**: `flutter analyze` sin issues. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (57.6MB). ✅ **Probado en dispositivo** con inspector en zona almacén (confirmado 2026-07-16).
 
 ### **⚠️ NOTA**: La sección "Versiones" arriba en este archivo está desactualizada (decía 1.3.19+45); la versión real del proyecto va en pubspec.yaml.
 
@@ -1112,4 +1112,4 @@ Con `enableEdgeToEdge()` (obligatorio para Android 15), en teléfonos con barra 
 ### Ya estaban bien (no tocados)
 `autos_screen` (BottomNavigationBar de Material maneja el inset solo), `graneles_screen` (SafeArea en TabBar), `viaje_form_screen` (bottom bar ya sumaba padding.bottom), formularios de autos con SafeArea (dano_form, registro_vin_forms, fotos_presentacion_form, contenedor_form), forms de graneles con SizedBox + padding.bottom (paralizacion, control_humedad, silos_crear), login/camera/visores con SafeArea completo, `registro_asistencia_screen` (padding bottom 100).
 
-### 📍 Estado: `flutter analyze` sin issues. Versión **1.5.6+68**. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (57.6MB). **Pendiente probar en dispositivo con barra de 3 botones** (Ajustes > Sistema > Navegación del sistema > Navegación con 3 botones para reproducir).
+### 📍 Estado: `flutter analyze` sin issues. Versión **1.5.6+68**. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (57.6MB). ✅ **Probado en dispositivo con barra de 3 botones** (confirmado 2026-07-16). Todo commiteado y pusheado a origin/main.
