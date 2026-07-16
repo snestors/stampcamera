@@ -235,7 +235,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
               if (ticketId == 0) return const HomeScreen();
               final step = int.tryParse(state.uri.queryParameters['step'] ?? '');
-              return ViajeFormScreen.edit(ticketId: ticketId, initialStep: step);
+              final cancelToDetail = state.uri.queryParameters['origen'] == 'lista';
+              return ViajeFormScreen.edit(
+                ticketId: ticketId,
+                initialStep: step,
+                cancelToDetail: cancelToDetail,
+              );
             },
           ),
           // IMPORTANTE: Rutas específicas deben ir ANTES de las rutas con parámetros genéricos

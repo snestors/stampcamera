@@ -285,7 +285,7 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
               padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _TicketCard(
                 ticket: ticket,
-                onTap: () => _navigateToDetail(ticket.id),
+                onTap: () => _onTicketTap(ticket),
               ),
             );
           }
@@ -379,6 +379,26 @@ class _TicketsTabState extends ConsumerState<TicketsTab> {
         action: action,
       ),
     );
+  }
+
+  /// Inspector en zona ALMACÉN: un viaje con balanza pendiente de almacén
+  /// abre directo el paso 3 del formulario. Al guardar regresa a esta lista;
+  /// al retroceder sin guardar abre el detalle del ticket (origen=lista).
+  /// El detalle directo queda solo para viajes completos.
+  void _onTicketTap(TicketMuelle ticket) {
+    final permisos = ref.read(userGranelesPermissionsProvider).valueOrNull;
+    final esZonaAlmacen =
+        permisos?.zonaTipo == 'ALMACEN' || permisos?.zonaTipo == 'ALMACEN-PDI';
+    final puedeRegistrarAlmacen =
+        (permisos?.almacen.canAdd ?? false) || (permisos?.almacen.canEdit ?? false);
+
+    if (esZonaAlmacen &&
+        puedeRegistrarAlmacen &&
+        ticket.estado == 'pendiente_almacen') {
+      context.push('/graneles/viaje/editar/${ticket.id}?step=3&origen=lista');
+    } else {
+      _navigateToDetail(ticket.id);
+    }
   }
 
   void _navigateToDetail(int ticketId) {

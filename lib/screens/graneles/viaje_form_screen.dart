@@ -26,15 +26,17 @@ class ViajeFormScreen extends ConsumerStatefulWidget {
   final int? ticketId;
   final bool isEditMode;
   final int? initialStep; // 1=muelle, 2=balanza, 3=almacén
+  final bool cancelToDetail; // atrás sin guardar → detalle (entrada directa desde la lista)
 
   /// Crear nuevo viaje (opcionalmente con servicio preseleccionado)
   const ViajeFormScreen({super.key, this.servicioId})
       : ticketId = null,
         isEditMode = false,
-        initialStep = null;
+        initialStep = null,
+        cancelToDetail = false;
 
   /// Editar viaje existente (opcionalmente abrir en paso específico)
-  const ViajeFormScreen.edit({super.key, required this.ticketId, this.initialStep})
+  const ViajeFormScreen.edit({super.key, required this.ticketId, this.initialStep, this.cancelToDetail = false})
       : servicioId = null,
         isEditMode = true;
 
@@ -431,10 +433,10 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoadingTicket) {
-      return Scaffold(
+      return _wrapCancelPop(Scaffold(
         appBar: _buildAppBar('Cargando...'),
         body: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      );
+      ));
     }
 
     final asistenciaAsync = ref.watch(asistenciaActivaProvider);
@@ -447,7 +449,7 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
     );
     final optionsAsync = ref.watch(ticketMuelleOptionsFlexProvider(optionsParams));
 
-    return Scaffold(
+    return _wrapCancelPop(Scaffold(
       appBar: _buildAppBar(widget.isEditMode ? 'Editar Viaje' : 'Nuevo Viaje'),
       body: optionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
@@ -457,6 +459,21 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         ),
         data: (options) => _buildContent(options),
       ),
+    ));
+  }
+
+  /// Entrada directa desde la lista (cancelToDetail): retroceder sin guardar
+  /// abre el detalle del ticket para validar sus datos. El pop tras guardar
+  /// es imperativo (Navigator.pop) y no pasa por aquí → regresa a la lista.
+  Widget _wrapCancelPop(Widget child) {
+    if (!widget.cancelToDetail) return child;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.pushReplacement('/graneles/ticket/${widget.ticketId}');
+      },
+      child: child,
     );
   }
 
@@ -1826,7 +1843,12 @@ class _ViajeFormScreenState extends ConsumerState<ViajeFormScreen> {
         }
         ref.invalidate(ticketsMuelleProvider);
         AppSnackBar.success(context, widget.isEditMode ? 'Viaje actualizado correctamente' : 'Viaje creado correctamente');
-        context.pop();
+        if (widget.cancelToDetail) {
+          // Pop imperativo: no consulta el PopScope de cancelación → lista de viajes
+          Navigator.of(context).pop();
+        } else {
+          context.pop();
+        }
       }
     } catch (e) {
       if (mounted) {
