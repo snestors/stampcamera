@@ -48,7 +48,7 @@ class _SimpleAddImageModalState extends ConsumerState<SimpleAddImageModal> {
           left: 20,
           right: 20,
           top: 20,
-          bottom: keyboardHeight + 20,
+          bottom: keyboardHeight + MediaQuery.of(context).padding.bottom + 20,
         ),
         child: Column(
           children: [

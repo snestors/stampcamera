@@ -84,7 +84,8 @@ class _EditarNaveFormState extends ConsumerState<_EditarNaveForm> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom +
+        MediaQuery.of(context).padding.bottom;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),

@@ -223,7 +223,12 @@ class _ParalizacionesTabState extends ConsumerState<ParalizacionesTab> {
         expand: false,
         builder: (_, scrollController) => SingleChildScrollView(
           controller: scrollController,
-          padding: const EdgeInsets.all(DesignTokens.spaceL),
+          padding: EdgeInsets.fromLTRB(
+            DesignTokens.spaceL,
+            DesignTokens.spaceL,
+            DesignTokens.spaceL,
+            DesignTokens.spaceL + MediaQuery.of(ctx).viewPadding.bottom,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

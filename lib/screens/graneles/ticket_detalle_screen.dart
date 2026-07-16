@@ -70,7 +70,12 @@ class _TicketDetalleContent extends StatelessWidget {
     final numberFormat = NumberFormat('#,##0.000', 'es_PE');
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(DesignTokens.spaceM),
+      padding: EdgeInsets.fromLTRB(
+        DesignTokens.spaceM,
+        DesignTokens.spaceM,
+        DesignTokens.spaceM,
+        DesignTokens.spaceM + MediaQuery.of(context).padding.bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

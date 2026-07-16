@@ -143,7 +143,12 @@ class _ReportePedeteoScreenState extends ConsumerState<ReportePedeteoScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(DesignTokens.spaceM),
+      padding: EdgeInsets.fromLTRB(
+        DesignTokens.spaceM,
+        DesignTokens.spaceM,
+        DesignTokens.spaceM,
+        DesignTokens.spaceM + MediaQuery.of(context).padding.bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -301,7 +301,12 @@ class _DetalleRegistroScreenState extends ConsumerState<DetalleRegistroScreen>
 
   Widget _buildScrollableTab({required Widget child}) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(DesignTokens.spaceL),
+      padding: EdgeInsets.fromLTRB(
+        DesignTokens.spaceL,
+        DesignTokens.spaceL,
+        DesignTokens.spaceL,
+        DesignTokens.spaceL + MediaQuery.of(context).padding.bottom,
+      ),
       physics: const AlwaysScrollableScrollPhysics(),
       child: child,
     );

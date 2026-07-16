@@ -146,7 +146,12 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
       body: images.isEmpty
           ? const Center(child: Text('No hay imágenes'))
           : GridView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.fromLTRB(
+                8,
+                8,
+                8,
+                8 + MediaQuery.of(context).padding.bottom,
+              ),
               itemCount: images.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,

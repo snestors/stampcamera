@@ -106,6 +106,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom,
+        ),
         child: Column(
           children: [
             _buildUserHeader(authState),

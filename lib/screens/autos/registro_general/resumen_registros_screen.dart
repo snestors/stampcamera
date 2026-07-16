@@ -408,7 +408,12 @@ class _ResumenRegistrosScreenState
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.all(DesignTokens.spaceS),
+        padding: EdgeInsets.fromLTRB(
+          DesignTokens.spaceS,
+          DesignTokens.spaceS,
+          DesignTokens.spaceS,
+          DesignTokens.spaceS + MediaQuery.of(context).padding.bottom,
+        ),
         itemCount: registros.length + (notifier.hasNextPage ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < registros.length) {
@@ -911,8 +916,10 @@ class _UsuarioSearchSheetState extends ConsumerState<_UsuarioSearchSheet> {
 
                   return ListView.builder(
                     controller: scrollController,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: DesignTokens.spaceM,
+                    padding: EdgeInsets.only(
+                      left: DesignTokens.spaceM,
+                      right: DesignTokens.spaceM,
+                      bottom: MediaQuery.of(context).viewPadding.bottom,
                     ),
                     itemCount: filtrados.length,
                     itemBuilder: (context, index) {

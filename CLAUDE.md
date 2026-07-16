@@ -1068,4 +1068,48 @@ El cuello #1 de la cámara era el post-procesado (watermark + compresión) corri
 
 ### **📍 Estado FINAL**: `flutter analyze` sin issues. Probado en Galaxy S22. **Pedeteo CERRADO.** Versión **1.5.4+66** (salto de +65 porque el proyecto KMP usa el mismo applicationId con versionCode 65). Bundle release generado.
 
+---
+
+## ✅ **COMPLETADO - SESIÓN 2026-07-07 - v1.5.5+67 - Flujo directo de almacén en graneles**
+
+### **Flujo inspector zona ALMACÉN (tab Viajes de graneles)**
+Si el usuario tiene asistencia activa en zona tipo `ALMACEN`/`ALMACEN-PDI` (vía `userGranelesPermissionsProvider.zonaTipo`, que viene de `user_permissions/`) y permiso `almacen.canAdd||canEdit`:
+- Tocar ticket **Pend. Almacén** → DIRECTO al formulario de viaje paso 3 (`/graneles/viaje/editar/{id}?step=3&origen=lista`), sin pasar por el detalle
+- **Guardar** → regresa a la lista de tickets (pop imperativo `Navigator.of(context).pop()` que NO consulta el PopScope)
+- **Atrás sin guardar** → `pushReplacement` al detalle del ticket (para validar datos); atrás desde ahí cae en la lista
+- Ticket **Completo** → detalle directo como siempre
+- `pendiente_balanza` → detalle (el inspector de almacén no puede registrar balanza; backend `can_add=false`)
+
+### **Implementación (`origen=lista` como flag de entrada)**
+- `lib/screens/graneles/tabs/tickets_tab.dart` — `_onTicketTap()` con gate por zona+permisos
+- `lib/routes/app_router.dart` — ruta `viaje/editar/:ticketId` lee `?origen=lista` → `cancelToDetail: true`
+- `lib/screens/graneles/viaje_form_screen.dart` — param `cancelToDetail` en `.edit`; `_wrapCancelPop()` con `PopScope(canPop:false)` que redirige al detalle; submit usa pop imperativo cuando `cancelToDetail`
+- Flujos existentes (detalle → editar) intactos: sin `origen=lista` no hay PopScope
+
+### **⚠️ Deuda conocida (no tocada)**
+- FABs de `almacen_tab.dart` y `balanzas_tab.dart` apuntan a rutas muertas (`/graneles/almacen/crear`, `/graneles/balanza/crear|editar` no existen en el router; los formularios viejos fueron eliminados). El registro real es vía `ViajeFormScreen`.
+
+### **📍 Estado**: `flutter analyze` sin issues. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (57.6MB). **Pendiente probar en dispositivo** con inspector en zona almacén.
+
 ### **⚠️ NOTA**: La sección "Versiones" arriba en este archivo está desactualizada (decía 1.3.19+45); la versión real del proyecto va en pubspec.yaml.
+
+---
+
+## ✅ COMPLETADO - SESIÓN 2026-07-07 (Sesión 2) - Fix edge-to-edge: contenido tapado por barra de 3 botones
+
+### Problema
+Con `enableEdgeToEdge()` (obligatorio para Android 15), en teléfonos con barra de navegación de 3 botones (~48dp) el contenido inferior quedaba tapado en muchas pantallas. Con gestos casi no se notaba. No hay fix global en Flutter que no rompa las pantallas fullscreen (cámara/visores): se corrigió por pantalla.
+
+### Reglas aplicadas
+- Scroll full-screen → sumar `MediaQuery.of(context).padding.bottom` al padding bottom del scroll (ListView/GridView con padding explícito pierden el inset automático; SingleChildScrollView nunca lo tiene).
+- Bottom sheets/modales → `viewInsets.bottom + padding.bottom` (teclado + barra; padding.bottom se vuelve 0 cuando el teclado está abierto, no se duplica). Sheets de solo lectura usan `viewPadding.bottom`.
+
+### Archivos corregidos (21 puntos)
+- Full-screen: `home_screen.dart`, `detalle_registro_screen.dart` (_buildScrollableTab cubre los 4 tabs), `reporte_pedeteo_screen.dart`, `ticket_detalle_screen.dart`, `servicio_dashboard_screen.dart`, `jornadas_screen.dart`, `resumen_registros_screen.dart` (lista + _UsuarioSearchSheet), `casos_home_screen.dart` (2 listas), `explorador_screen.dart`, `inventario_tab_widget.dart`, `imagenes_tab_widget.dart`, `inventario_detalle_nave_screen.dart`, `gallery_selector_screen.dart`
+- Sheets/modales: `inventario_form.dart`, `simple_add_image_modal.dart`, `modal_entrada.dart`, `editar_nave_bottom_sheet.dart`, detail sheets de `paralizaciones_tab.dart` y `control_temperatura_tab.dart`, `_NaveSearchSheet` en `registro_screen.dart`
+- Drawer: `queue_side_widget.dart` (cola offline pedeteo)
+
+### Ya estaban bien (no tocados)
+`autos_screen` (BottomNavigationBar de Material maneja el inset solo), `graneles_screen` (SafeArea en TabBar), `viaje_form_screen` (bottom bar ya sumaba padding.bottom), formularios de autos con SafeArea (dano_form, registro_vin_forms, fotos_presentacion_form, contenedor_form), forms de graneles con SizedBox + padding.bottom (paralizacion, control_humedad, silos_crear), login/camera/visores con SafeArea completo, `registro_asistencia_screen` (padding bottom 100).
+
+### 📍 Estado: `flutter analyze` sin issues. Versión **1.5.6+68**. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (57.6MB). **Pendiente probar en dispositivo con barra de 3 botones** (Ajustes > Sistema > Navegación del sistema > Navegación con 3 botones para reproducir).

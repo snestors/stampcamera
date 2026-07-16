@@ -262,7 +262,12 @@ class _ExploradorScreenState extends ConsumerState<ExploradorScreen> {
                 .read(exploradorProvider.notifier)
                 .loadContenidoCarpeta(widget.carpetaId),
             child: ListView(
-              padding: const EdgeInsets.all(DesignTokens.spaceM),
+              padding: EdgeInsets.fromLTRB(
+                DesignTokens.spaceM,
+                DesignTokens.spaceM,
+                DesignTokens.spaceM,
+                DesignTokens.spaceM + MediaQuery.of(context).padding.bottom,
+              ),
               children: [
                 // Subcarpetas
                 if (subcarpetas.isNotEmpty) ...[

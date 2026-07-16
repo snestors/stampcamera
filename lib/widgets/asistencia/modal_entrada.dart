@@ -125,7 +125,9 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
               left: 20,
               right: 20,
               top: 12,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              bottom: MediaQuery.of(context).viewInsets.bottom +
+                  MediaQuery.of(context).padding.bottom +
+                  20,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

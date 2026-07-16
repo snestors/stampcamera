@@ -695,8 +695,10 @@ class _NaveSearchSheetState extends State<_NaveSearchSheet> {
                         )
                       : ListView.builder(
                           controller: scrollController,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: DesignTokens.spaceM,
+                          padding: EdgeInsets.only(
+                            left: DesignTokens.spaceM,
+                            right: DesignTokens.spaceM,
+                            bottom: MediaQuery.of(context).viewPadding.bottom,
                           ),
                           itemCount: _results.length,
                           itemBuilder: (context, index) {

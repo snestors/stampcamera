@@ -105,7 +105,12 @@ class _ImagenesTabWidgetState extends ConsumerState<ImagenesTabWidget> {
         ref.invalidate(inventarioDetalleProvider(widget.informacionUnidadId));
       },
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          16 + MediaQuery.of(context).padding.bottom,
+        ),
         itemCount: widget.response.imagenes.length,
         itemBuilder: (context, index) {
           final imagen = widget.response.imagenes[index];

@@ -138,7 +138,10 @@ class _DashboardContent extends StatelessWidget {
                     ),
                   ],
 
-                  const SizedBox(height: DesignTokens.spaceXL),
+                  SizedBox(
+                    height: DesignTokens.spaceXL +
+                        MediaQuery.of(context).padding.bottom,
+                  ),
                 ],
               ),
             ),

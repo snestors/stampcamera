@@ -156,7 +156,12 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
     return RefreshIndicator(
       onRefresh: () => ref.read(exploradorProvider.notifier).loadCarpetasRaiz(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(DesignTokens.spaceM),
+        padding: EdgeInsets.fromLTRB(
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM,
+          DesignTokens.spaceM + MediaQuery.of(context).padding.bottom,
+        ),
         itemCount: state.rubros.length,
         itemBuilder: (context, index) {
           final rubro = state.rubros[index];
@@ -252,7 +257,11 @@ class _CasosHomeScreenState extends ConsumerState<CasosHomeScreen> {
             onRefresh: () =>
                 ref.read(exploradorProvider.notifier).loadCarpetasRaiz(),
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: DesignTokens.spaceM),
+              padding: EdgeInsets.only(
+                left: DesignTokens.spaceM,
+                right: DesignTokens.spaceM,
+                bottom: MediaQuery.of(context).padding.bottom,
+              ),
               itemCount: filtered.length,
               itemBuilder: (context, index) {
                 final carpeta = filtered[index];

@@ -327,6 +327,9 @@ class _JornadasTableView extends StatelessWidget {
     final cabAlmacen = resumen.cabecerasAlmacen;
 
     return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom,
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: _buildTable(cabBodega, cabAlmacen),
