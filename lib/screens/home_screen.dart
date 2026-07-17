@@ -82,7 +82,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.settings, color: AppColors.primary, size: 20),
+                child: const Icon(
+                  Icons.settings,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               onPressed: () => _showSettingsDialog(context),
               tooltip: 'Configuración',
@@ -106,9 +110,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
         child: Column(
           children: [
             _buildUserHeader(authState),
@@ -253,6 +255,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       cards.add(_buildModuleCard(context, module, user));
     }
 
+    // Gestión de equipos: exclusivo de superusuarios (no viene del backend)
+    if (user.isSuperuser == true) {
+      cards.add(
+        _AppCard(
+          title: 'Equipos',
+          subtitle: 'Solicitudes de acceso',
+          icon: Icons.phonelink_lock,
+          color: AppColors.info,
+          onTap: () => context.push('/admin/device-requests'),
+        ),
+      );
+    }
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -277,11 +292,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: const Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.web,
-            size: 64,
-            color: AppColors.warning,
-          ),
+          Icon(Icons.web, size: 64, color: AppColors.warning),
           SizedBox(height: DesignTokens.spaceM),
           Text(
             'Acceso Solo Web',
@@ -435,7 +446,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               decoration: BoxDecoration(
                 color: AppColors.info.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.info.withValues(alpha: 0.3),
+                ),
               ),
               child: const Row(
                 children: [
@@ -638,7 +651,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AppDialog.info(
       context,
       title: 'Próximamente',
-      message: 'Esta funcionalidad estará disponible en una próxima actualización.',
+      message:
+          'Esta funcionalidad estará disponible en una próxima actualización.',
       buttonText: 'Entendido',
     );
   }
@@ -758,7 +772,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
 }
 
 // Widgets auxiliares
@@ -799,7 +812,9 @@ class _AppCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
-        onTap: isDisabled ? null : onTap, // Bloqueado aún permite tap para mostrar diálogo
+        onTap: isDisabled
+            ? null
+            : onTap, // Bloqueado aún permite tap para mostrar diálogo
         child: Container(
           padding: const EdgeInsets.all(DesignTokens.spaceS),
           decoration: BoxDecoration(
@@ -828,46 +843,50 @@ class _AppCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                  Container(
-                    padding: const EdgeInsets.all(DesignTokens.spaceL),
-                    decoration: BoxDecoration(
-                      color: isDisabled
-                          ? AppColors.neutral.withValues(alpha: 0.2)
-                          : effectiveColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+                    Container(
+                      padding: const EdgeInsets.all(DesignTokens.spaceL),
+                      decoration: BoxDecoration(
+                        color: isDisabled
+                            ? AppColors.neutral.withValues(alpha: 0.2)
+                            : effectiveColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(
+                          DesignTokens.radiusL,
+                        ),
+                      ),
+                      child: Icon(
+                        icon,
+                        size: DesignTokens.iconXXXL * 1.4,
+                        color: isDisabled
+                            ? AppColors.textLight
+                            : effectiveColor,
+                      ),
                     ),
-                    child: Icon(
-                      icon,
-                      size: DesignTokens.iconXXXL * 1.4,
-                      color: isDisabled ? AppColors.textLight : effectiveColor,
+                    const SizedBox(height: DesignTokens.spaceS),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeRegular,
+                        fontWeight: FontWeight.bold,
+                        color: isDisabled
+                            ? AppColors.textLight
+                            : AppColors.textPrimary,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(height: DesignTokens.spaceS),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeRegular,
-                      fontWeight: FontWeight.bold,
-                      color: isDisabled
-                          ? AppColors.textLight
-                          : AppColors.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: DesignTokens.spaceXS),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeXS * 0.9,
-                      color: isBlocked
-                          ? Colors.orange[700]
-                          : (isDisabled
-                              ? AppColors.textLight
-                              : AppColors.textSecondary),
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: DesignTokens.spaceXS),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeXS * 0.9,
+                        color: isBlocked
+                            ? Colors.orange[700]
+                            : (isDisabled
+                                  ? AppColors.textLight
+                                  : AppColors.textSecondary),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -1136,10 +1155,7 @@ class _StaticDot extends StatelessWidget {
   final Color color;
   final double size;
 
-  const _StaticDot({
-    required this.color,
-    this.size = 10,
-  });
+  const _StaticDot({required this.color, this.size = 10});
 
   @override
   Widget build(BuildContext context) {
@@ -1166,10 +1182,7 @@ class _PulsingDot extends StatefulWidget {
   final Color color;
   final double size;
 
-  const _PulsingDot({
-    required this.color,
-    this.size = 10,
-  });
+  const _PulsingDot({required this.color, this.size = 10});
 
   @override
   State<_PulsingDot> createState() => _PulsingDotState();
@@ -1188,9 +1201,10 @@ class _PulsingDotState extends State<_PulsingDot>
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

@@ -1,5 +1,6 @@
 // lib/providers/session_manager_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stampcamera/providers/admin/device_requests_provider.dart';
 import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
@@ -141,7 +142,7 @@ class SessionManager extends StateNotifier<String?> {
     // ============================================================================
     ref.invalidate(registroGeneralProvider);
     ref.invalidate(registroVinOptionsProvider);
-    
+
     // ============================================================================
     // PROVIDERS DE AUTOS - PEDETEO
     // ============================================================================
@@ -196,6 +197,13 @@ class SessionManager extends StateNotifier<String?> {
     // Filtros de UI
     ref.invalidate(ticketsPendientesFilterProvider);
     ref.invalidate(balanzasPendientesFilterProvider);
+
+    // ============================================================================
+    // PROVIDERS DE ADMIN - SOLICITUDES DE EQUIPOS
+    // ============================================================================
+    // Invalidar también cancela sus listeners del WebSocket (ref.onDispose)
+    ref.invalidate(deviceRequestsProvider);
+    ref.invalidate(equiposConfianzaProvider);
 
     // ============================================================================
     // NOTA: NO limpiar themeProvider ni connectivityProvider (configuraciones globales)

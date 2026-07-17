@@ -28,6 +28,7 @@ import 'package:stampcamera/screens/graneles/control_humedad_form_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
 import 'package:stampcamera/screens/device_registration_screen.dart';
+import 'package:stampcamera/screens/admin/device_requests_screen.dart';
 import 'package:stampcamera/screens/casos/casos_home_screen.dart';
 import 'package:stampcamera/screens/casos/explorador_screen.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
@@ -82,6 +83,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegistroAsistenciaScreen(),
       ),
       GoRoute(
+        path: '/admin/device-requests',
+        name: 'admin-device-requests',
+        // La pantalla valida internamente que el usuario sea superusuario
+        builder: (context, state) => const DeviceRequestsScreen(),
+      ),
+      GoRoute(
         path: '/autos',
         builder: (context, state) => const AutosScreen(),
         routes: [
@@ -95,7 +102,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'inventario/nave/:naveId',
             builder: (context, state) {
-              final naveId = int.tryParse(state.pathParameters['naveId'] ?? '') ?? 0;
+              final naveId =
+                  int.tryParse(state.pathParameters['naveId'] ?? '') ?? 0;
               if (naveId == 0) return const HomeScreen();
               return InventarioDetalleNaveScreen(naveId: naveId);
             },
@@ -103,7 +111,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'inventario/detalle/:infId',
             builder: (context, state) {
-              final infId = int.tryParse(state.pathParameters['infId'] ?? '') ?? 0;
+              final infId =
+                  int.tryParse(state.pathParameters['infId'] ?? '') ?? 0;
               if (infId == 0) return const HomeScreen();
               return InventarioDetalleScreen(informacionUnidadId: infId);
             },
@@ -179,10 +188,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'contenedor/crear',
-            pageBuilder: (context, state) => _slideUpPage(
-              state,
-              const ContenedorForm(),
-            ),
+            pageBuilder: (context, state) =>
+                _slideUpPage(state, const ContenedorForm()),
           ),
           GoRoute(
             path: 'contenedor/editar',
@@ -205,7 +212,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'servicio/:servicioId/dashboard',
             name: 'servicio-dashboard',
             builder: (context, state) {
-              final servicioId = int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
+              final servicioId =
+                  int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
               if (servicioId == 0) return const HomeScreen();
               return ServicioDashboardScreen(servicioId: servicioId);
             },
@@ -214,7 +222,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'servicio/:servicioId/jornadas',
             name: 'servicio-jornadas',
             builder: (context, state) {
-              final servicioId = int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
+              final servicioId =
+                  int.tryParse(state.pathParameters['servicioId'] ?? '') ?? 0;
               if (servicioId == 0) return const HomeScreen();
               return JornadasScreen(servicioId: servicioId);
             },
@@ -223,7 +232,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'viaje/crear',
             builder: (context, state) {
-              final servicioId = int.tryParse(state.uri.queryParameters['servicio_id'] ?? '');
+              final servicioId = int.tryParse(
+                state.uri.queryParameters['servicio_id'] ?? '',
+              );
               return servicioId != null
                   ? ViajeFormScreen(servicioId: servicioId)
                   : const ViajeFormScreen();
@@ -232,10 +243,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'viaje/editar/:ticketId',
             builder: (context, state) {
-              final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
+              final ticketId =
+                  int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
               if (ticketId == 0) return const HomeScreen();
-              final step = int.tryParse(state.uri.queryParameters['step'] ?? '');
-              final cancelToDetail = state.uri.queryParameters['origen'] == 'lista';
+              final step = int.tryParse(
+                state.uri.queryParameters['step'] ?? '',
+              );
+              final cancelToDetail =
+                  state.uri.queryParameters['origen'] == 'lista';
               return ViajeFormScreen.edit(
                 ticketId: ticketId,
                 initialStep: step,
@@ -248,7 +263,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'ticket/:ticketId',
             builder: (context, state) {
-              final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
+              final ticketId =
+                  int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
               if (ticketId == 0) return const HomeScreen();
               return TicketDetalleScreen(ticketId: ticketId);
             },
@@ -263,7 +279,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'silos/editar/:siloId',
             builder: (context, state) {
-              final siloId = int.tryParse(state.pathParameters['siloId'] ?? '') ?? 0;
+              final siloId =
+                  int.tryParse(state.pathParameters['siloId'] ?? '') ?? 0;
               if (siloId == 0) return const HomeScreen();
               return SilosCrearScreen.edit(siloId: siloId);
             },
@@ -278,7 +295,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'paralizacion/editar/:paralizacionId',
             builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['paralizacionId'] ?? '') ?? 0;
+              final id =
+                  int.tryParse(state.pathParameters['paralizacionId'] ?? '') ??
+                  0;
               if (id == 0) return const HomeScreen();
               return ParalizacionFormScreen.edit(paralizacionId: id);
             },
@@ -293,7 +312,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'control-humedad/editar/:controlId',
             builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['controlId'] ?? '') ?? 0;
+              final id =
+                  int.tryParse(state.pathParameters['controlId'] ?? '') ?? 0;
               if (id == 0) return const HomeScreen();
               return ControlHumedadFormScreen.edit(controlId: id);
             },
@@ -308,7 +328,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'explorador/:carpetaId',
             builder: (context, state) {
-              final carpetaId = int.tryParse(state.pathParameters['carpetaId'] ?? '') ?? 0;
+              final carpetaId =
+                  int.tryParse(state.pathParameters['carpetaId'] ?? '') ?? 0;
               if (carpetaId == 0) return const HomeScreen();
               return ExploradorScreen(carpetaId: carpetaId);
             },
@@ -419,13 +440,10 @@ CustomTransitionPage<T> _slideUpPage<T>(GoRouterState state, Widget child) {
     reverseTransitionDuration: const Duration(milliseconds: 250),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       return SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-        )),
+        position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+            .animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            ),
         child: child,
       );
     },

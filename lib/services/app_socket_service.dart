@@ -14,6 +14,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:stampcamera/models/admin/device_request_model.dart';
 import 'package:stampcamera/services/http_service.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -55,8 +56,7 @@ class AppSocketEvent {
   // --- Datos de permissions_updated ---
   Map<String, dynamic>? get permissions =>
       raw['permissions'] as Map<String, dynamic>?;
-  List<String>? get grupos =>
-      (permissions?['grupos'] as List?)?.cast<String>();
+  List<String>? get grupos => (permissions?['grupos'] as List?)?.cast<String>();
   Map<String, dynamic>? get modulos =>
       permissions?['modulos'] as Map<String, dynamic>?;
 
@@ -115,8 +115,9 @@ class AppSocketService {
       StreamController<WsConnectionState>.broadcast();
   final _notificationController =
       StreamController<Map<String, dynamic>>.broadcast();
-  final _dataChangedController =
-      StreamController<AppSocketEvent>.broadcast();
+  final _dataChangedController = StreamController<AppSocketEvent>.broadcast();
+  final _deviceRequestChangedController =
+      StreamController<DeviceRequestChangedEvent>.broadcast();
 
   Stream<AppSocketEvent> get eventStream => _eventController.stream;
   Stream<WsConnectionState> get connectionStateStream =>
@@ -124,6 +125,11 @@ class AppSocketService {
   Stream<Map<String, dynamic>> get onNotification =>
       _notificationController.stream;
   Stream<AppSocketEvent> get onDataChanged => _dataChangedController.stream;
+
+  /// Cambios en solicitudes de autorización de equipos (solo superusuarios).
+  /// El evento es una señal de invalidación: los datos se consultan vía REST.
+  Stream<DeviceRequestChangedEvent> get onDeviceRequestChanged =>
+      _deviceRequestChangedController.stream;
 
   // ─── Ticket WS ─────────────────────────────────────────────────────
 
@@ -252,10 +258,7 @@ class AppSocketService {
   }
 
   void sendPing() {
-    _send({
-      'type': 'ping',
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    });
+    _send({'type': 'ping', 'timestamp': DateTime.now().millisecondsSinceEpoch});
   }
 
   // ─── Manejo de mensajes ──────────────────────────────────────────────
@@ -290,6 +293,16 @@ class AppSocketService {
           _dataChangedController.add(event);
           break;
 
+        case 'device_request_changed':
+          final parsed = DeviceRequestChangedEvent.tryParse(data);
+          if (parsed != null) {
+            _deviceRequestChangedController.add(parsed);
+          } else {
+            // No loguear el payload: podría traer datos inesperados
+            debugPrint('WS: device_request_changed inválido, ignorado');
+          }
+          break;
+
         case 'force_logout':
           debugPrint('WS: Force logout - ${data['reason']}');
           _eventController.add(event);
@@ -317,10 +330,9 @@ class AppSocketService {
   void _onError(dynamic error) {
     debugPrint('WS: Error: $error');
     _setConnectionState(WsConnectionState.error);
-    _eventController.add(AppSocketEvent(
-      type: 'error',
-      raw: {'message': error.toString()},
-    ));
+    _eventController.add(
+      AppSocketEvent(type: 'error', raw: {'message': error.toString()}),
+    );
     _scheduleReconnect();
   }
 
@@ -368,7 +380,8 @@ class AppSocketService {
 
     final delay = _reconnectBaseDelay * (_reconnectAttempts + 1);
     debugPrint(
-        'WS: Reconectando en ${delay.inSeconds}s (${_reconnectAttempts + 1}/$_maxReconnectAttempts)');
+      'WS: Reconectando en ${delay.inSeconds}s (${_reconnectAttempts + 1}/$_maxReconnectAttempts)',
+    );
 
     _reconnectTimer = Timer(delay, () {
       _reconnectAttempts++;
@@ -394,11 +407,16 @@ class AppSocketService {
     _reconnectAttempts = 0;
   }
 
+  /// Inyecta un mensaje crudo como si viniera del WS (solo para tests).
+  @visibleForTesting
+  void debugHandleMessage(String message) => _onMessage(message);
+
   void dispose() {
     disconnect();
     _eventController.close();
     _connectionStateController.close();
     _notificationController.close();
     _dataChangedController.close();
+    _deviceRequestChangedController.close();
   }
 }
