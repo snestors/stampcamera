@@ -1134,3 +1134,24 @@ Con `enableEdgeToEdge()` (obligatorio para Android 15), en teléfonos con barra 
 ### Próximos pasos iOS
 - TestFlight: instalar y probar en iPhone (cámara, scanner, GPS, watermark — iOS usa el pipeline Dart, NO el motor nativo Kotlin)
 - Completar ficha de App Store Connect: screenshots, descripción, política de privacidad, y enviar a revisión
+
+---
+
+## ✅ COMPLETADO - SESIÓN 2026-07-17 (continuación) - Fixes iOS probados en iPhone + App Store Connect
+
+### Bugs iOS encontrados probando en iPhone 11 físico (v1.5.6+70/71)
+1. **Galería de cámara vacía**: `camera_provider._loadImages()` buscaba en `/storage/emulated/0/DCIM/StampCamera` (ruta Android hardcodeada). Fix: iOS usa `Documents/StampCamera` (misma ruta donde guarda `ImageProcessor._saveProcessedImage`).
+2. **Compartir crasheaba**: share_plus en iOS exige `sharePositionOrigin`. Fix: helper `shareOriginOf(context)` en `lib/utils/share_utils.dart`, aplicado a los 5 call sites de SharePlus.
+3. **Fotos invisibles en WhatsApp/Fotos**: en iOS quedaban solo en la carpeta privada de la app. Fix: paquete `gal ^2.3.2` — tras guardar, `Gal.putImage()` copia al carrete (solo iOS, permiso add-only `NSPhotoLibraryAddUsageDescription`). Android intacto.
+
+### App Store Connect (app "AYG APP", ID 6791653349)
+- Builds subidos: 69 (solo-iPhone) por Organizer; **el definitivo es el 71** (con los 3 fixes)
+- Capturas: `appstore_assets/final_65/` (1284×2778 - la cuenta pide 6,5"; las 6,9" en `final/`)
+- Notas del revisor con credenciales y token: `appstore_assets/notas_revisor.md` (carpeta en .gitignore)
+- Usuario demo Apple: appletest (token de dispositivo fijo, ver notas_revisor.md)
+- Política de privacidad: https://www.aygajustadores.com/privacy-policy/
+
+### ⚠️ Lecciones de esta Mac (228GB, siempre al límite)
+- Cada `flutter build ipa` genera ~4GB en DerivedData → limpiar con `rm -rf ~/Library/Developer/Xcode/DerivedData` cuando falte espacio
+- **NO borrar** el runtime del simulador (`xcrun simctl runtime delete`): en Xcode 26 esa plataforma también se necesita para instalar en iPhones físicos (re-descarga de ~4GB con `xcodebuild -downloadPlatform iOS`)
+- Export de ipa por CLI falla (sin cert de distribución local); la subida SIEMPRE por Xcode Organizer (usa firma en la nube)
