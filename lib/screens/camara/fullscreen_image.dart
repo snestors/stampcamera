@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:stampcamera/utils/share_utils.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/camera_provider.dart';
@@ -73,7 +74,10 @@ class _FullscreenImageState extends ConsumerState<FullscreenImage> {
 
   Future<void> _shareCurrentImage(File file) async {
     final result = await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)]),
+      ShareParams(
+        files: [XFile(file.path)],
+        sharePositionOrigin: shareOriginOf(context),
+      ),
     );
 
     if (result.status == ShareResultStatus.success) {

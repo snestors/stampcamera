@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:stampcamera/utils/share_utils.dart';
 import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
@@ -53,7 +54,10 @@ class _GallerySelectorScreenState extends ConsumerState<GallerySelectorScreen> {
     }
 
     final result = await SharePlus.instance.share(
-      ShareParams(files: selected.map((f) => XFile(f.path)).toList()),
+      ShareParams(
+        files: selected.map((f) => XFile(f.path)).toList(),
+        sharePositionOrigin: shareOriginOf(context),
+      ),
     );
 
     if (result.status == ShareResultStatus.success) {

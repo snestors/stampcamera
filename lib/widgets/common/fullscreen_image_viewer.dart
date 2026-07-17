@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:stampcamera/utils/share_utils.dart';
 import 'package:stampcamera/core/core.dart';
 
 class FullscreenImageViewer extends StatefulWidget {
@@ -142,10 +143,12 @@ class _FullscreenImageViewerState extends State<FullscreenImageViewer> {
         return;
       }
 
+      if (!mounted) return;
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
           text: widget.title,
+          sharePositionOrigin: shareOriginOf(context),
         ),
       );
     } catch (e) {

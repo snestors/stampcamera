@@ -13,6 +13,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:stampcamera/utils/share_utils.dart';
 
 class InventarioDetalleNaveScreen extends ConsumerStatefulWidget {
   final int naveId;
@@ -731,13 +732,15 @@ class _InventarioDetalleNaveScreenState
         await file.writeAsBytes(pngBytes);
 
         // Cerrar loading
-        if (mounted) AppDialog.closeLoading(context);
+        if (!mounted) return;
+        AppDialog.closeLoading(context);
 
         // Compartir
         await SharePlus.instance.share(
           ShareParams(
             text: 'Reporte de Unidades: $marca - $cliente',
             files: [XFile(file.path)],
+            sharePositionOrigin: shareOriginOf(context),
           ),
         );
 
@@ -1019,12 +1022,14 @@ class _InventarioDetalleNaveScreenState
       );
       await file.writeAsBytes(bytes);
 
-      if (mounted) AppDialog.closeLoading(context);
+      if (!mounted) return;
+      AppDialog.closeLoading(context);
 
       await SharePlus.instance.share(
         ShareParams(
           text: 'Pendientes de $label - $naveNombre',
           files: [XFile(file.path)],
+          sharePositionOrigin: shareOriginOf(context),
         ),
       );
 

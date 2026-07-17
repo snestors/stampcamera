@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 
@@ -72,7 +74,15 @@ class CameraNotifier extends StateNotifier<CameraState> {
   }
 
   Future<void> _loadImages() async {
-    final dir = Directory('/storage/emulated/0/DCIM/StampCamera');
+    // Misma ruta que usa ImageProcessor._saveProcessedImage:
+    // Android → DCIM/StampCamera; iOS → Documents/StampCamera
+    final Directory dir;
+    if (Platform.isAndroid) {
+      dir = Directory('/storage/emulated/0/DCIM/StampCamera');
+    } else {
+      final appDir = await getApplicationDocumentsDirectory();
+      dir = Directory(p.join(appDir.path, 'StampCamera'));
+    }
     if (!await dir.exists()) return;
 
     // Usar operaciones ASÍNCRONAS para no bloquear el UI thread
