@@ -359,6 +359,8 @@ abstract class BaseListProviderImpl<T> extends AsyncNotifier<List<T>>
           return 'El servidor tardó demasiado en responder';
         case DioExceptionType.sendTimeout:
           return 'Error enviando datos - Revisa tu conexión';
+        case DioExceptionType.transformTimeout:
+          return 'El servidor tardó demasiado en responder';
         case DioExceptionType.badResponse:
           final status = error.response?.statusCode;
           if (status == 401) {
