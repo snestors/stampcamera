@@ -9,6 +9,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:geolocator/geolocator.dart';
@@ -802,6 +803,22 @@ class ImageProcessor {
         '${now.second.toString().padLeft(2, '0')}';
   }
 
+  Future<void> _exportToPhotoLibrary(String filePath) async {
+    try {
+      if (!await Gal.hasAccess()) {
+        final granted = await Gal.requestAccess();
+        if (!granted) {
+          debugPrint('⚠️ Permiso de carrete denegado, foto solo en la app');
+          return;
+        }
+      }
+      await Gal.putImage(filePath);
+      debugPrint('📸 Foto copiada al carrete');
+    } catch (e) {
+      debugPrint('⚠️ No se pudo copiar al carrete: $e');
+    }
+  }
+
   Future<void> _scanFile(String path) async {
     try {
       await _methodChannel.invokeMethod('scanFile', {'path': path});
@@ -835,6 +852,10 @@ class ImageProcessor {
 
       if (Platform.isAndroid) {
         _scanFile(filePath);
+      } else if (Platform.isIOS) {
+        // Copiar al carrete de Fotos para que sea visible desde otras apps
+        // (WhatsApp, Fotos, etc.). La app sigue listando Documents/StampCamera.
+        _exportToPhotoLibrary(filePath);
       }
 
       final fileSizeMB = (imageBytes.length / 1024 / 1024).toStringAsFixed(2);

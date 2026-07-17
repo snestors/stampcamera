@@ -36,6 +36,8 @@
 	<string>Usamos tu ubicación para el registro de asistencia y para estampar las coordenadas en las fotos de inspección</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>El componente de cámara requiere declarar este permiso. La app no graba audio.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Guarda las fotos de inspección en tu carrete para poder compartirlas desde otras apps</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Permite seleccionar fotos de tu galería para adjuntarlas a inspecciones y documentos</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
