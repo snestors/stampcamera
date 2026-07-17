@@ -49,3 +49,6 @@ app.*.map.json
 
 # Python cache (scripts de playstore)
 __pycache__/
+
+# Assets de App Store (contiene credenciales de revisión en notas_revisor.md)
+appstore_assets/
