@@ -1113,3 +1113,24 @@ Con `enableEdgeToEdge()` (obligatorio para Android 15), en teléfonos con barra 
 `autos_screen` (BottomNavigationBar de Material maneja el inset solo), `graneles_screen` (SafeArea en TabBar), `viaje_form_screen` (bottom bar ya sumaba padding.bottom), formularios de autos con SafeArea (dano_form, registro_vin_forms, fotos_presentacion_form, contenedor_form), forms de graneles con SizedBox + padding.bottom (paralizacion, control_humedad, silos_crear), login/camera/visores con SafeArea completo, `registro_asistencia_screen` (padding bottom 100).
 
 ### 📍 Estado: `flutter analyze` sin issues. Versión **1.5.6+68**. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (57.6MB). ✅ **Probado en dispositivo con barra de 3 botones** (confirmado 2026-07-16). Todo commiteado y pusheado a origin/main.
+
+---
+
+## ✅ COMPLETADO - SESIÓN 2026-07-17 - Configuración iOS + primera subida a App Store
+
+### Configuración de firma iOS (primera vez)
+- **Bundle ID iOS**: `com.nestorfar.stampcamera` (unificado con el applicationId de Android; antes decía com.aygajustadores.stampcamera)
+- **Team**: A&G Ajustadores y Peritos de Seguros S.A.C — `DEVELOPMENT_TEAM = JZ4ZUD5L9A` en las 3 configs de Runner, firma automática
+- **Info.plist**: agregados NSCameraUsageDescription, NSMicrophoneUsageDescription, NSLocationWhenInUseUsageDescription, NSPhotoLibraryUsageDescription (NSFaceIDUsageDescription ya existía)
+- **iPhone de prueba registrado** en la cuenta (UDID 00008030-001D71C12199802E) — requerido para el perfil de desarrollo
+- Llavero: clave privada del certificado con acceso permitido a todas las apps (evita el diálogo de codesign por cada framework)
+
+### Build y subida
+- `flutter build ipa --release` → `build/ios/ipa/stampcamera.ipa` (27MB), v1.5.6+68
+- Subido a App Store Connect vía Xcode Organizer (Distribute App)
+- `permission_handler` 9.4.7 (iOS) trae todos los macros en 0 por defecto → no hizo falta tocar el Podfile
+- NOTA: archivar con `xcodebuild` crudo falla ("Flutter/Flutter.h not found" en geolocator); usar SIEMPRE `flutter build ipa`
+
+### Próximos pasos iOS
+- TestFlight: instalar y probar en iPhone (cámara, scanner, GPS, watermark — iOS usa el pipeline Dart, NO el motor nativo Kotlin)
+- Completar ficha de App Store Connect: screenshots, descripción, política de privacidad, y enviar a revisión
