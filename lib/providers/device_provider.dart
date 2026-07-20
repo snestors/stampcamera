@@ -257,6 +257,25 @@ class DeviceNotifier extends StateNotifier<DeviceState> {
     return result;
   }
 
+  /// Marca el equipo como registrado sin pasar por `checking`
+  /// (el flujo de login ya validó contra el servidor; `checking` redirige al splash)
+  void markRegistered({
+    required String deviceId,
+    String? type,
+    String? deviceName,
+    DeviceUser? user,
+  }) {
+    state = state.copyWith(
+      status: DeviceRegistrationStatus.registered,
+      deviceId: deviceId,
+      deviceType: type,
+      deviceName: deviceName,
+      user: user,
+      isLoading: false,
+      errorMessage: null,
+    );
+  }
+
   /// Limpia el error actual
   void clearError() {
     state = state.copyWith(errorMessage: null);

@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/auth_state.dart';
+import 'package:stampcamera/models/login_flow_model.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/device_provider.dart';
+import 'package:stampcamera/providers/login_flow_provider.dart';
 import 'package:stampcamera/services/device_service.dart';
 import 'package:stampcamera/services/biometric_service.dart';
+import 'package:stampcamera/utils/share_utils.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -21,6 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
   final _passwordFocusNode = FocusNode();
 
   late AnimationController _animationController;
@@ -124,6 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _animationController.dispose();
     _usernameCtrl.dispose();
     _passwordCtrl.dispose();
+    _otpCtrl.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
   }
@@ -139,10 +147,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         BiometricService().setPendingPassword(_lastPassword!);
       }
 
+      ref.read(authProvider.notifier).clearError();
+
+      // El flujo resuelve la autorización del equipo dentro del login:
+      // authenticated | pending_otp | pending_admin
       await ref
-          .read(authProvider.notifier)
-          .login(_lastUsername!, _lastPassword!);
+          .read(loginFlowProvider.notifier)
+          .start(_lastUsername!, _lastPassword!);
     }
+  }
+
+  Future<void> _verifyOtp() async {
+    final code = _otpCtrl.text.trim();
+    if (code.length != 6) return;
+    await ref.read(loginFlowProvider.notifier).verifyOtp(code);
+  }
+
+  void _cancelLoginFlow() {
+    _otpCtrl.clear();
+    ref.read(loginFlowProvider.notifier).cancel();
+  }
+
+  /// Comparte el código de aprobación por el share sheet del sistema
+  /// (WhatsApp personal o Business, SMS, etc.)
+  Future<void> _shareUserCode(String code) async {
+    final username = _lastUsername ?? _usernameCtrl.text.trim();
+    final message = username.isEmpty
+        ? 'Solicito aprobación de mi equipo en AYG APP.\nCódigo: $code'
+        : 'Solicito aprobación de mi equipo en AYG APP.\nUsuario: $username\nCódigo: $code';
+
+    await SharePlus.instance.share(
+      ShareParams(
+        text: message,
+        sharePositionOrigin: shareOriginOf(context),
+      ),
+    );
   }
 
   Future<void> _loginWithBiometric() async {
@@ -225,16 +264,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       final deviceService = DeviceService();
       await deviceService.clearDeviceInfo();
       ref.read(deviceProvider.notifier).reset();
+      // El próximo login verifica el equipo dentro del propio flujo,
+      // ya no hay que pasar por la pantalla de registro
       if (mounted) {
-        context.go('/device-registration');
+        setState(() {
+          _isPersonalDevice = false;
+          _biometricEnabled = false;
+          _usernameCtrl.clear();
+          _passwordCtrl.clear();
+        });
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final errorMessage = ref.watch(authProvider).value?.errorMessage;
-    final isLoading = ref.watch(authProvider).isLoading;
+    final flowState = ref.watch(loginFlowProvider);
+    final authErrorMessage = ref.watch(authProvider).value?.errorMessage;
+    final errorMessage = flowState.errorMessage ?? authErrorMessage;
+    final isLoading = ref.watch(authProvider).isLoading || flowState.isLoading;
+
+    final Widget content;
+    switch (flowState.phase) {
+      case LoginFlowPhase.otp:
+        content = _buildOtpCard(flowState);
+        break;
+      case LoginFlowPhase.adminApproval:
+        content = _buildAdminApprovalCard(flowState);
+        break;
+      case LoginFlowPhase.credentials:
+        content = _buildLoginForm(errorMessage, isLoading);
+        break;
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -252,9 +313,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildHeader(),
-                    _buildLoginForm(errorMessage, isLoading),
+                    content,
                     const SizedBox(height: 6),
-                    _buildFooter(),
+                    _buildFooter(showSharedDeviceLink: flowState.isCredentials),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -263,6 +324,264 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           },
         ),
       ),
+    );
+  }
+
+  /// Contenedor con el estilo del formulario de login
+  Widget _buildFlowCard({required List<Widget> children}) {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 400),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.overlayDark.withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
+  /// Fase pending_otp: código de 6 dígitos enviado al correo
+  Widget _buildOtpCard(LoginFlowState flow) {
+    return _buildFlowCard(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.mark_email_read_outlined,
+            color: AppColors.primary,
+            size: 32,
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceM),
+        const Text(
+          'Verificación de equipo',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeXL,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceS),
+        Text(
+          'Enviamos un código de 6 dígitos a\n${flow.maskedEmail ?? 'tu correo'}',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceL),
+        TextField(
+          controller: _otpCtrl,
+          enabled: !flow.isLoading,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          maxLength: 6,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 12,
+            color: AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            counterText: '',
+            hintText: '••••••',
+            filled: true,
+            fillColor: AppColors.backgroundLight,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+            ),
+          ),
+          onChanged: (_) => setState(() {}),
+          onSubmitted: (_) => _verifyOtp(),
+        ),
+        const SizedBox(height: DesignTokens.spaceL),
+        if (flow.errorMessage != null) ...[
+          AppInlineError(
+            message: flow.errorMessage!,
+            onDismiss: () =>
+                ref.read(loginFlowProvider.notifier).clearError(),
+            dismissible: true,
+          ),
+          const SizedBox(height: DesignTokens.spaceM),
+        ],
+        AppButton.primary(
+          text: 'Verificar código',
+          onPressed:
+              flow.isLoading || _otpCtrl.text.trim().length != 6
+                  ? null
+                  : _verifyOtp,
+          isLoading: flow.isLoading,
+          size: AppButtonSize.large,
+        ),
+        const SizedBox(height: DesignTokens.spaceS),
+        TextButton(
+          onPressed: flow.isLoading
+              ? null
+              : () =>
+                  ref.read(loginFlowProvider.notifier).requestAdminApproval(),
+          child: const Text(
+            '¿No te llegó el correo? Pedir aprobación del administrador',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: DesignTokens.fontSizeS),
+          ),
+        ),
+        TextButton(
+          onPressed: flow.isLoading ? null : _cancelLoginFlow,
+          child: const Text(
+            'Cancelar',
+            style: TextStyle(
+              fontSize: DesignTokens.fontSizeS,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Fase pending_admin: mostrar user_code y esperar aprobación (polling)
+  Widget _buildAdminApprovalCard(LoginFlowState flow) {
+    return _buildFlowCard(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.admin_panel_settings_outlined,
+            color: AppColors.warning,
+            size: 32,
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceM),
+        const Text(
+          'Aprobación requerida',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeXL,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceS),
+        const Text(
+          'Pide a un administrador o coordinador que apruebe este equipo con el siguiente código:',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeS,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceL),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.25),
+            ),
+          ),
+          child: Text(
+            flow.userCode ?? '----',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 6,
+              fontFamily: 'monospace',
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceM),
+        ElevatedButton.icon(
+          onPressed: flow.userCode == null
+              ? null
+              : () => _shareUserCode(flow.userCode!),
+          icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 22),
+          label: const Text(
+            'Compartir código',
+            style: TextStyle(
+              fontSize: DesignTokens.fontSizeM,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF25D366),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+            ),
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceL),
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primary,
+              ),
+            ),
+            SizedBox(width: DesignTokens.spaceS),
+            Text(
+              'Esperando aprobación…',
+              style: TextStyle(
+                fontSize: DesignTokens.fontSizeM,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: DesignTokens.spaceS),
+        const Text(
+          'El código expira en 10 minutos.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: DesignTokens.fontSizeXS,
+            color: AppColors.textLight,
+          ),
+        ),
+        const SizedBox(height: DesignTokens.spaceS),
+        TextButton(
+          onPressed: _cancelLoginFlow,
+          child: const Text(
+            'Cancelar',
+            style: TextStyle(
+              fontSize: DesignTokens.fontSizeS,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -379,6 +698,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     message: errorMessage,
                     onDismiss: () {
                       ref.read(authProvider.notifier).clearError();
+                      ref.read(loginFlowProvider.notifier).clearError();
                     },
                     dismissible: true,
                   ),
@@ -609,14 +929,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   // Método eliminado - usando AppButton del sistema de diseño
 
-  Widget _buildFooter() {
-    return Text(
-      'Versión $_appVersion',
-      style: const TextStyle(
-        color: AppColors.textLight,
-        fontSize: DesignTokens.fontSizeXS,
-      ),
-      textAlign: TextAlign.center,
+  Widget _buildFooter({bool showSharedDeviceLink = true}) {
+    return Column(
+      children: [
+        if (showSharedDeviceLink)
+          TextButton.icon(
+            onPressed: () => context.go('/device-registration'),
+            icon: const Icon(
+              Icons.tablet_android,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+            label: const Text(
+              'Registrar equipo compartido',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: DesignTokens.fontSizeXS,
+              ),
+            ),
+          ),
+        Text(
+          'Versión $_appVersion',
+          style: const TextStyle(
+            color: AppColors.textLight,
+            fontSize: DesignTokens.fontSizeXS,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

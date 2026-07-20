@@ -12,6 +12,8 @@ import 'package:stampcamera/models/user_model.dart';
 import 'package:stampcamera/models/auth_state.dart';
 import 'package:stampcamera/services/http_service.dart';
 import 'package:stampcamera/services/device_service.dart';
+import 'package:stampcamera/services/login_flow_service.dart';
+import 'package:stampcamera/services/push_notification_service.dart';
 import 'package:stampcamera/services/biometric_service.dart';
 import 'package:stampcamera/services/storage_health_service.dart'; // Importa appSecureStorage
 
@@ -163,6 +165,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     }
   }
 
+  /// Login directo vía auth/login/start/ — solo cubre el caso de equipo YA
+  /// de confianza (status: authenticated). Lo usan los caminos biométricos;
+  /// el login manual con verificación de equipo va por loginFlowProvider.
   Future<void> login(String username, String password) async {
     debugPrint('🔐 AuthProvider: Iniciando login para: $username');
 
@@ -179,26 +184,63 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
     state = const AsyncValue.loading();
 
     try {
-      final response = await _http.dio.post(
-        'api/v1/token/',
-        data: {'username': username.trim(), 'password': password.trim()},
+      final result = await LoginFlowService().startLogin(
+        username: username.trim(),
+        password: password.trim(),
       );
 
-      final accessToken = response.data['access'] as String?;
-      final refreshToken = response.data['refresh'] as String?;
-
-      if (accessToken == null || refreshToken == null) {
-        throw Exception('Respuesta inválida del servidor');
+      if (result.isAuthenticated) {
+        if (result.deviceId != null && result.deviceId!.isNotEmpty) {
+          await DeviceService().storeDeviceId(result.deviceId!);
+        }
+        await completeLoginWithTokens(
+          access: result.access!,
+          refresh: result.refresh!,
+        );
+        debugPrint('✅ Login exitoso para: ${username.trim()}');
+      } else if (result.isPending) {
+        // El equipo dejó de ser de confianza: requiere el flujo manual
+        state = const AsyncValue.data(
+          AuthState(
+            status: AuthStatus.loggedOut,
+            errorMessage:
+                'Este equipo requiere verificación. Ingresa con tu usuario y contraseña.',
+          ),
+        );
+      } else {
+        state = AsyncValue.data(
+          AuthState(
+            status: AuthStatus.loggedOut,
+            errorMessage: result.error ?? 'No se pudo iniciar sesión',
+          ),
+        );
       }
-
-      await _storage.write(key: 'access', value: accessToken);
-      await _storage.write(key: 'refresh', value: refreshToken);
-
-      await _fetchUserAndSetState();
-
-      debugPrint('✅ Login exitoso para: ${username.trim()}');
     } catch (e) {
       debugPrint('❌ AuthProvider: Error en login: $e');
+
+      final errorMessage = _handleGenericError(e);
+
+      state = AsyncValue.data(
+        AuthState(status: AuthStatus.loggedOut, errorMessage: errorMessage),
+      );
+    }
+  }
+
+  /// Persiste los tokens emitidos por el flujo de autorización de equipos
+  /// y carga el usuario. Lo invoca loginFlowProvider al llegar a `authenticated`.
+  Future<void> completeLoginWithTokens({
+    required String access,
+    required String refresh,
+  }) async {
+    state = const AsyncValue.loading();
+
+    try {
+      await _storage.write(key: 'access', value: access);
+      await _storage.write(key: 'refresh', value: refresh);
+
+      await _fetchUserAndSetState();
+    } catch (e) {
+      debugPrint('❌ AuthProvider: Error completando login: $e');
 
       final errorMessage = _handleGenericError(e);
 
@@ -253,6 +295,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
 
       // Conectar WebSocket de presencia después de login exitoso
       _ref.read(appSocketProvider.notifier).connect();
+
+      // Registrar token FCM (idempotente por sesión de app)
+      unawaited(PushNotificationService().registerAfterLogin());
     } catch (e) {
       if (_isUnauthorizedError(e)) {
         throw Exception('Sesión expirada');
@@ -320,6 +365,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthState>> {
   }
 
   Future<void> logout({WidgetRef? ref, String? reason}) async {
+    // Borrar token FCM para dejar de recibir push en este equipo
+    unawaited(PushNotificationService().onLogout());
+
     // Desconectar WebSocket de presencia
     await _ref.read(appSocketProvider.notifier).disconnect();
 

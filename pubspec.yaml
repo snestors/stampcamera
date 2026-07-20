@@ -1,7 +1,7 @@
 name: stampcamera # ✅ DEJAR IGUAL
 description: "Aplicación de inspección vehicular para A&G Ajustadores" # ✅ CAMBIAR ESTA
 publish_to: "none" # ✅ DEJAR IGUAL
-version: 1.5.6+71
+version: 1.6.0+73
 
 environment:
   sdk: ^3.8.1
@@ -28,6 +28,8 @@ dependencies:
   geolocator: ^14.0.2
   image_picker: ^1.1.2
   connectivity_plus: ^6.1.4
+  device_info_plus: ^11.3.0
+  font_awesome_flutter: ^11.0.0
   shared_preferences: ^2.5.3
   uuid: ^4.5.1
   geocoding: ^4.0.0
@@ -39,6 +41,8 @@ dependencies:
   file_picker: ^8.1.6
   timezone: ^0.11.0
   gal: ^2.3.2
+  firebase_core: ^4.12.1
+  firebase_messaging: ^16.4.3
 
 dev_dependencies:
   flutter_test:

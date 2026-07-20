@@ -378,22 +378,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Si ya aceptó la política, continuar con verificaciones
       if (privacyAccepted) {
-        // 🔐 2. VERIFICAR DISPOSITIVO DE CONFIANZA
+        // 🔐 2. VALIDAR DEVICE_ID ALMACENADO (solo bloquea durante el arranque)
+        // El registro de equipo ya NO es un gate previo: el flujo de login
+        // (auth/login/start/) resuelve la autorización del equipo.
         final deviceState = ref.read(deviceProvider);
 
-        // Si está verificando el dispositivo, mostrar splash
         if (deviceState.status == DeviceRegistrationStatus.checking) {
           if (state.fullPath != '/') return '/';
-          return null;
-        }
-
-        // Si el dispositivo no está registrado, ir a registro
-        if (deviceState.status == DeviceRegistrationStatus.notRegistered ||
-            deviceState.status == DeviceRegistrationStatus.awaitingCode ||
-            deviceState.status == DeviceRegistrationStatus.awaitingToken) {
-          if (state.fullPath != '/device-registration') {
-            return '/device-registration';
-          }
           return null;
         }
 
@@ -406,11 +397,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         final auth = authState.value;
 
         if (auth == null || auth.status == AuthStatus.loggedOut) {
-          // Si no está logueado, ir a login
-          if (state.fullPath == '/privacy' ||
-              state.fullPath == '/device-registration' ||
-              state.fullPath == '/') {
-            return '/login';
+          // /device-registration sigue disponible para registrar equipos
+          // compartidos con token; al completarse vuelve al login
+          if (state.fullPath == '/device-registration') {
+            return deviceState.isRegistered ? '/login' : null;
           }
           if (state.fullPath != '/login') return '/login';
           return null;

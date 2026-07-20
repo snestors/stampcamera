@@ -116,8 +116,11 @@ class HttpService {
           }
 
           // Solo manejar errores 401 y no del endpoint de refresh
+          // ni de los endpoints del flujo de login (un 401 ahí es
+          // credenciales inválidas, no un access token vencido)
           if (error.response?.statusCode == 401 &&
-              !error.requestOptions.path.contains(refreshEndpoint)) {
+              !error.requestOptions.path.contains(refreshEndpoint) &&
+              !_isLoginFlowPath(error.requestOptions.path)) {
             // Prevenir reintentos infinitos
             if (error.requestOptions.extra['retried'] == true) {
               _authNotifier?.logout();
@@ -183,6 +186,13 @@ class HttpService {
         errorString.contains('socket') ||
         errorString.contains('connection failed') ||
         errorString.contains('no address associated with hostname');
+  }
+
+  /// Endpoints públicos del flujo de login/autorización de equipos
+  bool _isLoginFlowPath(String path) {
+    return path.contains('auth/login/') ||
+        path.contains('auth/device-approval/') ||
+        path.contains('api/v1/token/');
   }
 
   /// Verificar si es error de dispositivo no autorizado
