@@ -1235,4 +1235,4 @@ FCM solo cubre background/app cerrada; en foreground el WS entregaba las notific
 - ✅ Versión **1.7.0+74**. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (73.9MB).
 - ⏳ PENDIENTE deploy backend: los 2 commits FCM anteriores + el cambio de `pushnotificacitons/views.py` de esta sesión (sin commitear en el repo Django). Sin eso, la app recibe redirect/401 en `/notificaciones/`.
 - ⏳ NO probado en dispositivo aún.
-- 🧹 Disco: se liberó Temp de Windows (209MB → ~4GB antes del build; quedó en 2.3GB tras el build). Candidatos si falta espacio: **`~/.android/avd` = 13GB** (emuladores Android — el testing se hace en dispositivos físicos, borrar los AVD que no se usen libera lo más grande) y `~/.gradle/caches` = 7.4GB (NUNCA borrarla con un build corriendo; modules-2 son 2.5GB re-descargables).
+- 🧹 Disco: se liberó Temp de Windows y se **eliminó el AVD Pixel 9a (13GB)** — el testing es solo en dispositivos físicos, NO recrear emuladores. Estado final: **15GB libres** en C:. Si vuelve a faltar: `~/.gradle/caches` = 7.4GB (NUNCA borrarla con un build corriendo; modules-2 son 2.5GB re-descargables).
