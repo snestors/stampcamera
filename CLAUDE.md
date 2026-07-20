@@ -1155,3 +1155,43 @@ Con `enableEdgeToEdge()` (obligatorio para Android 15), en teléfonos con barra 
 - Cada `flutter build ipa` genera ~4GB en DerivedData → limpiar con `rm -rf ~/Library/Developer/Xcode/DerivedData` cuando falte espacio
 - **NO borrar** el runtime del simulador (`xcrun simctl runtime delete`): en Xcode 26 esa plataforma también se necesita para instalar en iPhones físicos (re-descarga de ~4GB con `xcodebuild -downloadPlatform iOS`)
 - Export de ipa por CLI falla (sin cert de distribución local); la subida SIEMPRE por Xcode Organizer (usa firma en la nube)
+
+---
+
+## ✅ COMPLETADO - SESIÓN 2026-07-20 - v1.6.0+73 - Autorización de equipos en login + FCM Android
+
+### 🔐 1. Flujo de autorización de equipos DENTRO del login (contrato nuevo del backend admin-v2)
+El backend tiene dos sistemas de login; la app ahora usa el NUEVO (`POST /api/v1/auth/login/start/`, `client_type: "api"`):
+- `authenticated` → tokens directos (equipo de confianza, 365 días)
+- `pending_otp` → código 6 dígitos al correo → `verify-otp/` (con botón "¿No te llegó? Pedir aprobación admin" → `request-admin-approval/`)
+- `pending_admin` → pantalla con `user_code` (ABCD-2345) en grande + **polling cada 4s** a `device-approval/status/` hasta authenticated/rejected/expired
+- El `flow_secret` viaja en el body JSON; el `device_id` (64 hex) lo genera el SERVIDOR y la app lo adopta
+- **El WS DeviceFlowConsumer es solo web** (exige sesión Django); en móvil la espera es polling
+- **Botón verde WhatsApp** (font_awesome_flutter) en la pantalla del código → share sheet del sistema (elegible WhatsApp/Business/SMS) con mensaje "Solicito aprobación... Usuario + Código"
+- Gate pre-login `/device-registration` ELIMINADO del router; la ruta queda accesible solo manual (footer del login) para equipos compartidos por token
+- "Cambiar equipo" ya no navega al registro: limpia y el próximo login re-verifica
+- `http_service`: los 401 de `auth/login/*`, `auth/device-approval/*` y `api/v1/token/` ya NO disparan refresh de token (son credenciales inválidas)
+- Biométrico: usa el mismo `login/start` (equipo confiable → directo); si el equipo fue revocado cae al flujo manual
+
+**Archivos nuevos:** `lib/models/login_flow_model.dart`, `lib/services/login_flow_service.dart`, `lib/providers/login_flow_provider.dart`
+**Modificados:** `auth_provider` (login vía start + `completeLoginWithTokens`), `login_screen` (3 fases en la misma pantalla), `device_provider` (`markRegistered` sin pasar por checking), `app_router`, `http_service`
+
+### 🔔 2. Notificaciones push FCM (Android)
+- **Backend (2 commits en admin-v2, repo Django):** `4a1747763` `/save-fcm-token/` ahora es vista DRF (acepta JWT del móvil además de sesión web) · `a718c3809` payload FCM con `data: {type, id, url, route}` en task Celery y management command (antes solo `type`; la URL iba en webpush que el móvil ignora)
+- **Flutter:** `lib/services/push_notification_service.dart` — registro del token tras login (`mobile: true`), re-registro en `onTokenRefresh`, `deleteToken()` en logout, navegación al tocar la push mapeando `data.route` → rutas de la app. **Foreground NO muestra nada** (el WS ya entrega en vivo; FCM es respaldo para background/cerrada — la bandeja del sistema pinta sola)
+- **Firebase:** proyecto `fcm-django-bd051` (sender 212704024550). La app Android `com.nestorfar.stampcamera` se registró VÍA API con el service account del backend (script en scratchpad; la CLI firebase de npm está rota) → `android/app/google-services.json` (commiteado, no es secreto). AppId: `1:212704024550:android:971de2234a042559202827`
+- Gradle: plugin `com.google.gms.google-services 4.4.4` (settings + app, compatible AGP 9). Manifest: `POST_NOTIFICATIONS`
+- Deps: `firebase_core 4.12.1`, `firebase_messaging 16.4.3`, `device_info_plus` (nombre legible del equipo), `font_awesome_flutter 11.0.0` (la 10.x NO compila en Flutter 3.44: extiende IconData que ahora es final)
+- iOS queda PENDIENTE (subir clave APNs a Firebase + GoogleService-Info.plist; la app tolera la ausencia: sin config no hay push pero no crashea)
+
+### ⚠️ Lecciones de esta PC (16GB RAM, disco 238GB al límite)
+- Cada build release genera ~4GB de intermedios; con 6 builds el disco pasó de 10GB a 100MB libres → builds fallando por RAM (OOM del AOT de Dart) y luego por disco
+- `gradle.properties` bajado a propósito a `-Xmx4G -XX:MaxMetaspaceSize=1G` (con 8G el daemon ahogaba al compilador) — NO subirlo
+- Limpieza aplicada: cachés muertos Gradle 8.14 (~4.8GB) + `flutter clean`. El Temp de Windows quedó pendiente (tan grande que cuelga `du`)
+- NUNCA `flutter build | tail && install`: el pipe enmascara el exit code y se instala un APK viejo. Usar guard con exit code + grep "√ Built"
+
+### 📍 Estado
+- ✅ Probado en Galaxy S22: flujo completo de aprobación (código → WhatsApp → admin aprueba → entra solo)
+- ✅ Bundle: `build\app\outputs\bundle\release\app-release.aab` (73.8MB) v1.6.0+73
+- ⏳ PENDIENTE: desplegar los 2 commits del backend admin-v2 (sin eso el registro del token FCM da 401 en producción)
+- ⏳ PENDIENTE: probar push end-to-end tras el deploy · FCM iOS
