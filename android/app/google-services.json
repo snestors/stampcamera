@@ -1,0 +1,87 @@
+{
+  "project_info": {
+    "project_number": "212704024550",
+    "firebase_url": "https://fcm-django-bd051-default-rtdb.firebaseio.com",
+    "project_id": "fcm-django-bd051",
+    "storage_bucket": "fcm-django-bd051.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:212704024550:android:edfbd8ca2b3f60eb202827",
+        "android_client_info": {
+          "package_name": "com.example.ayg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3ZhxiA-B4umEU7SFnTVTSmccP-BuuFEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:212704024550:android:cfab0a18f3da3055202827",
+        "android_client_info": {
+          "package_name": "com.example.scannapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3ZhxiA-B4umEU7SFnTVTSmccP-BuuFEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:212704024550:android:2700bebac77e0ffd202827",
+        "android_client_info": {
+          "package_name": "com.flutter.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3ZhxiA-B4umEU7SFnTVTSmccP-BuuFEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:212704024550:android:971de2234a042559202827",
+        "android_client_info": {
+          "package_name": "com.nestorfar.stampcamera"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3ZhxiA-B4umEU7SFnTVTSmccP-BuuFEY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

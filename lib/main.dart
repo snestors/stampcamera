@@ -6,6 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:stampcamera/providers/theme_provider.dart';
 import 'package:stampcamera/services/background_queue_service.dart';
 import 'package:stampcamera/services/offline_sync_handler.dart';
+import 'package:stampcamera/services/push_notification_service.dart';
 import 'package:stampcamera/services/storage_health_service.dart';
 import 'package:stampcamera/services/update_service.dart';
 import 'package:stampcamera/core/theme/app_theme.dart';
@@ -31,6 +32,9 @@ Future<void> main() async {
 
   // Inicializar timezone America/Lima para toda la app
   initTimezone();
+
+  // Firebase (push FCM); si no hay config la app sigue sin push
+  await PushNotificationService.initializeFirebase();
 
   // IMPORTANTE: Verificar salud del storage ANTES de cualquier otra operacion
   // Esto soluciona el problema de corrupcion al cambiar entre debug y release
@@ -63,6 +67,10 @@ Future<void> main() async {
 
   // Verificar actualizacion al inicio y al volver del background
   UpdateService().initialize();
+
+  // Navegación al tocar una push (app en background o terminada)
+  PushNotificationService()
+      .setupInteractedMessages(_providerContainer.read(appRouterProvider));
 }
 
 class MyApp extends ConsumerWidget {
