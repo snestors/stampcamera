@@ -27,7 +27,6 @@ import 'package:stampcamera/screens/graneles/paralizacion_form_screen.dart';
 import 'package:stampcamera/screens/graneles/control_humedad_form_screen.dart';
 import 'package:stampcamera/screens/privacy_policy_screen.dart';
 import 'package:stampcamera/screens/registro_asistencia_screen.dart';
-import 'package:stampcamera/screens/device_registration_screen.dart';
 import 'package:stampcamera/screens/admin/device_requests_screen.dart';
 import 'package:stampcamera/screens/casos/casos_home_screen.dart';
 import 'package:stampcamera/screens/casos/explorador_screen.dart';
@@ -73,10 +72,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PrivacyAcceptanceScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(
-        path: '/device-registration',
-        builder: (context, state) => const DeviceRegistrationScreen(),
-      ),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
       GoRoute(
         path: '/notificaciones',
@@ -403,11 +398,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         final auth = authState.value;
 
         if (auth == null || auth.status == AuthStatus.loggedOut) {
-          // /device-registration sigue disponible para registrar equipos
-          // compartidos con token; al completarse vuelve al login
-          if (state.fullPath == '/device-registration') {
-            return deviceState.isRegistered ? '/login' : null;
-          }
           if (state.fullPath != '/login') return '/login';
           return null;
         }
@@ -415,8 +405,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (auth.status == AuthStatus.loggedIn) {
           if (state.fullPath == '/login' ||
               state.fullPath == '/' ||
-              state.fullPath == '/privacy' ||
-              state.fullPath == '/device-registration') {
+              state.fullPath == '/privacy') {
             return '/home';
           }
         }

@@ -61,75 +61,10 @@ class DeviceUser {
   }
 }
 
-/// Resultado de solicitar código
-class RequestCodeResult {
-  final bool success;
-  final String? method; // 'email' | 'admin'
-  final String? maskedEmail;
-  final String? deviceId;
-  final String? message;
-  final String? error;
-
-  RequestCodeResult({
-    required this.success,
-    this.method,
-    this.maskedEmail,
-    this.deviceId,
-    this.message,
-    this.error,
-  });
-
-  factory RequestCodeResult.fromJson(Map<String, dynamic> json) {
-    return RequestCodeResult(
-      success: json['success'] ?? false,
-      method: json['method'],
-      maskedEmail: json['masked_email'],
-      deviceId: json['device_id'],
-      message: json['message'],
-      error: json['error'],
-    );
-  }
-
-  factory RequestCodeResult.error(String message) {
-    return RequestCodeResult(success: false, error: message);
-  }
-}
-
-/// Resultado de registrar dispositivo
-class RegisterDeviceResult {
-  final bool success;
-  final String? type; // 'personal' | 'shared'
-  final String? deviceName;
-  final DeviceUser? user;
-  final String? message;
-  final String? error;
-
-  RegisterDeviceResult({
-    required this.success,
-    this.type,
-    this.deviceName,
-    this.user,
-    this.message,
-    this.error,
-  });
-
-  factory RegisterDeviceResult.fromJson(Map<String, dynamic> json) {
-    return RegisterDeviceResult(
-      success: json['success'] ?? false,
-      type: json['type'],
-      deviceName: json['device_name'],
-      user: json['user'] != null ? DeviceUser.fromJson(json['user']) : null,
-      message: json['message'],
-      error: json['error'],
-    );
-  }
-
-  factory RegisterDeviceResult.error(String message) {
-    return RegisterDeviceResult(success: false, error: message);
-  }
-}
-
-/// Servicio para manejo de dispositivos de confianza
+/// Servicio para manejo de dispositivos de confianza.
+/// El registro de equipos (personal por OTP/aprobación, compartido) vive en
+/// el flujo de login (auth/login/start/) — aquí solo queda la validación
+/// del device_id almacenado y el storage local.
 class DeviceService {
   static final DeviceService _instance = DeviceService._internal();
   factory DeviceService() => _instance;
@@ -249,89 +184,6 @@ class DeviceService {
       return DeviceStatus.error(_handleDioError(e));
     } catch (e) {
       return DeviceStatus.error('Error verificando dispositivo: $e');
-    }
-  }
-
-  /// Solicita código de verificación
-  /// POST /api/v1/device/request-code/
-  Future<RequestCodeResult> requestCode({
-    required String username,
-    String? deviceName,
-  }) async {
-    try {
-      final response = await _http.dio.post(
-        'api/v1/device/request-code/',
-        data: {
-          'username': username,
-          if (deviceName != null) 'device_name': deviceName,
-        },
-      );
-
-      // Validar que la respuesta sea un Map
-      if (response.data is! Map<String, dynamic>) {
-        return RequestCodeResult.error('Respuesta inválida del servidor');
-      }
-
-      final result = RequestCodeResult.fromJson(response.data);
-
-      // Validar que si es exitoso, tenga método
-      if (result.success && result.method == null) {
-        return RequestCodeResult.error('El servidor no indicó el método de verificación');
-      }
-
-      // Si es exitoso, almacenar el device_id temporalmente
-      if (result.success && result.deviceId != null) {
-        await storeDeviceId(result.deviceId!);
-      }
-
-      return result;
-    } on DioException catch (e) {
-      return RequestCodeResult.error(_handleDioError(e));
-    } catch (e) {
-      return RequestCodeResult.error('Error solicitando código: $e');
-    }
-  }
-
-  /// Registra dispositivo con código o token
-  /// POST /api/v1/device/register/
-  Future<RegisterDeviceResult> registerDevice({
-    required String deviceId,
-    String? code,
-    String? token,
-    String? deviceName,
-  }) async {
-    if (code == null && token == null) {
-      return RegisterDeviceResult.error('Se requiere código o token');
-    }
-
-    try {
-      final response = await _http.dio.post(
-        'api/v1/device/register/',
-        data: {
-          'device_id': deviceId,
-          if (code != null) 'code': code,
-          if (token != null) 'token': token,
-          if (deviceName != null) 'device_name': deviceName,
-        },
-      );
-
-      final result = RegisterDeviceResult.fromJson(response.data);
-
-      // Si es exitoso, almacenar información del dispositivo
-      if (result.success) {
-        await storeDeviceInfo(
-          deviceId: deviceId,
-          type: result.type ?? 'personal',
-          deviceName: result.deviceName,
-          username: result.user?.username,
-        );
-      }
-
-      return result;
-    } on DioException catch (e) {
-      return RegisterDeviceResult.error(_handleDioError(e));
-    } catch (e) {
-      return RegisterDeviceResult.error('Error registrando dispositivo: $e');
     }
   }
 

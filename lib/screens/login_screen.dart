@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:stampcamera/core/core.dart';
@@ -315,7 +314,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     _buildHeader(),
                     content,
                     const SizedBox(height: 6),
-                    _buildFooter(showSharedDeviceLink: flowState.isCredentials),
+                    _buildFooter(),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -929,25 +928,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   // Método eliminado - usando AppButton del sistema de diseño
 
-  Widget _buildFooter({bool showSharedDeviceLink = true}) {
+  Widget _buildFooter() {
     return Column(
       children: [
-        if (showSharedDeviceLink)
-          TextButton.icon(
-            onPressed: () => context.go('/device-registration'),
-            icon: const Icon(
-              Icons.tablet_android,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-            label: const Text(
-              'Registrar equipo compartido',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: DesignTokens.fontSizeXS,
-              ),
-            ),
-          ),
         Text(
           'Versión $_appVersion',
           style: const TextStyle(

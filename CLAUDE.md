@@ -1219,6 +1219,12 @@ FCM solo cubre background/app cerrada; en foreground el WS entregaba las notific
 - onTokenRefresh se cancela en logout y se re-arma en el siguiente registro; errores del listener capturados.
 - Ya estaban desde antes (verificado): re-registro en login/arranque vía check-auth, `mobile: true`, `deleteToken()` en logout, deep-link con `data.route`.
 
+### 🗑️ 1c. Eliminado registro legacy de equipos (decisión: solo flujo nuevo admin-v2)
+- **Borrados de Flutter**: `device_registration_screen.dart` (pantalla completa con modos código-por-email y token), botón "Registrar equipo compartido" del footer del login, ruta `/device-registration` + sus redirects en el router, métodos `requestCode`/`registerWithCode`/`registerWithToken`/`backToRequestCode` y estados `awaitingCode`/`awaitingToken` del device_provider, clases `RequestCodeResult`/`RegisterDeviceResult` del device_service.
+- **Se conserva**: `checkDevice()` → `GET api/v1/check-device/` (validación del device_id almacenado en el arranque), `markRegistered`, storage local del equipo, biométrico.
+- Los equipos compartidos YA registrados siguen funcionando (sus filas `EquipoConfianza` con `is_global=True` pasan `is_device_valid`); lo que muere es la FORMA de registrar nuevos por token.
+- ⚠️ **BACKEND (borrado planeado 2026-07-21)**: eliminar `device/request-code/` y `device/register/` de apis/urls.py + vistas en auth_views.py + sistema de tokens de registro. **NO borrar `check-device/`** (la app lo usa en cada arranque). Si a futuro se necesita registrar un equipo compartido nuevo, habrá que agregar el concepto "compartido/global" al flujo admin-v2 (hoy solo crea equipos personales).
+
 ### 🍎 2. FCM iOS pre-configurado (desde Windows, para la sesión en la Mac)
 - **App iOS registrada en Firebase** `fcm-django-bd051` vía Management API con el service account del backend (script: scratchpad `register_ios_firebase.py`). AppId: `1:212704024550:ios:8384be3871ecce5b202827`
 - `ios/Runner/GoogleService-Info.plist` descargado y **referenciado en project.pbxproj** (PBXFileReference + Resources build phase, UUIDs D5A1F00x...)

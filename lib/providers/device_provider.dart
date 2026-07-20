@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 import 'package:stampcamera/services/device_service.dart';
 import 'package:stampcamera/services/http_service.dart';
 
-/// Estados posibles del dispositivo
+/// Estados posibles del dispositivo.
+/// La autorización del equipo la resuelve el flujo de login
+/// (auth/login/start/); aquí solo se valida el device_id almacenado.
 enum DeviceRegistrationStatus {
   /// Estado inicial, verificando
   checking,
@@ -11,10 +12,6 @@ enum DeviceRegistrationStatus {
   notRegistered,
   /// Registrado y válido
   registered,
-  /// Esperando código de verificación
-  awaitingCode,
-  /// Esperando token de admin (usuario sin email)
-  awaitingToken,
   /// Error en la verificación/registro
   error,
 }
@@ -26,7 +23,6 @@ class DeviceState {
   final String? deviceType; // 'personal' | 'shared'
   final String? deviceName;
   final DeviceUser? user;
-  final String? maskedEmail;
   final String? errorMessage;
   final bool isLoading;
 
@@ -36,7 +32,6 @@ class DeviceState {
     this.deviceType,
     this.deviceName,
     this.user,
-    this.maskedEmail,
     this.errorMessage,
     this.isLoading = false,
   });
@@ -47,7 +42,6 @@ class DeviceState {
     String? deviceType,
     String? deviceName,
     DeviceUser? user,
-    String? maskedEmail,
     String? errorMessage,
     bool? isLoading,
   }) {
@@ -57,7 +51,6 @@ class DeviceState {
       deviceType: deviceType ?? this.deviceType,
       deviceName: deviceName ?? this.deviceName,
       user: user ?? this.user,
-      maskedEmail: maskedEmail ?? this.maskedEmail,
       errorMessage: errorMessage,
       isLoading: isLoading ?? this.isLoading,
     );
@@ -143,120 +136,6 @@ class DeviceNotifier extends StateNotifier<DeviceState> {
     }
   }
 
-  /// Solicita código de verificación para registrar dispositivo
-  Future<RequestCodeResult> requestCode({
-    required String username,
-    String? deviceName,
-  }) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    final result = await _deviceService.requestCode(
-      username: username,
-      deviceName: deviceName,
-    );
-
-    if (result.success) {
-      if (result.method == 'email') {
-        state = state.copyWith(
-          status: DeviceRegistrationStatus.awaitingCode,
-          deviceId: result.deviceId,
-          maskedEmail: result.maskedEmail,
-          isLoading: false,
-        );
-      } else if (result.method == 'admin') {
-        state = state.copyWith(
-          status: DeviceRegistrationStatus.awaitingToken,
-          deviceId: result.deviceId,
-          isLoading: false,
-        );
-      } else {
-        // Método desconocido - fallback a token
-        state = state.copyWith(
-          status: DeviceRegistrationStatus.awaitingToken,
-          deviceId: result.deviceId,
-          isLoading: false,
-          errorMessage: 'Método de verificación no reconocido: ${result.method}',
-        );
-      }
-    } else {
-      state = state.copyWith(
-        errorMessage: result.error ?? 'Error desconocido al solicitar código',
-        isLoading: false,
-      );
-    }
-
-    return result;
-  }
-
-  /// Registra el dispositivo con código de email
-  Future<RegisterDeviceResult> registerWithCode(String code) async {
-    final deviceId = state.deviceId;
-    if (deviceId == null) {
-      return RegisterDeviceResult.error('No hay device_id. Solicite código nuevamente.');
-    }
-
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    final result = await _deviceService.registerDevice(
-      deviceId: deviceId,
-      code: code,
-    );
-
-    if (result.success) {
-      state = state.copyWith(
-        status: DeviceRegistrationStatus.registered,
-        deviceType: result.type,
-        deviceName: result.deviceName,
-        user: result.user,
-        isLoading: false,
-      );
-    } else {
-      state = state.copyWith(
-        errorMessage: result.error,
-        isLoading: false,
-      );
-    }
-
-    return result;
-  }
-
-  /// Registra el dispositivo con token de admin
-  Future<RegisterDeviceResult> registerWithToken(String token) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    // Si no hay device_id, generar uno nuevo
-    String deviceId = state.deviceId ?? await _deviceService.getStoredDeviceId() ?? '';
-
-    if (deviceId.isEmpty) {
-      // Generar nuevo device_id
-      deviceId = const Uuid().v4();
-      await _deviceService.storeDeviceId(deviceId);
-    }
-
-    final result = await _deviceService.registerDevice(
-      deviceId: deviceId,
-      token: token,
-    );
-
-    if (result.success) {
-      state = state.copyWith(
-        status: DeviceRegistrationStatus.registered,
-        deviceId: deviceId,
-        deviceType: result.type,
-        deviceName: result.deviceName,
-        user: result.user,
-        isLoading: false,
-      );
-    } else {
-      state = state.copyWith(
-        errorMessage: result.error,
-        isLoading: false,
-      );
-    }
-
-    return result;
-  }
-
   /// Marca el equipo como registrado sin pasar por `checking`
   /// (el flujo de login ya validó contra el servidor; `checking` redirige al splash)
   void markRegistered({
@@ -290,15 +169,6 @@ class DeviceNotifier extends StateNotifier<DeviceState> {
   void reset() {
     state = const DeviceState(
       status: DeviceRegistrationStatus.notRegistered,
-    );
-  }
-
-  /// Vuelve al paso de solicitar código
-  void backToRequestCode() {
-    state = state.copyWith(
-      status: DeviceRegistrationStatus.notRegistered,
-      maskedEmail: null,
-      errorMessage: null,
     );
   }
 }
