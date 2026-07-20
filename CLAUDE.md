@@ -1195,3 +1195,44 @@ El backend tiene dos sistemas de login; la app ahora usa el NUEVO (`POST /api/v1
 - ✅ Bundle: `build\app\outputs\bundle\release\app-release.aab` (73.8MB) v1.6.0+73
 - ⏳ PENDIENTE: desplegar los 2 commits del backend admin-v2 (sin eso el registro del token FCM da 401 en producción)
 - ⏳ PENDIENTE: probar push end-to-end tras el deploy · FCM iOS
+
+---
+
+## ✅ COMPLETADO - SESIÓN 2026-07-20 (Sesión 2) - Centro de notificaciones in-app + FCM iOS pre-configurado
+
+### 🔔 1. Centro de notificaciones + emergentes en foreground
+FCM solo cubre background/app cerrada; en foreground el WS entregaba las notificaciones a `wsNotificationsProvider` y NADIE las consumía. Ahora:
+
+- **Banner emergente global** (`lib/widgets/common/in_app_notification_banner.dart`): montado sobre TODA la app vía `MaterialApp.router(builder:)` en main.dart. Escucha el WS, entra deslizando desde arriba, auto-cierra a los 5s, swipe-up descarta, tap navega vía route mapper. Color/icono según `tipo` (info/success/warning/error/message).
+- **Centro de notificaciones** (`lib/screens/notificaciones_screen.dart`, ruta `/notificaciones`): **bandeja EFÍMERA espejo de la web** (decisión de producto): solo no-leídas, "marcar leída" ELIMINA en el servidor, y el Celery Beat del backend borra todo lo de >2 días. Lista con swipe→leída, botón "marcar todas" (con confirmación), pull-to-refresh, detalle en bottom sheet con botón "Abrir" si la URL mapea a ruta móvil.
+- **Campanita con badge** de no-leídas en el AppBar del home (`home_screen.dart` → `_buildNotificationsBell`).
+- **Provider** (`lib/providers/notificaciones_provider.dart`): carga REST inicial + prepend en vivo por WS + re-sync al reconectar el WS + markAsRead optimista. Registrado en SessionManager (limpieza en logout).
+- **Modelo** (`lib/models/notificacion_model.dart`): parsea shape REST y shape WS (distintos). Filtro `esRuidoAutomatico` replica las exclusiones del backend ("Se ha registrado un nuevo ticket/VIN:") para que el WS no muestre lo que el REST oculta.
+- **Route mapper compartido** (`lib/utils/notification_route_mapper.dart`): extraído de PushNotificationService, lo usan push FCM + banner + centro.
+
+#### Backend (repo Django `Escritorio 2/django/core`, ⚠️ SIN commitear):
+- `pushnotificacitons/views.py`: `get_notifications`, `mark_as_read`, `mark_all_as_read` convertidas a DRF `@api_view` + `IsAuthenticated` (antes `@login_required` solo-sesión → la app con JWT recibía redirect). La web sigue igual (SessionAuthentication + CSRF conviven, mismos paths y shapes). Campo aditivo `creado_en_iso` (la web usa `creado_en` timesince; la app formatea su propio tiempo relativo).
+
+### 🔄 1b. Robustez del registro de token FCM (`push_notification_service.dart`)
+- **`previous_token` en el POST**: el último token registrado con éxito se persiste en secure storage (`fcm_last_registered_token`); cuando getToken/onTokenRefresh devuelven uno distinto, viaja `previous_token` y el backend borra el Device viejo (anti-zombi). En logout NO se borra el persistido (a propósito: el siguiente login lo usa para limpiar).
+- **Single-flight + dedupe por sesión**: getToken() y onTokenRefresh disparaban un doble POST al arranque (~1s de diferencia); ahora se serializan y un token ya registrado en la sesión no se re-postea. El dedupe se resetea en logout para que otro usuario en el mismo teléfono reasigne Device.user aunque el token no cambie.
+- onTokenRefresh se cancela en logout y se re-arma en el siguiente registro; errores del listener capturados.
+- Ya estaban desde antes (verificado): re-registro en login/arranque vía check-auth, `mobile: true`, `deleteToken()` en logout, deep-link con `data.route`.
+
+### 🍎 2. FCM iOS pre-configurado (desde Windows, para la sesión en la Mac)
+- **App iOS registrada en Firebase** `fcm-django-bd051` vía Management API con el service account del backend (script: scratchpad `register_ios_firebase.py`). AppId: `1:212704024550:ios:8384be3871ecce5b202827`
+- `ios/Runner/GoogleService-Info.plist` descargado y **referenciado en project.pbxproj** (PBXFileReference + Resources build phase, UUIDs D5A1F00x...)
+- `ios/Runner/Runner.entitlements` creado con `aps-environment = development` (Xcode lo cambia a production al exportar para App Store) + `CODE_SIGN_ENTITLEMENTS` en las 3 configs del target Runner
+- El código Flutter ya toleraba iOS sin config; ahora con plist `Firebase.initializeApp()` funcionará
+
+#### ⏳ PENDIENTE EN LA MAC (único paso que no se puede hacer desde Windows):
+1. **Subir la clave APNs (.p8)** a Firebase Console → Project Settings → Cloud Messaging → app iOS (crear la clave en Apple Developer → Keys si no existe; team JZ4ZUD5L9A)
+2. Al abrir el proyecto, Xcode con firma automática detectará el entitlement y agregará la capability Push Notifications al App ID
+3. `flutter build ipa` y probar push en el iPhone 11 (con el backend ya desplegado)
+
+### 📍 Estado
+- ✅ `flutter analyze`: 0 errores, 0 warnings en el código de esta sesión. Quedan 31 `info` pre-existentes (`use_null_aware_elements`, lint nuevo del upgrade de Flutter) en archivos NO tocados — deuda menor.
+- ✅ Versión **1.7.0+74**. Bundle generado: `build\app\outputs\bundle\release\app-release.aab` (73.9MB).
+- ⏳ PENDIENTE deploy backend: los 2 commits FCM anteriores + el cambio de `pushnotificacitons/views.py` de esta sesión (sin commitear en el repo Django). Sin eso, la app recibe redirect/401 en `/notificaciones/`.
+- ⏳ NO probado en dispositivo aún.
+- 🧹 Disco: se liberó Temp de Windows (209MB → ~4GB antes del build; quedó en 2.3GB tras el build). Próximo candidato grande si falta espacio: `~/.gradle/caches` = **7.4GB** (NUNCA borrarla con un build corriendo).

@@ -38,6 +38,7 @@ import 'package:stampcamera/routes/go_router_refresh_stream.dart';
 import 'package:stampcamera/screens/splash_screen.dart';
 import 'package:stampcamera/screens/login_screen.dart';
 import 'package:stampcamera/screens/home_screen.dart';
+import 'package:stampcamera/screens/notificaciones_screen.dart';
 
 // ---------------------------------------------------------------------------
 // Cache for privacy_policy_accepted to avoid SharedPreferences I/O on every
@@ -77,6 +78,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const DeviceRegistrationScreen(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(
+        path: '/notificaciones',
+        name: 'notificaciones',
+        builder: (context, state) => const NotificacionesScreen(),
+      ),
       GoRoute(
         path: '/asistencia',
         name: 'asistencia',

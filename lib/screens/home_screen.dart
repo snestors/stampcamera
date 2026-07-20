@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/auth_provider.dart';
 import 'package:stampcamera/providers/app_socket_provider.dart';
+import 'package:stampcamera/providers/notificaciones_provider.dart';
 import 'package:stampcamera/services/biometric_service.dart';
 
 import 'package:stampcamera/main.dart'; // Para acceder a `cameras`
@@ -73,6 +74,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         actions: [
+          _buildNotificationsBell(context),
           Container(
             margin: const EdgeInsets.only(right: 4),
             child: IconButton(
@@ -118,6 +120,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             _buildFooter(),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Campanita de notificaciones con badge de no-leídas
+  Widget _buildNotificationsBell(BuildContext context) {
+    final unreadCount = ref.watch(notificacionesUnreadCountProvider);
+
+    return Container(
+      margin: const EdgeInsets.only(right: 4),
+      child: IconButton(
+        icon: Badge(
+          isLabelVisible: unreadCount > 0,
+          label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
+          backgroundColor: AppColors.error,
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.notifications_none,
+              color: AppColors.primary,
+              size: 20,
+            ),
+          ),
+        ),
+        onPressed: () => context.push('/notificaciones'),
+        tooltip: 'Notificaciones',
       ),
     );
   }

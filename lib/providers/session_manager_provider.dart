@@ -8,6 +8,7 @@ import 'package:stampcamera/providers/autos/registro_general_provider.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
+import 'package:stampcamera/providers/notificaciones_provider.dart';
 
 // TODO: Migrar parámetros WidgetRef → Ref para permitir uso desde providers/servicios.
 // Actualmente no es posible porque en Riverpod 2.x, WidgetRef y Ref son tipos
@@ -204,6 +205,11 @@ class SessionManager extends StateNotifier<String?> {
     // Invalidar también cancela sus listeners del WebSocket (ref.onDispose)
     ref.invalidate(deviceRequestsProvider);
     ref.invalidate(equiposConfianzaProvider);
+
+    // ============================================================================
+    // NOTIFICACIONES - Bandeja del usuario
+    // ============================================================================
+    ref.invalidate(notificacionesProvider);
 
     // ============================================================================
     // NOTA: NO limpiar themeProvider ni connectivityProvider (configuraciones globales)

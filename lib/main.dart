@@ -14,6 +14,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:stampcamera/utils/image_processor.dart';
 import 'package:stampcamera/core/helpers/formatters/date_formatters.dart';
 import 'package:stampcamera/routes/app_router.dart';
+import 'package:stampcamera/widgets/common/in_app_notification_banner.dart';
 
 late List<CameraDescription> cameras;
 late ProviderContainer _providerContainer;
@@ -85,6 +86,10 @@ class MyApp extends ConsumerWidget {
       title: 'A&G Inspección Vehicular',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+
+      // Banner emergente global de notificaciones en vivo (foreground)
+      builder: (context, child) =>
+          InAppNotificationBanner(child: child ?? const SizedBox.shrink()),
 
       // ✅ Usar los temas corporativos A&G desde AppTheme
       theme: AppTheme.lightTheme, // Tema claro corporativo

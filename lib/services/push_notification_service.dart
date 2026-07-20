@@ -6,11 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stampcamera/services/http_service.dart';
 import 'package:stampcamera/services/login_flow_service.dart';
+import 'package:stampcamera/utils/notification_route_mapper.dart';
 
 /// Notificaciones push vía FCM (proyecto Firebase `fcm-django-bd051`).
 ///
 /// Diseño (alineado con la web /app):
 /// - El token se registra en `POST /save-fcm-token/` tras el login (JWT).
+///   Se manda `previous_token` cuando el token rotó para que el backend
+///   borre el Device viejo (FCM acepta envíos a tokens muertos sin error).
+///   getToken() y onTokenRefresh disparan casi a la vez en el arranque:
+///   single-flight + dedupe por sesión dejan UN solo POST por token.
 /// - En background/terminada, el bloque `notification` del mensaje lo pinta
 ///   la bandeja del sistema — no hay código involucrado.
 /// - En foreground NO se muestra nada: el WebSocket ws/app/ ya entrega las
@@ -27,7 +32,13 @@ class PushNotificationService {
 
   final _http = HttpService();
 
+  /// Último token registrado con ÉXITO (persistente): viaja como
+  /// `previous_token` cuando el token cambia.
+  static const _lastTokenKey = 'fcm_last_registered_token';
+
   bool _registeredThisSession = false;
+  String? _lastSentTokenThisSession;
+  Future<void>? _inFlight;
   StreamSubscription<String>? _tokenRefreshSub;
   GoRouter? _router;
 
@@ -85,8 +96,11 @@ class PushNotificationService {
       await _sendTokenToBackend(token);
       _registeredThisSession = true;
 
-      _tokenRefreshSub ??=
-          messaging.onTokenRefresh.listen(_sendTokenToBackend);
+      _tokenRefreshSub ??= messaging.onTokenRefresh.listen((newToken) {
+        _sendTokenToBackend(newToken).catchError((Object e) {
+          debugPrint('⚠️ Error re-registrando token FCM rotado: $e');
+        });
+      });
 
       debugPrint('🔔 Token FCM registrado');
     } catch (e) {
@@ -94,10 +108,15 @@ class PushNotificationService {
     }
   }
 
-  /// Borra el token en FCM (client-side, igual que la web). El backend
-  /// eliminará el Device cuando el próximo envío a ese token falle.
+  /// Borra el token en FCM (client-side, igual que la web) para que el
+  /// usuario saliente no siga recibiendo push en un teléfono compartido.
+  /// El Device viejo del servidor se limpia en el siguiente registro vía
+  /// `previous_token` (el token persistido NO se borra aquí a propósito).
   Future<void> onLogout() async {
     _registeredThisSession = false;
+    _lastSentTokenThisSession = null;
+    await _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = null;
     if (!firebaseAvailable) return;
     try {
       await FirebaseMessaging.instance.deleteToken();
@@ -108,7 +127,30 @@ class PushNotificationService {
   }
 
   Future<void> _sendTokenToBackend(String token) async {
+    // Serializar POSTs concurrentes (getToken + onTokenRefresh del arranque)
+    while (_inFlight != null) {
+      try {
+        await _inFlight;
+      } catch (_) {
+        // El error lo maneja quien originó ese POST
+      }
+    }
+    // Ya registrado esta sesión con este mismo token: nada que hacer
+    if (token == _lastSentTokenThisSession) return;
+
+    final future = _postToken(token);
+    _inFlight = future;
+    try {
+      await future;
+    } finally {
+      _inFlight = null;
+    }
+  }
+
+  Future<void> _postToken(String token) async {
+    final previousToken = await _http.storage.read(key: _lastTokenKey);
     final deviceName = await LoginFlowService().deviceName();
+
     await _http.dio.post(
       'save-fcm-token/',
       data: {
@@ -116,31 +158,24 @@ class PushNotificationService {
         'user_agent': deviceName,
         'battery_level': 'unknown',
         'mobile': true,
+        // Rotación: el backend borra el Device del token anterior
+        if (previousToken != null &&
+            previousToken.isNotEmpty &&
+            previousToken != token)
+          'previous_token': previousToken,
       },
     );
+
+    _lastSentTokenThisSession = token;
+    await _http.storage.write(key: _lastTokenKey, value: token);
   }
 
   void _handleMessageTap(RemoteMessage message) {
     final route = message.data['route'] as String?;
-    final appRoute = _mapWebRouteToApp(route);
+    final appRoute = mapWebRouteToApp(route);
     debugPrint('🔔 Push tocada: route=$route → $appRoute');
     if (appRoute != null) {
       _router?.go(appRoute);
     }
-  }
-
-  /// Mapea el path web de la notificación (`notificacion.url`) a una ruta
-  /// de la app. Si no hay equivalente, no navega (la app abre donde estaba).
-  String? _mapWebRouteToApp(String? route) {
-    if (route == null || route.isEmpty) return null;
-    if (route.contains('casos')) return '/casos';
-    if (route.contains('autos')) return '/autos';
-    if (route.contains('graneles')) return '/graneles';
-    if (route.contains('asistencia')) return '/asistencia';
-    if (route.contains('equipos') || route.contains('device')) {
-      // La pantalla valida internamente que sea superusuario
-      return '/admin/device-requests';
-    }
-    return null;
   }
 }
