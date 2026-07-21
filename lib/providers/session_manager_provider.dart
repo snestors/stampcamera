@@ -5,8 +5,10 @@ import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
 import 'package:stampcamera/providers/autos/registro_general_provider.dart';
+import 'package:stampcamera/providers/autos/registro_vin_list_provider.dart';
 import 'package:stampcamera/providers/autos/inventario_provider.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
+import 'package:stampcamera/providers/casos/explorador_provider.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/providers/notificaciones_provider.dart';
 
@@ -56,6 +58,9 @@ class SessionManager extends StateNotifier<String?> {
     // AUTOS - Limpiar datos de trabajo del día anterior
     // =========================================================================
     ref.invalidate(registroGeneralProvider);
+    ref.invalidate(registroVinListProvider);
+    ref.invalidate(registrosConDanosProvider);
+    ref.invalidate(registrosPedeteadosProvider);
     ref.invalidate(contenedorProvider);
 
     // Limpiar pedeteo del día anterior
@@ -79,6 +84,8 @@ class SessionManager extends StateNotifier<String?> {
     ref.invalidate(silosListProvider);
     ref.invalidate(silosProvider);
     ref.invalidate(almacenListProvider);
+    ref.invalidate(paralizacionesListProvider);
+    ref.invalidate(controlHumedadListProvider);
     ref.invalidate(granelesFormProvider);
     // Filtros de UI
     ref.invalidate(ticketsPendientesFilterProvider);
@@ -98,6 +105,9 @@ class SessionManager extends StateNotifier<String?> {
     // AUTOS
     // =========================================================================
     ref.invalidate(registroGeneralProvider);
+    ref.invalidate(registroVinListProvider);
+    ref.invalidate(registrosConDanosProvider);
+    ref.invalidate(registrosPedeteadosProvider);
     ref.invalidate(contenedorProvider);
 
     // Limpiar pedeteo - opciones dependen de la asistencia
@@ -121,6 +131,8 @@ class SessionManager extends StateNotifier<String?> {
     ref.invalidate(silosListProvider);
     ref.invalidate(silosProvider);
     ref.invalidate(almacenListProvider);
+    ref.invalidate(paralizacionesListProvider);
+    ref.invalidate(controlHumedadListProvider);
     ref.invalidate(granelesFormProvider);
     // Filtros de UI
     ref.invalidate(ticketsPendientesFilterProvider);
@@ -143,6 +155,10 @@ class SessionManager extends StateNotifier<String?> {
     // ============================================================================
     ref.invalidate(registroGeneralProvider);
     ref.invalidate(registroVinOptionsProvider);
+    ref.invalidate(registroVinListProvider);
+    ref.invalidate(usuariosRegistradoresProvider);
+    ref.invalidate(registrosConDanosProvider);
+    ref.invalidate(registrosPedeteadosProvider);
 
     // ============================================================================
     // PROVIDERS DE AUTOS - PEDETEO
@@ -194,10 +210,19 @@ class SessionManager extends StateNotifier<String?> {
     ref.invalidate(silosListProvider);
     ref.invalidate(silosProvider);
     ref.invalidate(almacenListProvider);
+    ref.invalidate(paralizacionesListProvider);
+    ref.invalidate(controlHumedadListProvider);
     ref.invalidate(granelesFormProvider);
     // Filtros de UI
     ref.invalidate(ticketsPendientesFilterProvider);
     ref.invalidate(balanzasPendientesFilterProvider);
+
+    // ============================================================================
+    // PROVIDERS DE CASOS
+    // ============================================================================
+    // Invalidar dispone el notifier: cancela la suscripción WS del canal `casos`
+    // y descarta el _currentUserId capturado (atribución de subidas de fotos)
+    ref.invalidate(exploradorProvider);
 
     // ============================================================================
     // PROVIDERS DE ADMIN - SOLICITUDES DE EQUIPOS
