@@ -95,105 +95,131 @@ class _DeviceRequestsScreenState extends ConsumerState<DeviceRequestsScreen> {
         DesignTokens.spaceL,
         DesignTokens.spaceS,
       ),
-      padding: const EdgeInsets.all(DesignTokens.spaceM),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        border: Border.all(color: AppColors.neutral.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _codeController,
-                  textCapitalization: TextCapitalization.characters,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'[A-HJ-NP-Za-hj-np-z2-9-]'),
-                    ),
-                    LengthLimitingTextInputFormatter(9),
-                  ],
-                  style: const TextStyle(
-                    fontSize: DesignTokens.fontSizeM,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Código (ej. NSCY-YDQ5)',
-                    hintStyle: const TextStyle(
-                      fontSize: DesignTokens.fontSizeS,
-                      letterSpacing: 0,
-                      fontWeight: FontWeight.normal,
-                      color: AppColors.textLight,
-                    ),
-                    prefixIcon: const Icon(Icons.qr_code_2, size: 20),
-                    isDense: true,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(DesignTokens.radiusM),
-                    ),
-                  ),
-                  onSubmitted: (_) => _resolveCode(),
-                ),
-              ),
-              const SizedBox(width: DesignTokens.spaceS),
-              AppButton.primary(
-                text: 'Buscar',
-                size: AppButtonSize.medium,
-                isLoading: _searching,
-                onPressed: _searching ? null : _resolveCode,
-              ),
-            ],
-          ),
-          if (_searchError != null) ...[
-            const SizedBox(height: DesignTokens.spaceS),
-            AppInlineError(
-              message: _searchError!,
-              dismissible: true,
-              onDismiss: () => setState(() => _searchError = null),
-            ),
-          ],
-          if (_searchResult != null) ...[
-            const SizedBox(height: DesignTokens.spaceS),
+      child: _CardShell(
+        accentColor: AppColors.primary,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header con icono en chip, patrón del card del detalle VIN
             Row(
               children: [
-                const Expanded(
-                  child: Text(
-                    'Resultado de la búsqueda',
-                    style: TextStyle(
-                      fontSize: DesignTokens.fontSizeXS,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                    ),
+                Container(
+                  padding: const EdgeInsets.all(DesignTokens.spaceS),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_2,
+                    color: AppColors.primary,
+                    size: 20,
                   ),
                 ),
-                InkWell(
-                  onTap: () => setState(() {
-                    _searchResult = null;
-                    _codeController.clear();
-                  }),
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Icon(
-                      Icons.close,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
+                const SizedBox(width: DesignTokens.spaceS),
+                const Text(
+                  'Aprobar por código',
+                  style: TextStyle(
+                    fontSize: DesignTokens.fontSizeM,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
                   ),
                 ),
               ],
             ),
-            _DeviceRequestCard(
-              key: ValueKey('search_${_searchResult!.id}'),
-              request: _searchResult!,
-              highlighted: true,
-              onApprove: (scope) => _approve(_searchResult!, scope),
-              onReject: () => _reject(_searchResult!),
+            const SizedBox(height: DesignTokens.spaceM),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _codeController,
+                    textCapitalization: TextCapitalization.characters,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[A-HJ-NP-Za-hj-np-z2-9-]'),
+                      ),
+                      LengthLimitingTextInputFormatter(9),
+                    ],
+                    style: const TextStyle(
+                      fontSize: DesignTokens.fontSizeM,
+                      letterSpacing: 1.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Código (ej. NSCY-YDQ5)',
+                      hintStyle: const TextStyle(
+                        fontSize: DesignTokens.fontSizeS,
+                        letterSpacing: 0,
+                        fontWeight: FontWeight.normal,
+                        color: AppColors.textLight,
+                      ),
+                      prefixIcon: const Icon(Icons.qr_code_2, size: 20),
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          DesignTokens.radiusM,
+                        ),
+                      ),
+                    ),
+                    onSubmitted: (_) => _resolveCode(),
+                  ),
+                ),
+                const SizedBox(width: DesignTokens.spaceS),
+                AppButton.primary(
+                  text: 'Buscar',
+                  size: AppButtonSize.medium,
+                  isLoading: _searching,
+                  onPressed: _searching ? null : _resolveCode,
+                ),
+              ],
             ),
+            if (_searchError != null) ...[
+              const SizedBox(height: DesignTokens.spaceS),
+              AppInlineError(
+                message: _searchError!,
+                dismissible: true,
+                onDismiss: () => setState(() => _searchError = null),
+              ),
+            ],
+            if (_searchResult != null) ...[
+              const SizedBox(height: DesignTokens.spaceS),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Resultado de la búsqueda',
+                      style: TextStyle(
+                        fontSize: DesignTokens.fontSizeXS,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => setState(() {
+                      _searchResult = null;
+                      _codeController.clear();
+                    }),
+                    child: const Padding(
+                      padding: EdgeInsets.all(4),
+                      child: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              _DeviceRequestCard(
+                key: ValueKey('search_${_searchResult!.id}'),
+                request: _searchResult!,
+                highlighted: true,
+                onApprove: (scope) => _approve(_searchResult!, scope),
+                onReject: () => _reject(_searchResult!),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -378,24 +404,26 @@ class _DeviceRequestCardState extends State<_DeviceRequestCard> {
   Widget build(BuildContext context) {
     final statusColor = _statusColor(request.status);
 
-    return Container(
-      padding: const EdgeInsets.all(DesignTokens.spaceM),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        border: Border.all(
-          color: widget.highlighted
-              ? AppColors.primary.withValues(alpha: 0.5)
-              : AppColors.neutral.withValues(alpha: 0.5),
-          width: widget.highlighted ? 1.5 : 1,
-        ),
-      ),
+    return _CardShell(
+      accentColor: statusColor,
+      borderColor: widget.highlighted
+          ? AppColors.primary.withValues(alpha: 0.5)
+          : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header: usuario + estado
+          // Header: icono en chip + usuario + estado
           Row(
             children: [
+              Container(
+                padding: const EdgeInsets.all(DesignTokens.spaceS),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                ),
+                child: Icon(Icons.phonelink_lock, color: statusColor, size: 20),
+              ),
+              const SizedBox(width: DesignTokens.spaceS),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,7 +452,7 @@ class _DeviceRequestCardState extends State<_DeviceRequestCard> {
               _StatusBadge(label: request.statusLabel, color: statusColor),
             ],
           ),
-          const SizedBox(height: DesignTokens.spaceS),
+          const SizedBox(height: DesignTokens.spaceM),
 
           // Detalle: dispositivo, cliente, vencimiento
           _detailRow(Icons.devices_other, 'Equipo', request.displayDevice),
@@ -471,7 +499,7 @@ class _DeviceRequestCardState extends State<_DeviceRequestCard> {
 
   Widget _detailRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
+      padding: const EdgeInsets.only(bottom: DesignTokens.spaceXS),
       child: Row(
         children: [
           Icon(icon, size: 14, color: AppColors.textSecondary),
@@ -487,7 +515,7 @@ class _DeviceRequestCardState extends State<_DeviceRequestCard> {
             child: Text(
               value,
               style: const TextStyle(
-                fontSize: DesignTokens.fontSizeXS,
+                fontSize: DesignTokens.fontSizeS,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
               ),
@@ -656,6 +684,57 @@ class _DeviceRequestCardState extends State<_DeviceRequestCard> {
       case null:
         return AppColors.textSecondary;
     }
+  }
+}
+
+/// Shell de tarjeta del design system: fondo blanco, radio L, sombra sutil
+/// y accent strip lateral de 4px (mismo patrón que DetalleRegistroCard y
+/// FormFieldsCard de pedeteo).
+class _CardShell extends StatelessWidget {
+  final Widget child;
+  final Color accentColor;
+  final Color? borderColor;
+
+  const _CardShell({
+    required this.child,
+    required this.accentColor,
+    this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        border: borderColor != null
+            ? Border.all(color: borderColor!, width: 1.5)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusL),
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              Container(width: 4, color: accentColor),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(DesignTokens.spaceM),
+                  child: child,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
