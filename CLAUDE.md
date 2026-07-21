@@ -1321,8 +1321,19 @@ Funcional sano (analyze 0, natives post-merge iOS coherentes, timers/subs bien l
 2. **almacen_tab**: FAB "Nuevo Almacén", botón "Crear primer registro" y lápiz de editar ELIMINADOS (el flujo real es ViajeFormScreen); parámetro `onEdit` de `_AlmacenCard` removido; padding inferior del ListView ahora usa `MediaQuery.padding.bottom` (antes +80 fijo para el FAB)
 3. **balanzas_tab**: FAB y "Crear primera balanza" eliminados; **editar SÍ se conservó** → `/graneles/viaje/editar/{ticketId}?step=2` (guard: `canEdit && ticketId != null`); mismo ajuste de padding
 
+### 🎨 UI extra (misma sesión, pedidos del usuario probando en S22)
+- Home: whitelist de módulos implementados (`camera/asistencia/autos/graneles`) — fuera cards grises de módulos no implementados y el diálogo "Próximamente"
+- Solicitudes de equipos: rediseñada con el shell canónico (`_CardShell`: blanco + sombra + strip 4px en color de estado + icono en chip); buscador "Aprobar por código"
+- App renombrada a **"AYG APP"** en Android (`android:label`, estaba escapado como `A&amp;G`) e iOS (`CFBundleDisplayName`, decía "Stampcamera"). Razón social A&G en textos legales NO se tocó
+
+### 🍎 Push iOS desbloqueado (lado servidor completo)
+- Clave APNs creada y subida a Firebase (Key ID `S27GY237NV`, team `JZ4ZUD5L9A`, dev+prod). Android confirmado end-to-end en S22
+- ⚠️ **Xcode Cloud tiene un workflow conectado al repo que falla en cada push** (no sabe compilar Flutter sin `ci_scripts/ci_post_clone.sh`) → correos de error por push. PENDIENTE decidir: desactivarlo en App Store Connect o configurarlo para Flutter
+
 ### 📍 Estado
-- ✅ Mergeados 4 commits de la sesión iOS de la Mac (rebase limpio); home + P0 pusheados
-- ✅ `flutter analyze`: 0 issues
-- ⏳ Probar en dispositivo: logout entre 2 usuarios (datos limpios), tabs balanzas/almacén de graneles (sin FABs, editar balanza abre paso 2 del viaje)
+- ✅ Versión **1.7.1+76**. Bundle Android: `build\app\outputs\bundle\release\app-release.aab` (73.9MB) listo para Play Console
+- ✅ `flutter analyze`: 0 issues. Todo pusheado a origin/main
+- ✅ Probado en S22: campana, sin cards grises, rediseño equipos, "AYG APP"
+- ⏳ MAC: `git pull` → `flutter build ipa --release` → Organizer → TestFlight con archive **1.7.1 (76)** (borrar el archive viejo 74 del Organizer). Luego en iPhone: TestFlight → login → aceptar notificaciones → probar push con app cerrada
+- ⏳ Probar en dispositivo: logout entre 2 usuarios (datos limpios), tabs balanzas/almacén de graneles
 - ⏳ Próximas sesiones: P1 (design system) y P2 (higiene/testing) según plan de arriba
