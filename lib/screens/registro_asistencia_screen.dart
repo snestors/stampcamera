@@ -7,6 +7,7 @@ import 'package:stampcamera/providers/asistencia/asistencias_provider.dart';
 import 'package:stampcamera/widgets/asistencia/marcar_salida.dart';
 import 'package:stampcamera/widgets/asistencia/modal_entrada.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
+import 'package:stampcamera/core/core.dart';
 
 class RegistroAsistenciaScreen extends ConsumerStatefulWidget {
   const RegistroAsistenciaScreen({super.key});
@@ -81,10 +82,10 @@ class _RegistroAsistenciaScreenState
     final status = ref.watch(asistenciaStatusProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         title: const Text('Registro de Asistencia'),
-        backgroundColor: const Color(0xFF003B5C),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -113,7 +114,7 @@ class _RegistroAsistenciaScreenState
 
           return RefreshIndicator(
             onRefresh: _handleRefresh,
-            color: const Color(0xFF003B5C),
+            color: AppColors.primary,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(bottom: 100),
@@ -126,7 +127,11 @@ class _RegistroAsistenciaScreenState
           onRetry: () => ref.invalidate(asistenciaActivaProvider),
         ),
       ),
-      floatingActionButton: _buildFAB(asistenciaAsync, formOptionsAsync, status),
+      floatingActionButton: _buildFAB(
+        asistenciaAsync,
+        formOptionsAsync,
+        status,
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -136,14 +141,14 @@ class _RegistroAsistenciaScreenState
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF003B5C), Color(0xFF00587A)],
+          colors: [AppColors.primary, Color(0xFF00587A)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF003B5C).withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -311,21 +316,19 @@ class _RegistroAsistenciaScreenState
                     tween: Tween(begin: 0.0, end: 1.0),
                     duration: const Duration(milliseconds: 800),
                     curve: Curves.elasticOut,
-                    builder: (context, value, child) => Transform.scale(
-                      scale: value,
-                      child: child,
-                    ),
+                    builder: (context, value, child) =>
+                        Transform.scale(scale: value, child: child),
                     child: Container(
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF003B5C).withValues(alpha: 0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.access_time_rounded,
                         size: 60,
-                        color: Color(0xFF003B5C),
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -335,7 +338,7 @@ class _RegistroAsistenciaScreenState
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF003B5C),
+                      color: AppColors.primary,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -361,10 +364,7 @@ class _RegistroAsistenciaScreenState
                       const SizedBox(width: 8),
                       Text(
                         'Presiona el botón abajo',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[500],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                       ),
                       const SizedBox(width: 8),
                       Icon(
@@ -393,16 +393,13 @@ class _RegistroAsistenciaScreenState
             height: 50,
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              color: Color(0xFF003B5C),
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 20),
           Text(
             'Cargando asistencia...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
         ],
       ),
@@ -432,8 +429,7 @@ class _RegistroAsistenciaScreenState
                     HapticFeedback.mediumImpact();
                     showMarcarEntradaBottomSheet(context, ref);
                   },
-            backgroundColor:
-                isLoading ? Colors.grey[400] : const Color(0xFF00B4D8),
+            backgroundColor: isLoading ? Colors.grey[400] : AppColors.secondary,
             elevation: isLoading ? 0 : 4,
             icon: isLoading
                 ? const SizedBox(
@@ -447,10 +443,7 @@ class _RegistroAsistenciaScreenState
                 : const Icon(Icons.login_rounded),
             label: Text(
               isLoading ? 'Cargando...' : 'Marcar Entrada',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
             ),
           ),
           loading: () => FloatingActionButton.extended(

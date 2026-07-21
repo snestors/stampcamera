@@ -54,14 +54,13 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
     final formOptionsAsync = ref.watch(asistenciaFormOptionsProvider);
     final status = ref.watch(asistenciaStatusProvider);
     // Usar estado local O estado del provider para máxima protección
-    final isLoading = _isSubmitting || status == AsistenciaStatus.entradaLoading;
+    final isLoading =
+        _isSubmitting || status == AsistenciaStatus.entradaLoading;
 
     return AnimatedBuilder(
       animation: _scaleAnim,
-      builder: (context, child) => Transform.scale(
-        scale: _scaleAnim.value,
-        child: child,
-      ),
+      builder: (context, child) =>
+          Transform.scale(scale: _scaleAnim.value, child: child),
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -125,7 +124,8 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
               left: 20,
               right: 20,
               top: 12,
-              bottom: MediaQuery.of(context).viewInsets.bottom +
+              bottom:
+                  MediaQuery.of(context).viewInsets.bottom +
                   MediaQuery.of(context).padding.bottom +
                   20,
             ),
@@ -149,8 +149,8 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        const Color(0xFF003B5C),
-                        const Color(0xFF003B5C).withValues(alpha: 0.8),
+                        AppColors.primary,
+                        AppColors.primary.withValues(alpha: 0.8),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
@@ -205,12 +205,17 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                   hint: 'Buscar zona...',
                   value: _selectedZonaId,
                   isRequired: true,
-                  prefixIcon: const Icon(Icons.location_on, color: Color(0xFF003B5C)),
+                  prefixIcon: const Icon(
+                    Icons.location_on,
+                    color: AppColors.primary,
+                  ),
                   options: zonas
-                      .map((zona) => AppSearchDropdownOption<int>(
-                            value: zona.id,
-                            label: zona.value,
-                          ))
+                      .map(
+                        (zona) => AppSearchDropdownOption<int>(
+                          value: zona.id,
+                          label: zona.value,
+                        ),
+                      )
                       .toList(),
                   onChanged: isLoading
                       ? null
@@ -225,12 +230,17 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                   hint: 'Buscar nave (opcional)...',
                   value: _selectedNaveId,
                   isRequired: false,
-                  prefixIcon: const Icon(Icons.directions_boat, color: Color(0xFF00B4D8)),
+                  prefixIcon: const Icon(
+                    Icons.directions_boat,
+                    color: AppColors.secondary,
+                  ),
                   options: naves
-                      .map((nave) => AppSearchDropdownOption<int>(
-                            value: nave.id,
-                            label: nave.value,
-                          ))
+                      .map(
+                        (nave) => AppSearchDropdownOption<int>(
+                          value: nave.id,
+                          label: nave.value,
+                        ),
+                      )
                       .toList(),
                   onChanged: isLoading
                       ? null
@@ -257,7 +267,7 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(
-                        color: Color(0xFF003B5C),
+                        color: AppColors.primary,
                         width: 2,
                       ),
                     ),
@@ -275,10 +285,10 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                   height: 54,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00B4D8),
+                      backgroundColor: AppColors.secondary,
                       foregroundColor: Colors.white,
                       elevation: isLoading ? 0 : 2,
-                      shadowColor: const Color(0xFF00B4D8).withValues(alpha: 0.4),
+                      shadowColor: AppColors.secondary.withValues(alpha: 0.4),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -350,8 +360,9 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.7),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Center(
                 child: Column(
@@ -376,7 +387,7 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                             height: 50,
                             child: CircularProgressIndicator(
                               strokeWidth: 3,
-                              color: Color(0xFF003B5C),
+                              color: AppColors.primary,
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -385,7 +396,7 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF003B5C),
+                              color: AppColors.primary,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -408,7 +419,6 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
     );
   }
 
-
   Future<void> _handleSubmit() async {
     // Prevenir doble tap
     if (_isSubmitting) return;
@@ -429,8 +439,9 @@ class _ModalMarcarEntradaState extends ConsumerState<ModalMarcarEntrada>
       final ok = await notifier.marcarEntrada(
         zonaTrabajoId: _selectedZonaId!,
         naveId: _selectedNaveId,
-        comentario:
-            comentarioCtrl.text.trim().isEmpty ? null : comentarioCtrl.text.trim(),
+        comentario: comentarioCtrl.text.trim().isEmpty
+            ? null
+            : comentarioCtrl.text.trim(),
         wref: ref,
       );
 

@@ -92,7 +92,6 @@ class DetalleDanos extends ConsumerWidget {
     );
   }
 
-
   // ============================================================================
   // CARD DE DAÑO INDIVIDUAL CON BOTONES DE ACCIÓN
   // ============================================================================
@@ -214,7 +213,7 @@ class DetalleDanos extends ConsumerWidget {
                   if (dano.relevante)
                     _buildStatusBadge(
                       'RELEVANTE',
-                      const Color(0xFFF59E0B),
+                      AppColors.warning,
                       Icons.priority_high,
                     ),
 
@@ -282,7 +281,11 @@ class DetalleDanos extends ConsumerWidget {
               onTap: () => _confirmDelete(context, ref, dano),
               child: const Padding(
                 padding: EdgeInsets.all(6),
-                child: Icon(Icons.delete_outline, size: DesignTokens.iconXXL, color: Colors.red),
+                child: Icon(
+                  Icons.delete_outline,
+                  size: DesignTokens.iconXXL,
+                  color: Colors.red,
+                ),
               ),
             ),
           ),
@@ -303,7 +306,8 @@ class DetalleDanos extends ConsumerWidget {
     final confirmed = await AppDialog.confirm(
       context,
       title: 'Eliminar Daño',
-      message: '¿Estás seguro de eliminar el daño de ${dano.areaDano.esp}?\n\nEsta acción también eliminará todas las fotos asociadas.',
+      message:
+          '¿Estás seguro de eliminar el daño de ${dano.areaDano.esp}?\n\nEsta acción también eliminará todas las fotos asociadas.',
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
       isDanger: true,
@@ -530,7 +534,7 @@ class DetalleDanos extends ConsumerWidget {
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -546,16 +550,16 @@ class DetalleDanos extends ConsumerWidget {
 
     if (severidad.contains('LEVE')) {
       icon = Icons.info_outline;
-      color = const Color(0xFFF59E0B); // Naranja
+      color = AppColors.severityLow; // Naranja
     } else if (severidad.contains('MEDIO')) {
       icon = Icons.warning_outlined;
-      color = const Color(0xFFDC2626); // Rojo
+      color = AppColors.severityMedium; // Rojo
     } else if (severidad.contains('GRAVE')) {
       icon = Icons.dangerous_outlined;
-      color = const Color(0xFF7C2D12); // Rojo oscuro
+      color = AppColors.severityHigh; // Rojo oscuro
     } else {
       icon = Icons.error_outline;
-      color = const Color(0xFF6B7280); // Gris
+      color = AppColors.neutralSemantic; // Gris
     }
 
     return Container(
@@ -589,10 +593,14 @@ class DetalleDanos extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: const Color(0xFF00B4D8).withValues(alpha: 0.1),
+            color: AppColors.secondary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: const Icon(Icons.article, size: 14, color: Color(0xFF00B4D8)),
+          child: const Icon(
+            Icons.article,
+            size: 14,
+            color: AppColors.secondary,
+          ),
         ),
         const SizedBox(width: DesignTokens.spaceXS),
         Expanded(
@@ -612,7 +620,7 @@ class DetalleDanos extends ConsumerWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -624,24 +632,24 @@ class DetalleDanos extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF00B4D8).withValues(alpha: 0.1),
+                color: AppColors.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: const Color(0xFF00B4D8).withValues(alpha: 0.3),
+                  color: AppColors.secondary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.visibility, size: 12, color: Color(0xFF00B4D8)),
+                  Icon(Icons.visibility, size: 12, color: AppColors.secondary),
                   SizedBox(width: 4),
                   Text(
                     'Ver',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF00B4D8),
+                      color: AppColors.secondary,
                     ),
                   ),
                 ],

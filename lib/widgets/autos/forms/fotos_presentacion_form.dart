@@ -523,7 +523,9 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
-            onPressed: (_isLoading || _hasSubmitted || !canSave) ? null : _submitForm,
+            onPressed: (_isLoading || _hasSubmitted || !canSave)
+                ? null
+                : _submitForm,
             style: ElevatedButton.styleFrom(
               backgroundColor: canSave ? AppColors.primary : Colors.grey,
             ),
@@ -578,7 +580,9 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 28),
             SizedBox(width: 10),
-            Expanded(child: Text('Foto guardada', style: TextStyle(fontSize: 18))),
+            Expanded(
+              child: Text('Foto guardada', style: TextStyle(fontSize: 18)),
+            ),
           ],
         ),
         content: const Text('¿Qué deseas hacer ahora?'),
@@ -593,9 +597,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
             onPressed: () => Navigator.pop(ctx, 'create_another'),
             icon: const Icon(Icons.add_a_photo),
             label: const Text('Crear otra foto'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
           ),
         ],
       ),
@@ -693,15 +695,14 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       } else {
         // Modo crear: usa fire-and-forget (guarda localmente y sincroniza en background)
         // Timeout de seguridad: si SharedPreferences se bloquea, no dejar el form colgado
-        success = await notifier.addFotoOfflineFirst(
-          registroVinId: _selectedRegistroVinId!,
-          tipo: _selectedTipo!,
-          imagen: File(_fotoPath!),
-          nDocumento: nDocumento,
-        ).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => false,
-        );
+        success = await notifier
+            .addFotoOfflineFirst(
+              registroVinId: _selectedRegistroVinId!,
+              tipo: _selectedTipo!,
+              imagen: File(_fotoPath!),
+              nDocumento: nDocumento,
+            )
+            .timeout(const Duration(seconds: 10), onTimeout: () => false);
       }
 
       if (mounted) {
@@ -718,9 +719,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
           }
         } else {
           _hasSubmitted = false; // Permitir reintentar
-          _showError(
-            'Error al ${isEditMode ? 'actualizar' : 'guardar'} foto',
-          );
+          _showError('Error al ${isEditMode ? 'actualizar' : 'guardar'} foto');
         }
       }
     } catch (e) {
@@ -749,7 +748,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 20),
-        Icon(icon, size: 48, color: const Color(0xFFDC2626)),
+        Icon(icon, size: 48, color: AppColors.error),
         const SizedBox(height: 16),
         Text(
           title,
@@ -758,7 +757,7 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
         const SizedBox(height: 8),
         Text(
           message,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
@@ -832,17 +831,17 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   Color _getCondicionColor(String condicion) {
     switch (condicion.toUpperCase()) {
       case 'PUERTO':
-        return const Color(0xFF00B4D8);
+        return AppColors.puerto;
       case 'RECEPCION':
-        return const Color(0xFF8B5CF6);
+        return AppColors.recepcion;
       case 'ALMACEN':
-        return const Color(0xFF059669);
+        return AppColors.almacen;
       case 'PDI':
-        return const Color(0xFFF59E0B);
+        return AppColors.pdi;
       case 'PRE-PDI':
-        return const Color(0xFFEF4444);
+        return AppColors.prePdi;
       default:
-        return const Color(0xFF6B7280);
+        return AppColors.neutralSemantic;
     }
   }
 
@@ -866,17 +865,17 @@ class _FotoPresentacionFormState extends ConsumerState<FotoPresentacionForm> {
   Color _getTipoColor(String tipo) {
     switch (tipo.toUpperCase()) {
       case 'TARJA':
-        return const Color(0xFF059669);
+        return AppColors.success;
       case 'AUTO':
-        return const Color(0xFF00B4D8);
+        return AppColors.secondary;
       case 'KM':
-        return const Color(0xFFF59E0B);
+        return AppColors.warning;
       case 'DR':
-        return const Color(0xFFDC2626);
+        return AppColors.error;
       case 'OTRO':
-        return const Color(0xFF8B5CF6);
+        return AppColors.recepcion;
       default:
-        return const Color(0xFF6B7280);
+        return AppColors.neutralSemantic;
     }
   }
 

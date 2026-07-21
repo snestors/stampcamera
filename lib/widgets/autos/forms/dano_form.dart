@@ -63,7 +63,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditMode ? 'Editar Daño' : 'Nuevo Daño'),
-        backgroundColor: const Color(0xFFDC2626),
+        backgroundColor: AppColors.error,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.close),
@@ -279,7 +279,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
             width: DesignTokens.borderWidthNormal,
           ),
         ),
-        fillColor: isCondicionEditable ? AppColors.surface : AppColors.backgroundLight,
+        fillColor: isCondicionEditable
+            ? AppColors.surface
+            : AppColors.backgroundLight,
         filled: true,
       ),
       items: condicionesFiltradas.isNotEmpty
@@ -388,7 +390,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           hint: 'Buscar tipo de daño...',
           value: _selectedTipoDano,
           isRequired: true,
-          prefixIcon: const Icon(Icons.report_problem, color: Color(0xFFDC2626)),
+          prefixIcon: const Icon(Icons.report_problem, color: AppColors.error),
           options: tiposDano.map<AppSearchDropdownOption<int>>((tipo) {
             return AppSearchDropdownOption<int>(
               value: tipo['value'],
@@ -407,7 +409,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           hint: 'Buscar área de daño...',
           value: _selectedAreaDano,
           isRequired: true,
-          prefixIcon: const Icon(Icons.location_on, color: Color(0xFF059669)),
+          prefixIcon: const Icon(Icons.location_on, color: AppColors.success),
           options: areasDano.map<AppSearchDropdownOption<int>>((area) {
             return AppSearchDropdownOption<int>(
               value: area['value'],
@@ -426,7 +428,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           hint: 'Buscar severidad...',
           value: _selectedSeveridad,
           isRequired: true,
-          prefixIcon: const Icon(Icons.priority_high, color: Color(0xFFF59E0B)),
+          prefixIcon: const Icon(Icons.priority_high, color: AppColors.warning),
           options: severidades.map<AppSearchDropdownOption<int>>((severidad) {
             return AppSearchDropdownOption<int>(
               value: severidad['value'],
@@ -438,7 +440,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                   color: _getSeveridadColor(severidad['label']),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: _getSeveridadColor(severidad['label']).withValues(alpha: 0.5),
+                    color: _getSeveridadColor(
+                      severidad['label'],
+                    ).withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
@@ -498,7 +502,8 @@ class _DanoFormState extends ConsumerState<DanoForm> {
               label: resp['label'],
             );
           }).toList(),
-          onChanged: (value) => setState(() => _selectedResponsabilidad = value),
+          onChanged: (value) =>
+              setState(() => _selectedResponsabilidad = value),
         ),
 
         const SizedBox(height: 12),
@@ -521,7 +526,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           subtitle: const Text('El daño es significativo para la inspección'),
           value: _relevante,
           onChanged: (value) => setState(() => _relevante = value),
-          activeTrackColor: const Color(0xFFDC2626),
+          activeTrackColor: AppColors.error,
         ),
       ],
     );
@@ -546,7 +551,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           color: AppColors.textSecondary,
         ),
         helperText: 'Asocia una foto/documento existente al daño (opcional)',
-        prefixIcon: const Icon(Icons.photo_library, color: Color(0xFF8B5CF6)),
+        prefixIcon: const Icon(Icons.photo_library, color: AppColors.recepcion),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(DesignTokens.radiusM),
           borderSide: const BorderSide(
@@ -644,7 +649,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                 fontSize: DesignTokens.fontSizeS,
                 color: AppColors.textSecondary,
               ),
-              prefixIcon: Icon(icon, color: const Color(0xFF3B82F6)),
+              prefixIcon: Icon(icon, color: AppColors.focus),
               suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.grey),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(DesignTokens.radiusM),
@@ -662,7 +667,10 @@ class _DanoFormState extends ConsumerState<DanoForm> {
               ),
               filled: true,
               fillColor: AppColors.surface,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 14,
+              ),
             ),
             child: Text(
               selectedValues.isEmpty
@@ -670,7 +678,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                   : '${selectedValues.length} ${label.toLowerCase()} seleccionada${selectedValues.length > 1 ? 's' : ''}',
               style: TextStyle(
                 fontSize: DesignTokens.fontSizeS,
-                color: selectedValues.isEmpty ? AppColors.textSecondary : AppColors.textPrimary,
+                color: selectedValues.isEmpty
+                    ? AppColors.textSecondary
+                    : AppColors.textPrimary,
               ),
             ),
           ),
@@ -683,12 +693,15 @@ class _DanoFormState extends ConsumerState<DanoForm> {
             children: selectedValues.map((id) {
               final option = options.firstWhere((opt) => opt['value'] == id);
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                  color: AppColors.focus.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(DesignTokens.radiusS),
                   border: Border.all(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+                    color: AppColors.focus.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -699,7 +712,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                       style: const TextStyle(
                         fontSize: DesignTokens.fontSizeXS,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF3B82F6),
+                        color: AppColors.focus,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -712,7 +725,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                       child: Icon(
                         Icons.close,
                         size: 14,
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.7),
+                        color: AppColors.focus.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -734,7 +747,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       children: [
         Row(
           children: [
-            const Icon(Icons.photo_camera, color: Color(0xFF059669)),
+            const Icon(Icons.photo_camera, color: AppColors.success),
             const SizedBox(width: 8),
             const Text(
               'Imágenes del Daño',
@@ -775,7 +788,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           currentImageUrl: isNetworkImage ? _imagenesPaths[i] : null,
           onImageSelected: (path) => setState(() => _imagenesPaths[i] = path),
           showGalleryOption: true,
-          primaryColor: const Color(0xFFDC2626),
+          primaryColor: AppColors.error,
         ),
       );
 
@@ -812,7 +825,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
               icon: const Icon(Icons.add_photo_alternate),
               label: const Text('Agregar Otra Foto'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626),
+                backgroundColor: AppColors.error,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -875,9 +888,11 @@ class _DanoFormState extends ConsumerState<DanoForm> {
           const SizedBox(width: 16),
           Expanded(
             child: ElevatedButton(
-              onPressed: (_isLoading || _hasSubmitted || !_canSubmit) ? null : _submitForm,
+              onPressed: (_isLoading || _hasSubmitted || !_canSubmit)
+                  ? null
+                  : _submitForm,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626),
+                backgroundColor: AppColors.error,
                 disabledBackgroundColor: Colors.grey[300],
               ),
               child: _isLoading
@@ -1001,23 +1016,22 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       } else {
         // Modo crear: usa fire-and-forget (guarda localmente y sincroniza en background)
         // Timeout de seguridad: si SharedPreferences se bloquea, no dejar el form colgado
-        success = await notifier.createDanoOfflineFirst(
-          registroVinId: _selectedRegistroVinId!,
-          tipoDano: _selectedTipoDano!,
-          areaDano: _selectedAreaDano!,
-          severidad: _selectedSeveridad!,
-          zonas: _selectedZonas.isEmpty ? null : _selectedZonas,
-          descripcion: _descripcionController.text.trim().isEmpty
-              ? null
-              : _descripcionController.text.trim(),
-          responsabilidad: _selectedResponsabilidad,
-          relevante: _relevante,
-          imagenes: _getValidImages(),
-          nDocumento: _selectedFotoPresentacion,
-        ).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () => false,
-        );
+        success = await notifier
+            .createDanoOfflineFirst(
+              registroVinId: _selectedRegistroVinId!,
+              tipoDano: _selectedTipoDano!,
+              areaDano: _selectedAreaDano!,
+              severidad: _selectedSeveridad!,
+              zonas: _selectedZonas.isEmpty ? null : _selectedZonas,
+              descripcion: _descripcionController.text.trim().isEmpty
+                  ? null
+                  : _descripcionController.text.trim(),
+              responsabilidad: _selectedResponsabilidad,
+              relevante: _relevante,
+              imagenes: _getValidImages(),
+              nDocumento: _selectedFotoPresentacion,
+            )
+            .timeout(const Duration(seconds: 10), onTimeout: () => false);
       }
 
       if (mounted) {
@@ -1142,12 +1156,12 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                        color: AppColors.focus.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         Icons.grid_view,
-                        color: Color(0xFF3B82F6),
+                        color: AppColors.focus,
                         size: 20,
                       ),
                     ),
@@ -1215,7 +1229,10 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -1223,12 +1240,12 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                               height: 24,
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF3B82F6)
+                                    ? AppColors.focus
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: isSelected
-                                      ? const Color(0xFF3B82F6)
+                                      ? AppColors.focus
                                       : Colors.grey[400]!,
                                   width: 2,
                                 ),
@@ -1247,9 +1264,11 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                                 option['label'],
                                 style: TextStyle(
                                   fontSize: DesignTokens.fontSizeS,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
                                   color: isSelected
-                                      ? const Color(0xFF3B82F6)
+                                      ? AppColors.focus
                                       : AppColors.textPrimary,
                                 ),
                               ),
@@ -1280,7 +1299,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.radiusM,
+                            ),
                           ),
                         ),
                         child: const Text(
@@ -1297,10 +1318,12 @@ class _DanoFormState extends ConsumerState<DanoForm> {
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3B82F6),
+                          backgroundColor: AppColors.focus,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(DesignTokens.radiusM),
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.radiusM,
+                            ),
                           ),
                         ),
                         child: const Text(
@@ -1344,7 +1367,7 @@ class _DanoFormState extends ConsumerState<DanoForm> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 20),
-        Icon(icon, size: 48, color: const Color(0xFFDC2626)),
+        Icon(icon, size: 48, color: AppColors.error),
         const SizedBox(height: 16),
         Text(
           title,
@@ -1353,14 +1376,14 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         const SizedBox(height: 8),
         Text(
           message,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 20),
         ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF003B5C),
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
           ),
           child: Text(buttonText),
@@ -1407,17 +1430,17 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   Color _getCondicionColor(String condicion) {
     switch (condicion.toUpperCase()) {
       case 'PUERTO':
-        return const Color(0xFF00B4D8);
+        return AppColors.puerto;
       case 'RECEPCION':
-        return const Color(0xFF8B5CF6);
+        return AppColors.recepcion;
       case 'ALMACEN':
-        return const Color(0xFF059669);
+        return AppColors.almacen;
       case 'PDI':
-        return const Color(0xFFF59E0B);
+        return AppColors.pdi;
       case 'PRE-PDI':
-        return const Color(0xFFEF4444);
+        return AppColors.prePdi;
       default:
-        return const Color(0xFF6B7280);
+        return AppColors.neutralSemantic;
     }
   }
 
@@ -1439,28 +1462,28 @@ class _DanoFormState extends ConsumerState<DanoForm> {
   }
 
   Color _getSeveridadColor(String severidad) {
-    if (severidad.contains('LEVE')) return const Color(0xFF059669);
-    if (severidad.contains('MEDIO')) return const Color(0xFFF59E0B);
-    if (severidad.contains('GRAVE')) return const Color(0xFFDC2626);
-    if (severidad.contains('FALTANTE')) return const Color(0xFF8B5CF6);
-    if (severidad.contains('CERO')) return const Color(0xFF6B7280);
-    return const Color(0xFF6B7280);
+    if (severidad.contains('LEVE')) return AppColors.success;
+    if (severidad.contains('MEDIO')) return AppColors.warning;
+    if (severidad.contains('GRAVE')) return AppColors.error;
+    if (severidad.contains('FALTANTE')) return AppColors.recepcion;
+    if (severidad.contains('CERO')) return AppColors.neutralSemantic;
+    return AppColors.neutralSemantic;
   }
 
   Color _getFotoTipoColor(String tipo) {
     switch (tipo.toUpperCase()) {
       case 'TARJA':
-        return const Color(0xFF059669);
+        return AppColors.success;
       case 'AUTO':
-        return const Color(0xFF00B4D8);
+        return AppColors.secondary;
       case 'KM':
-        return const Color(0xFFF59E0B);
+        return AppColors.warning;
       case 'DR':
-        return const Color(0xFFDC2626);
+        return AppColors.error;
       case 'OTRO':
-        return const Color(0xFF8B5CF6);
+        return AppColors.recepcion;
       default:
-        return const Color(0xFF6B7280);
+        return AppColors.neutralSemantic;
     }
   }
 
