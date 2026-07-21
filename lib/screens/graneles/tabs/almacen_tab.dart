@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
 import 'package:stampcamera/models/graneles/servicio_granel_model.dart';
-import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class AlmacenTab extends ConsumerStatefulWidget {

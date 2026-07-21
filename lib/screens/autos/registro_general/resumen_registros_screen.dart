@@ -14,7 +14,6 @@ import 'package:stampcamera/core/helpers/debouncer.dart';
 import 'package:stampcamera/models/autos/registro_vin_list_model.dart';
 import 'package:stampcamera/providers/autos/registro_vin_list_provider.dart';
 import 'package:stampcamera/widgets/vin_scanner_screen.dart';
-import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class ResumenRegistrosScreen extends ConsumerStatefulWidget {

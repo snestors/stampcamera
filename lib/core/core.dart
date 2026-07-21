@@ -26,8 +26,6 @@ export 'helpers/ui_helpers/vehicle_helpers.dart';
 // - lib/widgets/common/       → SOLO widgets de dominio transversal (infra de
 //   toda la app: cámara reutilizable, cola offline, banner de notificaciones
 //   en vivo). No es un cajón de sastre; lo genérico va a core.
-//   Excepción: search_bar_widget.dart (UI genérica) sigue ahí porque lo
-//   importa registro_screen.dart, que está fuera de alcance para editar.
 // ============================================================================
 
 // Widgets comunes
@@ -42,6 +40,7 @@ export 'widgets/common/app_section_header.dart';
 export 'widgets/common/app_search_select.dart';
 export 'widgets/common/app_search_dropdown.dart';
 export 'widgets/common/fullscreen_image_viewer.dart';
+export 'widgets/common/search_bar_widget.dart';
 
 // Feedback widgets (diálogos, snackbars)
 export 'widgets/feedback/app_dialog.dart';

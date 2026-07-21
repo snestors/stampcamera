@@ -1,13 +1,13 @@
 // =====================================================
-// widgets/pedeteo/search_bar_widget.dart - ACTUALIZACIÓN NECESARIA
+// widgets/pedeteo/pedeteo_search_bar.dart
 // =====================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/widgets/pedeteo/search_dropdown_widget.dart';
-import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 
 class PedeteoSearchBar extends ConsumerStatefulWidget {
   const PedeteoSearchBar({super.key});

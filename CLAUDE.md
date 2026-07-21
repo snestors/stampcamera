@@ -1363,9 +1363,9 @@ Regla aplicada (documentada en `lib/core/core.dart`):
 - `lib/widgets/<feature>/` → widgets atados a un feature.
 - `lib/widgets/common/` → SOLO dominio transversal (infra app-wide): quedan `reusable_camera_card`, `offline_sync_indicator`, `in_app_notification_banner`.
 - **Movido a core**: `fullscreen_image_viewer.dart` (genérico) → `core/widgets/common/` + exportado; 10 consumidores repuntados (9 lo consumen vía `core/core.dart`, `detalle_imagen_preview` por path directo).
+- **Movido a core** (post-P1, autorizado por el usuario): `search_bar_widget.dart` → `core/widgets/common/` + exportado. Los 9 screens consumidores ya importaban `core/core.dart` → solo se borró el import directo (incluido `registro_screen.dart`: SOLO esa línea, con Python byte-a-byte para preservar CRLF y no tocar nada más). `pedeteo_search_bar` repuntado a `core/core.dart`. Excepción retirada de core.dart.
 - **Renombrado**: `widgets/pedeteo/search_bar_widget.dart` → `pedeteo_search_bar.dart`.
 - **Borrado código muerto** (0 usos verificados): `core/widgets/app_bars/app_corporate_bar.dart` (+ su export) y `widgets/connectivity_app_bar.dart`.
-- ⚠️ **Desviación**: `search_bar_widget.dart` (UI genérica) NO se movió a core y sigue en `widgets/common/`, porque su consumidor `registro_screen.dart` está en la lista dura de "NO tocar" y moverlo obligaría a editar su import (rompería el build). Documentado como excepción en core.dart.
 
 ### Fase 4 — errorBuilder del GoRouter
 `errorBuilder` en `app_router.dart`: Scaffold `backgroundLight` + AppBar del tema + `AppErrorState(type: notFound)` con "Página no encontrada" + `state.uri` + botón "Ir al inicio" (`context.go('/home')`).

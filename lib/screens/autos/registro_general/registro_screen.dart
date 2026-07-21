@@ -10,7 +10,6 @@ import 'package:stampcamera/providers/autos/registro_general_provider.dart';
 import 'package:stampcamera/services/http_service.dart';
 import 'package:stampcamera/widgets/autos/card_detalle_registro_vin.dart';
 import 'package:stampcamera/widgets/vin_scanner_screen.dart';
-import 'package:stampcamera/widgets/common/search_bar_widget.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';
 
 class RegistroScreen extends ConsumerStatefulWidget {
