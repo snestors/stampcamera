@@ -64,43 +64,28 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        decoration: InputDecoration(
-          hintText: 'Buscar por embarque, marca o modelo...',
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    ref.read(inventarioBaseProvider.notifier).clearSearch();
-                    _searchFocusNode.unfocus();
-                  },
-                )
-              : null,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(DesignTokens.radiusL)),
-          filled: true,
-          fillColor: AppColors.surface,
-        ),
-        onChanged: (value) {
-          setState(() {});
-          if (value.trim().isEmpty) {
-            ref.read(inventarioBaseProvider.notifier).clearSearch();
-          } else {
-            ref.read(inventarioBaseProvider.notifier).debouncedSearch(value);
-          }
-        },
-        onSubmitted: (value) {
-          if (value.trim().isNotEmpty) {
-            ref.read(inventarioBaseProvider.notifier).search(value);
-            _searchFocusNode.unfocus();
-          }
-        },
-      ),
+    return SearchBarWidget(
+      controller: _searchController,
+      focusNode: _searchFocusNode,
+      hintText: 'Buscar por embarque, marca o modelo...',
+      showScannerButton: false,
+      onChanged: (value) {
+        if (value.trim().isEmpty) {
+          ref.read(inventarioBaseProvider.notifier).clearSearch();
+        } else {
+          ref.read(inventarioBaseProvider.notifier).debouncedSearch(value);
+        }
+      },
+      onSubmitted: (value) {
+        if (value.trim().isNotEmpty) {
+          ref.read(inventarioBaseProvider.notifier).search(value);
+          _searchFocusNode.unfocus();
+        }
+      },
+      onClear: () {
+        ref.read(inventarioBaseProvider.notifier).clearSearch();
+        _searchFocusNode.unfocus();
+      },
     );
   }
 
@@ -218,7 +203,9 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                         Row(
                           children: [
                             Icon(
-                              nave.isSIC ? Icons.inventory : Icons.directions_boat,
+                              nave.isSIC
+                                  ? Icons.inventory
+                                  : Icons.directions_boat,
                               color: accentColor,
                               size: 20,
                             ),
@@ -249,10 +236,19 @@ class _InventarioScreenState extends ConsumerState<InventarioScreen> {
                           runSpacing: DesignTokens.spaceXS,
                           children: [
                             if (nave.naveDescargaPuerto.isNotEmpty)
-                              _buildMetaItem(Icons.location_on, nave.naveDescargaPuerto),
+                              _buildMetaItem(
+                                Icons.location_on,
+                                nave.naveDescargaPuerto,
+                              ),
                             if (nave.naveDescargaFechaAtraque.isNotEmpty)
-                              _buildMetaItem(Icons.calendar_today, nave.naveDescargaFechaAtraque),
-                            _buildMetaItem(Icons.inventory_2, '${nave.totalUnidades} unidades'),
+                              _buildMetaItem(
+                                Icons.calendar_today,
+                                nave.naveDescargaFechaAtraque,
+                              ),
+                            _buildMetaItem(
+                              Icons.inventory_2,
+                              '${nave.totalUnidades} unidades',
+                            ),
                           ],
                         ),
 

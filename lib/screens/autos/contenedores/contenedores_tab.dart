@@ -50,20 +50,13 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
-          // Header con búsqueda
-          Container(
-            padding: const EdgeInsets.all(DesignTokens.spaceL),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: _buildSearchBar(notifier),
+          // Header con búsqueda (componente unificado de la app)
+          SearchBarWidget(
+            controller: _searchController,
+            hintText: 'Buscar por número de contenedor...',
+            showScannerButton: false,
+            onChanged: (value) => notifier.debouncedSearch(value),
+            onClear: () => notifier.clearSearch(),
           ),
 
           // Lista de contenedores
@@ -81,54 +74,6 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
         onPressed: () => _showCreateForm(context),
         backgroundColor: AppColors.secondary,
         child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(ContenedorNotifier notifier) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXL),
-        border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (value) {
-          notifier.debouncedSearch(value);
-        },
-        decoration: InputDecoration(
-          hintText: 'Buscar por número de contenedor...',
-          prefixIcon: const Icon(
-            Icons.search,
-            color: AppColors.secondary,
-            size: DesignTokens.iconL,
-          ),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    notifier.clearSearch();
-                  },
-                )
-              : notifier.isSearching
-              ? Container(
-                  width: 20,
-                  height: 20,
-                  margin: const EdgeInsets.all(DesignTokens.spaceM),
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: DesignTokens.spaceL,
-            vertical: DesignTokens.spaceM,
-          ),
-        ),
       ),
     );
   }
@@ -260,7 +205,9 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                           padding: const EdgeInsets.all(DesignTokens.spaceS),
                           decoration: BoxDecoration(
                             color: AppColors.secondary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(DesignTokens.radiusS),
+                            borderRadius: BorderRadius.circular(
+                              DesignTokens.radiusS,
+                            ),
                           ),
                           child: const Icon(
                             Icons.inventory_2,
@@ -294,7 +241,8 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                           ),
                         ),
                         PopupMenuButton<String>(
-                          onSelected: (value) => _handleMenuAction(value, contenedor),
+                          onSelected: (value) =>
+                              _handleMenuAction(value, contenedor),
                           itemBuilder: (context) => [
                             const PopupMenuItem(
                               value: 'editar',
@@ -310,7 +258,11 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                               value: 'eliminar',
                               child: Row(
                                 children: [
-                                  Icon(Icons.delete, size: 16, color: AppColors.error),
+                                  Icon(
+                                    Icons.delete,
+                                    size: 16,
+                                    color: AppColors.error,
+                                  ),
                                   SizedBox(width: 8),
                                   Text(
                                     'Eliminar',
@@ -332,11 +284,20 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
                       runSpacing: DesignTokens.spaceXS,
                       children: [
                         if (contenedor.zonaInspeccion != null)
-                          _buildMetaItem(Icons.location_on, contenedor.zonaInspeccion!.value),
+                          _buildMetaItem(
+                            Icons.location_on,
+                            contenedor.zonaInspeccion!.value,
+                          ),
                         if (contenedor.precinto1 != null)
-                          _buildMetaItem(Icons.lock_outline, 'P1: ${contenedor.precinto1!}'),
+                          _buildMetaItem(
+                            Icons.lock_outline,
+                            'P1: ${contenedor.precinto1!}',
+                          ),
                         if (contenedor.precinto2 != null)
-                          _buildMetaItem(Icons.lock_outline, 'P2: ${contenedor.precinto2!}'),
+                          _buildMetaItem(
+                            Icons.lock_outline,
+                            'P2: ${contenedor.precinto2!}',
+                          ),
                       ],
                     ),
 
@@ -565,7 +526,8 @@ class _ContenedoresTabState extends ConsumerState<ContenedoresTab> {
     final confirmed = await AppDialog.confirm(
       context,
       title: 'Confirmar eliminación',
-      message: '¿Estás seguro de eliminar el contenedor ${contenedor.nContenedor}?',
+      message:
+          '¿Estás seguro de eliminar el contenedor ${contenedor.nContenedor}?',
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
       isDanger: true,
