@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
+import 'package:stampcamera/core/widgets/common/fullscreen_image_viewer.dart';
 
 /// Widget para mostrar preview de imagen de red con tap para ver fullscreen
 class NetworkImagePreview extends StatelessWidget {

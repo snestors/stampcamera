@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:stampcamera/models/autos/contenedor_model.dart';
 import 'package:stampcamera/providers/autos/contenedor_provider.dart';
 import 'package:stampcamera/core/core.dart';
-import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 
 class ContenedoresTab extends ConsumerStatefulWidget {
   const ContenedoresTab({super.key});

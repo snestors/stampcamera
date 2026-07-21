@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/models/autos/registro_general_model.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
-import 'package:stampcamera/widgets/pedeteo/search_bar_widget.dart';
+import 'package:stampcamera/widgets/pedeteo/pedeteo_search_bar.dart';
 import 'package:stampcamera/widgets/pedeteo/scanner_widget.dart';
 import 'package:stampcamera/widgets/pedeteo/registration_form_widget.dart';
 import 'package:stampcamera/widgets/connection_error_screen.dart';

@@ -53,7 +53,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:stampcamera/config/camera/camera_config.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/utils/image_processor.dart';
-import 'package:stampcamera/widgets/common/fullscreen_image_viewer.dart';
 
 /// Enum personalizado para resoluciones de cámara
 /// Evita la necesidad de importar la librería camera en otros archivos
