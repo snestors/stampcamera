@@ -1271,7 +1271,7 @@ FCM solo cubre background/app cerrada; en foreground el WS entregaba las notific
 ### 📍 Estado
 - ✅ IPA final (incluye update forzado) generado 21-jul 8:01, archive abierto en Organizer
 - ⏳ Subir build 74 a App Store Connect (Organizer o Transporter) y enviar a revisión
-- ⏳ Verificar clave APNs (.p8) subida en Firebase Console → sin eso NO llegan push a iPhone
+- ✅ Clave APNs subida a Firebase (2026-07-21): Key ID `S27GY237NV`, team `JZ4ZUD5L9A`, en filas desarrollo Y producción de `fcm-django-bd051` → app `com.nestorfar.stampcamera`. El `.p8` lo guarda Nestor (no está en ningún repo). Push Android (S22) confirmado funcionando end-to-end
 - ⏳ Probar en TestFlight: login con aprobación de equipo, push con app cerrada, tap→navegación
 
 ---
