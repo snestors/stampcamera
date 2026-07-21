@@ -10,7 +10,7 @@ Aplicación Flutter para gestión de vehículos con cámara de sellos. Se está 
 - **detalle_info_general.dart** - Información general del vehículo migrada
 - **detalle_registros_vin.dart** - Historial de registros VIN migrado
 - **detalle_fotos_presentacion.dart** - Galería de fotos migrada
-- **detalle_danos.dart** - Migración completa a design system ✅
+- **detalle_danos.dart** - Migración a design system ✅ (colores hardcodeados migrados a tokens DE VERDAD en P1, 2026-07-21)
 - **Limpieza de duplicados** - Eliminado custom_colors.dart duplicado
 - **AppCard component** - Componente central creado y funcionando
 - **AppEmptyState** - Componente para estados vacíos
@@ -1302,12 +1302,12 @@ Funcional sano (analyze 0, natives post-merge iOS coherentes, timers/subs bien l
    - `almacen_tab.dart:93,203` FAB/botón "crear" y `:156` editar → `/graneles/almacen/*` NO existe. Fix: quitar FAB y botón crear (el alta real es vía ViajeFormScreen desde el tab Viajes); quitar editar (AlmacenGranel NO tiene ticketId para deep-link)
    - `balanzas_tab.dart:108,253` crear y `:182` editar → `/graneles/balanza/*` NO existe. Fix: quitar crear; editar SÍ se puede salvar → `/graneles/viaje/editar/{balanza.ticketId}?step=2` (Balanza tiene ticketId; step 1=muelle, 2=balanza, 3=almacén)
 
-#### Cambios propuestos — P1 (sesión "design system")
-- Unificar las dos carpetas `common` (`core/widgets/common` vs `widgets/common`) con regla clara
-- Matar dropdown duplicado: `custom_dropdown_field` (solo lo usa pedeteo/form_fields_card) → migrar a `app_search_select` del core
-- Renombrar `widgets/pedeteo/search_bar_widget.dart` → `pedeteo_search_bar.dart` (colisión de nombre con el común)
-- Sweep de literales `Color(0xFF…)` → tokens: dano_form.dart (43), jornadas_screen.dart (19), fotos_presentacion_form.dart (14), detalle_danos.dart (13 — el "✅ migrado" de arriba en este archivo es FALSO), registro_asistencia_screen.dart (10), modal_entrada.dart (9)
-- Agregar `errorBuilder` al GoRouter (que una ruta rota nunca más sea pantalla blanca de error cruda)
+#### Cambios propuestos — P1 (sesión "design system") — ✅ COMPLETADO 2026-07-21 (detalle en "P1 COMPLETADO" al final)
+- ✅ Unificar las dos carpetas `common` con regla clara (documentada en `lib/core/core.dart`)
+- ✅ Matar dropdown duplicado: `custom_dropdown_field` → migrado a `AppSearchDropdown` del core (archivo borrado)
+- ✅ Renombrar `widgets/pedeteo/search_bar_widget.dart` → `pedeteo_search_bar.dart`
+- ✅ Sweep de literales `Color(0xFF…)` → tokens (los que coinciden EXACTO con un token; el resto documentado). jornadas_screen.dart dejado a propósito (paleta local tailwind cohesiva)
+- ✅ Agregar `errorBuilder` al GoRouter
 
 #### Cambios propuestos — P2 (higiene, cuando toque)
 - Borrar código muerto: `core/widgets/app_bars/app_corporate_bar.dart`, `widgets/connectivity_app_bar.dart` (0 usos)
@@ -1337,3 +1337,38 @@ Funcional sano (analyze 0, natives post-merge iOS coherentes, timers/subs bien l
 - ⏳ MAC: `git pull` → `flutter build ipa --release` → Organizer → TestFlight con archive **1.7.1 (76)** (borrar el archive viejo 74 del Organizer). Luego en iPhone: TestFlight → login → aceptar notificaciones → probar push con app cerrada
 - ⏳ Probar en dispositivo: logout entre 2 usuarios (datos limpios), tabs balanzas/almacén de graneles
 - ⏳ Próximas sesiones: P1 (design system) y P2 (higiene/testing) según plan de arriba
+
+---
+
+## ✅ P1 COMPLETADO - SESIÓN 2026-07-21 (design system)
+
+Refactor sin cambios visuales (solo literales → tokens de valor idéntico, movimientos de archivos e imports). `flutter analyze` en 0 tras CADA fase. 5 commits convencionales, sin push.
+
+### Fase 1 — Sweep de colores hardcodeados → tokens
+Regla: reemplazar solo literales `Color(0xFF…)` cuyo valor coincide EXACTO con un token de `AppColors`.
+- **dano_form.dart**: 42/43. Helpers de dominio mapeados a sus tokens semánticos (condición→puerto/recepcion/almacen/pdi/prePdi; severidad/foto-tipo→success/warning/error/recepcion/neutralSemantic). Dejado: `Color(0xFF6366F1)` (índigo del icono "Responsabilidad") — sin token equivalente.
+- **fotos_presentacion_form.dart**: 14/14. 0 dejados.
+- **detalle_danos.dart**: 13/13. Las severidades calzan EXACTO con `severityLow/Medium/High`. 0 dejados. (Esto vuelve VERDADERO el "✅ migrado" que antes era falso.)
+- **registro_asistencia_screen.dart**: 10/11 (+ import de `core/core.dart`). Dejado: `Color(0xFF00587A)` (2º color del gradient del header) — sin token.
+- **modal_entrada.dart**: 9/9. 0 dejados.
+- **jornadas_screen.dart**: 0/19 — DEJADO ENTERO a propósito. Es una paleta local tailwind cohesiva y autodocumentada (sky-600/50/100, orange-500/50/100, gray-50/100/200, amber-600, purple-600) de la tabla de jornadas. Solo 3 valores coinciden por casualidad con tokens (F0F9FF=surfaceTint, F3F4F6=hover/pressed, E5E7EB=neutral), pero fragmentar la paleta acoplaría colores de tabla a tokens de UI-state no relacionados. Riesgo > beneficio.
+- Notas de naming: en valores con varios tokens iguales se eligió el nombre más apropiado; unos pocos son imperfectos pero de valor idéntico (severidad FALTANTE y foto-tipo OTRO → `AppColors.recepcion`, el único morado de la paleta). `0xFFF9FAFB` (=`textPrimaryDark`) NO se usó como fondo claro (sería semánticamente inverso).
+
+### Fase 2 — Dropdown duplicado eliminado
+`custom_dropdown_field.dart` (único consumidor: pedeteo/form_fields_card) migrado a **`AppSearchDropdown`** del core (no `AppSearchSelect`: AppSearchDropdown tiene `enabled` para los permisos de campo, `validator` y `value`, y es el mismo componente que ya usan dano_form/modal_entrada). Comportamiento del form intacto (mismos callbacks al `pedeteoStateProvider`). Archivo borrado.
+
+### Fase 3 — Unificación de carpetas common + renombres + código muerto
+Regla aplicada (documentada en `lib/core/core.dart`):
+- `lib/core/widgets/common/` → presentación reutilizable SIN imports de dominio; exportada por `core/core.dart`.
+- `lib/widgets/<feature>/` → widgets atados a un feature.
+- `lib/widgets/common/` → SOLO dominio transversal (infra app-wide): quedan `reusable_camera_card`, `offline_sync_indicator`, `in_app_notification_banner`.
+- **Movido a core**: `fullscreen_image_viewer.dart` (genérico) → `core/widgets/common/` + exportado; 10 consumidores repuntados (9 lo consumen vía `core/core.dart`, `detalle_imagen_preview` por path directo).
+- **Renombrado**: `widgets/pedeteo/search_bar_widget.dart` → `pedeteo_search_bar.dart`.
+- **Borrado código muerto** (0 usos verificados): `core/widgets/app_bars/app_corporate_bar.dart` (+ su export) y `widgets/connectivity_app_bar.dart`.
+- ⚠️ **Desviación**: `search_bar_widget.dart` (UI genérica) NO se movió a core y sigue en `widgets/common/`, porque su consumidor `registro_screen.dart` está en la lista dura de "NO tocar" y moverlo obligaría a editar su import (rompería el build). Documentado como excepción en core.dart.
+
+### Fase 4 — errorBuilder del GoRouter
+`errorBuilder` en `app_router.dart`: Scaffold `backgroundLight` + AppBar del tema + `AppErrorState(type: notFound)` con "Página no encontrada" + `state.uri` + botón "Ir al inicio" (`context.go('/home')`).
+
+### ⏳ Pendiente probar en dispositivo
+Los formularios de daño/foto/asistencia/pedeteo, el detalle de daños, la tabla de jornadas y una ruta rota (para ver el nuevo errorBuilder). Todo es refactor de valor idéntico, pero conviene una pasada visual.
