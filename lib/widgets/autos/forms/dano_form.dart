@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stampcamera/models/autos/detalle_registro_model.dart';
 import 'package:stampcamera/providers/autos/registro_detalle_provider.dart';
+import 'package:stampcamera/utils/autos/severidad_rules.dart';
 import 'package:stampcamera/widgets/common/reusable_camera_card.dart';
 import 'package:stampcamera/core/core.dart';
 
@@ -376,6 +377,24 @@ class _DanoFormState extends ConsumerState<DanoForm> {
     final areasDano = options['areas_dano'] as List<dynamic>? ?? [];
     final severidades = options['severidades'] as List<dynamic>? ?? [];
 
+    // Regla de negocio (paridad con React): ciertos tipos de daño fijan la
+    // severidad y bloquean el selector. Se empareja por nombre, no por id.
+    final int? severidadForzadaId = severidadForzadaPorTipoId(
+      _selectedTipoDano,
+      tiposDano,
+      severidades,
+    );
+    final bool severidadBloqueada = severidadForzadaId != null;
+    // Sincroniza el estado para que el submit envíe la severidad forzada
+    // (cubre crear, editar y auto-cura datos legacy con severidad incorrecta).
+    if (severidadBloqueada && _selectedSeveridad != severidadForzadaId) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _selectedSeveridad = severidadForzadaId);
+        }
+      });
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -426,8 +445,9 @@ class _DanoFormState extends ConsumerState<DanoForm> {
         AppSearchDropdown<int>(
           label: 'Severidad',
           hint: 'Buscar severidad...',
-          value: _selectedSeveridad,
+          value: severidadForzadaId ?? _selectedSeveridad,
           isRequired: true,
+          enabled: !severidadBloqueada,
           prefixIcon: const Icon(Icons.priority_high, color: AppColors.warning),
           options: severidades.map<AppSearchDropdownOption<int>>((severidad) {
             return AppSearchDropdownOption<int>(

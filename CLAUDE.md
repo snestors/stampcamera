@@ -1372,3 +1372,17 @@ Regla aplicada (documentada en `lib/core/core.dart`):
 
 ### ⏳ Pendiente probar en dispositivo
 Los formularios de daño/foto/asistencia/pedeteo, el detalle de daños, la tabla de jornadas y una ruta rota (para ver el nuevo errorBuilder). Todo es refactor de valor idéntico, pero conviene una pasada visual.
+
+---
+
+## ✅ SESIÓN 2026-07-21 (cont.) - Unificación búsquedas autos + regla severidad
+
+### 🔎 Búsquedas de autos unificadas al SearchBarWidget común
+- `contenedores_tab.dart` (era pill VERDE con borde/icono `secondary`, radio XL — "parecía de otra empresa") e `inventario_screen.dart` (rectángulo gris propio) → ahora ambos usan `SearchBarWidget` (mismo de registro/graneles/pedeteo), `showScannerButton:false`. La identidad verde de contenedores (tarjetas/FAB/refresh) se MANTIENE a propósito; solo se unificó la barra de búsqueda.
+
+### 🩹 Regla tipo de daño → severidad forzada (paridad con React)
+- Port de `frontend/src/pages/autos/severidadRules.ts` (commit c3d45e748) → **`lib/utils/autos/severidad_rules.dart`** (Dart puro, reutiliza `TextFormatters.removeAccents`). El backend NO impone la regla; la app la replica client-side.
+- Reglas (emparejan por NOMBRE, no por id — los ids del catálogo difieren entre entornos): `FALTANTE && !FLOJO` → severidad FALTANTE; `SIN DAÑO` (norm. SIN DANO) → severidad que empieza con CERO. `FLOJO/FALTANTE` y demás quedan libres.
+- Integración en `dano_form.dart`: enfoque reactivo en `build` — `severidadForzadaPorTipoId(...)` calcula el id forzado; si hay regla, el `AppSearchDropdown` de severidad se fija (`value: forzada ?? _selected`) y se **bloquea** (`enabled:false`), y un `addPostFrameCallback` sincroniza `_selectedSeveridad` para el submit. Cubre crear, editar y auto-cura datos legacy. Funciona igual al abrir un daño existente de esos tipos.
+- **Tests**: `test/utils/autos/severidad_rules_test.dart` (11 casos, todos verdes) — incluye acentos, FLOJO/FALTANTE libre, emparejar por nombre con ids arbitrarios, y regla activa sin severidad que empareje.
+- `flutter analyze`: 0 issues.
