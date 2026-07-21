@@ -71,10 +71,10 @@ class RegistroVinService {
         'condicion': condicion,
         'zona_inspeccion': zonaInspeccion,
         'foto_vin': await MultipartFile.fromFile(fotoPath),
-        if (bloqueId != null) 'bloque': bloqueId,
-        if (fila != null) 'fila': fila,
-        if (posicion != null) 'posicion': posicion,
-        if (contenedorId != null) 'contenedor': contenedorId,
+        'bloque': ?bloqueId,
+        'fila': ?fila,
+        'posicion': ?posicion,
+        'contenedor': ?contenedorId,
       });
 
       final response = await _http.dio.post(

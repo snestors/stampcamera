@@ -42,7 +42,7 @@ class ContenedorService extends BaseServiceImpl<ContenedorModel> {
       final data = <String, dynamic>{
         'n_contenedor': nContenedor,
         'nave_descarga_id': naveDescarga,
-        if (zonaInspeccion != null) 'zona_inspeccion_id': zonaInspeccion,
+        'zona_inspeccion_id': ?zonaInspeccion,
         if (precinto1 != null && precinto1.isNotEmpty) 'precinto1': precinto1,
         if (precinto2 != null && precinto2.isNotEmpty) 'precinto2': precinto2,
       };

@@ -213,7 +213,7 @@ class _EditarNaveFormState extends ConsumerState<_EditarNaveForm> {
   Widget _buildForm(BerthingsFormOptions options) {
     final transiciones = options.transicionesDesde(_estatusInicial);
     final opcionesMostrar = <BerthingEstatus>{
-      if (_estatusInicial != null) _estatusInicial!,
+      ?_estatusInicial,
       ...transiciones,
     }.toList();
 

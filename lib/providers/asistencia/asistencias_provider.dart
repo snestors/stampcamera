@@ -62,8 +62,8 @@ class AsistenciaActivaNotifier extends AsyncNotifier<AsistenciaActivaResponse> {
         data: {
           'zona_trabajo_id': zonaTrabajoId,
           'ubicacion_entrada_gps': gps,
-          if (naveId != null) 'nave_id': naveId,
-          if (comentario != null) 'comentario_usuario': comentario,
+          'nave_id': ?naveId,
+          'comentario_usuario': ?comentario,
         },
       );
 

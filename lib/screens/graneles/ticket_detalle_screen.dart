@@ -529,7 +529,7 @@ class _TicketDetalleContent extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (trailing != null) trailing,
+                ?trailing,
               ],
             ),
           ),

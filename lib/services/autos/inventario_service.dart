@@ -193,7 +193,7 @@ class InventarioBaseService {
     try {
       final formData = FormData.fromMap({
         'imagen': await MultipartFile.fromFile(imagePath),
-        if (descripcion != null) 'descripcion': descripcion,
+        'descripcion': ?descripcion,
       });
 
       final response = await _http.dio.post(
@@ -318,13 +318,13 @@ class InventarioBaseService {
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        if (marcaId != null) 'marca_id': marcaId,
+        'marca_id': ?marcaId,
         if (modelo != null && modelo.isNotEmpty) 'modelo': modelo,
         if (version != null && version.isNotEmpty) 'version': version,
         if (embarque != null && embarque.isNotEmpty) 'embarque': embarque,
-        if (naveDescargaId != null) 'nave_descarga_id': naveDescargaId,
-        if (agenteId != null) 'agente_id': agenteId,
-        if (tieneInventario != null) 'tiene_inventario': tieneInventario,
+        'nave_descarga_id': ?naveDescargaId,
+        'agente_id': ?agenteId,
+        'tiene_inventario': ?tieneInventario,
       };
 
       final response = await _http.dio.get(

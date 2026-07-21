@@ -205,11 +205,11 @@ class TicketMuelleService implements BaseService<TicketMuelle> {
       'numero_ticket': numeroTicket,
       'bl': blId,
       'distribucion': distribucionId,
-      if (placaId != null) 'placa': placaId,
-      if (transporteId != null) 'transporte': transporteId,
+      'placa': ?placaId,
+      'transporte': ?transporteId,
       'inicio_descarga': inicioDescarga.toIso8601String(),
       'fin_descarga': finDescarga.toIso8601String(),
-      if (observaciones != null) 'observaciones': observaciones,
+      'observaciones': ?observaciones,
       if (foto != null)
         'foto': await MultipartFile.fromFile(
           foto.path,
@@ -700,18 +700,18 @@ class BalanzaService implements BaseService<Balanza> {
       'guia': guia,
       'ticket': ticketId,
       'distribucion_almacen': distribucionAlmacenId,
-      if (precintoId != null) 'precinto': precintoId,
-      if (permisoId != null) 'permiso': permisoId,
+      'precinto': ?precintoId,
+      'permiso': ?permisoId,
       'fecha_entrada_balanza': fechaEntradaBalanza.toIso8601String(),
       'fecha_salida_balanza': fechaSalidaBalanza.toIso8601String(),
-      if (balanzaEntrada != null) 'balanza_entrada': balanzaEntrada,
-      if (balanzaSalida != null) 'balanza_salida': balanzaSalida,
+      'balanza_entrada': ?balanzaEntrada,
+      'balanza_salida': ?balanzaSalida,
       'peso_bruto': pesoBruto,
       'peso_tara': pesoTara,
       'peso_neto': pesoNeto,
-      if (bags != null) 'bags': bags,
+      'bags': ?bags,
       'fecha_envio_wp': fechaEnvioWp.toIso8601String(),
-      if (observaciones != null) 'observaciones': observaciones,
+      'observaciones': ?observaciones,
       if (foto1 != null)
         'foto1': await MultipartFile.fromFile(
           foto1.path,
@@ -1063,8 +1063,8 @@ class AlmacenService implements BaseService<AlmacenGranel> {
       'peso_bruto': pesoBruto,
       'peso_tara': pesoTara,
       'peso_neto': pesoNeto,
-      if (bags != null) 'bags': bags,
-      if (observaciones != null) 'observaciones': observaciones,
+      'bags': ?bags,
+      'observaciones': ?observaciones,
       if (foto1 != null)
         'foto1': await MultipartFile.fromFile(
           foto1.path,
@@ -1376,7 +1376,7 @@ class ControlHumedadService implements BaseService<ControlHumedad> {
       'hora_muestra': horaMuestra.toIso8601String(),
       'temperatura': temperatura,
       'humedad': humedad,
-      if (observaciones != null) 'observaciones': observaciones,
+      'observaciones': ?observaciones,
       if (fotoTemperatura != null)
         'foto_temperatura': await MultipartFile.fromFile(
           fotoTemperatura.path,

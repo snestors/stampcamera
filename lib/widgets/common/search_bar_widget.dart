@@ -115,7 +115,7 @@ class SearchBarWidget extends StatelessWidget {
             ],
           ),
           // Widget hijo personalizado (ej: dropdown)
-          if (child != null) child!,
+          ?child,
         ],
       ),
     );

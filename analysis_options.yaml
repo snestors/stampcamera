@@ -1,4 +1,9 @@
 include: package:flutter_lints/flutter.yaml
+analyzer:
+  exclude:
+    # Swift Package Manager (Flutter 3.44+) descarga el fuente de los plugins
+    # aquí, incluidos sus examples/tests en Dart — no son parte del proyecto
+    - build/**
 linter:
   rules:
     - always_use_package_imports
