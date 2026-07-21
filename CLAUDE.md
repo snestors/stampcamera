@@ -1242,3 +1242,34 @@ FCM solo cubre background/app cerrada; en foreground el WS entregaba las notific
 - ⏳ PENDIENTE deploy backend: los 2 commits FCM anteriores + el cambio de `pushnotificacitons/views.py` de esta sesión (sin commitear en el repo Django). Sin eso, la app recibe redirect/401 en `/notificaciones/`.
 - ⏳ NO probado en dispositivo aún.
 - 🧹 Disco: se liberó Temp de Windows y se **eliminó el AVD Pixel 9a (13GB)** — el testing es solo en dispositivos físicos, NO recrear emuladores. Estado final: **15GB libres** en C:. Si vuelve a faltar: `~/.gradle/caches` = 7.4GB (NUNCA borrarla con un build corriendo; modules-2 son 2.5GB re-descargables).
+
+---
+
+## ✅ COMPLETADO - SESIÓN 2026-07-21 (Mac) - iOS 1.7.0+74 listo para App Store + update forzado en iOS
+
+### 🍎 Build iOS v1.7.0+74 (con FCM) validado y generado
+- Flutter actualizado en esta Mac 3.38.7 → **3.44.7**; `pub get`, analyze y 32/32 tests OK
+- **Deployment target iOS 13.0 → 15.0** (pbxproj x3 + Podfile): requisito de Firebase SDK 12 (firebase_messaging 16.x). Se pierden iPhone 6s/7/SE1 (iOS 13-14)
+- **Migración a Swift Package Manager** (automática de Flutter 3.44): la mayoría de plugins ya no van por CocoaPods (Podfile.lock quedó casi vacío, aparecen `Package.resolved`); solo `flutter_secure_storage` sigue en pods. `AppFrameworkInfo.plist` ya no lleva MinimumOSVersion
+- `analysis_options.yaml`: excluido `build/**` del analyzer — SPM descarga el FUENTE de los plugins ahí (examples/tests incluidos) y generaba 166 falsos errores
+- Aplicado `dart fix` del lint nuevo `use_null_aware_elements` (31 casos, 9 archivos) → analyze en 0
+- IPA: `build/ios/ipa/stampcamera.ipa` (28.6MB), firmado **Cloud Managed Apple Distribution** — el export CLI SÍ funciona ahora (Xcode 26 firma en la nube también desde `flutter build ipa`); Transporter u Organizer para subir
+- OJO Organizer: los archives de `flutter build ipa` van a `build/ios/archive/Runner.xcarchive`, NO aparecen solos en Organizer — abrirlos con `open` para registrarlos
+
+### 🔄 Actualización obligatoria ahora también en iOS
+- `lib/services/update_service.dart` reescrito: Android sigue con In-App Updates de Play (intacto); iOS consulta iTunes lookup (`bundleId com.nestorfar.stampcamera`, store PE) al iniciar y al volver de background
+- Si la versión instalada < versión publicada → **diálogo bloqueante** (PopScope canPop:false, sin dismiss) con única acción "Actualizar en App Store" (abre ficha id6791653349)
+- Falla de red/timeout → silencioso, no bloquea (mismo criterio que Android). Comparación semver de `version`, no build number
+- iTunes lookup puede tardar ~24h en reflejar una versión recién aprobada → el bloqueo se activa gradualmente tras cada release
+- Wiring en `main.dart`: `UpdateService().initialize(navigatorKey: router.routerDelegate.navigatorKey)`
+
+### 🧹 Limpieza de disco de esta Mac (estaba en 0 bytes, ahora ~8GB libres)
+- Borrado: DerivedData (regenera ~4GB por build), iOS DeviceSupport 5.5GB (regenera al conectar iPhone), `~/.gradle/caches` 4.9GB, emulador Android + system-images + AVDs (~3GB), NDKs no usados 26.x/27.x/28.2 (8GB — el proyecto pinea 28.0.13004108, NO borrar esa)
+- Candidatos restantes si falta espacio: Docker.raw 8GB reales (Docker Desktop colgado, pendiente), `com.apple.mediaanalysisd` 13GB (sistema, no tocar), Arduino15 9GB
+- La subida a App Store falló el 20-jul por disco a 0 durante el zip de Transporter — con espacio libre funciona
+
+### 📍 Estado
+- ✅ IPA final (incluye update forzado) generado 21-jul 8:01, archive abierto en Organizer
+- ⏳ Subir build 74 a App Store Connect (Organizer o Transporter) y enviar a revisión
+- ⏳ Verificar clave APNs (.p8) subida en Firebase Console → sin eso NO llegan push a iPhone
+- ⏳ Probar en TestFlight: login con aprobación de equipo, push con app cerrada, tap→navegación
