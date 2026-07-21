@@ -1273,3 +1273,56 @@ FCM solo cubre background/app cerrada; en foreground el WS entregaba las notific
 - ⏳ Subir build 74 a App Store Connect (Organizer o Transporter) y enviar a revisión
 - ⏳ Verificar clave APNs (.p8) subida en Firebase Console → sin eso NO llegan push a iPhone
 - ⏳ Probar en TestFlight: login con aprobación de equipo, push con app cerrada, tap→navegación
+
+---
+
+## 🔍 SESIÓN 2026-07-21 (Windows) - Skills + revisión de arquitectura + plan P0/P1/P2
+
+### 🧰 Skills de agentes instaladas
+- `npx skills add` de `flutter/agent-plugins`, `dart-lang/skills` y `flutter/skills` → 22 SKILL.md en `.agents/skills/` (commiteado junto con `skills-lock.json`)
+- Revisadas: contenido benigno (solo documentación, sin scripts). Los flags "Critical/High Risk" del scanner son falsos positivos (docs de FFI que describen descargas de binarios y del package http)
+- ⚠️ Duplicadas con `.claude/skills/` de una instalación anterior — a futuro consolidar en UNA sola ruta
+- ⚠️ `flutter-use-http-package` enseña `package:http` + FutureBuilder; este proyecto usa **dio (http_service) + Riverpod** — no seguir esa skill aquí
+
+### 🏠 Home: AppBar limpiado
+- Eliminado botón de configuración del AppBar + `_showSettingsDialog` + `_showAboutDialog` (modal sin utilidad real, -156 líneas)
+- Campana de notificaciones: era icono `AppColors.primary` en chip navy 10% sobre AppBar navy (0xFF003B5C sobre sí mismo = invisible). Ahora `IconButton` plano que hereda el foreground blanco del tema; badge rojo intacto
+
+### 📋 REVISIÓN DE ARQUITECTURA (agente Opus, solo lectura) — salud 6.5/10
+Funcional sano (analyze 0, natives post-merge iOS coherentes, timers/subs bien liberados, sin más casos navy-sobre-navy). Deuda en estructura y correctitud de datos.
+
+#### Cambios propuestos — P0 (correctitud, ESTA sesión)
+1. **Fuga de datos entre usuarios en logout**: `SessionManager._clearAllUserRelatedProviders` no invalida 7 providers sin autoDispose que cachean datos de usuario:
+   - `registroVinListProvider` + `usuariosRegistradoresProvider` (autos/registro_vin_list_provider.dart)
+   - `registrosConDanosProvider` + `registrosPedeteadosProvider` (autos/registro_general_provider.dart)
+   - `paralizacionesListProvider` + `controlHumedadListProvider` (graneles/graneles_provider.dart) — OJO: el reporte del agente los llamó `paralizacionesProvider`/`controlHumedadProvider`, los nombres reales llevan `List`
+   - `exploradorProvider` (casos/explorador_provider.dart) — además mantiene viva la suscripción WS del canal `casos` y un `_currentUserId` stale (atribución de subidas)
+   → Fix: registrarlos en `_clearAllUserRelatedProviders`; los de trabajo diario (registroVinList, conDanos, pedeteados, paralizaciones, controlHumedad) también en `onStartAssistance`/`onEndAssistance`
+2. **6 botones a rutas muertas en graneles** (no hay errorBuilder → pantalla de error go_router):
+   - `almacen_tab.dart:93,203` FAB/botón "crear" y `:156` editar → `/graneles/almacen/*` NO existe. Fix: quitar FAB y botón crear (el alta real es vía ViajeFormScreen desde el tab Viajes); quitar editar (AlmacenGranel NO tiene ticketId para deep-link)
+   - `balanzas_tab.dart:108,253` crear y `:182` editar → `/graneles/balanza/*` NO existe. Fix: quitar crear; editar SÍ se puede salvar → `/graneles/viaje/editar/{balanza.ticketId}?step=2` (Balanza tiene ticketId; step 1=muelle, 2=balanza, 3=almacén)
+
+#### Cambios propuestos — P1 (sesión "design system")
+- Unificar las dos carpetas `common` (`core/widgets/common` vs `widgets/common`) con regla clara
+- Matar dropdown duplicado: `custom_dropdown_field` (solo lo usa pedeteo/form_fields_card) → migrar a `app_search_select` del core
+- Renombrar `widgets/pedeteo/search_bar_widget.dart` → `pedeteo_search_bar.dart` (colisión de nombre con el común)
+- Sweep de literales `Color(0xFF…)` → tokens: dano_form.dart (43), jornadas_screen.dart (19), fotos_presentacion_form.dart (14), detalle_danos.dart (13 — el "✅ migrado" de arriba en este archivo es FALSO), registro_asistencia_screen.dart (10), modal_entrada.dart (9)
+- Agregar `errorBuilder` al GoRouter (que una ruta rota nunca más sea pantalla blanca de error cruda)
+
+#### Cambios propuestos — P2 (higiene, cuando toque)
+- Borrar código muerto: `core/widgets/app_bars/app_corporate_bar.dart`, `widgets/connectivity_app_bar.dart` (0 usos)
+- Borrar `lib/features/` vacía o arrancar el piloto de migración con UN módulo (casos)
+- Mover `lib/models/autos/Manual-API.md` y `lib/services/http_service.md` a `docs/`
+- Package Kotlin `com.example.stampcamera` ≠ applicationId `com.nestorfar.stampcamera` (funciona; renombrar con calma)
+- Testing (5 áreas de mayor retorno): SessionManager/logout, http_service refresh + colas offline, `canAccess()`, backoff de queue_service, parsers fromJson (notificacion doble shape, permisos, login_flow)
+
+### ✅ P0 APLICADO (esta sesión)
+1. **SessionManager**: los 7 providers registrados en `_clearAllUserRelatedProviders`; los 5 de trabajo diario también en `onStartAssistance`/`onEndAssistance`. `exploradorProvider` con nota: invalidar dispone el notifier → cancela WS del canal casos y descarta el userId stale
+2. **almacen_tab**: FAB "Nuevo Almacén", botón "Crear primer registro" y lápiz de editar ELIMINADOS (el flujo real es ViajeFormScreen); parámetro `onEdit` de `_AlmacenCard` removido; padding inferior del ListView ahora usa `MediaQuery.padding.bottom` (antes +80 fijo para el FAB)
+3. **balanzas_tab**: FAB y "Crear primera balanza" eliminados; **editar SÍ se conservó** → `/graneles/viaje/editar/{ticketId}?step=2` (guard: `canEdit && ticketId != null`); mismo ajuste de padding
+
+### 📍 Estado
+- ✅ Mergeados 4 commits de la sesión iOS de la Mac (rebase limpio); home + P0 pusheados
+- ✅ `flutter analyze`: 0 issues
+- ⏳ Probar en dispositivo: logout entre 2 usuarios (datos limpios), tabs balanzas/almacén de graneles (sin FABs, editar balanza abre paso 2 del viaje)
+- ⏳ Próximas sesiones: P1 (design system) y P2 (higiene/testing) según plan de arriba
