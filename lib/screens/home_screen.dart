@@ -76,25 +76,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         actions: [
           _buildNotificationsBell(context),
           Container(
-            margin: const EdgeInsets.only(right: 4),
-            child: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.settings,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-              ),
-              onPressed: () => _showSettingsDialog(context),
-              tooltip: 'Configuración',
-            ),
-          ),
-          Container(
             margin: const EdgeInsets.only(right: 8),
             child: IconButton(
               icon: Container(
@@ -128,29 +109,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildNotificationsBell(BuildContext context) {
     final unreadCount = ref.watch(notificacionesUnreadCountProvider);
 
-    return Container(
-      margin: const EdgeInsets.only(right: 4),
-      child: IconButton(
-        icon: Badge(
-          isLabelVisible: unreadCount > 0,
-          label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
-          backgroundColor: AppColors.error,
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.notifications_none,
-              color: AppColors.primary,
-              size: 20,
-            ),
-          ),
-        ),
-        onPressed: () => context.push('/notificaciones'),
-        tooltip: 'Notificaciones',
+    return IconButton(
+      icon: Badge(
+        isLabelVisible: unreadCount > 0,
+        label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
+        backgroundColor: AppColors.error,
+        child: const Icon(Icons.notifications_none),
       ),
+      onPressed: () => context.push('/notificaciones'),
+      tooltip: 'Notificaciones',
     );
   }
 
@@ -689,121 +656,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        title: const Row(
-          children: [
-            Icon(Icons.settings, color: AppColors.primary),
-            SizedBox(width: 8),
-            Text('Configuración'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.info_outline, color: AppColors.info),
-              ),
-              title: const Text('Acerca de'),
-              subtitle: const Text('Información de la aplicación'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutDialog(context);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          AppButton.ghost(
-            text: 'Cerrar',
-            size: AppButtonSize.small,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(DesignTokens.radiusL),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.info_outline, color: AppColors.primary),
-            ),
-            const SizedBox(width: 12),
-            const Text('Acerca de'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'A&G Inspección Vehicular',
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeL,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Aplicación para gestión de vehículos con cámara de sellos.',
-              style: TextStyle(
-                fontSize: DesignTokens.fontSizeS,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Icon(Icons.business, color: AppColors.textSecondary, size: 16),
-                SizedBox(width: 8),
-                Text(
-                  'A&G Logistics',
-                  style: TextStyle(
-                    fontSize: DesignTokens.fontSizeS,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          AppButton.primary(
-            text: 'Cerrar',
-            size: AppButtonSize.small,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // Widgets auxiliares
