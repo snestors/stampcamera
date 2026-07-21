@@ -229,10 +229,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildModulesGrid(BuildContext context, dynamic user) {
     final List<dynamic> allModules = user.availableModules;
 
-    // Filtrar: habilitados, quitar dashboard y casos
+    // Solo módulos IMPLEMENTADOS en la app móvil (casos se excluye del grid
+    // a propósito). Lo que el backend mande fuera de esta lista no se muestra.
+    const implementados = {'camera', 'asistencia', 'autos', 'graneles'};
     final modules = allModules
         .where((m) => m.isEnabled == true)
-        .where((m) => m.id != 'dashboard' && m.id != 'casos')
+        .where((m) => implementados.contains(m.id))
         .toList();
 
     // Ordenar: camera → asistencia → autos → graneles → resto
@@ -404,8 +406,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 'casos':
         context.push('/casos');
         break;
-      default:
-        _showComingSoonDialog(context);
     }
   }
 
@@ -645,17 +645,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
-  void _showComingSoonDialog(BuildContext context) {
-    AppDialog.info(
-      context,
-      title: 'Próximamente',
-      message:
-          'Esta funcionalidad estará disponible en una próxima actualización.',
-      buttonText: 'Entendido',
-    );
-  }
-
 }
 
 // Widgets auxiliares
