@@ -67,7 +67,11 @@ Future<void> main() async {
   );
 
   // Verificar actualizacion al inicio y al volver del background
-  UpdateService().initialize();
+  // (el navigatorKey da el context del diálogo bloqueante de iOS)
+  UpdateService().initialize(
+    navigatorKey:
+        _providerContainer.read(appRouterProvider).routerDelegate.navigatorKey,
+  );
 
   // Navegación al tocar una push (app en background o terminada)
   PushNotificationService()
