@@ -38,6 +38,7 @@ import 'package:stampcamera/screens/splash_screen.dart';
 import 'package:stampcamera/screens/login_screen.dart';
 import 'package:stampcamera/screens/home_screen.dart';
 import 'package:stampcamera/screens/notificaciones_screen.dart';
+import 'package:stampcamera/core/core.dart';
 
 // ---------------------------------------------------------------------------
 // Cache for privacy_policy_accepted to avoid SharedPreferences I/O on every
@@ -61,6 +62,22 @@ void markPrivacyPolicyAccepted() => _PrivacyCache.markAccepted();
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
+    errorBuilder: (context, state) => Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(title: const Text('Página no encontrada')),
+      body: Center(
+        child: AppErrorState(
+          type: AppErrorType.notFound,
+          title: 'Página no encontrada',
+          message: 'No pudimos encontrar la página:\n${state.uri}',
+          customAction: AppButton.primary(
+            text: 'Ir al inicio',
+            icon: Icons.home_outlined,
+            onPressed: () => context.go('/home'),
+          ),
+        ),
+      ),
+    ),
     refreshListenable: GoRouterRefreshStream.multi([
       ref.watch(authProvider.notifier).stream,
       ref.watch(deviceProvider.notifier).stream,
