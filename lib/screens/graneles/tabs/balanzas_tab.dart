@@ -65,7 +65,6 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
 
     // Obtener permisos de balanza
     final permissions = permissionsAsync.valueOrNull ?? UserGranelesPermissions.defaults();
-    final canAdd = permissions.balanza.canAdd;
     final canEdit = permissions.balanza.canEdit;
 
     return Scaffold(
@@ -101,23 +100,8 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
           Expanded(child: _buildResultsList(balanzasAsync, notifier, canEdit, filterPendientes)),
         ],
       ),
-      // Solo mostrar FAB si tiene permiso de agregar
-      floatingActionButton: canAdd
-          ? FloatingActionButton.extended(
-              heroTag: 'fab_balanza',
-              onPressed: () => context.push('/graneles/balanza/crear'),
-              backgroundColor: AppColors.primary,
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text(
-                'Nueva Balanza',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: DesignTokens.fontSizeS,
-                ),
-              ),
-            )
-          : null,
+      // El registro de balanza es vía ViajeFormScreen (tab Viajes);
+      // las rutas /graneles/balanza/* no existen en el router
     );
   }
 
@@ -162,12 +146,11 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        // Padding extra abajo para el FAB (80px)
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           DesignTokens.spaceM,
           DesignTokens.spaceM,
           DesignTokens.spaceM,
-          DesignTokens.spaceM + 80,
+          DesignTokens.spaceM + MediaQuery.of(context).padding.bottom,
         ),
         itemCount: balanzas.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
@@ -177,9 +160,11 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
               padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
               child: _BalanzaCard(
                 balanza: balanza,
-                // Solo mostrar botón editar si tiene permiso
-                onEdit: canEdit
-                    ? () => context.push('/graneles/balanza/editar/${balanza.id}')
+                // Editar = paso 2 (balanza) del viaje; requiere permiso y ticketId
+                onEdit: canEdit && balanza.ticketId != null
+                    ? () => context.push(
+                        '/graneles/viaje/editar/${balanza.ticketId}?step=2',
+                      )
                     : null,
               ),
             );
@@ -207,8 +192,6 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
 
   Widget _buildEmptyState(BalanzaNotifier notifier, bool filterPendientes) {
     final isSearching = _searchController.text.isNotEmpty;
-    final permissionsAsync = ref.watch(userGranelesPermissionsProvider);
-    final canAdd = permissionsAsync.valueOrNull?.balanza.canAdd ?? false;
 
     String title;
     String subtitle;
@@ -245,12 +228,6 @@ class _BalanzasTabState extends ConsumerState<BalanzasTab> {
         onPressed: () {
           ref.read(balanzasListProvider.notifier).setFilterSinAlmacen(false);
         },
-      );
-    } else if (canAdd) {
-      action = AppButton.primary(
-        text: 'Crear primera balanza',
-        icon: Icons.add,
-        onPressed: () => context.push('/graneles/balanza/crear'),
       );
     }
 

@@ -3,7 +3,6 @@
 // =============================================================================
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/graneles/graneles_provider.dart';
@@ -88,20 +87,8 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
           Expanded(child: _buildResultsList(almacenAsync, notifier)),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab_almacen',
-        onPressed: () => context.push('/graneles/almacen/crear'),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Nuevo Almacén',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: DesignTokens.fontSizeS,
-          ),
-        ),
-      ),
+      // El registro/edición de almacén es vía ViajeFormScreen (tab Viajes);
+      // las rutas /graneles/almacen/* no existen en el router
     );
   }
 
@@ -138,12 +125,11 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
       onRefresh: () => notifier.refresh(),
       child: ListView.builder(
         controller: _scrollController,
-        // Padding extra abajo para el FAB (80px)
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           DesignTokens.spaceM,
           DesignTokens.spaceM,
           DesignTokens.spaceM,
-          DesignTokens.spaceM + 80,
+          DesignTokens.spaceM + MediaQuery.of(context).padding.bottom,
         ),
         itemCount: registros.length + (showLoadMoreIndicator ? 1 : 0),
         itemBuilder: (context, index) {
@@ -151,10 +137,7 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
             final almacen = registros[index];
             return Padding(
               padding: const EdgeInsets.only(bottom: DesignTokens.spaceS),
-              child: _AlmacenCard(
-                almacen: almacen,
-                onEdit: () => context.push('/graneles/almacen/editar/${almacen.id}'),
-              ),
+              child: _AlmacenCard(almacen: almacen),
             );
           }
 
@@ -197,11 +180,7 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
                   notifier.clearSearch();
                 },
               )
-            : AppButton.primary(
-                text: 'Crear primer registro',
-                icon: Icons.add,
-                onPressed: () => context.push('/graneles/almacen/crear'),
-              ),
+            : null,
       ),
     );
   }
@@ -213,9 +192,8 @@ class _AlmacenTabState extends ConsumerState<AlmacenTab> {
 
 class _AlmacenCard extends StatelessWidget {
   final AlmacenGranel almacen;
-  final VoidCallback? onEdit;
 
-  const _AlmacenCard({required this.almacen, this.onEdit});
+  const _AlmacenCard({required this.almacen});
 
   @override
   Widget build(BuildContext context) {
@@ -304,14 +282,6 @@ class _AlmacenCard extends StatelessWidget {
                     onPressed: () => _showPhotoDialog(context, almacen.foto1Url!),
                     icon: const Icon(Icons.photo_camera, size: 20, color: AppColors.primary),
                     tooltip: 'Ver foto',
-                    constraints: const BoxConstraints(),
-                    padding: const EdgeInsets.all(DesignTokens.spaceXS),
-                  ),
-                if (onEdit != null)
-                  IconButton(
-                    onPressed: onEdit,
-                    icon: const Icon(Icons.edit, size: 20, color: AppColors.primary),
-                    tooltip: 'Editar registro',
                     constraints: const BoxConstraints(),
                     padding: const EdgeInsets.all(DesignTokens.spaceXS),
                   ),
