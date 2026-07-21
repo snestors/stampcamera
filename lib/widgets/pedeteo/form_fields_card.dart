@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stampcamera/core/core.dart';
 import 'package:stampcamera/providers/autos/pedeteo_provider.dart';
-import 'package:stampcamera/widgets/common/custom_dropdown_field.dart';
 
 class FormFieldsCard extends ConsumerWidget {
   const FormFieldsCard({super.key});
@@ -14,29 +13,31 @@ class FormFieldsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // ✅ Patrón .when() robusto - Maneja todos los estados
-    return ref.watch(pedeteoOptionsProvider).when(
-      data: (options) => _buildFormCard(context, ref, options),
-      loading: () => _buildCardShell(
-        child: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(DesignTokens.spaceM),
-            child: CircularProgressIndicator(),
+    return ref
+        .watch(pedeteoOptionsProvider)
+        .when(
+          data: (options) => _buildFormCard(context, ref, options),
+          loading: () => _buildCardShell(
+            child: const Center(
+              child: Padding(
+                padding: EdgeInsets.all(DesignTokens.spaceM),
+                child: CircularProgressIndicator(),
+              ),
+            ),
           ),
-        ),
-      ),
-      error: (error, _) => _buildCardShell(
-        accentColor: AppColors.error,
-        child: Center(
-          child: Column(
-            children: [
-              const Icon(Icons.error, color: AppColors.error),
-              const SizedBox(height: DesignTokens.spaceS),
-              Text('Error al cargar opciones: $error'),
-            ],
+          error: (error, _) => _buildCardShell(
+            accentColor: AppColors.error,
+            child: Center(
+              child: Column(
+                children: [
+                  const Icon(Icons.error, color: AppColors.error),
+                  const SizedBox(height: DesignTokens.spaceS),
+                  Text('Error al cargar opciones: $error'),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
-    );
+        );
   }
 
   /// Mismo estilo de tarjeta que DetalleRegistroCard (card del detalle VIN):
@@ -120,12 +121,7 @@ class FormFieldsCard extends ConsumerWidget {
 
           // Condición
           if (fieldPermissions['condicion'] != null)
-            _buildCondicionField(
-              ref,
-              options,
-              initialValues,
-              fieldPermissions,
-            ),
+            _buildCondicionField(ref, options, initialValues, fieldPermissions),
 
           const SizedBox(height: DesignTokens.spaceS),
 
@@ -159,21 +155,26 @@ class FormFieldsCard extends ConsumerWidget {
     final condiciones = options.condiciones;
     final currentValue =
         state.formData['condicion'] ?? initialValues['condicion'];
+    final editable = field?.editable ?? true;
 
-    return CustomDropdownField<String>(
+    return AppSearchDropdown<String>(
       label: 'Condición',
+      hint: 'Buscar condición...',
       value: currentValue,
-      items: condiciones,
-      enabled: field?.editable ?? true,
-      onChanged: field?.editable ?? true
+      enabled: editable,
+      options: condiciones
+          .map<AppSearchDropdownOption<String>>(
+            (item) => AppSearchDropdownOption<String>(
+              value: item.value,
+              label: item.label,
+            ),
+          )
+          .toList(),
+      onChanged: editable
           ? (value) => ref
                 .read(pedeteoStateProvider.notifier)
                 .updateFormField('condicion', value)
           : null,
-      itemBuilder: (item) => DropdownMenuItem<String>(
-        value: item.value,
-        child: Text(item.label, overflow: TextOverflow.ellipsis),
-      ),
     );
   }
 
@@ -188,21 +189,26 @@ class FormFieldsCard extends ConsumerWidget {
     final zonas = options.zonasInspeccion;
     final currentValue =
         state.formData['zona_inspeccion'] ?? initialValues['zona_inspeccion'];
+    final editable = field?.editable ?? true;
 
-    return CustomDropdownField<int>(
+    return AppSearchDropdown<int>(
       label: 'Zona de Inspección',
+      hint: 'Buscar zona...',
       value: currentValue,
-      items: zonas,
-      enabled: field?.editable ?? true,
-      onChanged: field?.editable ?? true
+      enabled: editable,
+      options: zonas
+          .map<AppSearchDropdownOption<int>>(
+            (item) => AppSearchDropdownOption<int>(
+              value: item.value,
+              label: item.label,
+            ),
+          )
+          .toList(),
+      onChanged: editable
           ? (value) => ref
                 .read(pedeteoStateProvider.notifier)
                 .updateFormField('zona_inspeccion', value)
           : null,
-      itemBuilder: (item) => DropdownMenuItem<int>(
-        value: item.value,
-        child: Text(item.label, overflow: TextOverflow.ellipsis),
-      ),
     );
   }
 
@@ -216,21 +222,26 @@ class FormFieldsCard extends ConsumerWidget {
     final field = fieldPermissions['bloque'];
     final bloques = options.bloques;
     final currentValue = state.formData['bloque'] ?? initialValues['bloque'];
+    final editable = field?.editable ?? true;
 
-    return CustomDropdownField<int>(
+    return AppSearchDropdown<int>(
       label: 'Bloque',
+      hint: 'Buscar bloque...',
       value: currentValue,
-      items: bloques,
-      enabled: field?.editable ?? true,
-      onChanged: field?.editable ?? true
+      enabled: editable,
+      options: bloques
+          .map<AppSearchDropdownOption<int>>(
+            (item) => AppSearchDropdownOption<int>(
+              value: item.value,
+              label: item.label,
+            ),
+          )
+          .toList(),
+      onChanged: editable
           ? (value) => ref
                 .read(pedeteoStateProvider.notifier)
                 .updateFormField('bloque', value)
           : null,
-      itemBuilder: (item) => DropdownMenuItem<int>(
-        value: item.value,
-        child: Text(item.label, overflow: TextOverflow.ellipsis),
-      ),
     );
   }
 }
