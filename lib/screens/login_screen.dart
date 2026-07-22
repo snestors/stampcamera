@@ -591,28 +591,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         position: _slideAnimation,
         child: Column(
           children: [
-            // Logo con diseño mejorado
+            // Logo sin sombra ni efectos (regla del manual de marca A&G)
             Hero(
               tag: 'app_logo',
-              child: Container(
+              child: SizedBox(
                 height: 100,
                 width: 250,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.15),
-                      blurRadius: 30,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    'assets/logo_principal.png',
-                    fit: BoxFit.contain,
-                  ),
+                child: Image.asset(
+                  'assets/logo_principal.png',
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
