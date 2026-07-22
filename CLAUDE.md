@@ -1386,3 +1386,43 @@ Los formularios de daño/foto/asistencia/pedeteo, el detalle de daños, la tabla
 - Integración en `dano_form.dart`: enfoque reactivo en `build` — `severidadForzadaPorTipoId(...)` calcula el id forzado; si hay regla, el `AppSearchDropdown` de severidad se fija (`value: forzada ?? _selected`) y se **bloquea** (`enabled:false`), y un `addPostFrameCallback` sincroniza `_selectedSeveridad` para el submit. Cubre crear, editar y auto-cura datos legacy. Funciona igual al abrir un daño existente de esos tipos.
 - **Tests**: `test/utils/autos/severidad_rules_test.dart` (11 casos, todos verdes) — incluye acentos, FLOJO/FALTANTE libre, emparejar por nombre con ids arbitrarios, y regla activa sin severidad que empareje.
 - `flutter analyze`: 0 issues.
+
+---
+
+## ✅ COMPLETADO - SESIÓN 2026-07-22 - v1.8.0+78 - Alineación de marca (manual A&G + paleta del frontend)
+
+Revisión del manual de marca oficial (`X:\Autos - Documentos\Guia de la marca\A&G Logo\A&G - MANUAL DE MARCA.pdf`, 74 págs, leído con pymupdf) contra la app y alineación visual. Probado en S22 (build debug) antes de commitear.
+
+### 1. Sombra del logo del login eliminada
+`login_screen.dart` `_buildHeader`: el logo tenía un `boxShadow` (glow azulado con `AppColors.primary`) → viola el Don't "No añadir sombra ni otro efecto" (pág. 36). Se quitó; el `Container` con decoration + `ClipRRect` (que solo servían la sombra) → `SizedBox` limpio. El logo es PNG transparente `BoxFit.contain`, el borderRadius no aportaba nada visible.
+
+### 2. DM Sans aplicada globalmente
+DM Sans (fuente de cuerpo del manual) YA estaba empaquetada (`assets/fonts/DMSans-*.ttf`) pero el tema NO tenía `fontFamily` → la app corría en Roboto. Agregado `fontFamily: 'DMSans'` a los 2 `ThemeData` de `app_theme.dart`. OJO: el bundle trae pesos 400/500/700; 128 usos de `w600` caen al peso más cercano (sutil). Titulares siguen SIN **Syne** (no la tenemos → pendiente).
+
+### 3. Paleta alineada al FRONTEND (no al marino crudo del manual)
+Primer intento puse `primary = #001C26` (Marino Profundo, "principal 80%" del manual) → se vio DEMASIADO oscuro. El frontend React (`Escritorio 2/django/core/frontend/src/index.css`) muestra la verdad: usa **Azul Naviero `#004D6B`** como `--primary` y reserva `#001C26` solo para TEXTO. Corregido:
+- `AppColors.primary` / `primaryNavy`: `#003B5C` → **`#004D6B`** (Azul Naviero = `--primary` del frontend)
+- `AppColors.secondary` / `primaryTurquoise` / `info` / `puerto`: `#00B4D8` → **`#008B8B`** (Turquesa Costero = `--accent` del frontend)
+- Reemplazo byte-seguro (CRLF preservado) en 8 archivos. El comentario "COLORES EXACTOS A&G" de `app_theme.dart` ahora ES verdad.
+- NO se tocaron los semánticos (verde éxito, rojo error, naranja warning): convención UX, no identidad de marca.
+
+### 4. Splash: logo completo con bajada + fondo de paleta
+`pubspec.yaml` `flutter_native_splash`: `image` de fallback (Android < 12) `logo_blanco.png` (isotipo solo, viola pág. 26-27) → `branding.png` (logo completo con bajada). Android 12+ mantiene isotipo centrado (por el recorte circular del ícono) + `branding.png` como branding inferior. Fondo `#0A2D3E` → `#001C26`. Regenerado con `dart run flutter_native_splash:create`. Se dejó marino oscuro a propósito (dark + logo blanco = estándar; es color de paleta).
+
+### 5. ⚠️ Regresión edge-to-edge corregida (importante)
+`flutter_native_splash:create` REESCRIBE los `styles.xml` y RE-AGREGA `android:windowDrawsSystemBarBackgrounds=false` (+ `windowLayoutInDisplayCutoutMode=shortEdges`) en los 4 (values, values-night, values-v31, values-night-v31) — la línea que se había quitado para pasar la validación de Android 15 en Play. Se limpió tras la regeneración (conservando solo el cambio de `windowSplashScreenBackground` en los v31). `Info.plist` salía re-indentado (whitespace, ningún valor cambia, 6 permisos intactos) → revertido con `git checkout`. **Repetir esta limpieza tras CADA regeneración de splash.**
+
+### 6. Version bump + bundle + limpieza de disco
+- `1.7.2+77` → **`1.8.0+78`** (minor).
+- Disco estaba en 1.1GB: `flutter clean` + borrado de `~/.gradle/caches` (resultó ~15GB) → 18GB libres. El build re-descargó deps sin problema.
+- Bundle: `build\app\outputs\bundle\release\app-release.aab` (74 MB). `flutter analyze` 0 issues.
+- Nota de entorno: Flutter está en `C:\flutter\bin`, NO en el PATH del Bash tool → invocar `/c/flutter/bin/flutter.bat` y `dart.bat` con ruta completa.
+
+### Commits
+`fix(login)` sombra · `feat(theme)` DM Sans + paleta · `chore(splash)` · `chore: bump 1.8.0+78`.
+
+### ⏳ Pendientes
+- Subir `.aab` a Play Console (versionCode 78 > 77).
+- Splash en naviero (si se prefiere sobre el marino) → cambiar + regenerar.
+- Conseguir **Syne** para titulares.
+- En el S22 quedó el build DEBUG (deslogueado); reinstalar release si se necesita la de producción.
