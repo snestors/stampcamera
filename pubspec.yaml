@@ -74,11 +74,13 @@ flutter_launcher_icons:
   image_path: "assets/icon/icon.png"
 
 flutter_native_splash:
-  color: "#0A2D3E" # Azul oscuro como en la imagen subida
-  image: assets/splash/logo_blanco.png
+  color: "#001C26" # Azul Marino Profundo (paleta A&G)
+  image: assets/splash/branding.png # Logo completo con bajada (Android < 12)
   android: true
 
   android_12:
+    # En Android 12+ el ícono se recorta a un círculo: se usa el isotipo compacto
+    # centrado + el logo completo (con nombre) como branding inferior.
     image: assets/splash/logo_blanco.png
-    color: "#0A2D3E"
+    color: "#001C26"
     branding: assets/splash/branding.png
