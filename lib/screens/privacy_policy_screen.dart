@@ -48,7 +48,7 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF003B5C),
+      backgroundColor: const Color(0xFF004D6B),
       body: SafeArea(
         child: Column(
           children: [
@@ -94,7 +94,7 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF003B5C),
+                        color: Color(0xFF004D6B),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -167,7 +167,7 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
                                   });
                                 }
                               : null,
-                          activeColor: const Color(0xFF003B5C),
+                          activeColor: const Color(0xFF004D6B),
                         ),
                         const Expanded(
                           child: Text(
@@ -198,7 +198,7 @@ class _PrivacyAcceptanceScreenState extends State<PrivacyAcceptanceScreen> {
                       child: ElevatedButton(
                         onPressed: _isAccepted ? _acceptPolicy : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF003B5C),
+                          backgroundColor: const Color(0xFF004D6B),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -248,7 +248,7 @@ class _PolicySummarySection extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF003B5C),
+              color: Color(0xFF004D6B),
             ),
           ),
           const SizedBox(height: 8),

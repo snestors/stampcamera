@@ -98,8 +98,8 @@ class _AsistenciaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFF003B5C);
-    const accent = Color(0xFF00B4D8);
+    const primary = Color(0xFF004D6B);
+    const accent = Color(0xFF008B8B);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

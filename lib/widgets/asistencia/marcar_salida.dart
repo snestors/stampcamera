@@ -117,7 +117,7 @@ class _ConfirmSalidaDialogState extends ConsumerState<_ConfirmSalidaDialog>
                 height: 80,
                 decoration: BoxDecoration(
                   color: isLoading
-                      ? const Color(0xFF003B5C).withValues(alpha: 0.1)
+                      ? const Color(0xFF004D6B).withValues(alpha: 0.1)
                       : Colors.deepOrange.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
@@ -126,7 +126,7 @@ class _ConfirmSalidaDialogState extends ConsumerState<_ConfirmSalidaDialog>
                         padding: EdgeInsets.all(20),
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
-                          color: Color(0xFF003B5C),
+                          color: Color(0xFF004D6B),
                         ),
                       )
                     : Icon(
@@ -147,7 +147,7 @@ class _ConfirmSalidaDialogState extends ConsumerState<_ConfirmSalidaDialog>
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF003B5C),
+                    color: Color(0xFF004D6B),
                   ),
                   textAlign: TextAlign.center,
                 ),

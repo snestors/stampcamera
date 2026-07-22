@@ -19,7 +19,7 @@ class UserCard extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 24,
-              backgroundColor: Color(0xFF003B5C),
+              backgroundColor: Color(0xFF004D6B),
               child: Icon(Icons.person, color: Colors.white),
             ),
             const SizedBox(width: 16),

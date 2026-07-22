@@ -94,7 +94,7 @@ class _DiaSelectorWidgetState extends State<DiaSelectorWidget> {
                     gradient: esSeleccionado
                         ? const LinearGradient(
                             colors: [
-                              Color(0xFF003B5C),
+                              Color(0xFF004D6B),
                               Color.fromARGB(255, 215, 215, 230),
                             ],
                             begin: Alignment.topLeft,

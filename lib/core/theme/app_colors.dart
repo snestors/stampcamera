@@ -10,10 +10,10 @@ class AppColors {
   // ============================================================================
   
   /// Azul oscuro corporativo - Color principal de la marca
-  static const Color primary = Color(0xFF003B5C);
+  static const Color primary = Color(0xFF004D6B);
   
   /// Azul claro corporativo - Color secundario de la marca
-  static const Color secondary = Color(0xFF00B4D8);
+  static const Color secondary = Color(0xFF008B8B);
   
   /// Verde corporativo - Color de acento
   static const Color accent = Color(0xFF059669);
@@ -32,7 +32,7 @@ class AppColors {
   static const Color error = Color(0xFFDC2626);
   
   /// Azul info - Para información
-  static const Color info = Color(0xFF00B4D8);
+  static const Color info = Color(0xFF008B8B);
 
   // ============================================================================
   // GRISES Y NEUTROS
@@ -71,7 +71,7 @@ class AppColors {
   // ============================================================================
   
   /// Puerto - Azul para condición puerto
-  static const Color puerto = Color(0xFF00B4D8);
+  static const Color puerto = Color(0xFF008B8B);
   
   /// Recepción - Púrpura para condición recepción
   static const Color recepcion = Color(0xFF8B5CF6);

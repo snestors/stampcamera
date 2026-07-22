@@ -7,10 +7,10 @@ class AppTheme {
   // ============================================================================
 
   /// Azul Marino - Color base
-  static const Color primaryNavy = Color(0xFF003B5C);
+  static const Color primaryNavy = Color(0xFF004D6B);
 
   /// Turquesa - Color secundario
-  static const Color primaryTurquoise = Color(0xFF00B4D8);
+  static const Color primaryTurquoise = Color(0xFF008B8B);
 
   // ============================================================================
   // 🌅 TEMA LIGHT
@@ -18,6 +18,7 @@ class AppTheme {
 
   static ThemeData get lightTheme {
     return ThemeData(
+      fontFamily: 'DMSans', // Tipografía de cuerpo del manual de marca A&G
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryNavy,
         primary: primaryNavy,
@@ -52,6 +53,7 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     return ThemeData(
+      fontFamily: 'DMSans', // Tipografía de cuerpo del manual de marca A&G
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryTurquoise,
         primary: primaryTurquoise, // Invertir
